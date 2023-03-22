@@ -55,8 +55,11 @@ let roomId: string;
 let openIdToken: IOpenIDCredentials;
 let roomName: string;
 let startAudioOnly: boolean;
+let startWithAudioMuted: boolean | undefined;
+let startWithVideoMuted: boolean | undefined;
 let isVideoChannel: boolean;
 let supportsScreensharing: boolean;
+let language: string;
 
 let widgetApi: WidgetApi;
 let meetApi: any; // JitsiMeetExternalAPI
@@ -79,6 +82,13 @@ const setupCompleted = (async (): Promise<string | void> => {
             }
             return vals[0];
         };
+        const parseBooleanOrUndefined = (value: string | undefined): boolean | undefined => {
+            if (value === undefined) {
+                return undefined;
+            }
+
+            return value === "true";
+        };
 
         // If we have these params, expect a widget API to be available (ie. to be in an iframe
         // inside a matrix client). Otherwise, assume we're on our own, eg. have been popped
@@ -86,6 +96,7 @@ const setupCompleted = (async (): Promise<string | void> => {
         const parentUrl = qsParam("parentUrl", true);
         const widgetId = qsParam("widgetId", true);
         const theme = qsParam("theme", true);
+        language = qsParam("language", true) ?? "en";
 
         if (theme) {
             document.body.classList.add(`theme-${theme.replace(" ", "_")}`);
@@ -195,6 +206,8 @@ const setupCompleted = (async (): Promise<string | void> => {
         roomId = qsParam("roomId", true);
         roomName = qsParam("roomName", true);
         startAudioOnly = qsParam("isAudioOnly", true) === "true";
+        startWithAudioMuted = parseBooleanOrUndefined(qsParam("startWithAudioMuted", true));
+        startWithVideoMuted = parseBooleanOrUndefined(qsParam("startWithVideoMuted", true));
         isVideoChannel = qsParam("isVideoChannel", true) === "true";
         supportsScreensharing = qsParam("supportsScreensharing", true) === "true";
 
@@ -313,6 +326,31 @@ function closeConference(): void {
     }
 }
 
+// Converts from IETF language tags used by Element (en-US) to the format used
+// by Jitsi (enUS)
+function normalizeLanguage(language: string): string {
+    const [lang, variant] = language.replace("_", "-").split("-");
+
+    if (!variant || lang === variant) {
+        return lang;
+    }
+
+    return lang + variant.toUpperCase();
+}
+
+function mapLanguage(language: string): string {
+    // Element and Jitsi don't agree how to interpret en, so we go with Elements
+    // interpretation to stay consistent
+    switch (language) {
+        case "en":
+            return "enGB";
+        case "enUS":
+            return "en";
+        default:
+            return language;
+    }
+}
+
 // event handler bound in HTML
 // An audio input of undefined instructs Jitsi to start unmuted with whatever
 // audio input it can find, while an input of null instructs it to start muted,
@@ -361,8 +399,8 @@ function joinConference(audioInput?: string | null, videoInput?: string | null):
         configOverwrite: {
             subject: roomName,
             startAudioOnly,
-            startWithAudioMuted: audioInput === null,
-            startWithVideoMuted: videoInput === null,
+            startWithAudioMuted: audioInput === null ? true : startWithAudioMuted,
+            startWithVideoMuted: videoInput === null ? true : startWithVideoMuted,
             // Request some log levels for inclusion in rageshakes
             // Ideally we would capture all possible log levels, but this can
             // cause Jitsi Meet to try to post various circular data structures
@@ -371,6 +409,7 @@ function joinConference(audioInput?: string | null, videoInput?: string | null):
             apiLogLevels: ["warn", "error"],
         } as any,
         jwt: jwt,
+        lang: mapLanguage(normalizeLanguage(language)),
     };
 
     // Video channel widgets need some more tailored config options
