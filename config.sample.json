@@ -7,9 +7,6 @@
     "sso_redirect_options": {
         "immediate": true
     },
-    "branding": {
-        "auth_header_logo_url": "https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
-    },
     "brand": "Element-dev",
     "integrations_ui_url": "https://scalar.vector.im/",
     "integrations_rest_url": "https://scalar.vector.im/api",
