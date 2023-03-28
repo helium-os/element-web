@@ -33,6 +33,7 @@ import { logger } from "matrix-js-sdk/src/logger";
 import { createClient } from "matrix-js-sdk/src/matrix";
 import { SnakedObject } from "matrix-react-sdk/src/utils/SnakedObject";
 import MatrixChat from "matrix-react-sdk/src/components/structures/MatrixChat";
+import { parse } from "querystring";
 
 import { parseQs } from "./url_utils";
 import VectorBasePlatform from "./platform/VectorBasePlatform";
@@ -45,6 +46,8 @@ window.React = React;
 logger.log(`Application is running in ${process.env.NODE_ENV} mode`);
 
 window.matrixLogger = logger;
+
+const isDev = process.env.NODE_ENV === "development";
 
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
@@ -88,6 +91,19 @@ function onTokenLoginCompleted(): void {
     window.history.replaceState(null, "", url.href);
 }
 
+// Get orgId
+function getOrgId(): string {
+    const { hostname } = window.location;
+    const start = hostname.indexOf(".");
+    const end = hostname.length;
+    return hostname.slice(start + 1, end);
+}
+
+function getToken(): string {
+    const query = parse(window.location.href.split("?")[1]) as Record<string, any>;
+    return query?.token;
+}
+
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
     initRouting();
     const platform = PlatformPeg.get();
@@ -101,6 +117,11 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
+
+    const orgId = getOrgId();
+    if (!isDev && orgId) {
+        config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}`;
+    }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
     // Before we continue, let's see if we're supposed to do an SSO redirect
@@ -141,12 +162,14 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             onTokenLoginCompleted={onTokenLoginCompleted}
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
             defaultDeviceDisplayName={defaultDeviceName}
+            jwtToken={getToken()}
         />
     );
 }
 
 async function verifyServerConfig(): Promise<IConfigOptions> {
     let validatedConfig;
+    let orgId;
     try {
         logger.log("Verifying homeserver configuration");
 
@@ -214,6 +237,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
+        orgId = getOrgId();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
@@ -230,6 +254,10 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
+    if (!isDev && orgId) {
+        validatedConfig.hsUrl = `https://matrix.${orgId}`;
+        validatedConfig.hsName = `matrix.${orgId}`;
+    }
 
     // Just in case we ever have to debug this
     logger.log("Using homeserver config:", validatedConfig);
