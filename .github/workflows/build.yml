@@ -8,7 +8,7 @@ env:
     # These must be set for fetchdep.sh to get the right branch
     REPOSITORY: ${{ github.repository }}
     PR_NUMBER: ${{ github.event.pull_request.number }}
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 jobs:
     build:
         name: "Build"
