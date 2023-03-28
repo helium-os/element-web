@@ -1,7 +1,7 @@
 {
     "default_server_config": {
         "m.homeserver": {
-            "base_url": "http://192.168.50.139:8008"
+            "base_url": "http://matrix-testinner.easypayx.com/ "
         }
     },
     "sso_redirect_options": {
