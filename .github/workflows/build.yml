@@ -12,14 +12,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
+              with:
+                  persist-credentials: false
 
             - uses: actions/setup-node@v3
               with:
                   cache: "yarn"
 
-            - name: Configure Git
-                run: git config --global --add url."https://${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
-                
             - name: Install Dependencies
               run: "./scripts/layered.sh"
 
