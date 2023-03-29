@@ -4835,6 +4835,10 @@ entities@~2.1.0:
   resolved "https://registry.yarnpkg.com/entities/-/entities-2.1.0.tgz#992d3129cf7df6870b96c57858c249a120f8b8b5"
   integrity sha512-hCx1oky9PFrJ611mf0ifBLBRW8lUUVRlFolb5gWRfIELabBlbp9xZvrqZLZAs+NxFnbfQoeGd8wDkygjg7U85w==
 
+"ep-test@https://KingThq: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@github.com/KingThq/ep-test#main":
+  version "0.0.0"
+  resolved "https://KingThq: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@github.com/KingThq/ep-test#ad00a96ca348390a165cd4d2ae261f26e4e5854a"
+
 errno@^0.1.3, errno@~0.1.7:
   version "0.1.8"
   resolved "https://registry.yarnpkg.com/errno/-/errno-0.1.8.tgz#8bb3e9c7d463be4976ff888f76b4809ebc2e811f"
@@ -8142,7 +8146,7 @@ matrix-mock-request@^2.5.0:
     maplibre-gl "^2.0.0"
     matrix-encrypt-attachment "^1.0.3"
     matrix-events-sdk "0.0.1"
-    matrix-js-sdk "https://xiaozhuo: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@github.com/helium-os/matrix-js-sdk#main"
+    matrix-js-sdk "github:helium-os/matrix-js-sdk#main"
     matrix-widget-api "^1.3.1"
     minimist "^1.2.5"
     opus-recorder "^8.0.3"
