@@ -14,7 +14,8 @@ set -ex
 # for the primary repo (element-web in this case).
 
 # Install dependencies, as we'll be using fetchdep.sh from matrix-react-sdk
-yarn install --pure-lockfile
+# yarn install --pure-lockfile
+yarn install
 
 # Pass appropriate repo to fetchdep.sh
 export PR_ORG=vector-im
