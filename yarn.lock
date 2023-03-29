@@ -8104,7 +8104,7 @@ matrix-mock-request@^2.5.0:
 
 "matrix-react-sdk@https://github.com/helium-os/matrix-react-sdk#main":
   version "3.68.0"
-  resolved "https://github.com/helium-os/matrix-react-sdk#9b7520b48f4e9900e3e54f7d60b01eae3bfa0c94"
+  resolved "https://github.com/helium-os/matrix-react-sdk#0b54674fd2786d8e9ec5ca1c46eed4490b174fff"
   dependencies:
     "@babel/runtime" "^7.12.5"
     "@matrix-org/analytics-events" "^0.5.0"
