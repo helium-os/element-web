@@ -17,6 +17,9 @@ jobs:
               with:
                   cache: "yarn"
 
+            - name: Configure Git
+                run: git config --global --add url."https://${{ secrets.PAT }}@github.com/".insteadOf "https://github.com/"
+                
             - name: Install Dependencies
               run: "./scripts/layered.sh"
 
