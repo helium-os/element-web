@@ -7,6 +7,9 @@
     "sso_redirect_options": {
         "immediate": true
     },
+    "embedded_pages": {
+        "login_for_welcome": true
+    },
     "brand": "Element-dev",
     "integrations_ui_url": "https://scalar.vector.im/",
     "integrations_rest_url": "https://scalar.vector.im/api",
