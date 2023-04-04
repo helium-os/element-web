@@ -101,7 +101,9 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
-    // config.default_server_config["m.homeserver"].base_url = "http://matri-testinner.easypayx.com/";
+    if (window.parent?.versions?.orgId) {
+        config.default_server_config["m.homeserver"].base_url = `https://${window.parent.versions.orgId}.easypayx.com/`;
+    }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
     // Before we continue, let's see if we're supposed to do an SSO redirect
@@ -231,7 +233,9 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    // validatedConfig.hsUrl = "http://matri-testinner.easypayx.com/";
+    if (window.parent?.versions?.orgId) {
+        validatedConfig.hsUrl = `https://${window.parent.versions.orgId}.easypayx.com/`;
+    }
 
     // Just in case we ever have to debug this
     logger.log("Using homeserver config:", validatedConfig);
