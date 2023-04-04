@@ -88,6 +88,12 @@ function onTokenLoginCompleted(): void {
     window.history.replaceState(null, "", url.href);
 }
 
+// Get orgId
+async function getOrgId(): Promise<string> {
+    const accountNum = await window.parent?.versions?.getDNS();
+    return accountNum?.split?.("@")?.[1];
+}
+
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
     initRouting();
     const platform = PlatformPeg.get();
@@ -101,8 +107,10 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
-    if (window.parent?.versions?.orgId) {
-        config.default_server_config["m.homeserver"].base_url = `https://${window.parent.versions.orgId}.easypayx.com/`;
+
+    const orgId = await getOrgId();
+    if (orgId) {
+        config.default_server_config["m.homeserver"].base_url = `https://${orgId}.easypayx.com/`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -150,6 +158,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
 async function verifyServerConfig(): Promise<IConfigOptions> {
     let validatedConfig;
+    let orgId;
     try {
         logger.log("Verifying homeserver configuration");
 
@@ -217,6 +226,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
+        orgId = await getOrgId();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
@@ -233,8 +243,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    if (window.parent?.versions?.orgId) {
-        validatedConfig.hsUrl = `https://${window.parent.versions.orgId}.easypayx.com/`;
+    if (orgId) {
+        validatedConfig.hsUrl = `https://${orgId}.easypayx.com/`;
     }
 
     // Just in case we ever have to debug this
