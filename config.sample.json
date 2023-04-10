@@ -4,9 +4,6 @@
             "base_url": "https://matrix-testinner.easypayx.com/ "
         }
     },
-    "sso_redirect_options": {
-        "immediate": true
-    },
     "embedded_pages": {
         "login_for_welcome": true
     },
