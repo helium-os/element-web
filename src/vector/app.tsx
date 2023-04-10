@@ -90,8 +90,7 @@ function onTokenLoginCompleted(): void {
 
 // Get orgId
 async function getOrgId(): Promise<string> {
-    const accountNum = await window.parent?.versions?.getDNS();
-    return accountNum?.split?.("@")?.[1];
+    return await window.parent?.versions?.getDNS();
 }
 
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
@@ -110,7 +109,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     const orgId = await getOrgId();
     if (orgId) {
-        config.default_server_config["m.homeserver"].base_url = `https://${orgId}.easypayx.com/`;
+        config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}.helium/`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -244,7 +243,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
 
     validatedConfig.isDefault = true;
     if (orgId) {
-        validatedConfig.hsUrl = `https://${orgId}.easypayx.com/`;
+        validatedConfig.hsUrl = `https://matrix.${orgId}.helium/`;
     }
 
     // Just in case we ever have to debug this
