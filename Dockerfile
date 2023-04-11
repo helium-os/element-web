@@ -7,7 +7,7 @@ ARG USE_CUSTOM_SDKS=true
 ARG REACT_SDK_REPO="https://github.com/helium-os/matrix-react-sdk.git"
 ARG REACT_SDK_BRANCH="main"
 ARG JS_SDK_REPO="https://github.com/matrix-org/matrix-js-sdk.git"
-ARG JS_SDK_BRANCH="main"
+ARG JS_SDK_BRANCH="master"
 
 RUN apt-get update && apt-get install -y git dos2unix
 
