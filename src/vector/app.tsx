@@ -108,7 +108,6 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     const config = await verifyServerConfig();
 
     const orgId = await getOrgId();
-    logger.log(888, orgId);
     if (orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}.helium/`;
     }
@@ -245,6 +244,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     validatedConfig.isDefault = true;
     if (orgId) {
         validatedConfig.hsUrl = `https://matrix.${orgId}.helium/`;
+        validatedConfig.hsName = `matrix.${orgId}.helium`;
     }
 
     // Just in case we ever have to debug this
