@@ -3,11 +3,11 @@ FROM --platform=$BUILDPLATFORM node:16-buster as builder
 
 # Support custom branches of the react-sdk and js-sdk. This also helps us build
 # images of element-web develop.
-ARG USE_CUSTOM_SDKS=false
+ARG USE_CUSTOM_SDKS=true
 ARG REACT_SDK_REPO="https://github.com/helium-os/matrix-react-sdk.git"
-ARG REACT_SDK_BRANCH="master"
+ARG REACT_SDK_BRANCH="main"
 ARG JS_SDK_REPO="https://github.com/matrix-org/matrix-js-sdk.git"
-ARG JS_SDK_BRANCH="master"
+ARG JS_SDK_BRANCH="main"
 
 RUN apt-get update && apt-get install -y git dos2unix
 
