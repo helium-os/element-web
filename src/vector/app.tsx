@@ -89,8 +89,11 @@ function onTokenLoginCompleted(): void {
 }
 
 // Get orgId
-async function getOrgId(): Promise<string> {
-    return await window.parent?.versions?.getDNS();
+function getOrgId(): string {
+    const { hostname } = window.location;
+    const start = hostname.indexOf(".");
+    const end = hostname.length;
+    return hostname.slice(start + 1, end);
 }
 
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
@@ -107,9 +110,9 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
 
-    const orgId = await getOrgId();
+    const orgId = getOrgId();
     if (orgId) {
-        config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}.helium/`;
+        config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -225,7 +228,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
-        orgId = await getOrgId();
+        orgId = getOrgId();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
@@ -243,8 +246,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
 
     validatedConfig.isDefault = true;
     if (orgId) {
-        validatedConfig.hsUrl = `https://matrix.${orgId}.helium/`;
-        validatedConfig.hsName = `matrix.${orgId}.helium`;
+        validatedConfig.hsUrl = `https://matrix.${orgId}`;
+        validatedConfig.hsName = `matrix.${orgId}`;
     }
 
     // Just in case we ever have to debug this
