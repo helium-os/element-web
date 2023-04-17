@@ -21,7 +21,7 @@ limitations under the License.
 // To ensure we load the browser-matrix version first
 import "matrix-js-sdk/src/browser-index";
 
-import React, { ReactElement } from "react";
+import React, { ReactElement, useEffect } from "react";
 import PlatformPeg from "matrix-react-sdk/src/PlatformPeg";
 import { _td, newTranslatableError } from "matrix-react-sdk/src/languageHandler";
 import AutoDiscoveryUtils from "matrix-react-sdk/src/utils/AutoDiscoveryUtils";
@@ -138,7 +138,24 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
         // page). As such, just don't even bother loading the MatrixChat component.
         return;
     }
-
+    useEffect(()=>{
+        document.addEventListener("mouseup", function () {
+            let data = window.getSelection();
+            if(window?.parent){
+                window.parent.postMessage({...data, type: "mouseup" },'*');
+            }
+            
+        });
+        document.addEventListener("mousedown", function () {
+            var selectedText = window.getSelection().toString();
+            if (selectedText.length > 0) {
+                window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty();
+            }
+             if (window?.parent) {
+                 window.parent.postMessage({ type: "mousedown" }, "*");
+             }
+        });
+    },[])
     const defaultDeviceName = snakedConfig.get("default_device_display_name") ?? platform.getDefaultDeviceDisplayName();
 
     return (
