@@ -46,6 +46,8 @@ logger.log(`Application is running in ${process.env.NODE_ENV} mode`);
 
 window.matrixLogger = logger;
 
+const isDev = process.env.NODE_ENV === "development";
+
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
 // click back to the client having registered.
@@ -111,7 +113,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     const config = await verifyServerConfig();
 
     const orgId = getOrgId();
-    if (orgId) {
+    if (!isDev && orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
@@ -245,7 +247,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    if (orgId) {
+    if (!isDev && orgId) {
         validatedConfig.hsUrl = `https://matrix.${orgId}`;
         validatedConfig.hsName = `matrix.${orgId}`;
     }
