@@ -97,7 +97,7 @@ function getOrgId(): string {
     const hasTestinner = hostname.indexOf("testinner") !== -1;
     const start = hostname.indexOf(".");
     const end = hostname.length;
-    const name = hostname.slice(start + 1, end);
+    const name = hostname.slice(start, end);
     return hasTestinner ? `-testinner${name}` : name;
 }
 
@@ -122,7 +122,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     const orgId = getOrgId();
     if (!isDev && orgId) {
-        config.default_server_config["m.homeserver"].base_url = `https://matrix.${orgId}`;
+        config.default_server_config["m.homeserver"].base_url = `https://matrix${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -255,8 +255,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
 
     validatedConfig.isDefault = true;
     if (!isDev && orgId) {
-        validatedConfig.hsUrl = `https://matrix.${orgId}`;
-        validatedConfig.hsName = `matrix.${orgId}`;
+        validatedConfig.hsUrl = `https://matrix${orgId}`;
+        validatedConfig.hsName = `matrix${orgId}`;
     }
 
     // Just in case we ever have to debug this
