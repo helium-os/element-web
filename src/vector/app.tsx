@@ -91,8 +91,7 @@ function onTokenLoginCompleted(): void {
     window.history.replaceState(null, "", url.href);
 }
 
-// Get orgId
-function getOrgId(): string {
+function getHostname(): string {
     const { hostname } = window.location;
     const hasTestinner = hostname.indexOf("testinner") !== -1;
     const arr = hostname.split(".");
@@ -121,7 +120,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
 
-    const orgId = getOrgId();
+    const orgId = getHostname();
     if (!isDev && orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://matrix${orgId}`;
     }
@@ -238,7 +237,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
-        orgId = getOrgId();
+        orgId = getHostname();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
