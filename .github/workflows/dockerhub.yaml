@@ -3,9 +3,9 @@ on:
     workflow_dispatch: {}
     push:
         tags: [v*]
-    schedule:
-        # This job can take a while, and we have usage limits, so just publish develop only twice a day
-        - cron: "0 7/12 * * *"
+    # schedule:
+    # This job can take a while, and we have usage limits, so just publish develop only twice a day
+    # - cron: "0 7/12 * * *"
 concurrency: ${{ github.ref_name }}
 jobs:
     buildx:
@@ -36,7 +36,7 @@ jobs:
               uses: docker/metadata-action@507c2f2dc502c992ad446e3d7a5dfbe311567a96 # v4
               with:
                   images: |
-                      vectorim/element-web
+                      heliumos/element-web
                   tags: |
                       type=ref,event=branch
                       type=ref,event=tag
@@ -58,4 +58,4 @@ jobs:
               with:
                   username: ${{ secrets.DOCKERHUB_USERNAME }}
                   password: ${{ secrets.DOCKERHUB_TOKEN }}
-                  repository: vectorim/element-web
+                  repository: heliumos/element-web
