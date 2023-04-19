@@ -95,9 +95,10 @@ function onTokenLoginCompleted(): void {
 function getOrgId(): string {
     const { hostname } = window.location;
     const hasTestinner = hostname.indexOf("testinner") !== -1;
-    const start = hostname.indexOf(".");
-    const end = hostname.length;
-    const name = hostname.slice(start, end);
+    const arr = hostname.split(".");
+    const last = arr.pop();
+    const lastSecond = arr.pop();
+    const name = `.${lastSecond}.${last}`;
     return hasTestinner ? `-testinner${name}` : name;
 }
 
