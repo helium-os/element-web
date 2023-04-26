@@ -103,14 +103,15 @@ function getHostname(): string {
 function getToken(): string {
     const cookies = document.cookie.split(";");
     const name = "access_token=";
-
+    let token = "";
     for (let i = 0; i < cookies.length; i++) {
         const item = cookies[i].trim();
         if (item.indexOf(name) === 0) {
-            return item.substring(name.length, item.length);
+            token = item.substring(name.length, item.length);
         }
     }
-    return "";
+    logger.log("cookies and access_token:", cookies, token);
+    return token;
 }
 
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
