@@ -33,7 +33,6 @@ import { logger } from "matrix-js-sdk/src/logger";
 import { createClient } from "matrix-js-sdk/src/matrix";
 import { SnakedObject } from "matrix-react-sdk/src/utils/SnakedObject";
 import MatrixChat from "matrix-react-sdk/src/components/structures/MatrixChat";
-import { parse } from "querystring";
 
 import { parseQs } from "./url_utils";
 import VectorBasePlatform from "./platform/VectorBasePlatform";
@@ -102,8 +101,16 @@ function getHostname(): string {
 }
 
 function getToken(): string {
-    const query = parse(window.location.href.split("?")[1]) as Record<string, any>;
-    return query?.token;
+    const cookies = document.cookie.split(";");
+    const name = "access_token=";
+
+    for (let i = 0; i < cookies.length; i++) {
+        const item = cookies[i].trim();
+        if (item.indexOf(name) === 0) {
+            return item.substring(name.length, item.length);
+        }
+    }
+    return "";
 }
 
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
