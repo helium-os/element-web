@@ -694,6 +694,14 @@ module.exports = (env, argv) => {
             stats: "minimal",
             hotOnly: true,
             inline: true,
+
+            proxy: {
+                "/heliumos-user-api": {
+                    target: "http://heliumos-user.org1.helium",
+                    changeOrigin: true,
+                    pathRewrite: { "^/heliumos-user-api": "" },
+                },
+            },
         },
     };
 };
