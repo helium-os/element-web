@@ -50,48 +50,48 @@ async function settled(...promises: Array<Promise<any>>): Promise<void> {
     }
 }
 
-function checkBrowserFeatures(): boolean {
-    if (!window.Modernizr) {
-        logger.error("Cannot check features - Modernizr global is missing.");
-        return false;
-    }
+// function checkBrowserFeatures(): boolean {
+//     if (!window.Modernizr) {
+//         logger.error("Cannot check features - Modernizr global is missing.");
+//         return false;
+//     }
 
-    // Custom checks atop Modernizr because it doesn't have ES2018/ES2019 checks
-    // in it for some features we depend on.
-    // Modernizr requires rules to be lowercase with no punctuation.
-    // ES2018: http://262.ecma-international.org/9.0/#sec-promise.prototype.finally
-    window.Modernizr.addTest("promiseprototypefinally", () => typeof window.Promise?.prototype?.finally === "function");
-    // ES2020: http://262.ecma-international.org/#sec-promise.allsettled
-    window.Modernizr.addTest("promiseallsettled", () => typeof window.Promise?.allSettled === "function");
-    // ES2018: https://262.ecma-international.org/9.0/#sec-get-regexp.prototype.dotAll
-    window.Modernizr.addTest(
-        "regexpdotall",
-        () => window.RegExp?.prototype && !!Object.getOwnPropertyDescriptor(window.RegExp.prototype, "dotAll")?.get,
-    );
-    // ES2019: http://262.ecma-international.org/10.0/#sec-object.fromentries
-    window.Modernizr.addTest("objectfromentries", () => typeof window.Object?.fromEntries === "function");
+//     // Custom checks atop Modernizr because it doesn't have ES2018/ES2019 checks
+//     // in it for some features we depend on.
+//     // Modernizr requires rules to be lowercase with no punctuation.
+//     // ES2018: http://262.ecma-international.org/9.0/#sec-promise.prototype.finally
+//     window.Modernizr.addTest("promiseprototypefinally", () => typeof window.Promise?.prototype?.finally === "function");
+//     // ES2020: http://262.ecma-international.org/#sec-promise.allsettled
+//     window.Modernizr.addTest("promiseallsettled", () => typeof window.Promise?.allSettled === "function");
+//     // ES2018: https://262.ecma-international.org/9.0/#sec-get-regexp.prototype.dotAll
+//     window.Modernizr.addTest(
+//         "regexpdotall",
+//         () => window.RegExp?.prototype && !!Object.getOwnPropertyDescriptor(window.RegExp.prototype, "dotAll")?.get,
+//     );
+//     // ES2019: http://262.ecma-international.org/10.0/#sec-object.fromentries
+//     window.Modernizr.addTest("objectfromentries", () => typeof window.Object?.fromEntries === "function");
 
-    const featureList = Object.keys(window.Modernizr);
+//     const featureList = Object.keys(window.Modernizr);
 
-    let featureComplete = true;
-    for (const feature of featureList) {
-        if (window.Modernizr[feature] === undefined) {
-            logger.error(
-                "Looked for feature '%s' but Modernizr has no results for this. " + "Has it been configured correctly?",
-                feature,
-            );
-            return false;
-        }
-        if (window.Modernizr[feature] === false) {
-            logger.error("Browser missing feature: '%s'", feature);
-            // toggle flag rather than return early so we log all missing features rather than just the first.
-            featureComplete = false;
-        }
-    }
-    return featureComplete;
-}
+//     let featureComplete = true;
+//     for (const feature of featureList) {
+//         if (window.Modernizr[feature] === undefined) {
+//             logger.error(
+//                 "Looked for feature '%s' but Modernizr has no results for this. " + "Has it been configured correctly?",
+//                 feature,
+//             );
+//             return false;
+//         }
+//         if (window.Modernizr[feature] === false) {
+//             logger.error("Browser missing feature: '%s'", feature);
+//             // toggle flag rather than return early so we log all missing features rather than just the first.
+//             featureComplete = false;
+//         }
+//     }
+//     return featureComplete;
+// }
 
-const supportedBrowser = checkBrowserFeatures();
+// const supportedBrowser = checkBrowserFeatures();
 
 // React depends on Map & Set which we check for using modernizr's es6collections
 // if modernizr fails we may not have a functional react to show the error message.
@@ -112,7 +112,7 @@ async function start(): Promise<void> {
         loadApp,
         loadModules,
         showError,
-        showIncompatibleBrowser,
+        // showIncompatibleBrowser,
         _t,
     } = await import(
         /* webpackChunkName: "init" */
@@ -167,27 +167,27 @@ async function start(): Promise<void> {
         // await things settling so that any errors we have to render have features like i18n running
         await settled(loadThemePromise, loadLanguagePromise);
 
-        let acceptBrowser = supportedBrowser;
-        if (!acceptBrowser && window.localStorage) {
-            acceptBrowser = Boolean(window.localStorage.getItem("mx_accepts_unsupported_browser"));
-        }
+        // let acceptBrowser = supportedBrowser;
+        // if (!acceptBrowser && window.localStorage) {
+        //     acceptBrowser = Boolean(window.localStorage.getItem("mx_accepts_unsupported_browser"));
+        // }
 
         // ##########################
         // error handling begins here
         // ##########################
-        if (!acceptBrowser) {
-            await new Promise<void>((resolve) => {
-                logger.error("Browser is missing required features.");
-                // take to a different landing page to AWOOOOOGA at the user
-                showIncompatibleBrowser(() => {
-                    if (window.localStorage) {
-                        window.localStorage.setItem("mx_accepts_unsupported_browser", String(true));
-                    }
-                    logger.log("User accepts the compatibility risks.");
-                    resolve();
-                });
-            });
-        }
+        // if (!acceptBrowser) {
+        //     await new Promise<void>((resolve) => {
+        //         logger.error("Browser is missing required features.");
+        //         // take to a different landing page to AWOOOOOGA at the user
+        //         showIncompatibleBrowser(() => {
+        //             if (window.localStorage) {
+        //                 window.localStorage.setItem("mx_accepts_unsupported_browser", String(true));
+        //             }
+        //             logger.log("User accepts the compatibility risks.");
+        //             resolve();
+        //         });
+        //     });
+        // }
 
         try {
             // await config here
@@ -245,7 +245,8 @@ start().catch((err) => {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - typescript seems to only like the IE syntax for iframe sandboxing
     iframe["sandbox"] = "";
-    iframe.src = supportedBrowser ? "static/unable-to-load.html" : "static/incompatible-browser.html";
+    // iframe.src = supportedBrowser ? "static/unable-to-load.html" : "static/incompatible-browser.html";
+    iframe.src = "static/unable-to-load.html";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.position = "absolute";

@@ -48,6 +48,8 @@ declare global {
 
         // https://developer.mozilla.org/en-US/docs/Web/API/InstallTrigger
         InstallTrigger: any;
+
+        versions?: any;
     }
 
     interface Electron {
