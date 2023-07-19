@@ -124,7 +124,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     const config = await verifyServerConfig();
 
     const orgId = getOrgId();
-    logger.log('orgId', orgId);
+    console.log('orgId', orgId);
     if (!isDev && orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://chat.${orgId}`;
     }
@@ -156,7 +156,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     }
 
     const defaultDeviceName = snakedConfig.get("default_device_display_name") ?? platform.getDefaultDeviceDisplayName();
-    logger.log('----config', config);
+    console.log('----config', config);
     return (
         <MatrixChat
             onNewScreen={onNewScreen}
