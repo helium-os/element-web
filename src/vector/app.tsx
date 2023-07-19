@@ -162,7 +162,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     }
 
     const defaultDeviceName = snakedConfig.get("default_device_display_name") ?? platform.getDefaultDeviceDisplayName();
-
+    logger.log('----config', config);
     return (
         <MatrixChat
             onNewScreen={onNewScreen}
@@ -170,7 +170,8 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             config={config}
             realQueryParams={params}
             startingFragmentQueryParams={fragParams}
-            enableGuest={!config.disable_guests}
+            // enableGuest={!config.disable_guests}
+            enableGuest={false}
             onTokenLoginCompleted={onTokenLoginCompleted}
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
             defaultDeviceDisplayName={defaultDeviceName}

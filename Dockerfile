@@ -8,6 +8,7 @@ ARG REACT_SDK_REPO="https://github.com/helium-os/matrix-react-sdk.git"
 ARG REACT_SDK_BRANCH="users/tianhq/login"
 ARG JS_SDK_REPO="https://github.com/matrix-org/matrix-js-sdk.git"
 ARG JS_SDK_BRANCH="master"
+ARG JS_SDK_TAG="26.2.0"
 
 RUN apt-get update && apt-get install -y git dos2unix
 
