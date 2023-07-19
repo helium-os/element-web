@@ -90,15 +90,9 @@ function onTokenLoginCompleted(): void {
     window.history.replaceState(null, "", url.href);
 }
 
-function getHostname(): string {
+function getOrgId(): string {
     const { hostname } = window.location;
-    const hasTestinner = hostname.indexOf("testinner") !== -1;
-    const arr = hostname.split(".");
-    const last = arr.pop();
-    const lastSecond = arr.pop();
-    // const name = `.${lastSecond}.${last}`;
-    const name = `.${lastSecond}`;
-    return hasTestinner ? `-testinner${name}` : name;
+    return hostname.split(".").pop();
 }
 
 function getToken(): string {
@@ -128,11 +122,11 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
-    
-    const orgId = getHostname();
+
+    const orgId = getOrgId();
     logger.log('orgId', orgId);
     if (!isDev && orgId) {
-        config.default_server_config["m.homeserver"].base_url = `https://matrix${orgId}`;
+        config.default_server_config["m.homeserver"].base_url = `https://chat.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -248,7 +242,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
-        orgId = getHostname();
+        orgId = getOrgId();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
@@ -266,8 +260,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
 
     validatedConfig.isDefault = true;
     if (!isDev && orgId) {
-        validatedConfig.hsUrl = `https://matrix${orgId}`;
-        validatedConfig.hsName = `matrix${orgId}`;
+        validatedConfig.hsUrl = `https://chat.${orgId}`;
+        validatedConfig.hsName = `chat.${orgId}`;
     }
 
     // Just in case we ever have to debug this
