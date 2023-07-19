@@ -96,7 +96,8 @@ function getHostname(): string {
     const arr = hostname.split(".");
     const last = arr.pop();
     const lastSecond = arr.pop();
-    const name = `.${lastSecond}.${last}`;
+    // const name = `.${lastSecond}.${last}`;
+    const name = `.${lastSecond}`;
     return hasTestinner ? `-testinner${name}` : name;
 }
 
@@ -110,7 +111,7 @@ function getToken(): string {
             token = item.substring(name.length, item.length);
         }
     }
-    logger.log("cookies and access_token:", cookies, token);
+    logger.log("cookies", cookies, " access_token", token);
     return token;
 }
 
@@ -127,8 +128,9 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
-
+    
     const orgId = getHostname();
+    logger.log('orgId', orgId);
     if (!isDev && orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://matrix${orgId}`;
     }
