@@ -125,7 +125,8 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     const orgId = getOrgId();
     console.log('orgId', orgId);
-    if (!isDev && orgId) {
+    // if (!isDev && orgId) {
+    if (orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://chat.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
@@ -164,8 +165,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             config={config}
             realQueryParams={params}
             startingFragmentQueryParams={fragParams}
-            // enableGuest={!config.disable_guests}
-            enableGuest={false}
+            enableGuest={!config.disable_guests}
             onTokenLoginCompleted={onTokenLoginCompleted}
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
             defaultDeviceDisplayName={defaultDeviceName}
@@ -259,7 +259,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    if (!isDev && orgId) {
+    // if (!isDev && orgId) {
+    if (orgId) {
         validatedConfig.hsUrl = `https://chat.${orgId}`;
         validatedConfig.hsName = `chat.${orgId}`;
     }
