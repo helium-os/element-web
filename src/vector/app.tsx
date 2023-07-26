@@ -125,8 +125,8 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     const orgId = getOrgId();
     console.log('orgId', orgId);
-    // if (!isDev && orgId) {
-    if (orgId) {
+    if (!isDev && orgId) {
+    // if (orgId) {
         config.default_server_config["m.homeserver"].base_url = `https://chat.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
@@ -259,8 +259,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    // if (!isDev && orgId) {
-    if (orgId) {
+    if (!isDev && orgId) {
+    // if (orgId) {
         validatedConfig.hsUrl = `https://chat.${orgId}`;
         validatedConfig.hsName = `chat.${orgId}`;
     }
