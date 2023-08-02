@@ -64,7 +64,6 @@ try {
 } catch (e) {
     // ignore - not important
 }
-
 function parseOverridesToReplacements(overrides) {
     return Object.entries(overrides).map(([oldPath, newPath]) => {
         return new webpack.NormalModuleReplacementPlugin(
@@ -697,9 +696,16 @@ module.exports = (env, argv) => {
 
             proxy: {
                 "/heliumos-user-api": {
-                    target: "http://heliumos-user.org1.helium",
+                    target: "https://user.org2",
                     changeOrigin: true,
+                    secure: false,
                     pathRewrite: { "^/heliumos-user-api": "" },
+                },
+                "/heliumos-org-api": {
+                    target: "https://transaction-agent.org2",
+                    changeOrigin: true,
+                    secure: false,
+                    pathRewrite: { "^/heliumos-org-api": "" },
                 },
             },
         },
