@@ -48,6 +48,8 @@ window.matrixLogger = logger;
 
 const isDev = process.env.NODE_ENV === "development";
 
+console.log('test test');
+
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
 // click back to the client having registered.
