@@ -71,7 +71,7 @@ const COPY_LIST = [
     ["res/themes/**", "webapp/themes"],
     ["res/vector-icons/**", "webapp/vector-icons"],
     ["res/decoder-ring/**", "webapp/decoder-ring"],
-    ["node_modules/matrix-react-sdk/res/media/**", "webapp/media"],
+    ["src/matrix-react-sdk/res/media/**", "webapp/media"],
     ["node_modules/@matrix-org/olm/olm_legacy.js", "webapp", { directwatch: 1 }],
     ["./config.json", "webapp", { directwatch: 1 }],
     ["contribute.json", "webapp"],
@@ -155,7 +155,7 @@ function next(i, err) {
 }
 
 function genLangFile(lang, dest) {
-    const reactSdkFile = "node_modules/matrix-react-sdk/src/i18n/strings/" + lang + ".json";
+    const reactSdkFile = "src/matrix-react-sdk/src/i18n/strings/" + lang + ".json";
     const riotWebFile = "src/i18n/strings/" + lang + ".json";
 
     let translations = {};
@@ -253,7 +253,7 @@ regenerate the file, adding its content-hashed filename to langFileMap
 and regenerating languages.json with the new filename
 */
 function watchLanguage(lang, dest, langFileMap) {
-    const reactSdkFile = "node_modules/matrix-react-sdk/src/i18n/strings/" + lang + ".json";
+    const reactSdkFile = "src/matrix-react-sdk/src/i18n/strings/" + lang + ".json";
     const riotWebFile = "src/i18n/strings/" + lang + ".json";
 
     // XXX: Use a debounce because for some reason if we read the language

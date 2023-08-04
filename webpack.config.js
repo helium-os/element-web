@@ -32,14 +32,14 @@ if (!process.env.VERSION) {
 
 const cssThemes = {
     // CSS themes
-    "theme-legacy-light": "./node_modules/matrix-react-sdk/res/themes/legacy-light/css/legacy-light.pcss",
-    "theme-legacy-dark": "./node_modules/matrix-react-sdk/res/themes/legacy-dark/css/legacy-dark.pcss",
-    "theme-light": "./node_modules/matrix-react-sdk/res/themes/light/css/light.pcss",
+    "theme-legacy-light": "./src/matrix-react-sdk/res/themes/legacy-light/css/legacy-light.pcss",
+    "theme-legacy-dark": "./src/matrix-react-sdk/res/themes/legacy-dark/css/legacy-dark.pcss",
+    "theme-light": "./src/matrix-react-sdk/res/themes/light/css/light.pcss",
     "theme-light-high-contrast":
-        "./node_modules/matrix-react-sdk/res/themes/light-high-contrast/css/light-high-contrast.pcss",
-    "theme-dark": "./node_modules/matrix-react-sdk/res/themes/dark/css/dark.pcss",
-    "theme-light-custom": "./node_modules/matrix-react-sdk/res/themes/light-custom/css/light-custom.pcss",
-    "theme-dark-custom": "./node_modules/matrix-react-sdk/res/themes/dark-custom/css/dark-custom.pcss",
+        "./src/matrix-react-sdk/res/themes/light-high-contrast/css/light-high-contrast.pcss",
+    "theme-dark": "./src/matrix-react-sdk/res/themes/dark/css/dark.pcss",
+    "theme-light-custom": "./src/matrix-react-sdk/res/themes/light-custom/css/light-custom.pcss",
+    "theme-dark-custom": "./src/matrix-react-sdk/res/themes/dark-custom/css/dark-custom.pcss",
 };
 
 function getActiveThemes() {
@@ -115,7 +115,6 @@ module.exports = (env, argv) => {
     // Resolve the directories for the react-sdk and js-sdk for later use. We resolve these early, so we
     // don't have to call them over and over. We also resolve to the package.json instead of the src
     // directory, so we don't have to rely on an index.js or similar file existing.
-    const reactSdkSrcDir = path.resolve(require.resolve("matrix-react-sdk/package.json"), "..", "src");
     const jsSdkSrcDir = path.resolve(require.resolve("matrix-js-sdk/package.json"), "..", "src");
 
     const ACTIVE_THEMES = getActiveThemes();
@@ -145,7 +144,7 @@ module.exports = (env, argv) => {
             bundle: "./src/vector/index.ts",
             mobileguide: "./src/vector/mobile_guide/index.ts",
             jitsi: "./src/vector/jitsi/index.ts",
-            usercontent: "./node_modules/matrix-react-sdk/src/usercontent/index.ts",
+            usercontent: "./src/matrix-react-sdk/src/usercontent/index.ts",
             ...(useHMR ? {} : cssThemes),
         },
 
@@ -200,14 +199,14 @@ module.exports = (env, argv) => {
                 // alias any requires to the react module to the one in our path,
                 // otherwise we tend to get the react source included twice when
                 // using `npm link` / `yarn link`.
-                "react": path.resolve(__dirname, "node_modules/react"),
-                "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-
-                // Same goes for js/react-sdk - we don't need two copies.
-                "matrix-js-sdk": path.resolve(__dirname, "node_modules/matrix-js-sdk"),
-                "matrix-react-sdk": path.resolve(__dirname, "node_modules/matrix-react-sdk"),
-                // and sanitize-html
-                "sanitize-html": path.resolve(__dirname, "node_modules/sanitize-html"),
+                // "react": path.resolve(__dirname, "node_modules/react"),
+                // "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+                //
+                // // Same goes for js/react-sdk - we don't need two copies.
+                // "matrix-js-sdk": path.resolve(__dirname, "node_modules/matrix-js-sdk"),
+                "matrix-react-sdk": path.resolve(__dirname, "src/matrix-react-sdk"),
+                // // and sanitize-html
+                // "sanitize-html": path.resolve(__dirname, "node_modules/sanitize-html"),
 
                 // Define a variable so the i18n stuff can load
                 "$webapp": path.resolve(__dirname, "webapp"),
@@ -257,7 +256,6 @@ module.exports = (env, argv) => {
                         // run them through babel. Because the path tested is the resolved, absolute
                         // path, these could be anywhere thanks to yarn link. We must also not
                         // include node modules inside these modules, so we add 'src'.
-                        if (f.startsWith(reactSdkSrcDir)) return true;
                         if (f.startsWith(jsSdkSrcDir)) return true;
 
                         // but we can't run all of our dependencies through babel (many of them still
@@ -645,7 +643,7 @@ module.exports = (env, argv) => {
 
             // This is the usercontent sandbox's entry point (separate for iframing)
             new HtmlWebpackPlugin({
-                template: "./node_modules/matrix-react-sdk/src/usercontent/index.html",
+                template: "./src/matrix-react-sdk/src/usercontent/index.html",
                 filename: "usercontent/index.html",
                 minify: false,
                 chunks: ["usercontent"],
