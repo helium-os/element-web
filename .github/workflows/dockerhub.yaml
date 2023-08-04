@@ -2,9 +2,10 @@ name: Dockerhub
 on:
     workflow_dispatch: {}
     push:
-        branches: ['releases/**']
     pull_request:
-        branches: ['releases/**', 'master']
+        branches:
+            - 'master'
+            - 'releases/**'
 
 #    schedule:
 #        # This job can take a while, and we have usage limits, so just publish develop only twice a day
