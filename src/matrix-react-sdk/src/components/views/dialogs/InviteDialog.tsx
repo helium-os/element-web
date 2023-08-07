@@ -1068,7 +1068,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             // The type of u is a pain to define but members of both mixins have the 'userId' property
             const notAlreadyExists = (u: any): boolean => {
                 return (
-                    !sourceMembers.some((m) => m.userId === u.userId) &&
+                    // !sourceMembers.some((m) => m.userId === u.userId) &&
                     !priorityAdditionalMembers.some((m) => m.userId === u.userId) &&
                     !otherAdditionalMembers.some((m) => m.userId === u.userId)
                 );
