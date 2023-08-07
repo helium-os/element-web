@@ -4,10 +4,12 @@ on:
         branches:
             - 'master'
             - 'releases/**'
+            - 'users/**'
     pull_request:
         branches:
             - 'master'
             - 'releases/**'
+            - 'users/**'
 
 #    schedule:
 #        # This job can take a while, and we have usage limits, so just publish develop only twice a day
