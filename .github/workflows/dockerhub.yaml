@@ -2,6 +2,9 @@ name: Dockerhub
 on:
     workflow_dispatch: {}
     push:
+        branches:
+            - 'master'
+            - 'releases/**'
     pull_request:
         branches:
             - 'master'
