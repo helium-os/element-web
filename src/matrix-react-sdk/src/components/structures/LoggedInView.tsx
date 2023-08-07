@@ -730,7 +730,7 @@ class LoggedInView extends React.Component<IProps, IState> {
                             <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
                             <nav className="mx_LeftPanel_wrapper">
                                 <BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />
-                                <SpacePanel />
+                                {/*<SpacePanel />*/}
                                 <BackdropPanel backgroundImage={this.state.backgroundImage} />
                                 <div
                                     className="mx_LeftPanel_wrapper--user"

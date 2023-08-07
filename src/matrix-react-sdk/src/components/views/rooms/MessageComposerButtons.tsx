@@ -129,25 +129,26 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
     return (
         <UploadButtonContextProvider roomId={roomId} relation={props.relation}>
             {mainButtons}
-            {moreButtons.length > 0 && (
-                <AccessibleTooltipButton
-                    className={moreOptionsClasses}
-                    onClick={props.toggleButtonMenu}
-                    title={_t("More options")}
-                />
-            )}
-            {props.isMenuOpen && (
-                <IconizedContextMenu
-                    onFinished={props.toggleButtonMenu}
-                    {...props.menuPosition}
-                    wrapperClassName="mx_MessageComposer_Menu"
-                    compact={true}
-                >
-                    <OverflowMenuContext.Provider value={props.toggleButtonMenu}>
-                        <IconizedContextMenuOptionList>{moreButtons}</IconizedContextMenuOptionList>
-                    </OverflowMenuContext.Provider>
-                </IconizedContextMenu>
-            )}
+            {/*暂时隐藏更多功能*/}
+            {/*{moreButtons.length > 0 && (*/}
+            {/*    <AccessibleTooltipButton*/}
+            {/*        className={moreOptionsClasses}*/}
+            {/*        onClick={props.toggleButtonMenu}*/}
+            {/*        title={_t("More options")}*/}
+            {/*    />*/}
+            {/*)}*/}
+            {/*{props.isMenuOpen && (*/}
+            {/*    <IconizedContextMenu*/}
+            {/*        onFinished={props.toggleButtonMenu}*/}
+            {/*        {...props.menuPosition}*/}
+            {/*        wrapperClassName="mx_MessageComposer_Menu"*/}
+            {/*        compact={true}*/}
+            {/*    >*/}
+            {/*        <OverflowMenuContext.Provider value={props.toggleButtonMenu}>*/}
+            {/*            <IconizedContextMenuOptionList>{moreButtons}</IconizedContextMenuOptionList>*/}
+            {/*        </OverflowMenuContext.Provider>*/}
+            {/*    </IconizedContextMenu>*/}
+            {/*)}*/}
         </UploadButtonContextProvider>
     );
 };
