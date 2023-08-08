@@ -1475,11 +1475,11 @@ const BasicUserInfo: React.FC<{
         <div className="mx_UserInfo_container">
             <h3>{_t("Security")}</h3>
             <p>{text}</p>
-            {verifyButton}
-            {cryptoEnabled && (
-                <DevicesSection loading={showDeviceListSpinner} devices={devices} userId={member.userId} />
-            )}
-            {editDevices}
+            {/*{verifyButton}*/}
+            {/*{cryptoEnabled && (*/}
+            {/*    <DevicesSection loading={showDeviceListSpinner} devices={devices} userId={member.userId} />*/}
+            {/*)}*/}
+            {/*{editDevices}*/}
         </div>
     );
 
@@ -1584,18 +1584,18 @@ export const UserInfoHeader: React.FC<{
                 <div className="mx_UserInfo_profile">
                     <div>
                         <h2>
-                            {e2eIcon}
+                            {/*{e2eIcon}*/}
                             <span title={displayName} aria-label={displayName} dir="auto">
                                 {displayName}
                             </span>
                         </h2>
                     </div>
-                    <div className="mx_UserInfo_profile_mxid">
-                        {UserIdentifierCustomisations.getDisplayUserIdentifier?.(member.userId, {
-                            roomId,
-                            withDisplayName: true,
-                        })}
-                    </div>
+                    {/*<div className="mx_UserInfo_profile_mxid">*/}
+                    {/*    {UserIdentifierCustomisations.getDisplayUserIdentifier?.(member.userId, {*/}
+                    {/*        roomId,*/}
+                    {/*        withDisplayName: true,*/}
+                    {/*    })}*/}
+                    {/*</div>*/}
                     <div className="mx_UserInfo_profileStatus">{presenceLabel}</div>
                 </div>
             </div>
