@@ -3,3 +3,11 @@ src/vector/modernizr.js
 src/component-index.js
 # Auto-generated file
 src/modules.ts
+
+
+src/matrix-react-sdk/test/end-to-end-tests/node_modules/
+src/matrix-react-sdk/test/end-to-end-tests/element/
+src/matrix-react-sdk/test/end-to-end-tests/synapse/
+src/matrix-react-sdk/test/end-to-end-tests/lib/
+# Legacy skinning file that some people might still have
+src/matrix-react-sdk/src/component-index.js

@@ -46,6 +46,8 @@ logger.log(`Application is running in ${process.env.NODE_ENV} mode`);
 
 window.matrixLogger = logger;
 
+const isDev = process.env.NODE_ENV === "development";
+
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
 // click back to the client having registered.
@@ -88,6 +90,25 @@ function onTokenLoginCompleted(): void {
     window.history.replaceState(null, "", url.href);
 }
 
+function getOrgId(): string {
+    const { hostname } = window.location;
+    return hostname.split(".").pop();
+}
+
+function getToken(): string {
+    const cookies = document.cookie.split(";");
+    const name = "access_token=";
+    let token = "";
+    for (let i = 0; i < cookies.length; i++) {
+        const item = cookies[i].trim();
+        if (item.indexOf(name) === 0) {
+            token = item.substring(name.length, item.length);
+        }
+    }
+    logger.log("cookies", cookies, " access_token", token);
+    return token;
+}
+
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
     initRouting();
     const platform = PlatformPeg.get();
@@ -101,6 +122,13 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     // Don't bother loading the app until the config is verified
     const config = await verifyServerConfig();
+
+    const orgId = getOrgId();
+    console.log('orgId', orgId);
+    if (!isDev && orgId) {
+    // if (orgId) {
+        config.default_server_config["m.homeserver"].base_url = `https://chat.${orgId}`;
+    }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
     // Before we continue, let's see if we're supposed to do an SSO redirect
@@ -129,7 +157,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     }
 
     const defaultDeviceName = snakedConfig.get("default_device_display_name") ?? platform.getDefaultDeviceDisplayName();
-
+    console.log('----config', config);
     return (
         <MatrixChat
             onNewScreen={onNewScreen}
@@ -141,12 +169,14 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             onTokenLoginCompleted={onTokenLoginCompleted}
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
             defaultDeviceDisplayName={defaultDeviceName}
+            jwtToken={getToken()}
         />
     );
 }
 
 async function verifyServerConfig(): Promise<IConfigOptions> {
     let validatedConfig;
+    let orgId;
     try {
         logger.log("Verifying homeserver configuration");
 
@@ -212,6 +242,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
+        orgId = getOrgId();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
@@ -228,6 +259,11 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
+    if (!isDev && orgId) {
+    // if (orgId) {
+        validatedConfig.hsUrl = `https://chat.${orgId}`;
+        validatedConfig.hsName = `chat.${orgId}`;
+    }
 
     // Just in case we ever have to debug this
     logger.log("Using homeserver config:", validatedConfig);

@@ -20,7 +20,7 @@ then
 fi
 
 echo "Linking js-sdk"
-git clone --depth 1 --branch $JS_SDK_BRANCH "$JS_SDK_REPO" js-sdk
+git clone -b $JS_SDK_BRANCH --single-branch --depth 1 --branch $JS_SDK_TAG "$JS_SDK_REPO" js-sdk
 cd js-sdk
 yarn link
 yarn --network-timeout=100000 install

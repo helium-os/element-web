@@ -3,18 +3,19 @@ FROM --platform=$BUILDPLATFORM node:16-bullseye as builder
 
 # Support custom branches of the react-sdk and js-sdk. This also helps us build
 # images of element-web develop.
-ARG USE_CUSTOM_SDKS=false
-ARG REACT_SDK_REPO="https://github.com/matrix-org/matrix-react-sdk.git"
-ARG REACT_SDK_BRANCH="master"
-ARG JS_SDK_REPO="https://github.com/matrix-org/matrix-js-sdk.git"
-ARG JS_SDK_BRANCH="master"
+# ARG USE_CUSTOM_SDKS=true
+# ARG REACT_SDK_REPO="https://github.com/helium-os/matrix-react-sdk.git"
+# ARG REACT_SDK_BRANCH="users/tianhq/login"
+# ARG JS_SDK_REPO="https://github.com/matrix-org/matrix-js-sdk.git"
+# ARG JS_SDK_BRANCH="master"
+# ARG JS_SDK_TAG="v26.2.0"
 
 RUN apt-get update && apt-get install -y git dos2unix
 
 WORKDIR /src
 
 COPY . /src
-RUN dos2unix /src/scripts/docker-link-repos.sh && bash /src/scripts/docker-link-repos.sh
+# RUN dos2unix /src/scripts/docker-link-repos.sh && bash /src/scripts/docker-link-repos.sh
 RUN yarn --network-timeout=100000 install
 
 RUN dos2unix /src/scripts/docker-package.sh && bash /src/scripts/docker-package.sh

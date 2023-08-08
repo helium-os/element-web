@@ -27,3 +27,29 @@ electron/pub
 # Auto-generated file
 /src/modules.ts
 /build_config.yaml
+
+
+
+# matrix-react-sdk
+/src/matrix-react-sdk/coverage
+/src/matrix-react-sdk/lib
+
+# version file and tarball created by `npm pack` / `yarn pack`
+/git-revision.txt
+/matrix-react-sdk-*.tgz
+
+/.idea
+# Legacy skinning file that some people might still have
+/src/matrix-react-sdk/src/component-index.js
+
+*.tmp
+
+/src/matrix-react-sdk/cypress/videos
+/src/matrix-react-sdk/cypress/downloads
+/src/matrix-react-sdk/cypress/screenshots
+/src/matrix-react-sdk/cypress/synapselogs
+/src/matrix-react-sdk/cypress/dendritelogs
+# These could have files in them but don't currently
+# Cypress will still auto-create them though...
+/src/matrix-react-sdk/cypress/performance
+
