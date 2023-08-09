@@ -51,7 +51,7 @@ import SettingsStore from "../../../settings/SettingsStore";
 import DevtoolsDialog from "../dialogs/DevtoolsDialog";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
-import { UIComponent } from "../../../settings/UIFeature";
+import {UIComponent, UIFeature} from "../../../settings/UIFeature";
 
 interface IProps extends IContextMenuProps {
     room: Room;
@@ -165,49 +165,52 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
             />
         );
 
-        const echoChamber = EchoChamber.forRoom(room);
-        let notificationLabel: string;
-        let iconClassName: string;
-        switch (echoChamber.notificationVolume) {
-            case RoomNotifState.AllMessages:
-                notificationLabel = _t("Default");
-                iconClassName = "mx_RoomTile_iconNotificationsDefault";
-                break;
-            case RoomNotifState.AllMessagesLoud:
-                notificationLabel = _t("All messages");
-                iconClassName = "mx_RoomTile_iconNotificationsAllMessages";
-                break;
-            case RoomNotifState.MentionsOnly:
-                notificationLabel = _t("Mentions only");
-                iconClassName = "mx_RoomTile_iconNotificationsMentionsKeywords";
-                break;
-            case RoomNotifState.Mute:
-                notificationLabel = _t("Mute");
-                iconClassName = "mx_RoomTile_iconNotificationsNone";
-                break;
+
+        if (SettingsStore.getValue(UIFeature.RoomNotificationsSettings)) {
+            const echoChamber = EchoChamber.forRoom(room);
+            let notificationLabel: string;
+            let iconClassName: string;
+            switch (echoChamber.notificationVolume) {
+                case RoomNotifState.AllMessages:
+                    notificationLabel = _t("Default");
+                    iconClassName = "mx_RoomTile_iconNotificationsDefault";
+                    break;
+                case RoomNotifState.AllMessagesLoud:
+                    notificationLabel = _t("All messages");
+                    iconClassName = "mx_RoomTile_iconNotificationsAllMessages";
+                    break;
+                case RoomNotifState.MentionsOnly:
+                    notificationLabel = _t("Mentions only");
+                    iconClassName = "mx_RoomTile_iconNotificationsMentionsKeywords";
+                    break;
+                case RoomNotifState.Mute:
+                    notificationLabel = _t("Mute");
+                    iconClassName = "mx_RoomTile_iconNotificationsNone";
+                    break;
+            }
+
+            notificationOption = (
+                <IconizedContextMenuOption
+                    onClick={(ev: ButtonEvent) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+
+                        dis.dispatch({
+                            action: "open_room_settings",
+                            room_id: room.roomId,
+                            initial_tab_id: ROOM_NOTIFICATIONS_TAB,
+                        });
+                        onFinished();
+
+                        PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuNotificationsItem", ev);
+                    }}
+                    label={_t("Notifications")}
+                    iconClassName={iconClassName}
+                >
+                    <span className="mx_IconizedContextMenu_sublabel">{notificationLabel}</span>
+                </IconizedContextMenuOption>
+            );
         }
-
-        notificationOption = (
-            <IconizedContextMenuOption
-                onClick={(ev: ButtonEvent) => {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-
-                    dis.dispatch({
-                        action: "open_room_settings",
-                        room_id: room.roomId,
-                        initial_tab_id: ROOM_NOTIFICATIONS_TAB,
-                    });
-                    onFinished();
-
-                    PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuNotificationsItem", ev);
-                }}
-                label={_t("Notifications")}
-                iconClassName={iconClassName}
-            >
-                <span className="mx_IconizedContextMenu_sublabel">{notificationLabel}</span>
-            </IconizedContextMenuOption>
-        );
     }
 
     let peopleOption: JSX.Element | undefined;
@@ -250,7 +253,7 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     }
 
     let filesOption: JSX.Element | undefined;
-    if (!isVideoRoom) {
+    if (!isVideoRoom && SettingsStore.getValue(UIFeature.RoomFile)) {
         filesOption = (
             <IconizedContextMenuOption
                 onClick={(ev: ButtonEvent) => {
@@ -309,7 +312,7 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     }
 
     let exportChatOption: JSX.Element | undefined;
-    if (!isVideoRoom) {
+    if (!isVideoRoom && SettingsStore.getValue(UIFeature.RoomExportChat)) {
         exportChatOption = (
             <IconizedContextMenuOption
                 onClick={(ev: ButtonEvent) => {

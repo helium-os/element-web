@@ -178,6 +178,7 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
             powerLabel = <div className="mx_EntityTile_power">{powerText}</div>;
         }
 
+        const showE2eIcon = false;
         let e2eIcon;
         const { e2eStatus } = this.props;
         if (e2eStatus) {
@@ -193,12 +194,12 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
             <div>
                 <AccessibleButton
                     className={classNames(mainClassNames)}
-                    title={this.props.title}
+                    // title={this.props.title}
                     onClick={this.props.onClick}
                 >
                     <div className="mx_EntityTile_avatar">
                         {av}
-                        {e2eIcon}
+                        {showE2eIcon && e2eIcon}
                     </div>
                     {nameEl}
                     {powerLabel}
