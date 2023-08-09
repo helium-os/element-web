@@ -25,7 +25,7 @@ import { AsyncStoreWithClient } from "./AsyncStoreWithClient";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { MatrixClientPeg } from "../MatrixClientPeg";
 import { _t } from "../languageHandler";
-import { mediaFromMxc } from "../customisations/Media";
+import {getHttpUrlFromMxc} from "../customisations/Media";
 
 interface IState {
     displayName?: string;
@@ -93,13 +93,7 @@ export class OwnProfileStore extends AsyncStoreWithClient<IState> {
      * @returns The HTTP URL of the user's avatar
      */
     public getHttpAvatarUrl(size = 0): string | null {
-        if (!this.avatarMxc) return null;
-        const media = mediaFromMxc(this.avatarMxc);
-        if (!size || size <= 0) {
-            return media.srcHttp;
-        } else {
-            return media.getSquareThumbnailHttp(size);
-        }
+        return getHttpUrlFromMxc(this.avatarMxc, size);
     }
 
     protected async onNotReady(): Promise<void> {

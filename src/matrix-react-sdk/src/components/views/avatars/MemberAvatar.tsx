@@ -22,7 +22,7 @@ import { ResizeMethod } from "matrix-js-sdk/src/@types/partials";
 import dis from "../../../dispatcher/dispatcher";
 import { Action } from "../../../dispatcher/actions";
 import BaseAvatar from "./BaseAvatar";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getSourceHttpUrlFromMxc} from "../../../customisations/Media";
 import { CardContext } from "../right_panel/context";
 import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
 import { useRoomMemberProfile } from "../../../hooks/room/useRoomMemberProfile";
@@ -69,11 +69,7 @@ export default function MemberAvatar({
     let imageUrl: string | null | undefined;
     if (member?.name) {
         if (member.getMxcAvatarUrl()) {
-            imageUrl = mediaFromMxc(member.getMxcAvatarUrl() ?? "").getThumbnailOfSourceHttp(
-                width,
-                height,
-                resizeMethod,
-            );
+            imageUrl = getSourceHttpUrlFromMxc(member.getMxcAvatarUrl(), width, height, resizeMethod);
         }
 
         if (!title) {

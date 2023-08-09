@@ -164,3 +164,29 @@ export function mediaFromContent(content: Partial<IMediaEventContent>, client?: 
 export function mediaFromMxc(mxc?: string, client?: MatrixClient): Media {
     return mediaFromContent({ url: mxc }, client);
 }
+
+export function getHttpUrlFromMxc(url, size = 0): string | null {
+    if (!url) return null;
+    if (url.includes('mxc://')) {
+        const media = mediaFromMxc(url);
+        if (!size || size <= 0) {
+            return media.srcHttp;
+        } else {
+            return media.getSquareThumbnailHttp(size);
+        }
+    }
+    return url;
+}
+
+export function getSourceHttpUrlFromMxc(url, width, height, resizeMethod): string | null {
+    if (!url) return null;
+    if (url.includes('mxc://')) {
+        const media = mediaFromMxc(url);
+        if (width !== undefined && height !== undefined) {
+            return media.getThumbnailOfSourceHttp(width, height, resizeMethod);
+        }
+        return media.srcHttp;
+
+    }
+    return url;
+}
