@@ -42,7 +42,7 @@ import {
     RovingTabIndexProvider,
     Type,
 } from "../../../../accessibility/RovingTabIndex";
-import { mediaFromMxc } from "../../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../../customisations/Media";
 import { Action } from "../../../../dispatcher/actions";
 import defaultDispatcher from "../../../../dispatcher/dispatcher";
 import { ViewRoomPayload } from "../../../../dispatcher/payloads/ViewRoomPayload";
@@ -818,11 +818,7 @@ const SpotlightDialog: React.FC<IProps> = ({ initialText = "", initialFilter = n
                                     <BaseAvatar
                                         name={room.name}
                                         idName={room.room_id}
-                                        url={
-                                            room.avatar_url
-                                                ? mediaFromMxc(room.avatar_url).getSquareThumbnailHttp(AVATAR_SIZE)
-                                                : null
-                                        }
+                                        url={getHttpUrlFromMxc(room.avatar_url, AVATAR_SIZE)}
                                         width={AVATAR_SIZE}
                                         height={AVATAR_SIZE}
                                     />

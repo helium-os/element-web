@@ -23,7 +23,7 @@ import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { _t } from "../../../languageHandler";
 import Modal from "../../../Modal";
 import AccessibleButton from "../elements/AccessibleButton";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import RoomAvatar from "../avatars/RoomAvatar";
 import ImageView from "../elements/ImageView";
 interface IProps {
@@ -35,7 +35,7 @@ export default class RoomAvatarEvent extends React.Component<IProps> {
     private onAvatarClick = (): void => {
         const cli = MatrixClientPeg.get();
         const ev = this.props.mxEvent;
-        const httpUrl = mediaFromMxc(ev.getContent().url).srcHttp;
+        const httpUrl = getHttpUrlFromMxc(ev.getContent().url);
         if (!httpUrl) return;
 
         const room = cli.getRoom(this.props.mxEvent.getRoomId());

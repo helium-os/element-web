@@ -27,7 +27,7 @@ import Modal from "./Modal";
 import { _t } from "./languageHandler";
 import InviteDialog from "./components/views/dialogs/InviteDialog";
 import BaseAvatar from "./components/views/avatars/BaseAvatar";
-import { mediaFromMxc } from "./customisations/Media";
+import {getHttpUrlFromMxc} from "./customisations/Media";
 import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import { InviteKind } from "./components/views/dialogs/InviteDialogTypes";
 import { Member } from "./utils/direct-messages";
@@ -173,10 +173,7 @@ export function showAnyInviteErrors(
                                 <div key={addr} className="mx_InviteDialog_tile mx_InviteDialog_tile--inviterError">
                                     <div className="mx_InviteDialog_tile_avatarStack">
                                         <BaseAvatar
-                                            url={
-                                                (avatarUrl && mediaFromMxc(avatarUrl).getSquareThumbnailHttp(24)) ??
-                                                undefined
-                                            }
+                                            url={getHttpUrlFromMxc(avatarUrl, 24)}
                                             name={name!}
                                             idName={user?.userId}
                                             width={36}

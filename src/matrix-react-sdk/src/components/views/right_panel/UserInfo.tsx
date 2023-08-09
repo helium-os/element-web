@@ -64,7 +64,7 @@ import QuestionDialog from "../dialogs/QuestionDialog";
 import ConfirmUserActionDialog from "../dialogs/ConfirmUserActionDialog";
 import RoomAvatar from "../avatars/RoomAvatar";
 import RoomName from "../elements/RoomName";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import UIStore from "../../../stores/UIStore";
 import { ComposerInsertPayload } from "../../../dispatcher/payloads/ComposerInsertPayload";
 import ConfirmSpaceUserActionDialog from "../dialogs/ConfirmSpaceUserActionDialog";
@@ -1517,7 +1517,7 @@ export const UserInfoHeader: React.FC<{
             : (member as User).avatarUrl;
         if (!avatarUrl) return;
 
-        const httpUrl = mediaFromMxc(avatarUrl).srcHttp;
+        const httpUrl = getHttpUrlFromMxc(avatarUrl);
         const params = {
             src: httpUrl,
             name: (member as RoomMember).name || (member as User).displayName,

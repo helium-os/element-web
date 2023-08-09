@@ -23,7 +23,7 @@ import { EventType, MsgType } from "matrix-js-sdk/src/@types/event";
 import { logger } from "matrix-js-sdk/src/logger";
 
 import Exporter from "./Exporter";
-import { mediaFromMxc } from "../../customisations/Media";
+import {getSourceHttpUrlFromMxc} from "../../customisations/Media";
 import { Layout } from "../../settings/enums/Layout";
 import { shouldFormContinuation } from "../../components/structures/MessagePanel";
 import { formatFullDateNoDayNoTime, wantsDateSeparator } from "../../DateUtils";
@@ -246,7 +246,7 @@ export default class HTMLExporter extends Exporter {
     protected getAvatarURL(event: MatrixEvent): string | null {
         const member = event.sender;
         const avatarUrl = member?.getMxcAvatarUrl();
-        return avatarUrl ? mediaFromMxc(avatarUrl).getThumbnailOfSourceHttp(30, 30, "crop") : null;
+        return getSourceHttpUrlFromMxc(avatarUrl, 30, 30, "crop");
     }
 
     protected async saveAvatarIfNeeded(event: MatrixEvent): Promise<void> {

@@ -41,7 +41,7 @@ import { hideToast as hideNotificationsToast } from "./toasts/DesktopNotificatio
 import { SettingLevel } from "./settings/SettingLevel";
 import { isPushNotifyDisabled } from "./settings/controllers/NotificationControllers";
 import UserActivity from "./UserActivity";
-import { mediaFromMxc } from "./customisations/Media";
+import {getHttpUrlFromMxc} from "./customisations/Media";
 import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import LegacyCallHandler from "./LegacyCallHandler";
 import VoipUserMapper from "./VoipUserMapper";
@@ -198,7 +198,7 @@ class NotifierClass {
         // Ideally in here we could use MSC1310 to detect the type of file, and reject it.
 
         return {
-            url: mediaFromMxc(content.url).srcHttp,
+            url: getHttpUrlFromMxc(content.url),
             name: content.name,
             type: content.type,
             size: content.size,

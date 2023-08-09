@@ -167,7 +167,7 @@ export function mediaFromMxc(mxc?: string, client?: MatrixClient): Media {
 
 export function getHttpUrlFromMxc(url, size = 0): string | null {
     if (!url) return null;
-    if (url.includes('mxc://')) {
+    if (url.startsWith('mxc://')) {
         const media = mediaFromMxc(url);
         if (!size || size <= 0) {
             return media.srcHttp;
@@ -178,9 +178,9 @@ export function getHttpUrlFromMxc(url, size = 0): string | null {
     return url;
 }
 
-export function getSourceHttpUrlFromMxc(url, width, height, resizeMethod): string | null {
+export function getSourceHttpUrlFromMxc(url, width, height, resizeMethod?): string | null {
     if (!url) return null;
-    if (url.includes('mxc://')) {
+    if (url.startsWith('mxc://')) {
         const media = mediaFromMxc(url);
         if (width !== undefined && height !== undefined) {
             return media.getThumbnailOfSourceHttp(width, height, resizeMethod);

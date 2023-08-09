@@ -21,7 +21,7 @@ import { logger } from "matrix-js-sdk/src/logger";
 
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { _t } from "../../../languageHandler";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import VerificationComplete from "../verification/VerificationComplete";
 import VerificationCancelled from "../verification/VerificationCancelled";
 import BaseAvatar from "../avatars/BaseAvatar";
@@ -149,7 +149,7 @@ export default class IncomingSasDialog extends React.Component<IProps, IState> {
         let profile;
         const oppProfile = this.state.opponentProfile;
         if (oppProfile) {
-            const url = oppProfile.avatar_url ? mediaFromMxc(oppProfile.avatar_url).getSquareThumbnailHttp(48) : null;
+            const url = getHttpUrlFromMxc(oppProfile.avatar_url, 48);
             profile = (
                 <div className="mx_IncomingSasDialog_opponentProfile">
                     <BaseAvatar

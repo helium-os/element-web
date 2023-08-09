@@ -18,7 +18,7 @@ import React from "react";
 import { RoomMember } from "matrix-js-sdk/src/matrix";
 
 import emailPillAvatar from "../../../../res/img/icon-email-pill-avatar.svg";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import { Member, ThreepidMember } from "../../../utils/direct-messages";
 import BaseAvatar from "./BaseAvatar";
 
@@ -46,7 +46,7 @@ export function SearchResultAvatar({ user, size }: SearchResultAvatarProps): JSX
         return (
             <BaseAvatar
                 className="mx_SearchResultAvatar"
-                url={avatarUrl ? mediaFromMxc(avatarUrl).getSquareThumbnailHttp(size) : null}
+                url={getHttpUrlFromMxc(avatarUrl, size)}
                 name={user.name}
                 idName={user.userId}
                 width={size}

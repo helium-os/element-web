@@ -19,7 +19,7 @@ import classNames from "classnames";
 
 import { IApp } from "../../../stores/WidgetStore";
 import BaseAvatar, { BaseAvatarType } from "./BaseAvatar";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 
 interface IProps extends Omit<ComponentProps<BaseAvatarType>, "name" | "url" | "urls" | "height" | "width"> {
     app: IApp;
@@ -46,7 +46,7 @@ const WidgetAvatar: React.FC<IProps> = ({ app, className, width = 20, height = 2
             name={app.id}
             className={classNames("mx_WidgetAvatar", className)}
             // MSC2765
-            url={app.avatar_url ? mediaFromMxc(app.avatar_url).getSquareThumbnailHttp(20) : null}
+            url={getHttpUrlFromMxc(app.avatar_url, 20)}
             urls={iconUrls}
             width={width}
             height={height}

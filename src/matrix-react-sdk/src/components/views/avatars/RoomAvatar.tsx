@@ -27,7 +27,7 @@ import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import Modal from "../../../Modal";
 import * as Avatar from "../../../Avatar";
 import DMRoomMap from "../../../utils/DMRoomMap";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getSourceHttpUrlFromMxc} from "../../../customisations/Media";
 import { IOOBData } from "../../../stores/ThreepidInviteStore";
 import { LocalRoom } from "../../../models/LocalRoom";
 import { filterBoolean } from "../../../utils/arrays";
@@ -89,11 +89,7 @@ export default class RoomAvatar extends React.Component<IProps, IState> {
     private static getImageUrls(props: IProps): string[] {
         let oobAvatar: string | null = null;
         if (props.oobData.avatarUrl) {
-            oobAvatar = mediaFromMxc(props.oobData.avatarUrl).getThumbnailOfSourceHttp(
-                props.width,
-                props.height,
-                props.resizeMethod,
-            );
+            oobAvatar = getSourceHttpUrlFromMxc(props.oobData.avatarUrl, props.width, props.height, props.resizeMethod);
         }
 
         return filterBoolean([
