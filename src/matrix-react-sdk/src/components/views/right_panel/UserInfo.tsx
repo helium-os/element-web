@@ -1273,6 +1273,13 @@ const BasicUserInfo: React.FC<{
 
     // Check whether the user is ignored
     const [isIgnored, setIsIgnored] = useState(cli.isUserIgnored(member.userId));
+
+
+    const showVerifyButton = false;
+    const showDevices = false;
+    const showEditDevices = false;
+
+
     // Recheck if the user or client changes
     useEffect(() => {
         setIsIgnored(cli.isUserIgnored(member.userId));
@@ -1424,7 +1431,7 @@ const BasicUserInfo: React.FC<{
     const hasCrossSigningKeys = useHasCrossSigningKeys(cli, member as User, canVerify, setUpdating);
 
     const showDeviceListSpinner = devices === undefined;
-    if (canVerify) {
+    if (canVerify && showVerifyButton) {
         if (hasCrossSigningKeys !== undefined) {
             // Note: mx_UserInfo_verifyButton is for the end-to-end tests
             verifyButton = (
@@ -1453,7 +1460,7 @@ const BasicUserInfo: React.FC<{
     }
 
     let editDevices;
-    if (member.userId == cli.getUserId()) {
+    if (member.userId == cli.getUserId() && showEditDevices) {
         editDevices = (
             <div>
                 <AccessibleButton
@@ -1475,11 +1482,11 @@ const BasicUserInfo: React.FC<{
         <div className="mx_UserInfo_container">
             <h3>{_t("Security")}</h3>
             <p>{text}</p>
-            {/*{verifyButton}*/}
-            {/*{cryptoEnabled && (*/}
-            {/*    <DevicesSection loading={showDeviceListSpinner} devices={devices} userId={member.userId} />*/}
-            {/*)}*/}
-            {/*{editDevices}*/}
+            {verifyButton}
+            {showDevices && cryptoEnabled && (
+                <DevicesSection loading={showDeviceListSpinner} devices={devices} userId={member.userId} />
+            )}
+            {editDevices}
         </div>
     );
 
@@ -1576,6 +1583,8 @@ export const UserInfoHeader: React.FC<{
     const e2eIcon = e2eStatus ? <E2EIcon size={18} status={e2eStatus} isUser={true} /> : null;
 
     const displayName = (member as RoomMember).rawDisplayName;
+    const showUserId = false;
+    const showE2eIcon = false;
     return (
         <React.Fragment>
             {avatarElement}
@@ -1584,18 +1593,22 @@ export const UserInfoHeader: React.FC<{
                 <div className="mx_UserInfo_profile">
                     <div>
                         <h2>
-                            {/*{e2eIcon}*/}
+                            {showE2eIcon && e2eIcon}
                             <span title={displayName} aria-label={displayName} dir="auto">
                                 {displayName}
                             </span>
                         </h2>
                     </div>
-                    {/*<div className="mx_UserInfo_profile_mxid">*/}
-                    {/*    {UserIdentifierCustomisations.getDisplayUserIdentifier?.(member.userId, {*/}
-                    {/*        roomId,*/}
-                    {/*        withDisplayName: true,*/}
-                    {/*    })}*/}
-                    {/*</div>*/}
+                    {
+                        showUserId && (
+                            <div className="mx_UserInfo_profile_mxid">
+                                {UserIdentifierCustomisations.getDisplayUserIdentifier?.(member.userId, {
+                                    roomId,
+                                    withDisplayName: true,
+                                })}
+                            </div>
+                        )
+                    }
                     <div className="mx_UserInfo_profileStatus">{presenceLabel}</div>
                 </div>
             </div>

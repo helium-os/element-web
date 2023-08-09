@@ -40,6 +40,8 @@ import { chromeFileInputFix } from "../../../utils/BrowserWorkarounds";
 import IconizedContextMenu, { IconizedContextMenuOptionList } from "../context_menus/IconizedContextMenu";
 import { EmojiButton } from "./EmojiButton";
 import { useSettingValue } from "../../../hooks/useSettings";
+import SettingsStore from "../../../settings/SettingsStore";
+import {UIFeature} from "../../../settings/UIFeature";
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -129,26 +131,31 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
     return (
         <UploadButtonContextProvider roomId={roomId} relation={props.relation}>
             {mainButtons}
-            {/*暂时隐藏更多功能*/}
-            {/*{moreButtons.length > 0 && (*/}
-            {/*    <AccessibleTooltipButton*/}
-            {/*        className={moreOptionsClasses}*/}
-            {/*        onClick={props.toggleButtonMenu}*/}
-            {/*        title={_t("More options")}*/}
-            {/*    />*/}
-            {/*)}*/}
-            {/*{props.isMenuOpen && (*/}
-            {/*    <IconizedContextMenu*/}
-            {/*        onFinished={props.toggleButtonMenu}*/}
-            {/*        {...props.menuPosition}*/}
-            {/*        wrapperClassName="mx_MessageComposer_Menu"*/}
-            {/*        compact={true}*/}
-            {/*    >*/}
-            {/*        <OverflowMenuContext.Provider value={props.toggleButtonMenu}>*/}
-            {/*            <IconizedContextMenuOptionList>{moreButtons}</IconizedContextMenuOptionList>*/}
-            {/*        </OverflowMenuContext.Provider>*/}
-            {/*    </IconizedContextMenu>*/}
-            {/*)}*/}
+            {
+                SettingsStore.getValue(UIFeature.MessageComposerMoreBtn) && (
+                    <>
+                        {moreButtons.length > 0 && (
+                            <AccessibleTooltipButton
+                                className={moreOptionsClasses}
+                                onClick={props.toggleButtonMenu}
+                                title={_t("More options")}
+                            />
+                        )}
+                        {props.isMenuOpen && (
+                            <IconizedContextMenu
+                                onFinished={props.toggleButtonMenu}
+                                {...props.menuPosition}
+                                wrapperClassName="mx_MessageComposer_Menu"
+                                compact={true}
+                            >
+                                <OverflowMenuContext.Provider value={props.toggleButtonMenu}>
+                                    <IconizedContextMenuOptionList>{moreButtons}</IconizedContextMenuOptionList>
+                                </OverflowMenuContext.Provider>
+                            </IconizedContextMenu>
+                        )}
+                    </>
+                )
+            }
         </UploadButtonContextProvider>
     );
 };
