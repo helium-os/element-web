@@ -329,6 +329,11 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
     const pinningEnabled = useFeatureEnabled("feature_pinning");
     const pinCount = usePinnedEvents(pinningEnabled ? room : undefined)?.length;
 
+    const showFile = SettingsStore.getValue(UIFeature.RoomFile);
+    const showPollHistory = SettingsStore.getValue(UIFeature.RoomPollHistory);
+    const showExportChat = SettingsStore.getValue(UIFeature.RoomExportChat);
+    const showShareRoom = SettingsStore.getValue(UIFeature.RoomShare);
+
     return (
         <BaseCard header={header} className="mx_RoomSummaryCard" onClose={onClose}>
             <Group title={_t("About")} className="mx_RoomSummaryCard_aboutGroup">
@@ -336,12 +341,12 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
                     {_t("People")}
                     <span className="mx_BaseCard_Button_sublabel">{memberCount}</span>
                 </Button>
-                {!isVideoRoom && (
+                {showFile && !isVideoRoom && (
                     <Button className="mx_RoomSummaryCard_icon_files" onClick={onRoomFilesClick}>
                         {_t("Files")}
                     </Button>
                 )}
-                {!isVideoRoom && (
+                {showPollHistory && !isVideoRoom && (
                     <Button className="mx_RoomSummaryCard_icon_poll" onClick={onRoomPollHistoryClick}>
                         {_t("Poll history")}
                     </Button>
@@ -352,18 +357,22 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
                         {pinCount > 0 && <span className="mx_BaseCard_Button_sublabel">{pinCount}</span>}
                     </Button>
                 )}
-                {!isVideoRoom && (
+                {showExportChat && !isVideoRoom && (
                     <Button className="mx_RoomSummaryCard_icon_export" onClick={onRoomExportClick}>
                         {_t("Export chat")}
                     </Button>
                 )}
-                <Button
-                    data-testid="shareRoomButton"
-                    className="mx_RoomSummaryCard_icon_share"
-                    onClick={onShareRoomClick}
-                >
-                    {_t("Share room")}
-                </Button>
+                {
+                    showShareRoom && (
+                        <Button
+                            data-testid="shareRoomButton"
+                            className="mx_RoomSummaryCard_icon_share"
+                            onClick={onShareRoomClick}
+                        >
+                            {_t("Share room")}
+                        </Button>
+                    )
+                }
                 <Button className="mx_RoomSummaryCard_icon_settings" onClick={onRoomSettingsClick}>
                     {_t("Room settings")}
                 </Button>
