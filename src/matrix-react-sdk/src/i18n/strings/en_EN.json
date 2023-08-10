@@ -1336,6 +1336,7 @@
     "Give one or multiple users in this room more privileges": "Give one or multiple users in this room more privileges",
     "Search users in this room…": "Search users in this room…",
     "Apply": "Apply",
+    "Recall": "Recall",
     "Remove": "Remove",
     "This bridge was provisioned by <user />.": "This bridge was provisioned by <user />.",
     "This bridge is managed by <user />.": "This bridge is managed by <user />.",
