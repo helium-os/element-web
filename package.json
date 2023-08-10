@@ -233,6 +233,7 @@
         "webpack": "^4.46.0",
         "webpack-cli": "^3.3.12",
         "webpack-dev-server": "^3.11.2",
+        "webpack-merge": "^5.9.0",
         "worker-loader": "^3.0.0",
         "worklet-loader": "^2.0.0",
         "yaml": "^2.0.1",

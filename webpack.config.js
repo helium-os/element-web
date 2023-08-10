@@ -10,6 +10,9 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const HtmlWebpackInjectPreload = require("@principalstudio/html-webpack-inject-preload");
 const SentryCliPlugin = require("@sentry/webpack-plugin");
 const crypto = require("crypto");
+const { merge } = require('webpack-merge');
+
+const customConfig = merge(require('./config/config.ts'), process.env.ORG ? require(`./config/config.${process.env.ORG}.ts`) : {});
 
 // XXX: mangle Crypto::createHash to replace md4 with sha256, output.hashFunction is insufficient as multiple bits
 // of webpack hardcode md4. The proper fix it to upgrade to webpack 5.
@@ -693,18 +696,7 @@ module.exports = (env, argv) => {
             inline: true,
 
             proxy: {
-                "/heliumos-user-api": {
-                    target: "https://user.org2",
-                    changeOrigin: true,
-                    secure: false,
-                    pathRewrite: { "^/heliumos-user-api": "" },
-                },
-                "/heliumos-org-api": {
-                    target: "https://transaction-agent.org2",
-                    changeOrigin: true,
-                    secure: false,
-                    pathRewrite: { "^/heliumos-org-api": "" },
-                },
+                ...customConfig.proxy
             },
         },
     };
