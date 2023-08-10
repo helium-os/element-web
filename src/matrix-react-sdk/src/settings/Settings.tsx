@@ -1140,6 +1140,11 @@ export const SETTINGS: { [setting: string]: ISetting } = {
         supportedLevels: LEVELS_UI_FEATURE,
         default: true,
     },
+    // 是否允许用户修改自己的头像
+    [UIFeature.EditSelfAvatarEnable]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
     // 是否展示隐私安全中的安全备份面板
     [UIFeature.SecureBackupPanel]: {
         supportedLevels: LEVELS_UI_FEATURE,
