@@ -73,6 +73,7 @@ import { PipContainer } from "./PipContainer";
 import { monitorSyncedPushRules } from "../../utils/pushRules/monitorSyncedPushRules";
 import {accessSecretStorage} from "../../SecurityManager";
 import SetupEncryptionDialog from "../views/dialogs/security/SetupEncryptionDialog";
+import {UIFeature} from "../../settings/UIFeature";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -730,7 +731,9 @@ class LoggedInView extends React.Component<IProps, IState> {
                             <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
                             <nav className="mx_LeftPanel_wrapper">
                                 <BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />
-                                <SpacePanel />
+                                {
+                                    SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />
+                                }
                                 <BackdropPanel backgroundImage={this.state.backgroundImage} />
                                 <div
                                     className="mx_LeftPanel_wrapper--user"

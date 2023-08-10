@@ -33,8 +33,21 @@ export enum UIFeature {
     TimelineEnableRelativeDates = "UIFeature.timelineEnableRelativeDates",
     BulkUnverifiedSessionsReminder = "UIFeature.BulkUnverifiedSessionsReminder",
     EditSelfAvatarEnable = "UIFeature.EditSelfAvatarEnable",
+    LeftPanel = 'UIFeature.LeftPanel',
     SecureBackupPanel = "UIFeature.SecureBackupPanel",
     CrossSigningPanel = "UIFeature.CrossSigningPanel",
+    RoomFile = "UIFeature.Room.File",
+    RoomPollHistory = "UIFeature.Room.History",
+    RoomExportChat = "UIFeature.Room.ExportChat",
+    RoomShare = "UIFeature.Room.Share",
+    RoomAddressSettings = "UIFeature.Room.AddressSettings",
+    RoomOtherSettings = "UIFeature.Room.OtherSettings",
+    RoomAdvancedSettings = "UIFeature.Room.AdvancedSettings",
+    RoomSecurityAndPrivacySettings = "UIFeature.Room.SecurityAndPrivacySettings",
+    RoomRolesAndPermissionsSettings = "UIFeature.Room.RolesAndPermissionsSettings",
+    RoomPollHistorySettings = "UIFeature.Room.PollHistorySettings",
+    RoomNotificationsSettings = "UIFeature.Room.NotificationsSettings",
+    MessageComposerMoreBtn = "UIFeature.Message.ComposerMoreBtn",
 }
 
 export enum UIComponent {

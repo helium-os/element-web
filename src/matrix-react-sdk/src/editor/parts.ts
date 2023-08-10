@@ -669,7 +669,8 @@ export class PartCreator {
         if (!SettingsStore.getValue("MessageComposerInput.insertTrailingColon")) {
             insertTrailingCharacter = false;
         }
-        const postfix = this.plain(insertTrailingCharacter ? ": " : " ");
+        // const postfix = this.plain(insertTrailingCharacter ? ": " : " ");
+        const postfix = this.plain(" ");
         return [pill, postfix];
     }
 }

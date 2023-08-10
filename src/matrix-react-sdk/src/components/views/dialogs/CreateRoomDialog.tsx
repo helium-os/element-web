@@ -134,9 +134,9 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
         const action = getKeyBindingsManager().getAccessibilityAction(event);
         switch (action) {
             case KeyBindingAction.Enter:
-                this.onOk();
-                event.preventDefault();
-                event.stopPropagation();
+                // this.onOk();
+                // event.preventDefault();
+                // event.stopPropagation();
                 break;
         }
     };

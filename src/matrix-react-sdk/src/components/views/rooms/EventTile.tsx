@@ -1359,7 +1359,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu}>
                             {/* {this.renderContextMenu()} */}
                             {groupTimestamp}
-                            {groupPadlock}
+                            {/*{groupPadlock}*/}
                             {replyChain}
                             {renderTile(
                                 this.context.timelineRenderingType,

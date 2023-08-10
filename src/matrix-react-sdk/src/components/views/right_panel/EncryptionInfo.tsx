@@ -112,18 +112,18 @@ const EncryptionInfo: React.FC<IProps> = ({
                 <h3>{_t("Encryption")}</h3>
                 {description}
             </div>
-            <div className="mx_UserInfo_container">
-                <h3>{_t("Verify User")}</h3>
-                <div>
-                    <p>
-                        {_t(
-                            "For extra security, verify this user by checking a one-time code on both of your devices.",
-                        )}
-                    </p>
-                    <p>{_t("To be secure, do this in person or use a trusted way to communicate.")}</p>
-                    {content}
-                </div>
-            </div>
+            {/*<div className="mx_UserInfo_container">*/}
+            {/*    <h3>{_t("Verify User")}</h3>*/}
+            {/*    <div>*/}
+            {/*        <p>*/}
+            {/*            {_t(*/}
+            {/*                "For extra security, verify this user by checking a one-time code on both of your devices.",*/}
+            {/*            )}*/}
+            {/*        </p>*/}
+            {/*        <p>{_t("To be secure, do this in person or use a trusted way to communicate.")}</p>*/}
+            {/*        {content}*/}
+            {/*    </div>*/}
+            {/*</div>*/}
         </React.Fragment>
     );
 };

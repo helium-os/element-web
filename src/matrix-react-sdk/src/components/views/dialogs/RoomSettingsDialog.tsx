@@ -114,43 +114,52 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
                 ),
             );
         }
-        tabs.push(
-            new Tab(
-                ROOM_SECURITY_TAB,
-                _td("Security & Privacy"),
-                "mx_RoomSettingsDialog_securityIcon",
-                (
-                    <SecurityRoomSettingsTab
-                        roomId={this.props.roomId}
-                        closeSettingsFn={() => this.props.onFinished(true)}
-                    />
+
+        if (SettingsStore.getValue(UIFeature.RoomSecurityAndPrivacySettings)) {
+            tabs.push(
+                new Tab(
+                    ROOM_SECURITY_TAB,
+                    _td("Security & Privacy"),
+                    "mx_RoomSettingsDialog_securityIcon",
+                    (
+                        <SecurityRoomSettingsTab
+                            roomId={this.props.roomId}
+                            closeSettingsFn={() => this.props.onFinished(true)}
+                        />
+                    ),
+                    "RoomSettingsSecurityPrivacy",
                 ),
-                "RoomSettingsSecurityPrivacy",
-            ),
-        );
-        tabs.push(
-            new Tab(
-                ROOM_ROLES_TAB,
-                _td("Roles & Permissions"),
-                "mx_RoomSettingsDialog_rolesIcon",
-                <RolesRoomSettingsTab roomId={this.props.roomId} />,
-                "RoomSettingsRolesPermissions",
-            ),
-        );
-        tabs.push(
-            new Tab(
-                ROOM_NOTIFICATIONS_TAB,
-                _td("Notifications"),
-                "mx_RoomSettingsDialog_notificationsIcon",
-                (
-                    <NotificationSettingsTab
-                        roomId={this.props.roomId}
-                        closeSettingsFn={() => this.props.onFinished(true)}
-                    />
+            );
+        }
+
+        if (SettingsStore.getValue(UIFeature.RoomRolesAndPermissionsSettings)) {
+            tabs.push(
+                new Tab(
+                    ROOM_ROLES_TAB,
+                    _td("Roles & Permissions"),
+                    "mx_RoomSettingsDialog_rolesIcon",
+                    <RolesRoomSettingsTab roomId={this.props.roomId} />,
+                    "RoomSettingsRolesPermissions",
                 ),
-                "RoomSettingsNotifications",
-            ),
-        );
+            );
+        }
+
+        if (SettingsStore.getValue(UIFeature.RoomNotificationsSettings)) {
+            tabs.push(
+                new Tab(
+                    ROOM_NOTIFICATIONS_TAB,
+                    _td("Notifications"),
+                    "mx_RoomSettingsDialog_notificationsIcon",
+                    (
+                        <NotificationSettingsTab
+                            roomId={this.props.roomId}
+                            closeSettingsFn={() => this.props.onFinished(true)}
+                        />
+                    ),
+                    "RoomSettingsNotifications",
+                ),
+            );
+        }
 
         if (SettingsStore.getValue("feature_bridge_state")) {
             tabs.push(
@@ -164,16 +173,18 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             );
         }
 
-        tabs.push(
-            new Tab(
-                ROOM_POLL_HISTORY_TAB,
-                _td("Poll history"),
-                "mx_RoomSettingsDialog_pollsIcon",
-                <PollHistoryTab roomId={this.props.roomId} onFinished={() => this.props.onFinished(true)} />,
-            ),
-        );
+        if (SettingsStore.getValue(UIFeature.RoomPollHistorySettings)) {
+            tabs.push(
+                new Tab(
+                    ROOM_POLL_HISTORY_TAB,
+                    _td("Poll history"),
+                    "mx_RoomSettingsDialog_pollsIcon",
+                    <PollHistoryTab roomId={this.props.roomId} onFinished={() => this.props.onFinished(true)} />,
+                ),
+            );
+        }
 
-        if (SettingsStore.getValue(UIFeature.AdvancedSettings)) {
+        if (SettingsStore.getValue(UIFeature.RoomAdvancedSettings)) {
             tabs.push(
                 new Tab(
                     ROOM_ADVANCED_TAB,

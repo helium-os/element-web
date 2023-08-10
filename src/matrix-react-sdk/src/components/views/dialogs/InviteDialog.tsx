@@ -1350,32 +1350,30 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
             if (identityServersEnabled) {
                 helpText = _t(
-                    "Start a conversation with someone using their name, email address or username (like <userId/>).",
+                    "Start a conversation with someone using their name, email address or username.",
                     {},
                     {
-                        userId: () => {
-                            return (
-                                <span>用户名</span>
-                                // <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
-                                //     {userId}
-                                // </a>
-                            );
-                        },
+                        // userId: () => {
+                        //     return (
+                        //         <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
+                        //             {userId}
+                        //         </a>
+                        //     );
+                        // },
                     },
                 );
             } else {
                 helpText = _t(
-                    "Start a conversation with someone using their name or username (like <userId/>).",
+                    "Start a conversation with someone using their name or username.",
                     {},
                     {
-                        userId: () => {
-                            return (
-                                <span>用户名</span>
-                                // <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
-                                //     {userId}
-                                // </a>
-                            );
-                        },
+                        // userId: () => {
+                        //     return (
+                        //         <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
+                        //             {userId}
+                        //         </a>
+                        //     );
+                        // },
                     },
                 );
             }
@@ -1417,22 +1415,22 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 if (identityServersEnabled) {
                     helpTextUntranslated = _td(
                         "Invite someone using their name, email address, username " +
-                            "(like <userId/>) or <a>share this space</a>.",
+                            "or <a>share this space</a>.",
                     );
                 } else {
                     helpTextUntranslated = _td(
-                        "Invite someone using their name, username " + "(like <userId/>) or <a>share this space</a>.",
+                        "Invite someone using their name, username " + "or <a>share this space</a>.",
                     );
                 }
             } else {
                 if (identityServersEnabled) {
                     helpTextUntranslated = _td(
                         "Invite someone using their name, email address, username " +
-                            "(like <userId/>) or <a>share this room</a>.",
+                            "or <a>share this room</a>.",
                     );
                 } else {
                     helpTextUntranslated = _td(
-                        "Invite someone using their name, username " + "(like <userId/>) or <a>share this room</a>.",
+                        "Invite someone using their name, username " + "or <a>share this room</a>.",
                     );
                 }
             }
@@ -1441,11 +1439,11 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 helpTextUntranslated,
                 {},
                 {
-                    userId: () => (
-                        <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
-                            {userId}
-                        </a>
-                    ),
+                    // userId: () => (
+                    //     <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
+                    //         {userId}
+                    //     </a>
+                    // ),
                     a: (sub) => (
                         <a href={makeRoomPermalink(roomId)} rel="noreferrer noopener" target="_blank">
                             {sub}

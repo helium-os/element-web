@@ -125,6 +125,8 @@ interface IState {
     canRedact: boolean;
     canPin: boolean;
     reactionPickerDisplayed: boolean;
+    showViewSource: boolean;
+    showPermalink: boolean;
 }
 
 export default class MessageContextMenu extends React.Component<IProps, IState> {
@@ -140,6 +142,8 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             canRedact: false,
             canPin: false,
             reactionPickerDisplayed: false,
+            showViewSource: false, // 是否展示查看源代码按钮
+            showPermalink: false, // 是否展示共享按钮
         };
     }
 
@@ -458,13 +462,16 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         // This is specifically not behind the developerMode flag to give people insight into the Matrix
-        const viewSourceButton = (
-            <IconizedContextMenuOption
-                iconClassName="mx_MessageContextMenu_iconSource"
-                label={_t("View source")}
-                onClick={this.onViewSourceClick}
-            />
-        );
+        let viewSourceButton: JSX.Element | undefined;
+        if (this.state.showViewSource) {
+            viewSourceButton = (
+                <IconizedContextMenuOption
+                    iconClassName="mx_MessageContextMenu_iconSource"
+                    label={_t("View source")}
+                    onClick={this.onViewSourceClick}
+                />
+            );
+        }
 
         let unhidePreviewButton: JSX.Element | undefined;
         if (eventTileOps?.isWidgetHidden()) {
@@ -478,7 +485,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let permalinkButton: JSX.Element | undefined;
-        if (permalink) {
+        if (permalink && this.state.showPermalink) {
             permalinkButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconPermalink"

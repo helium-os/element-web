@@ -81,6 +81,9 @@ export default class GeneralRoomSettingsTab extends React.Component<IProps, ISta
             );
         }
 
+        const showRoomAddress = SettingsStore.getValue(UIFeature.RoomAddressSettings);
+        const showOther = SettingsStore.getValue(UIFeature.RoomOtherSettings);
+
         return (
             <div className="mx_SettingsTab mx_GeneralRoomSettingsTab">
                 <div className="mx_SettingsTab_heading">{_t("General")}</div>
@@ -88,15 +91,29 @@ export default class GeneralRoomSettingsTab extends React.Component<IProps, ISta
                     <RoomProfileSettings roomId={this.props.roomId} />
                 </div>
 
-                <div className="mx_SettingsTab_heading">{_t("Room Addresses")}</div>
-                <AliasSettings
-                    roomId={this.props.roomId}
-                    canSetCanonicalAlias={canSetCanonical}
-                    canSetAliases={canSetAliases}
-                    canonicalAliasEvent={canonicalAliasEv}
-                />
-                <div className="mx_SettingsTab_heading">{_t("Other")}</div>
-                {urlPreviewSettings}
+                {
+                    showRoomAddress && (
+                        <>
+                            <div className="mx_SettingsTab_heading">{_t("Room Addresses")}</div>
+                            <AliasSettings
+                                roomId={this.props.roomId}
+                                canSetCanonicalAlias={canSetCanonical}
+                                canSetAliases={canSetAliases}
+                                canonicalAliasEvent={canonicalAliasEv}
+                            />
+                        </>
+                    )
+                }
+
+                {
+                    showOther && (
+                        <>
+                            <div className="mx_SettingsTab_heading">{_t("Other")}</div>
+                            {urlPreviewSettings}
+                        </>
+                    )
+                }
+
                 {leaveSection}
             </div>
         );

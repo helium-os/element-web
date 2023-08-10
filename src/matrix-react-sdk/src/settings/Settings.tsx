@@ -526,7 +526,7 @@ export const SETTINGS: { [setting: string]: ISetting } = {
     "MessageComposerInput.insertTrailingColon": {
         supportedLevels: LEVELS_ACCOUNT_SETTINGS,
         displayName: _td("Insert a trailing colon after user mentions at the start of a message"),
-        default: true,
+        default: false,
     },
     // TODO: Wire up appropriately to UI (FTUE notifications)
     "Notifications.alwaysShowBadgeCounts": {
@@ -1145,6 +1145,16 @@ export const SETTINGS: { [setting: string]: ISetting } = {
         supportedLevels: LEVELS_UI_FEATURE,
         default: false,
     },
+    // 聊天信息相关设置
+    [UIFeature.MessageComposerMoreBtn]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    // 左侧边栏相关设置
+    [UIFeature.LeftPanel]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
     // 是否展示隐私安全中的安全备份面板
     [UIFeature.SecureBackupPanel]: {
         supportedLevels: LEVELS_UI_FEATURE,
@@ -1152,6 +1162,51 @@ export const SETTINGS: { [setting: string]: ISetting } = {
     },
     // 是否展示隐私安全中的交叉签名面板
     [UIFeature.CrossSigningPanel]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    // Room相关设置
+    [UIFeature.RoomFile]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomPollHistory]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomExportChat]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomShare]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomAddressSettings]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomOtherSettings]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomAdvancedSettings]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomSecurityAndPrivacySettings]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: true,
+    },
+    [UIFeature.RoomRolesAndPermissionsSettings]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomPollHistorySettings]: {
+        supportedLevels: LEVELS_UI_FEATURE,
+        default: false,
+    },
+    [UIFeature.RoomNotificationsSettings]: {
         supportedLevels: LEVELS_UI_FEATURE,
         default: false,
     },
