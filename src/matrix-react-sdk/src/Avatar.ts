@@ -158,5 +158,5 @@ export function avatarUrlForRoom(
 
     // If there are only two members in the DM use the avatar of the other member
     const otherMember = room.getAvatarFallbackMember();
-    return getSourceHttpUrlFromMxc(otherMember.getMxcAvatarUrl(), width, height, resizeMethod);
+    return getSourceHttpUrlFromMxc(otherMember?.getMxcAvatarUrl(), width, height, resizeMethod);
 }
