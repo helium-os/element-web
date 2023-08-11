@@ -144,6 +144,7 @@ import { findDMForUser } from "../../utils/dm/findDMForUser";
 import { Linkify } from "../../HtmlUtils";
 import { NotificationColor } from "../../stores/notifications/NotificationColor";
 import { UserTab } from "../views/dialogs/UserTab";
+import {OwnProfileStore} from "../../stores/OwnProfileStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -173,6 +174,7 @@ interface IProps {
     onTokenLoginCompleted?: () => void;
     // Represents the screen to display as a result of parsing the initial window.location
     initialScreenAfterLogin?: IScreen;
+    getScreenFromLocation?: (location: Location) => IScreen;
     // displayname, if any, to set on the device when logging in/registering.
     defaultDeviceDisplayName?: string;
     // A function that makes a registration URL
@@ -1516,6 +1518,16 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 this.setState({ syncError: data?.error ?? null });
             } else if (this.state.syncError) {
                 this.setState({ syncError: null });
+            }
+
+            /**
+             * 订阅到ClientEvent.Sync事件后，如果是在home页，调用onProfileUpdate方法去请求接口获取最新的用户名和用户头像 & 派发UPDATE_EVENT事件
+             * 在desktop修改用户名和用户头像时，如果chat界面停留在home页，用户名和头像不会同步desktop的修改
+             * 因为matrix-js-sdk不会派发RoomStateEvent.Events事件，导致在OwnProfileStore里订阅不到RoomStateEvent.Events事件，也就不会派发UPDATE_EVENT事件，所以首页用户名和头像不会修改
+             * matrix-js-sdk RoomStateEvent.Events事件是针对room变化的
+             */
+            if(state === SyncState.Syncing && this.props.getScreenFromLocation(window.location)?.screen === 'home') {
+                OwnProfileStore.instance.onProfileUpdate();
             }
 
             if (state === SyncState.Syncing && prevState === SyncState.Syncing) {

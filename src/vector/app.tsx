@@ -168,6 +168,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             enableGuest={!config.disable_guests}
             onTokenLoginCompleted={onTokenLoginCompleted}
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
+            getScreenFromLocation={getScreenFromLocation}
             defaultDeviceDisplayName={defaultDeviceName}
             jwtToken={getToken()}
         />

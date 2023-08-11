@@ -124,7 +124,7 @@ export class OwnProfileStore extends AsyncStoreWithClient<IState> {
         // we don't actually do anything here
     }
 
-    private onProfileUpdate = throttle(
+    public onProfileUpdate = throttle(
         async (): Promise<void> => {
             // We specifically do not use the User object we stored for profile info as it
             // could easily be wrong (such as per-room instead of global profile).
