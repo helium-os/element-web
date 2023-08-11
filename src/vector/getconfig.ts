@@ -22,7 +22,7 @@ export async function getVectorConfig(relativeLocation = ""): Promise<IConfigOpt
     if (relativeLocation !== "" && !relativeLocation.endsWith("/")) relativeLocation += "/";
 
     const specificConfigPromise = getConfig(`${relativeLocation}config.${document.domain}.json`);
-    const generalConfigPromise = getConfig(relativeLocation + "config.json");
+    const generalConfigPromise = getConfig(relativeLocation + "config.default.json");
 
     try {
         const configJson = await specificConfigPromise;
