@@ -13,7 +13,7 @@ const crypto = require("crypto");
 const { merge } = require('webpack-merge');
 
 // require对应的config文件
-const defaultORG = 'org';
+const defaultORG = 'org2';
 const ORG = process.env.ORG || defaultORG;
 let orgConfig;
 try {
