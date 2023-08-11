@@ -12,7 +12,16 @@ const SentryCliPlugin = require("@sentry/webpack-plugin");
 const crypto = require("crypto");
 const { merge } = require('webpack-merge');
 
-const customConfig = merge(require('./config/config.ts'), process.env.ORG ? require(`./config/config.${process.env.ORG}.ts`) : {});
+// require对应的config文件
+const defaultORG = 'org';
+const ORG = process.env.ORG || defaultORG;
+let orgConfig;
+try {
+    orgConfig = require(`./config/config.${ORG}.ts`)
+} catch(error) {
+}
+const customConfig = merge(require('./config/config.ts'), orgConfig || {});
+
 
 // XXX: mangle Crypto::createHash to replace md4 with sha256, output.hashFunction is insufficient as multiple bits
 // of webpack hardcode md4. The proper fix it to upgrade to webpack 5.
@@ -84,6 +93,16 @@ const moduleReplacementPlugins = [
     // Allow customisations to override the default components too
     ...parseOverridesToReplacements(fileOverrides),
 ];
+
+function generateCustomDefinePlugin(obj) {
+    const definePlugin = {};
+    for(const [key, value] of Object.entries(obj)) {
+        definePlugin[`CHAT_ENV_${key}`] = JSON.stringify(value);
+    }
+    return definePlugin;
+}
+
+
 
 module.exports = (env, argv) => {
     // Establish settings based on the environment and args.
@@ -667,6 +686,8 @@ module.exports = (env, argv) => {
                     },
                 }),
             new webpack.EnvironmentPlugin(["VERSION"]),
+
+            new webpack.DefinePlugin(generateCustomDefinePlugin(customConfig.define))
         ].filter(Boolean),
 
         output: {

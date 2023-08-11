@@ -1,5 +1,7 @@
 module.exports = {
-    define: {},
+    define: {
+        ORG_ID: 'heliumos'
+    },
     theme: {},
     proxy: {
         "/heliumos-user-api": {
