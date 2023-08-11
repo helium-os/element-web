@@ -126,6 +126,8 @@ export default abstract class BasePlatform {
      * @param newVersion the version string to check
      */
     protected shouldShowUpdate(newVersion: string): boolean {
+        return false;
+
         // If the user registered on this client in the last 24 hours then do not show them the update toast
         if (MatrixClientPeg.userRegisteredWithinLastHours(24)) return false;
 
