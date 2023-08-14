@@ -21,7 +21,7 @@ import { ResizeMethod } from "matrix-js-sdk/src/@types/partials";
 import { split } from "lodash";
 
 import DMRoomMap from "./utils/DMRoomMap";
-import { mediaFromMxc } from "./customisations/Media";
+import {getSourceHttpUrlFromMxc} from "./customisations/Media";
 import { isLocalRoom } from "./utils/localRoom/isLocalRoom";
 
 // Not to be used for BaseAvatar urls as that has similar default avatar fallback already
@@ -33,7 +33,7 @@ export function avatarUrlForMember(
 ): string {
     let url: string | null | undefined;
     if (member?.getMxcAvatarUrl()) {
-        url = mediaFromMxc(member.getMxcAvatarUrl()).getThumbnailOfSourceHttp(width, height, resizeMethod);
+        url = getSourceHttpUrlFromMxc(member.getMxcAvatarUrl(), width, height, resizeMethod);
     }
     if (!url) {
         // member can be null here currently since on invites, the JS SDK
@@ -50,8 +50,7 @@ export function avatarUrlForUser(
     height: number,
     resizeMethod?: ResizeMethod,
 ): string | null {
-    if (!user.avatarUrl) return null;
-    return mediaFromMxc(user.avatarUrl).getThumbnailOfSourceHttp(width, height, resizeMethod);
+    return getSourceHttpUrlFromMxc(user.avatarUrl, width, height, resizeMethod);
 }
 
 function isValidHexColor(color: string): boolean {
@@ -146,11 +145,7 @@ export function avatarUrlForRoom(
     if (!room) return null; // null-guard
 
     if (room.getMxcAvatarUrl()) {
-        const media = mediaFromMxc(room.getMxcAvatarUrl() ?? undefined);
-        if (width !== undefined && height !== undefined) {
-            return media.getThumbnailOfSourceHttp(width, height, resizeMethod);
-        }
-        return media.srcHttp;
+        return getSourceHttpUrlFromMxc(room.getMxcAvatarUrl(), width, height, resizeMethod);
     }
 
     // space rooms cannot be DMs so skip the rest
@@ -163,12 +158,5 @@ export function avatarUrlForRoom(
 
     // If there are only two members in the DM use the avatar of the other member
     const otherMember = room.getAvatarFallbackMember();
-    if (otherMember?.getMxcAvatarUrl()) {
-        const media = mediaFromMxc(otherMember.getMxcAvatarUrl());
-        if (width !== undefined && height !== undefined) {
-            return media.getThumbnailOfSourceHttp(width, height, resizeMethod);
-        }
-        return media.srcHttp;
-    }
-    return null;
+    return getSourceHttpUrlFromMxc(otherMember?.getMxcAvatarUrl(), width, height, resizeMethod);
 }

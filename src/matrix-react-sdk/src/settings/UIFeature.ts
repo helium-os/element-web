@@ -32,6 +32,7 @@ export enum UIFeature {
     RoomHistorySettings = "UIFeature.roomHistorySettings",
     TimelineEnableRelativeDates = "UIFeature.timelineEnableRelativeDates",
     BulkUnverifiedSessionsReminder = "UIFeature.BulkUnverifiedSessionsReminder",
+    EditSelfAvatarEnable = "UIFeature.EditSelfAvatarEnable",
     LeftPanel = 'UIFeature.LeftPanel',
     SecureBackupPanel = "UIFeature.SecureBackupPanel",
     CrossSigningPanel = "UIFeature.CrossSigningPanel",

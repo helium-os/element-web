@@ -23,7 +23,7 @@ import Field from "../elements/Field";
 import { OwnProfileStore } from "../../../stores/OwnProfileStore";
 import Modal from "../../../Modal";
 import ErrorDialog from "../dialogs/ErrorDialog";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import AccessibleButton from "../elements/AccessibleButton";
 import AvatarSetting from "./AvatarSetting";
 import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
@@ -48,7 +48,7 @@ export default class ProfileSettings extends React.Component<{}, IState> {
 
         const client = MatrixClientPeg.get();
         let avatarUrl = OwnProfileStore.instance.avatarMxc;
-        if (avatarUrl) avatarUrl = mediaFromMxc(avatarUrl).getSquareThumbnailHttp(96);
+        if (avatarUrl) avatarUrl = getHttpUrlFromMxc(avatarUrl, 96);
         this.state = {
             userId: client.getUserId()!,
             originalDisplayName: OwnProfileStore.instance.displayName ?? "",
@@ -112,7 +112,7 @@ export default class ProfileSettings extends React.Component<{}, IState> {
                 );
                 const { content_uri: uri } = await client.uploadContent(this.state.avatarFile);
                 await client.setAvatarUrl(uri);
-                newState.avatarUrl = mediaFromMxc(uri).getSquareThumbnailHttp(96) ?? undefined;
+                newState.avatarUrl = getHttpUrlFromMxc(uri, 96) ?? undefined;
                 newState.originalAvatarUrl = newState.avatarUrl;
                 newState.avatarFile = null;
             } else if (this.state.originalAvatarUrl !== this.state.avatarUrl) {

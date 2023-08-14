@@ -46,7 +46,7 @@ import RoomListStore from "../../../stores/room-list/RoomListStore";
 import OrgStore from "../../../stores/OrgStore";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import BaseAvatar from "../avatars/BaseAvatar";
 import { SearchResultAvatar } from "../avatars/SearchResultAvatar";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
@@ -219,7 +219,7 @@ class DMRoomTile extends React.PureComponent<IDMRoomTileProps> {
             <BaseAvatar
                 url={
                     this.props.member.getMxcAvatarUrl()
-                        ? mediaFromMxc(this.props.member.getMxcAvatarUrl()!).getSquareThumbnailHttp(avatarSize)
+                        ? getHttpUrlFromMxc(this.props.member.getMxcAvatarUrl()!, avatarSize)
                         : null
                 }
                 name={this.props.member.name}
@@ -702,7 +702,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                             results.splice(0, 0, {
                                 user_id: userId,
                                 display_name: item.display_name || item.username,
-                                avatar_url: null,
+                                avatar_url: item.avatar,
                             });
                         }
                     }

@@ -91,6 +91,7 @@ function onTokenLoginCompleted(): void {
 }
 
 function getOrgId(): string {
+    if (isDev) { return CHAT_ENV_ORG_ID; }
     const { hostname } = window.location;
     return hostname.split(".").pop();
 }
@@ -125,9 +126,8 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     const orgId = getOrgId();
     console.log('orgId', orgId);
-    if (!isDev && orgId) {
-    // if (orgId) {
-        config.default_server_config["m.homeserver"].base_url = `https://chat.${orgId}`;
+    if (orgId) {
+        config.default_server_config["m.homeserver"].base_url = `${window.location.protocol}//chat.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -168,6 +168,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             enableGuest={!config.disable_guests}
             onTokenLoginCompleted={onTokenLoginCompleted}
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
+            getScreenFromLocation={getScreenFromLocation}
             defaultDeviceDisplayName={defaultDeviceName}
             jwtToken={getToken()}
         />
@@ -259,9 +260,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    if (!isDev && orgId) {
-    // if (orgId) {
-        validatedConfig.hsUrl = `https://chat.${orgId}`;
+    if (orgId) {
+        validatedConfig.hsUrl = `${window.location.protocol}//chat.${orgId}`;
         validatedConfig.hsName = `chat.${orgId}`;
     }
 

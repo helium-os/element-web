@@ -21,7 +21,7 @@ import { EventType } from "matrix-js-sdk/src/matrix";
 import { _t } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import Field from "../elements/Field";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 import AccessibleButton from "../elements/AccessibleButton";
 import AvatarSetting from "../settings/AvatarSetting";
 import { htmlSerializeFromMdIfNeeded } from "../../../editor/serialize";
@@ -58,7 +58,7 @@ export default class RoomProfileSettings extends React.Component<IProps, IState>
 
         const avatarEvent = room.currentState.getStateEvents(EventType.RoomAvatar, "");
         let avatarUrl = avatarEvent?.getContent()["url"] ?? null;
-        if (avatarUrl) avatarUrl = mediaFromMxc(avatarUrl).getSquareThumbnailHttp(96);
+        if (avatarUrl) avatarUrl = getHttpUrlFromMxc(avatarUrl, 96);
 
         const topicEvent = room.currentState.getStateEvents(EventType.RoomTopic, "");
         const topic = topicEvent && topicEvent.getContent() ? topicEvent.getContent()["topic"] : "";
@@ -138,7 +138,7 @@ export default class RoomProfileSettings extends React.Component<IProps, IState>
         if (this.state.avatarFile) {
             const { content_uri: uri } = await client.uploadContent(this.state.avatarFile);
             await client.sendStateEvent(this.props.roomId, EventType.RoomAvatar, { url: uri }, "");
-            newState.avatarUrl = mediaFromMxc(uri).getSquareThumbnailHttp(96);
+            newState.avatarUrl = getHttpUrlFromMxc(uri, 96);
             newState.originalAvatarUrl = newState.avatarUrl;
             newState.avatarFile = null;
         } else if (this.state.originalAvatarUrl !== this.state.avatarUrl) {

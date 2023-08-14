@@ -46,7 +46,7 @@ import SearchBox from "./SearchBox";
 import RoomAvatar from "../views/avatars/RoomAvatar";
 import StyledCheckbox from "../views/elements/StyledCheckbox";
 import BaseAvatar from "../views/avatars/BaseAvatar";
-import { mediaFromMxc } from "../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../customisations/Media";
 import InfoTooltip from "../views/elements/InfoTooltip";
 import TextWithTooltip from "../views/elements/TextWithTooltip";
 import { useStateToggle } from "../../hooks/useStateToggle";
@@ -193,7 +193,7 @@ const Tile: React.FC<ITileProps> = ({
             <BaseAvatar
                 name={name}
                 idName={room.room_id}
-                url={room.avatar_url ? mediaFromMxc(room.avatar_url).getSquareThumbnailHttp(20) : null}
+                url={getHttpUrlFromMxc(room.avatar_url, 20)}
                 width={20}
                 height={20}
             />

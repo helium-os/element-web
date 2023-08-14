@@ -59,7 +59,7 @@ import type { RoomView as RoomViewType } from "./RoomView";
 import ToastContainer from "./ToastContainer";
 import UserView from "./UserView";
 import BackdropPanel from "./BackdropPanel";
-import { mediaFromMxc } from "../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../customisations/Media";
 import { UserTab } from "../views/dialogs/UserTab";
 import { OpenToTabPayload } from "../../dispatcher/payloads/OpenToTabPayload";
 import RightPanelStore from "../../stores/right-panel/RightPanelStore";
@@ -270,7 +270,7 @@ class LoggedInView extends React.Component<IProps, IState> {
         let backgroundImage = SettingsStore.getValue("RoomList.backgroundImage");
         if (backgroundImage) {
             // convert to http before going much further
-            backgroundImage = mediaFromMxc(backgroundImage).srcHttp;
+            backgroundImage = getHttpUrlFromMxc(backgroundImage);
         } else {
             backgroundImage = OwnProfileStore.instance.getHttpAvatarUrl();
         }

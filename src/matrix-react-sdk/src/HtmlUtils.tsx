@@ -39,7 +39,7 @@ import { IExtendedSanitizeOptions } from "./@types/sanitize-html";
 import SettingsStore from "./settings/SettingsStore";
 import { tryTransformPermalinkToLocalHref } from "./utils/permalinks/Permalinks";
 import { getEmojiFromUnicode } from "./emoji";
-import { mediaFromMxc } from "./customisations/Media";
+import {getSourceHttpUrlFromMxc} from "./customisations/Media";
 import { stripHTMLReply, stripPlainReply } from "./utils/Reply";
 
 // Anything outside the basic multilingual plane will be a surrogate pair
@@ -204,7 +204,7 @@ const transformTags: IExtendedSanitizeOptions["transformTags"] = {
             attribs.style += "height: 100%;";
         }
 
-        attribs.src = mediaFromMxc(src).getThumbnailOfSourceHttp(width, height)!;
+        attribs.src = getSourceHttpUrlFromMxc(src, width, height);
         return { tagName, attribs };
     },
     "code": function (tagName: string, attribs: sanitizeHtml.Attributes) {

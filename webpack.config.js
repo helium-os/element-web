@@ -10,6 +10,18 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const HtmlWebpackInjectPreload = require("@principalstudio/html-webpack-inject-preload");
 const SentryCliPlugin = require("@sentry/webpack-plugin");
 const crypto = require("crypto");
+const { merge } = require('webpack-merge');
+
+// require对应的config文件
+const defaultORG = 'org2';
+const ORG = process.env.ORG || defaultORG;
+let orgConfig;
+try {
+    orgConfig = require(`./config/config.${ORG}.ts`)
+} catch(error) {
+}
+const customConfig = merge(require('./config/config.ts'), orgConfig || {});
+
 
 // XXX: mangle Crypto::createHash to replace md4 with sha256, output.hashFunction is insufficient as multiple bits
 // of webpack hardcode md4. The proper fix it to upgrade to webpack 5.
@@ -81,6 +93,16 @@ const moduleReplacementPlugins = [
     // Allow customisations to override the default components too
     ...parseOverridesToReplacements(fileOverrides),
 ];
+
+function generateCustomDefinePlugin(obj) {
+    const definePlugin = {};
+    for(const [key, value] of Object.entries(obj)) {
+        definePlugin[`CHAT_ENV_${key}`] = JSON.stringify(value);
+    }
+    return definePlugin;
+}
+
+
 
 module.exports = (env, argv) => {
     // Establish settings based on the environment and args.
@@ -664,6 +686,8 @@ module.exports = (env, argv) => {
                     },
                 }),
             new webpack.EnvironmentPlugin(["VERSION"]),
+
+            new webpack.DefinePlugin(generateCustomDefinePlugin(customConfig.define))
         ].filter(Boolean),
 
         output: {
@@ -693,18 +717,7 @@ module.exports = (env, argv) => {
             inline: true,
 
             proxy: {
-                "/heliumos-user-api": {
-                    target: "https://user.org2",
-                    changeOrigin: true,
-                    secure: false,
-                    pathRewrite: { "^/heliumos-user-api": "" },
-                },
-                "/heliumos-org-api": {
-                    target: "https://transaction-agent.org2",
-                    changeOrigin: true,
-                    secure: false,
-                    pathRewrite: { "^/heliumos-org-api": "" },
-                },
+                ...customConfig.proxy
             },
         },
     };

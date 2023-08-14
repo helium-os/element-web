@@ -32,6 +32,8 @@ import MatrixClientContext from "../../contexts/MatrixClientContext";
 import MiniAvatarUploader, { AVATAR_SIZE } from "../views/elements/MiniAvatarUploader";
 import PosthogTrackers from "../../PosthogTrackers";
 import EmbeddedPage from "./EmbeddedPage";
+import SettingsStore from "../../settings/SettingsStore";
+import {UIFeature} from "../../settings/UIFeature";
 
 const onClickSendDm = (ev: ButtonEvent): void => {
     PosthogTrackers.trackInteraction("WebHomeCreateChatButton", ev);
@@ -72,23 +74,36 @@ const UserWelcomeTop: React.FC = () => {
 
     return (
         <div>
-            <MiniAvatarUploader
-                hasAvatar={!!ownProfile.avatarUrl}
-                hasAvatarLabel={_tDom("Great, that'll help people know it's you")}
-                noAvatarLabel={_tDom("Add a photo so people know it's you.")}
-                setAvatarUrl={(url) => cli.setAvatarUrl(url)}
-                isUserAvatar
-                onClick={(ev) => PosthogTrackers.trackInteraction("WebHomeMiniAvatarUploadButton", ev)}
-            >
-                <BaseAvatar
-                    idName={userId}
-                    name={ownProfile.displayName}
-                    url={ownProfile.avatarUrl}
-                    width={AVATAR_SIZE}
-                    height={AVATAR_SIZE}
-                    resizeMethod="crop"
-                />
-            </MiniAvatarUploader>
+            {
+                SettingsStore.getValue(UIFeature.EditSelfAvatarEnable) ? (
+                    <MiniAvatarUploader
+                        hasAvatar={!!ownProfile.avatarUrl}
+                        hasAvatarLabel={_tDom("Great, that'll help people know it's you")}
+                        noAvatarLabel={_tDom("Add a photo so people know it's you.")}
+                        setAvatarUrl={(url) => cli.setAvatarUrl(url)}
+                        isUserAvatar
+                        onClick={(ev) => PosthogTrackers.trackInteraction("WebHomeMiniAvatarUploadButton", ev)}
+                    >
+                        <BaseAvatar
+                            idName={userId}
+                            name={ownProfile.displayName}
+                            url={ownProfile.avatarUrl}
+                            width={AVATAR_SIZE}
+                            height={AVATAR_SIZE}
+                            resizeMethod="crop"
+                        />
+                    </MiniAvatarUploader>
+                ) : (
+                    <BaseAvatar
+                        idName={userId}
+                        name={ownProfile.displayName}
+                        url={ownProfile.avatarUrl}
+                        width={AVATAR_SIZE}
+                        height={AVATAR_SIZE}
+                        resizeMethod="crop"
+                    />
+                )
+            }
 
             <h1>{_tDom("Welcome %(name)s", { name: ownProfile.displayName })}</h1>
             <h2>{_tDom("Now, let's help you get started")}</h2>
@@ -104,26 +119,10 @@ const HomePage: React.FC<IProps> = ({ justRegistered = false }) => {
         return <EmbeddedPage className="mx_HomePage" url={pageUrl} scrollbar={true} />;
     }
 
-    let introSection: JSX.Element;
-    if (justRegistered || !OwnProfileStore.instance.getHttpAvatarUrl(AVATAR_SIZE)) {
-        introSection = <UserWelcomeTop />;
-    } else {
-        const brandingConfig = SdkConfig.getObject("branding");
-        const logoUrl = brandingConfig?.get("auth_header_logo_url") ?? "themes/element/img/logos/element-logo.svg";
-
-        introSection = (
-            <React.Fragment>
-                <img src={logoUrl} alt={config.brand} />
-                <h1>{_tDom("Welcome to %(appName)s", { appName: config.brand })}</h1>
-                <h2>{_tDom("Own your conversations.")}</h2>
-            </React.Fragment>
-        );
-    }
-
     return (
         <AutoHideScrollbar className="mx_HomePage mx_HomePage_default" element="main">
             <div className="mx_HomePage_default_wrapper">
-                {introSection}
+                <UserWelcomeTop />
                 <div className="mx_HomePage_default_buttons">
                     <AccessibleButton onClick={onClickSendDm} className="mx_HomePage_button_sendDm">
                         {_tDom("Send a Direct Message")}

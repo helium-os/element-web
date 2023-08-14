@@ -25,7 +25,7 @@ import { makeUserPermalink } from "../../../utils/permalinks/Permalinks";
 import BaseAvatar from "../avatars/BaseAvatar";
 import SettingsStore from "../../../settings/SettingsStore";
 import { isUrlPermitted } from "../../../HtmlUtils";
-import { mediaFromMxc } from "../../../customisations/Media";
+import {getHttpUrlFromMxc} from "../../../customisations/Media";
 
 interface IProps {
     ev: MatrixEvent;
@@ -129,7 +129,7 @@ export default class BridgeTile extends React.PureComponent<IProps> {
         let networkIcon;
 
         if (protocol.avatar_url) {
-            const avatarUrl = mediaFromMxc(protocol.avatar_url).getSquareThumbnailHttp(64) ?? undefined;
+            const avatarUrl = getHttpUrlFromMxc(protocol.avatar_url, 64);
 
             networkIcon = (
                 <BaseAvatar
