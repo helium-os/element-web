@@ -451,7 +451,7 @@ export interface ISearchInfo {
     roomId?: string;
     term: string;
     scope: SearchScope;
-    promise: Promise<ISearchResults>;
+    promise?: Promise<ISearchResults>;
     abortController?: AbortController;
 
     inProgress?: boolean;

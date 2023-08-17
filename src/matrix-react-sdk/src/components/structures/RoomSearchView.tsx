@@ -15,7 +15,11 @@ limitations under the License.
 */
 
 import React, { forwardRef, RefObject, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { ISearchResults } from "matrix-js-sdk/src/@types/search";
+import {
+    ISearchResponse,
+    ISearchResult,
+    ISearchResults
+} from "matrix-js-sdk/src/@types/search";
 import { IThreadBundledRelationship } from "matrix-js-sdk/src/models/event";
 import { THREAD_RELATION_TYPE } from "matrix-js-sdk/src/models/thread";
 import { logger } from "matrix-js-sdk/src/logger";
@@ -27,13 +31,15 @@ import Spinner from "../views/elements/Spinner";
 import { _t } from "../../languageHandler";
 import { haveRendererForEvent } from "../../events/EventTileFactory";
 import SearchResultTile from "../views/rooms/SearchResultTile";
-import { searchPagination } from "../../Searching";
-import Modal from "../../Modal";
-import ErrorDialog from "../views/dialogs/ErrorDialog";
+// import { searchPagination } from "../../Searching";
+// import Modal from "../../Modal";
+// import ErrorDialog from "../views/dialogs/ErrorDialog";
 import ResizeNotifier from "../../utils/ResizeNotifier";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
 import { RoomPermalinkCreator } from "../../utils/permalinks/Permalinks";
 import RoomContext from "../../contexts/RoomContext";
+import {Room} from "matrix-js-sdk/src/models/room";
+import {MsgType} from "matrix-js-sdk/src/matrix";
 
 const DEBUG = false;
 let debuglog = function (msg: string): void {};
@@ -45,9 +51,10 @@ if (DEBUG) {
 }
 
 interface Props {
+    room: Room;
     term: string;
     scope: SearchScope;
-    promise: Promise<ISearchResults>;
+    promise?: Promise<ISearchResults>;
     abortController?: AbortController;
     resizeNotifier: ResizeNotifier;
     permalinkCreator: RoomPermalinkCreator;
@@ -59,7 +66,7 @@ interface Props {
 // XXX: why doesn't searching on name work?
 export const RoomSearchView = forwardRef<ScrollPanel, Props>(
     (
-        { term, scope, promise, abortController, resizeNotifier, permalinkCreator, className, onUpdate }: Props,
+        { room, term, scope, promise, abortController, resizeNotifier, permalinkCreator, className, onUpdate }: Props,
         ref: RefObject<ScrollPanel>,
     ) => {
         const client = useContext(MatrixClientContext);
@@ -67,88 +74,169 @@ export const RoomSearchView = forwardRef<ScrollPanel, Props>(
         const [inProgress, setInProgress] = useState(true);
         const [highlights, setHighlights] = useState<string[] | null>(null);
         const [results, setResults] = useState<ISearchResults | null>(null);
-        const aborted = useRef(false);
+        // const aborted = useRef(false);
 
-        const handleSearchResult = useCallback(
-            (searchPromise: Promise<ISearchResults>): Promise<boolean> => {
-                setInProgress(true);
+        // const handleSearchResult = useCallback(
+        //     (searchPromise: Promise<ISearchResults>): Promise<boolean> => {
+        //         setInProgress(true);
+        //
+        //         return searchPromise
+        //             .then(
+        //                 async (results): Promise<boolean> => {
+        //                     console.log('查询结果', {...results});
+        //                     debuglog("search complete");
+        //                     if (aborted.current) {
+        //                         logger.error("Discarding stale search results");
+        //                         return false;
+        //                     }
+        //
+        //                     // postgres on synapse returns us precise details of the strings
+        //                     // which actually got matched for highlighting.
+        //                     //
+        //                     // In either case, we want to highlight the literal search term
+        //                     // whether it was used by the search engine or not.
+        //
+        //                     let highlights = results.highlights;
+        //                     if (!highlights.includes(term)) {
+        //                         highlights = highlights.concat(term);
+        //                     }
+        //
+        //                     // For overlapping highlights,
+        //                     // favour longer (more specific) terms first
+        //                     highlights = highlights.sort(function (a, b) {
+        //                         return b.length - a.length;
+        //                     });
+        //
+        //                     for (const result of results.results) {
+        //                         for (const event of result.context.getTimeline()) {
+        //                             const bundledRelationship =
+        //                                 event.getServerAggregatedRelation<IThreadBundledRelationship>(
+        //                                     THREAD_RELATION_TYPE.name,
+        //                                 );
+        //                             if (!bundledRelationship || event.getThread()) continue;
+        //                             const room = client.getRoom(event.getRoomId());
+        //                             const thread = room?.findThreadForEvent(event);
+        //                             if (thread) {
+        //                                 event.setThread(thread);
+        //                             } else {
+        //                                 room?.createThread(event.getId()!, event, [], true);
+        //                             }
+        //                         }
+        //                     }
+        //
+        //                     setHighlights(highlights);
+        //                     console.log('final results', {...results});
+        //                     setResults({ ...results }); // copy to force a refresh
+        //                 },
+        //                 (error) => {
+        //                     if (aborted.current) {
+        //                         logger.error("Discarding stale search results");
+        //                         return false;
+        //                     }
+        //                     logger.error("Search failed", error);
+        //                     Modal.createDialog(ErrorDialog, {
+        //                         title: _t("Search failed"),
+        //                         description:
+        //                             error?.message ??
+        //                             _t("Server may be unavailable, overloaded, or search timed out :("),
+        //                     });
+        //                     return false;
+        //                 },
+        //             )
+        //             .finally(() => {
+        //                 setInProgress(false);
+        //             });
+        //     },
+        //     [client, term],
+        // );
 
-                return searchPromise
-                    .then(
-                        async (results): Promise<boolean> => {
-                            debuglog("search complete");
-                            if (aborted.current) {
-                                logger.error("Discarding stale search results");
-                                return false;
-                            }
+        const beforeLimit = 1;
+        const afterLimit = 1;
+        const handleSearchResult = useCallback(() => {
+            console.log('roomInfo', room);
+            setInProgress(true);
 
-                            // postgres on synapse returns us precise details of the strings
-                            // which actually got matched for highlighting.
-                            //
-                            // In either case, we want to highlight the literal search term
-                            // whether it was used by the search engine or not.
+            const initialResults = [];
 
-                            let highlights = results.highlights;
-                            if (!highlights.includes(term)) {
-                                highlights = highlights.concat(term);
-                            }
-
-                            // For overlapping highlights,
-                            // favour longer (more specific) terms first
-                            highlights = highlights.sort(function (a, b) {
-                                return b.length - a.length;
-                            });
-
-                            for (const result of results.results) {
-                                for (const event of result.context.getTimeline()) {
-                                    const bundledRelationship =
-                                        event.getServerAggregatedRelation<IThreadBundledRelationship>(
-                                            THREAD_RELATION_TYPE.name,
-                                        );
-                                    if (!bundledRelationship || event.getThread()) continue;
-                                    const room = client.getRoom(event.getRoomId());
-                                    const thread = room?.findThreadForEvent(event);
-                                    if (thread) {
-                                        event.setThread(thread);
-                                    } else {
-                                        room?.createThread(event.getId()!, event, [], true);
-                                    }
-                                }
-                            }
-
-                            setHighlights(highlights);
-                            setResults({ ...results }); // copy to force a refresh
+            const timeline = room.getLiveTimeline().getEvents();
+            for (let i = timeline.length - 1; i >=0 ; i--) {
+                const item = timeline[i];
+                if (item.getType() === 'm.room.message' && item.getContent().body?.includes(term) && item.getContent().msgtype === MsgType.Text) {
+                    const beforeTimelines = timeline.slice(i - beforeLimit, i);
+                    const afterTimelines = timeline.slice(i + 1, i + afterLimit + 1);
+                    initialResults.push({
+                        context: {
+                            events_before: beforeTimelines.map(item => item.event),
+                            events_after: afterTimelines.map(item => item.event),
                         },
-                        (error) => {
-                            if (aborted.current) {
-                                logger.error("Discarding stale search results");
-                                return false;
-                            }
-                            logger.error("Search failed", error);
-                            Modal.createDialog(ErrorDialog, {
-                                title: _t("Search failed"),
-                                description:
-                                    error?.message ??
-                                    _t("Server may be unavailable, overloaded, or search timed out :("),
-                            });
-                            return false;
-                        },
-                    )
-                    .finally(() => {
-                        setInProgress(false);
+                        result: item.event
                     });
-            },
-            [client, term],
-        );
+                }
+            }
+
+
+            const searchResults: ISearchResults = {
+                results: [],
+                highlights: [],
+            };
+
+            const result: ISearchResponse = {
+                search_categories: {
+                    room_events: {
+                        count: initialResults.length,
+                        highlights: [term],
+                        results: initialResults
+                    }
+                }
+            };
+            console.log('search results', result);
+
+            const results = client.processRoomEventsSearch(searchResults, result);
+
+            let highlights = results.highlights;
+            if (!highlights.includes(term)) {
+                highlights = highlights.concat(term);
+            }
+
+            // For overlapping highlights,
+            // favour longer (more specific) terms first
+            highlights = highlights.sort(function (a, b) {
+                return b.length - a.length;
+            });
+
+            for (const result of results.results) {
+                for (const event of result.context.getTimeline()) {
+                    const bundledRelationship =
+                        event.getServerAggregatedRelation<IThreadBundledRelationship>(
+                            THREAD_RELATION_TYPE.name,
+                        );
+                    if (!bundledRelationship || event.getThread()) continue;
+                    const room = client.getRoom(event.getRoomId());
+                    const thread = room?.findThreadForEvent(event);
+                    if (thread) {
+                        event.setThread(thread);
+                    } else {
+                        room?.createThread(event.getId()!, event, [], true);
+                    }
+                }
+            }
+
+            setHighlights(highlights);
+            console.log('final results', results);
+            setResults({ ...results }); // copy to force a refresh
+
+            setInProgress(false);
+        }, [client, term, room]);
 
         // Mount & unmount effect
         useEffect(() => {
-            aborted.current = false;
-            handleSearchResult(promise);
-            return () => {
-                aborted.current = true;
-                abortController?.abort();
-            };
+            // aborted.current = false;
+            // handleSearchResult(promise);
+            handleSearchResult();
+            // return () => {
+            //     aborted.current = true;
+            //     abortController?.abort();
+            // };
         }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
         // show searching spinner
@@ -172,8 +260,9 @@ export const RoomSearchView = forwardRef<ScrollPanel, Props>(
             }
 
             debuglog("requesting more search results");
-            const searchPromise = searchPagination(results);
-            return handleSearchResult(searchPromise);
+            // const searchPromise = searchPagination(results);
+            // return handleSearchResult(searchPromise);
+            handleSearchResult();
         };
 
         const ret: JSX.Element[] = [];
@@ -303,7 +392,7 @@ export const RoomSearchView = forwardRef<ScrollPanel, Props>(
             <ScrollPanel
                 ref={ref}
                 className={"mx_RoomView_searchResultsPanel " + className}
-                onFillRequest={onSearchResultsFillRequest}
+                // onFillRequest={onSearchResultsFillRequest}
                 resizeNotifier={resizeNotifier}
             >
                 <li className="mx_RoomView_scrollheader" />

@@ -89,17 +89,17 @@ export default function SearchWarning({ isRoomEncrypted, kind }: IProps): JSX.El
                 );
                 break;
             case WarningKind.Search:
-                text = _t(
-                    "Use the <a>Desktop app</a> to search encrypted messages",
-                    {},
-                    {
-                        a: (sub) => (
-                            <a href={buildUrl} target="_blank" rel="noreferrer noopener">
-                                {sub}
-                            </a>
-                        ),
-                    },
-                );
+                // text = _t(
+                //     "Use the <a>Desktop app</a> to search encrypted messages",
+                //     {},
+                //     {
+                //         a: (sub) => (
+                //             <a href={buildUrl} target="_blank" rel="noreferrer noopener">
+                //                 {sub}
+                //             </a>
+                //         ),
+                //     },
+                // );
                 break;
         }
     } else {
