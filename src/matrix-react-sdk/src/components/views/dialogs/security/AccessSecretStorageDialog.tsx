@@ -89,16 +89,14 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
     }
 
     // 自动验证设备
-    private automaticVerifyDevice = (): void => {
+    private automaticVerifyDevice = async(): Promise<void> => {
         const hasPassphrase = this.props.keyInfo?.passphrase?.salt && this.props.keyInfo?.passphrase?.iterations;
         if (!this.state.resetting && !(hasPassphrase && !this.state.forceRecoveryKey)) {
             console.log('~~~~自动输入安全密钥，完成设备验证');
             const recoveryKey = getRecoveryKeyFromStore();
             console.log('~~~~获取到recoveryKey', recoveryKey);
-            this.changeRecoveryKey(recoveryKey);
-            setTimeout(() => {
-                this.onCheckPrivateKey();
-            }, VALIDATION_THROTTLE_MS + 100);
+            await this.changeRecoveryKey(recoveryKey, false);
+            this.onCheckPrivateKey();
         }
     }
 
@@ -151,9 +149,9 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
         this.changeRecoveryKey(ev.target.value);
     };
 
-    private changeRecoveryKey = (recoveryKey: string): void => {
+    private changeRecoveryKey = async(recoveryKey: string, debounce = true): Promise<void> => {
         console.log('~~~changeRecoveryKey', recoveryKey);
-        this.setState({
+        await this.setState({
             recoveryKey,
             recoveryKeyFileError: null,
         });
@@ -166,7 +164,7 @@ export default class AccessSecretStorageDialog extends React.PureComponent<IProp
         // than in a tooltip and b) we want it to display feedback based on the uploaded file
         // as well as the text box. Ideally we would refactor Field's validation logic so we could
         // re-use some of it.
-        this.validateRecoveryKeyOnChange();
+        debounce ? this.validateRecoveryKeyOnChange() : await this.validateRecoveryKey();
     }
 
     private onRecoveryKeyFileChange = async (ev: ChangeEvent<HTMLInputElement>): Promise<void> => {
