@@ -121,16 +121,15 @@ const determineType = (
     return null;
 };
 
-/**
- * Can be used to retrieve all information needed to display a permalink.
- */
-export const usePermalink: (args: Args) => HookResult = ({
-    room: permalinkRoom,
-    type: forcedType,
-    url,
-}): HookResult => {
-    let resourceId: string | null = null;
-    let parseResult: PermalinkParts | null = null;
+type ResourceId = string | null;
+type ParseResult = PermalinkParts | null;
+interface ResourceInfo {
+    resourceId: ResourceId;
+    parseResult: ParseResult
+}
+export function getResourceInfoFromUrl(url: string): ResourceInfo {
+    let resourceId: ResourceId = null;
+    let parseResult: ParseResult = null;
 
     if (url) {
         parseResult = parsePermalink(url);
@@ -139,6 +138,23 @@ export const usePermalink: (args: Args) => HookResult = ({
             resourceId = parseResult.primaryEntityId;
         }
     }
+
+    return {
+        resourceId,
+        parseResult
+    };
+}
+
+/**
+ * Can be used to retrieve all information needed to display a permalink.
+ */
+export const usePermalink: (args: Args) => HookResult = ({
+    room: permalinkRoom,
+    type: forcedType,
+    url,
+}): HookResult => {
+    const { resourceId, parseResult } = getResourceInfoFromUrl(url);
+
 
     const type = determineType(forcedType, parseResult, permalinkRoom);
     const targetRoom = usePermalinkTargetRoom(type, parseResult, permalinkRoom);

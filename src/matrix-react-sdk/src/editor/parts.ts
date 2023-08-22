@@ -27,6 +27,7 @@ import * as Avatar from "../Avatar";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
 import SettingsStore from "../settings/SettingsStore";
+import {createAllMember, isAllMember} from "../utils/AllMember";
 
 const REGIONAL_EMOJI_SEPARATOR = String.fromCodePoint(0x200b);
 
@@ -626,7 +627,7 @@ export class PartCreator {
     }
 
     public userPill(displayName: string, userId: string): UserPillPart {
-        const member = this.room.getMember(userId);
+        const member = !isAllMember(userId) ? this.room.getMember(userId) : createAllMember(this.room.roomId);
         return new UserPillPart(userId, displayName, member || undefined);
     }
 

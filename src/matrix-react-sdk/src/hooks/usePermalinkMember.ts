@@ -20,6 +20,7 @@ import { useEffect, useState } from "react";
 import { PillType } from "../components/views/elements/Pill";
 import { SdkContextClass } from "../contexts/SDKContext";
 import { PermalinkParts } from "../utils/permalinks/PermalinkConstructor";
+import {createAllMember, isAllMember} from "../utils/AllMember";
 
 const createMemberFromProfile = (userId: string, profile: IMatrixProfile): RoomMember => {
     const member = new RoomMember("", userId);
@@ -74,6 +75,10 @@ const determineUserId = (
  *          null in all other cases.
  */
 const determineMember = (userId: string, targetRoom: Room): RoomMember | null => {
+    if (isAllMember(userId)) {
+        return createAllMember(targetRoom.roomId)
+    }
+
     const targetRoomMember = targetRoom.getMember(userId);
 
     if (targetRoomMember) return targetRoomMember;
