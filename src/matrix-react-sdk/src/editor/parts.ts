@@ -27,6 +27,7 @@ import * as Avatar from "../Avatar";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
 import SettingsStore from "../settings/SettingsStore";
+import {createAllMember, isAllMember} from "../utils/AllMember";
 
 const REGIONAL_EMOJI_SEPARATOR = String.fromCodePoint(0x200b);
 
@@ -205,6 +206,13 @@ abstract class PlainBasePart extends BasePart {
         }
         // when not pasting or dropping text, reject characters that should start a pill candidate
         if (inputType !== "insertFromPaste" && inputType !== "insertFromDrop") {
+            if (chr.startsWith('@')) {
+                /**
+                 * 输入@时不做字符插入，而是做分割处理
+                 * bugfix: 在文字后输入@用户列表不会展示，必须添加空格才会展示
+                 */
+                return false;
+            }
             if (chr !== "@" && chr !== "#" && chr !== ":" && chr !== "+") {
                 return true;
             }
@@ -484,6 +492,8 @@ class UserPillPart extends PillPart {
     }
 
     protected onClick = (): void => {
+        if (isAllMember(this.member.userId)) return; // @All不需要支持点击预览用户
+
         defaultDispatcher.dispatch({
             action: Action.ViewUser,
             member: this.member,
@@ -626,7 +636,7 @@ export class PartCreator {
     }
 
     public userPill(displayName: string, userId: string): UserPillPart {
-        const member = this.room.getMember(userId);
+        const member = !isAllMember(userId) ? this.room.getMember(userId) : createAllMember(this.room.roomId);
         return new UserPillPart(userId, displayName, member || undefined);
     }
 
