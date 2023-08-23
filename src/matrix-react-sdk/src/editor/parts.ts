@@ -207,7 +207,10 @@ abstract class PlainBasePart extends BasePart {
         // when not pasting or dropping text, reject characters that should start a pill candidate
         if (inputType !== "insertFromPaste" && inputType !== "insertFromDrop") {
             if (chr.startsWith('@')) {
-                // 输入@时不做字符插入，而是做分割处理，否则@后的用户列表不会展示
+                /**
+                 * 输入@时不做字符插入，而是做分割处理
+                 * bugfix: 在文字后输入@用户列表不会展示，必须添加空格才会展示
+                 */
                 return false;
             }
             if (chr !== "@" && chr !== "#" && chr !== ":" && chr !== "+") {
@@ -489,7 +492,7 @@ class UserPillPart extends PillPart {
     }
 
     protected onClick = (): void => {
-        if (isAllMember(this.member.userId)) return; // @All不支持点击预览用户
+        if (isAllMember(this.member.userId)) return; // @All不需要支持点击预览用户
 
         defaultDispatcher.dispatch({
             action: Action.ViewUser,
