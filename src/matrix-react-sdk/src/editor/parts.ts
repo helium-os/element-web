@@ -485,6 +485,8 @@ class UserPillPart extends PillPart {
     }
 
     protected onClick = (): void => {
+        if (isAllMember(this.member.userId)) return; // @All不支持点击预览用户
+
         defaultDispatcher.dispatch({
             action: Action.ViewUser,
             member: this.member,

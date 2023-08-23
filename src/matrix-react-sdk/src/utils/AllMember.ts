@@ -6,7 +6,7 @@ export function getAllMemberId(orgId?: string): string {
     orgId = orgId ?? OrgStore.sharedInstance().getCurrentOrgId();
     return `@All:chat.${orgId}`;
 }
-export function getAllMemberName() {
+export function getAllMemberName(): string {
     return _t('All member');
 }
 
