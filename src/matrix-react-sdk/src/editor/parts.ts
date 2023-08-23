@@ -206,6 +206,10 @@ abstract class PlainBasePart extends BasePart {
         }
         // when not pasting or dropping text, reject characters that should start a pill candidate
         if (inputType !== "insertFromPaste" && inputType !== "insertFromDrop") {
+            if (chr.startsWith('@')) {
+                // 输入@时不做字符插入，而是做分割处理，否则@后的用户列表不会展示
+                return false;
+            }
             if (chr !== "@" && chr !== "#" && chr !== ":" && chr !== "+") {
                 return true;
             }

@@ -168,6 +168,10 @@ export default class EditorModel {
         if (!caret) {
             caret = this.getPositionAtEnd();
         }
+        // bugfix: @某个用户/All，不输入任何文字，发送后再次@时，用户列表不展示
+        if (!this._parts.length) {
+            this.activePartIdx = null;
+        }
         // close auto complete if open
         // this would happen when clearing the composer after sending
         // a message with the autocomplete still open
