@@ -18,6 +18,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
+import './rewrite-js-sdk'; // 重写sdk中的一些方法
 import { logger } from "matrix-js-sdk/src/logger";
 
 // These are things that can run before the skin loads - be careful not to reference the react-sdk though.
