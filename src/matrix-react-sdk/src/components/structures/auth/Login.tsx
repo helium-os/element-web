@@ -374,7 +374,9 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
     // };
 
     private onLoginViaJwt = (): void => {
-        this.loginLogic.loginViaJwt(this.props.jwtToken).then(async (data) => {
+        // this.loginLogic.loginViaJwt(this.props.jwtToken)
+        this.loginLogic.loginViaJwt()
+            .then(async (data) => {
             this.setState({ serverIsAlive: true });
             this.props.onChangeTokenLogin(true);
             this.props.onLoggedIn(data, "");

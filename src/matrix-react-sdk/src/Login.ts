@@ -150,12 +150,9 @@ export default class Login {
             });
     }
 
-    public loginViaJwt(token: string): Promise<IMatrixClientCreds> {
+    public loginViaJwt(): Promise<IMatrixClientCreds> {
         const tryFallbackHs = (originalError: Error): Promise<IMatrixClientCreds> => {
-            return sendLoginRequest(this.fallbackHsUrl!, this.isUrl, "org.matrix.login.jwt", {
-                token,
-                initial_device_display_name: this.defaultDeviceDisplayName,
-            }).catch((fallbackError) => {
+            return sendLoginRequest(this.fallbackHsUrl!, this.isUrl, "", {}, false).catch((fallbackError) => {
                 logger.log("fallback HS login failed", fallbackError);
                 // throw the original error
                 throw originalError;
@@ -163,10 +160,7 @@ export default class Login {
         };
 
         let originalLoginError: Error | null = null;
-        return sendLoginRequest(this.hsUrl, this.isUrl, "org.matrix.login.jwt", {
-            token,
-            initial_device_display_name: this.defaultDeviceDisplayName,
-        })
+        return sendLoginRequest(this.hsUrl, this.isUrl, "", {}, false)
             .catch((error) => {
                 originalLoginError = error;
                 if (error.httpStatus === 403) {
@@ -183,6 +177,21 @@ export default class Login {
     }
 }
 
+// jwt登录
+export function jwtLoginRequest(client: MatrixClient): Promise<any> {
+    return fetch('/heliumos-chat-api/user/v1/matrices')
+        .then((response) => response.json())
+        .then((res) => {
+            if (res.access_token && res.user_id) {
+                client.http.opts.accessToken = res.access_token;
+                client.credentials = {
+                    userId: res.user_id,
+                };
+            }
+            return res;
+        });
+}
+
 /**
  * Send a login request to the given server, and format the response
  * as a MatrixClientCreds
@@ -191,6 +200,7 @@ export default class Login {
  * @param {string} isUrl   the base url of the default identity server
  * @param {string} loginType the type of login to do
  * @param {ILoginParams} loginParams the parameters for the login
+ * @param {boolean} isOriginalLogin 是否是原始登录，默认为true
  *
  * @returns {IMatrixClientCreds}
  */
@@ -199,13 +209,14 @@ export async function sendLoginRequest(
     isUrl: string | undefined,
     loginType: string,
     loginParams: ILoginParams,
+    isOriginalLogin = true
 ): Promise<IMatrixClientCreds> {
     const client = createClient({
         baseUrl: hsUrl,
         idBaseUrl: isUrl,
     });
 
-    const data = await client.login(loginType, loginParams);
+    const data = await (isOriginalLogin ? client.login(loginType, loginParams) : jwtLoginRequest(client));
 
     const wellknown = data.well_known;
     if (wellknown) {
