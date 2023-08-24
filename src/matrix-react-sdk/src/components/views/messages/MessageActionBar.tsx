@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { ReactElement, useCallback, useContext, useEffect } from "react";
+import React, { ReactElement, useState, useCallback, useContext, useEffect } from "react";
 import { EventStatus, MatrixEvent, MatrixEventEvent } from "matrix-js-sdk/src/models/event";
 import classNames from "classnames";
 import { MsgType, RelationType } from "matrix-js-sdk/src/@types/event";
@@ -77,8 +77,16 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
     onFocusChange,
     getRelationsForEvent,
 }) => {
+    const [showOptionsBtn, setShowOptionsBtn] = useState(false);
+    const [menuCount, setMenuCount] = useState(0);
     const [menuDisplayed, button, openMenu, closeMenu] = useContextMenu();
     const [onFocus, isActive] = useRovingTabIndex(button);
+
+    useEffect(() => {
+        setShowOptionsBtn(menuCount > 0);
+    }, [menuCount]);
+
+
     useEffect(() => {
         onFocusChange(menuDisplayed);
     }, [onFocusChange, menuDisplayed]);
@@ -116,8 +124,10 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
         );
     }
 
+    console.log('menuDisplayed', menuDisplayed);
+
     return (
-        <React.Fragment>
+        <div style={{ display: showOptionsBtn ? 'block' : 'none'}}>
             <ContextMenuTooltipButton
                 className="mx_MessageActionBar_iconButton mx_MessageActionBar_optionsButton"
                 title={_t("Options")}
@@ -131,7 +141,7 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
                 <ContextMenuIcon />
             </ContextMenuTooltipButton>
             {contextMenu}
-        </React.Fragment>
+        </div>
     );
 };
 
