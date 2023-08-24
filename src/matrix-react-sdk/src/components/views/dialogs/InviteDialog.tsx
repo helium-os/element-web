@@ -77,6 +77,7 @@ import dis from "../../../dispatcher/dispatcher";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
 import { NonEmptyArray } from "../../../@types/common";
 import {AddressType, getAddressType} from "../../../UserAddress";
+import User from "../../../utils/User";
 
 // we have a number of types defined from the Matrix spec which can't reasonably be altered here.
 /* eslint-disable camelcase */
@@ -505,10 +506,10 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             userName = searchUser;
             userOrgId = currentOrgId;
         } else if (getAddressType(searchUser) === AddressType.MatrixUserId) {
-            // @userId:chat.orgId
+            // @userId:matrix.system.service.orgId
             let chatServer;
             [userId, chatServer] = searchUser.split('@')[1].split(':');
-            userOrgId = chatServer.split('.')[1];
+            userOrgId = chatServer.split('.').pop();
         } else {
             // userName@orgName
             [userName, userOrgName] = searchUser.split('@');
@@ -698,7 +699,8 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                     for (let i = 0; i < data.length; i++) {
                         const item = data[i];
                         if (item.username) {
-                            const userId = `@${item.id}:chat.${userOrgId}`;
+                            const cli = MatrixClientPeg.get();
+                            const userId = User.instance().generateUserIdByBaseUrl(item.id, cli.baseUrl);
                             results.splice(0, 0, {
                                 user_id: userId,
                                 display_name: item.display_name || item.username,

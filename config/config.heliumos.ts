@@ -5,7 +5,7 @@ module.exports = {
     theme: {},
     proxy: {
         "/heliumos-chat-api": {
-            target: "https://matrix.system.service.heliumos",
+            target: "https://chat.system.app.heliumos",
             changeOrigin: true,
             secure: false,
             pathRewrite: { "^/heliumos-chat-api": "" },
@@ -17,7 +17,7 @@ module.exports = {
             pathRewrite: { "^/heliumos-user-api": "" },
         },
         "/heliumos-org-api": {
-            target: "https://transaction-agent.system.service.heliumos",
+            target: "https://transaction-agent.heliumos",
             changeOrigin: true,
             secure: false,
             pathRewrite: { "^/heliumos-org-api": "" },

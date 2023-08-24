@@ -32,7 +32,7 @@ export default class OrgStore {
 
     private constructor() {
         const mxUserId = localStorage.getItem("mx_user_id");
-        this.currentOrgId = mxUserId.split(":")[1]?.split('.')[1];
+        this.currentOrgId = mxUserId.split(":")[1]?.split('.').pop();
     }
 
     public static sharedInstance(): OrgStore {

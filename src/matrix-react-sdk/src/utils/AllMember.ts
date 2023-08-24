@@ -1,10 +1,11 @@
 import {RoomMember} from "matrix-js-sdk/src/models/room-member";
 import {_t} from "../languageHandler";
-import OrgStore from "../stores/OrgStore";
+import User from "./User";
+import {MatrixClientPeg} from "../MatrixClientPeg";
 
-export function getAllMemberId(orgId?: string): string {
-    orgId = orgId ?? OrgStore.sharedInstance().getCurrentOrgId();
-    return `@All:chat.${orgId}`;
+export function getAllMemberId(): string {
+    const cli = MatrixClientPeg.get();
+    return User.instance().generateUserIdByBaseUrl('All', cli.baseUrl);
 }
 export function getAllMemberName(): string {
     return _t('All member');

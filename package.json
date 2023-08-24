@@ -202,7 +202,6 @@
         "matrix-mock-request": "^2.5.0",
         "matrix-web-i18n": "^1.4.0",
         "mini-css-extract-plugin": "^1",
-        "minimist": "^1.2.6",
         "mkdirp": "^2.0.0",
         "modernizr": "^3.12.0",
         "node-fetch": "^2.6.7",

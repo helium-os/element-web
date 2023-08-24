@@ -21,8 +21,10 @@ import { MatrixClient } from "matrix-js-sdk/src/client";
 import { logger } from "matrix-js-sdk/src/logger";
 import { DELEGATED_OIDC_COMPATIBILITY, ILoginParams, LoginFlow } from "matrix-js-sdk/src/@types/auth";
 
-import { IMatrixClientCreds } from "./MatrixClientPeg";
 import SecurityCustomisations from "./customisations/Security";
+import { IMatrixClientCreds } from "./MatrixClientPeg";
+
+import User from "./utils/User";
 
 interface ILoginOptions {
     defaultDeviceDisplayName?: string;
@@ -179,16 +181,23 @@ export default class Login {
 
 // jwt登录
 export function jwtLoginRequest(client: MatrixClient): Promise<any> {
-    return fetch('/heliumos-chat-api/user/v1/matrices')
+    return fetch('/heliumos-chat-api/user/v1/matrices/login', {
+        method: 'POST'
+    })
         .then((response) => response.json())
         .then((res) => {
-            if (res.access_token && res.user_id) {
-                client.http.opts.accessToken = res.access_token;
+            const data = res.data;
+
+            data.user_id = User.instance().generateUserIdByBaseUrl(res.data.user_id, client.baseUrl);
+
+            const { token, user_id } = data;
+            if (token) client.http.opts.accessToken = token;
+            if (user_id) {
                 client.credentials = {
-                    userId: res.user_id,
+                    userId: user_id,
                 };
             }
-            return res;
+            return data;
         });
 }
 
@@ -236,7 +245,7 @@ export async function sendLoginRequest(
         identityServerUrl: isUrl,
         userId: data.user_id,
         deviceId: data.device_id,
-        accessToken: data.access_token,
+        accessToken: data.token || data.access_token,
     };
 
     SecurityCustomisations.examineLoginResponse?.(data, creds);
