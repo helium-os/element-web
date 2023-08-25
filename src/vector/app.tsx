@@ -48,6 +48,8 @@ window.matrixLogger = logger;
 
 const isDev = process.env.NODE_ENV === "development";
 
+const hsNamePrefix = 'matrix.system.service';
+
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
 // click back to the client having registered.
@@ -96,20 +98,6 @@ function getOrgId(): string {
     return hostname.split(".").pop();
 }
 
-function getToken(): string {
-    const cookies = document.cookie.split(";");
-    const name = "access_token=";
-    let token = "";
-    for (let i = 0; i < cookies.length; i++) {
-        const item = cookies[i].trim();
-        if (item.indexOf(name) === 0) {
-            token = item.substring(name.length, item.length);
-        }
-    }
-    logger.log("cookies", cookies, " access_token", token);
-    return token;
-}
-
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
     initRouting();
     const platform = PlatformPeg.get();
@@ -127,7 +115,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     const orgId = getOrgId();
     console.log('orgId', orgId);
     if (orgId) {
-        config.default_server_config["m.homeserver"].base_url = `${window.location.protocol}//chat.${orgId}`;
+        config.default_server_config["m.homeserver"].base_url = `${window.location.protocol}//${hsNamePrefix}.${orgId}`;
     }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
@@ -170,7 +158,6 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
             initialScreenAfterLogin={getScreenFromLocation(window.location)}
             getScreenFromLocation={getScreenFromLocation}
             defaultDeviceDisplayName={defaultDeviceName}
-            jwtToken={getToken()}
         />
     );
 }
@@ -261,8 +248,8 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
 
     validatedConfig.isDefault = true;
     if (orgId) {
-        validatedConfig.hsUrl = `${window.location.protocol}//chat.${orgId}`;
-        validatedConfig.hsName = `chat.${orgId}`;
+        validatedConfig.hsUrl = `${window.location.protocol}//${hsNamePrefix}.${orgId}`;
+        validatedConfig.hsName = `${hsNamePrefix}.${orgId}`;
     }
 
     // Just in case we ever have to debug this

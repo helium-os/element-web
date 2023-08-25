@@ -179,7 +179,6 @@ interface IProps {
     defaultDeviceDisplayName?: string;
     // A function that makes a registration URL
     makeRegistrationUrl: (params: QueryDict) => string;
-    jwtToken: string;
 }
 
 interface IState {
@@ -2164,7 +2163,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                     onServerConfigChange={this.onServerConfigChange}
                     fragmentAfterLogin={fragmentAfterLogin}
                     defaultUsername={this.props.startingFragmentQueryParams.defaultUsername as string}
-                    jwtToken={this.props.jwtToken}
                     onChangeTokenLogin={this.onChangeTokenLogin}
                     {...this.getServerProperties()}
                 />

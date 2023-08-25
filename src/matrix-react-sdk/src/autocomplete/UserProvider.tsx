@@ -35,7 +35,7 @@ import { ICompletion, ISelectionRange } from "./Autocompleter";
 import MemberAvatar from "../components/views/avatars/MemberAvatar";
 import { TimelineRenderingType } from "../contexts/RoomContext";
 import UserIdentifierCustomisations from "../customisations/UserIdentifier";
-import {createAllMember} from "../utils/AllMember";
+import AllMember from "../utils/AllMember";
 
 const USER_REGEX = /\B@\S*/g;
 
@@ -118,7 +118,7 @@ export default class UserProvider extends AutocompleteProvider {
         if (fullMatch) {
             // Don't include the '@' in our search query - it's only used as a way to trigger completion
             const query = fullMatch;
-            const allMemberItem = createAllMember(this.room.roomId);
+            const allMemberItem = AllMember.instance().getAllMember(this.room.roomId);
             return [allMemberItem, ...this.matcher.match(query, limit)].map((user) => {
                 const description = UserIdentifierCustomisations.getDisplayUserIdentifier?.(user.userId, {
                     roomId: this.room.roomId,

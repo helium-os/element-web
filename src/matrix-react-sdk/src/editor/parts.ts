@@ -27,7 +27,7 @@ import * as Avatar from "../Avatar";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "../dispatcher/actions";
 import SettingsStore from "../settings/SettingsStore";
-import {createAllMember, isAllMember} from "../utils/AllMember";
+import AllMember from "../utils/AllMember";
 
 const REGIONAL_EMOJI_SEPARATOR = String.fromCodePoint(0x200b);
 
@@ -492,7 +492,7 @@ class UserPillPart extends PillPart {
     }
 
     protected onClick = (): void => {
-        if (isAllMember(this.member.userId)) return; // @All不需要支持点击预览用户
+        if (AllMember.instance().isAllMember(this.member.userId)) return; // @All不需要支持点击预览用户
 
         defaultDispatcher.dispatch({
             action: Action.ViewUser,
@@ -636,7 +636,7 @@ export class PartCreator {
     }
 
     public userPill(displayName: string, userId: string): UserPillPart {
-        const member = !isAllMember(userId) ? this.room.getMember(userId) : createAllMember(this.room.roomId);
+        const member = !AllMember.instance().isAllMember(userId, this.room.roomId) ? this.room.getMember(userId) : AllMember.instance().getAllMember(this.room.roomId);
         return new UserPillPart(userId, displayName, member || undefined);
     }
 

@@ -28,7 +28,7 @@ import MemberAvatar from "../avatars/MemberAvatar";
 import { _t } from "../../../languageHandler";
 import { Icon as LinkIcon } from "../../../../res/img/element-icons/room/composer/link.svg";
 import { Icon as UserIcon } from "../../../../res/img/compound/user.svg";
-import {getAllMemberId, isAllMember} from "../../../utils/AllMember";
+import AllMember from "../../../utils/AllMember";
 
 export enum PillType {
     UserMention = "TYPE_USER_MENTION",
@@ -78,12 +78,13 @@ const PillMemberAvatar: React.FC<{
 
 /**
  * 是否被提及
+ * @param roomId 房间id
  * @param userId 判断是否被提及的用户id
  * @param resourceId @的id
  * @param senderId 发送消息的用户id
  */
-export function beMentioned(userId: string, resourceId: string, senderId: string): boolean {
-    return [userId, getAllMemberId()].includes(resourceId) && senderId !== userId
+export function beMentioned(roomId: string, userId: string, resourceId: string, senderId: string): boolean {
+    return [userId, AllMember.instance().getAllMemberId(roomId)].includes(resourceId) && senderId !== userId
 }
 
 export interface PillProps {
@@ -121,7 +122,7 @@ export const Pill: React.FC<PillProps> = ({ senderId, type: propType, url, inMes
         mx_RoomPill: type === PillType.RoomMention,
         mx_SpacePill: type === "space",
         mx_UserPill: type === PillType.UserMention,
-        mx_UserPill_me: beMentioned(currentUserId, resourceId, senderId),
+        mx_UserPill_me: beMentioned(room.roomId, currentUserId, resourceId, senderId),
         mx_EventPill: type === PillType.EventInOtherRoom || type === PillType.EventInSameRoom,
     });
 
@@ -174,7 +175,7 @@ export const Pill: React.FC<PillProps> = ({ senderId, type: propType, url, inMes
     return (
         <bdi>
             <MatrixClientContext.Provider value={MatrixClientPeg.get()}>
-                {inMessage && url && !isAllMember(resourceId) ? (
+                {inMessage && url && !AllMember.instance().isAllMember(resourceId, room.roomId) ? (
                     <a
                         className={classes}
                         href={url}
