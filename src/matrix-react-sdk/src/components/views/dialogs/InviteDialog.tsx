@@ -700,7 +700,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                         const item = data[i];
                         if (item.username) {
                             const cli = MatrixClientPeg.get();
-                            const userId = User.instance().generateUserIdByBaseUrl(item.id, cli.baseUrl);
+                            const userId = User.instance().generateUserIdByBaseUrl(item.id, cli.baseUrl, userOrgId);
                             results.splice(0, 0, {
                                 user_id: userId,
                                 display_name: item.display_name || item.username,
