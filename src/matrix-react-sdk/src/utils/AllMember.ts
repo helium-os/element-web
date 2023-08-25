@@ -25,17 +25,14 @@ export default class AllMember {
     private createAllMember(roomId: string): RoomMember {
         const allMember = new RoomMember(roomId, this.generateAllMemberId(roomId));
         allMember.name = allMember.rawDisplayName = this.generateAllMemberName();
-        console.log('创建allMember', allMember);
         return allMember;
     }
 
     public setAllMember(roomId, member: RoomMember): void {
         this.roomMap.set(roomId, member);
-        console.log('setAllMember this.roomMap', this.roomMap);
     }
 
     public getAllMember(roomId: string): RoomMember {
-        console.log('getAllMember this.roomMap', this.roomMap);
         if (!this.roomMap.get(roomId)) {
             const member = this.createAllMember(roomId);
             this.setAllMember(roomId, member);
@@ -54,6 +51,6 @@ export default class AllMember {
     }
 
     public isAllMember(userId: string, roomId?: string): boolean {
-        return roomId ? userId === this.getAllMemberId(roomId) : userId.split(':')[0].split('@')[1] === this.userId;
+        return userId === this.getAllMemberId(roomId) || userId.split(':')[0].split('@')[1] === this.userId;
     }
 }
