@@ -138,8 +138,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
     public constructor(props: IProps) {
         super(props);
 
-        this.menuCount = 0;
-
         this.state = {
             canRedact: false,
             canPin: false,
@@ -152,10 +150,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
     public componentDidMount(): void {
         MatrixClientPeg.get().on(RoomMemberEvent.PowerLevel, this.checkPermissions);
         this.checkPermissions();
-    }
-
-    public componentDidUpdate(prevProps: Readonly<IProps>, prevState: Readonly<IState>, snapshot?: any): void {
-        console.log('this.menuCount', this.menuCount);
     }
 
     public componentWillUnmount(): void {
@@ -384,16 +378,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         this.closeMenu();
     };
 
-    private addMenuCount = (step = 1): void => {
-        this.menuCount += step;
-    }
-
-    private resetMenuCount = (): void => {
-        this.menuCount = 0;
-    }
-
     public render(): React.ReactNode {
-        this.resetMenuCount();
         const cli = MatrixClientPeg.get();
         const me = cli.getUserId();
         const { mxEvent, rightClick, link, eventTileOps, reactions, collapseReplyChain, ...other } = this.props;
@@ -421,7 +406,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onResendReactionsClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let redactButton: JSX.Element | undefined;
@@ -433,7 +417,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onRedactClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let openInMapSiteButton: JSX.Element | undefined;
@@ -453,7 +436,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     }}
                 />
             );
-            this.addMenuCount();
         }
 
         let forwardButton: JSX.Element | undefined;
@@ -466,7 +448,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onForwardClick(forwardableEvent)}
                 />
             );
-            this.addMenuCount();
         }
 
         let pinButton: JSX.Element | undefined;
@@ -478,7 +459,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onPinClick}
                 />
             );
-            this.addMenuCount();
         }
 
         // This is specifically not behind the developerMode flag to give people insight into the Matrix
@@ -491,7 +471,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onViewSourceClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let unhidePreviewButton: JSX.Element | undefined;
@@ -503,7 +482,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onUnhidePreviewClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let permalinkButton: JSX.Element | undefined;
@@ -524,7 +502,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     }
                 />
             );
-            this.addMenuCount();
         }
 
         let endPollButton: JSX.Element | undefined;
@@ -536,7 +513,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onEndPollClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let quoteButton: JSX.Element | undefined;
@@ -549,7 +525,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onQuoteClick}
                 />
             );
-            this.addMenuCount();
         }
 
         // Bridges can provide a 'external_url' to link back to the source.
@@ -574,7 +549,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     }
                 />
             );
-            this.addMenuCount();
         }
 
         let collapseReplyChainButton: JSX.Element | undefined;
@@ -586,7 +560,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onCollapseReplyChainClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let jumpToRelatedEventButton: JSX.Element | undefined;
@@ -599,7 +572,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={() => this.onJumpToRelatedEventClick(relatedEventId)}
                 />
             );
-            this.addMenuCount();
         }
 
         let reportEventButton: JSX.Element | undefined;
@@ -611,7 +583,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onReportEventClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let copyLinkButton: JSX.Element | undefined;
@@ -632,7 +603,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     }
                 />
             );
-            this.addMenuCount();
         }
 
         let copyButton: JSX.Element | undefined;
@@ -645,7 +615,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onCopyClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let editButton: JSX.Element | undefined;
@@ -657,7 +626,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onEditClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let replyButton: JSX.Element | undefined;
@@ -669,7 +637,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.onReplyClick}
                 />
             );
-            this.addMenuCount();
         }
 
         let replyInThreadButton: JSX.Element | undefined;
@@ -681,7 +648,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             timelineRenderingType !== TimelineRenderingType.Thread
         ) {
             replyInThreadButton = <ReplyInThreadButton mxEvent={mxEvent} closeMenu={this.closeMenu} />;
-            this.addMenuCount();
         }
 
         let reactButton: JSX.Element | undefined;
@@ -694,7 +660,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     inputRef={this.reactButtonRef}
                 />
             );
-            this.addMenuCount();
         }
 
         let viewInRoomButton: JSX.Element | undefined;
@@ -706,7 +671,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     onClick={this.viewInRoom}
                 />
             );
-            this.addMenuCount();
         }
 
         let nativeItemsList: JSX.Element | undefined;

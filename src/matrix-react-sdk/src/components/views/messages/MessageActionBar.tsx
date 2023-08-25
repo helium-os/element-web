@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { ReactElement, useState, useCallback, useContext, useEffect } from "react";
+import React, { ReactElement, useCallback, useContext, useEffect } from "react";
 import { EventStatus, MatrixEvent, MatrixEventEvent } from "matrix-js-sdk/src/models/event";
 import classNames from "classnames";
 import { MsgType, RelationType } from "matrix-js-sdk/src/@types/event";
@@ -77,16 +77,8 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
     onFocusChange,
     getRelationsForEvent,
 }) => {
-    const [showOptionsBtn, setShowOptionsBtn] = useState(false);
-    const [menuCount, setMenuCount] = useState(0);
     const [menuDisplayed, button, openMenu, closeMenu] = useContextMenu();
     const [onFocus, isActive] = useRovingTabIndex(button);
-
-    useEffect(() => {
-        setShowOptionsBtn(menuCount > 0);
-    }, [menuCount]);
-
-
     useEffect(() => {
         onFocusChange(menuDisplayed);
     }, [onFocusChange, menuDisplayed]);
@@ -124,10 +116,8 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
         );
     }
 
-    console.log('menuDisplayed', menuDisplayed);
-
     return (
-        <div style={{ display: showOptionsBtn ? 'block' : 'none'}}>
+        <React.Fragment>
             <ContextMenuTooltipButton
                 className="mx_MessageActionBar_iconButton mx_MessageActionBar_optionsButton"
                 title={_t("Options")}
@@ -141,7 +131,7 @@ const OptionsButton: React.FC<IOptionsButtonProps> = ({
                 <ContextMenuIcon />
             </ContextMenuTooltipButton>
             {contextMenu}
-        </div>
+        </React.Fragment>
     );
 };
 
@@ -575,6 +565,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
                 );
             }
 
+            console.log('this.props.mxEvent', this.props.mxEvent);
             // The menu button should be last, so dump it there.
             toolbarOpts.push(
                 <OptionsButton
@@ -591,9 +582,11 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
         // aria-live=off to not have this read out automatically as navigating around timeline, gets repetitive.
         return (
-            <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
-                {toolbarOpts}
-            </Toolbar>
+            !this.props.mxEvent.isRedacted() && (
+                <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
+                    {toolbarOpts}
+                </Toolbar>
+            )
         );
     }
 }
