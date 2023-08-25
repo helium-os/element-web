@@ -3,9 +3,8 @@ import {MatrixEvent} from "matrix-js-sdk/src/models/event";
 import {escapeRegExp} from "matrix-js-sdk/src/utils";
 import {PushProcessor} from "matrix-js-sdk/src/pushprocessor";
 
-import {getAllMemberName} from "matrix-react-sdk/src/utils/AllMember";
 import {getResourceInfoFromUrl} from "../../matrix-react-sdk/src/hooks/usePermalink";
-import {getAllMemberId} from "../../matrix-react-sdk/src/utils/AllMember";
+import AllMember from "../../matrix-react-sdk/src/utils/AllMember";
 import {beMentioned} from "../../matrix-react-sdk/src/components/views/elements/Pill";
 
 PushProcessor.prototype.eventFulfillsDisplayNameCondition = function(cond: IContainsDisplayNameCondition, ev: MatrixEvent): boolean {
@@ -39,7 +38,7 @@ PushProcessor.prototype.eventFulfillsDisplayNameCondition = function(cond: ICont
     // N.B. we can't use \b as it chokes on unicode. however \W seems to be okay
     // as shorthand for [^0-9A-Za-z_].
     // const displayName = member.name;
-    // const pat = new RegExp(`(^|\\W)(${escapeRegExp(displayName)}|${escapeRegExp(getAllMemberName())})(\\W|$)`, "i");
+    // const pat = new RegExp(`(^|\\W)(${escapeRegExp(displayName)}|${escapeRegExp(AllMember.instance().getAllMemberName(room.roomId))})(\\W|$)`, "i");
     // return content.body.search(pat) > -1;
 
 
@@ -48,7 +47,7 @@ PushProcessor.prototype.eventFulfillsDisplayNameCondition = function(cond: ICont
     if (!resourceId) {
         return false;
     }
-    return beMentioned(currentUserId, resourceId, senderId);
+    return beMentioned(room.roomId, currentUserId, resourceId, senderId);
 }
 
 
