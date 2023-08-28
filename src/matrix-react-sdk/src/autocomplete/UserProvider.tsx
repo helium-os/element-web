@@ -35,6 +35,7 @@ import { ICompletion, ISelectionRange } from "./Autocompleter";
 import MemberAvatar from "../components/views/avatars/MemberAvatar";
 import { TimelineRenderingType } from "../contexts/RoomContext";
 import UserIdentifierCustomisations from "../customisations/UserIdentifier";
+import AllMember from "../utils/AllMember";
 
 const USER_REGEX = /\B@\S*/g;
 
@@ -117,7 +118,8 @@ export default class UserProvider extends AutocompleteProvider {
         if (fullMatch) {
             // Don't include the '@' in our search query - it's only used as a way to trigger completion
             const query = fullMatch;
-            return this.matcher.match(query, limit).map((user) => {
+            const allMemberItem = AllMember.instance().getAllMember(this.room.roomId);
+            return [allMemberItem, ...this.matcher.match(query, limit)].map((user) => {
                 const description = UserIdentifierCustomisations.getDisplayUserIdentifier?.(user.userId, {
                     roomId: this.room.roomId,
                     withDisplayName: true,
@@ -129,7 +131,8 @@ export default class UserProvider extends AutocompleteProvider {
                     completion: user.rawDisplayName,
                     completionId: user.userId,
                     type: "user",
-                    suffix: selection.beginning && range!.start === 0 ? ": " : " ",
+                    // suffix: selection.beginning && range!.start === 0 ? ": " : " ",
+                    suffix: " ",
                     href: makeUserPermalink(user.userId),
                     component: (
                         <PillCompletion title={displayName} description={description}>

@@ -3765,5 +3765,7 @@
     "Activate selected button": "Activate selected button",
     "New line": "New line",
     "Force complete": "Force complete",
-    "Search (must be enabled)": "Search (must be enabled)"
+    "Search (must be enabled)": "Search (must be enabled)",
+
+    "All member": "All"
 }

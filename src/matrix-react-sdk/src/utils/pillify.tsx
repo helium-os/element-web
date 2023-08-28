@@ -63,6 +63,7 @@ export function pillifyLinks(nodes: ArrayLike<Element>, mxEvent: MatrixEvent, pi
     const room = MatrixClientPeg.get().getRoom(mxEvent.getRoomId()) ?? undefined;
     const shouldShowPillAvatar = SettingsStore.getValue("Pill.shouldShowPillAvatar");
     let node = nodes[0];
+    const senderId = mxEvent.getSender();
     while (node) {
         let pillified = false;
 
@@ -78,7 +79,7 @@ export function pillifyLinks(nodes: ArrayLike<Element>, mxEvent: MatrixEvent, pi
                 const pillContainer = document.createElement("span");
 
                 const pill = (
-                    <Pill url={href} inMessage={true} room={room} shouldShowPillAvatar={shouldShowPillAvatar} />
+                    <Pill senderId={senderId} url={href} inMessage={true} room={room} shouldShowPillAvatar={shouldShowPillAvatar} />
                 );
 
                 ReactDOM.render(pill, pillContainer);

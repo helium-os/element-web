@@ -28,6 +28,7 @@ import MemberAvatar from "../avatars/MemberAvatar";
 import { _t } from "../../../languageHandler";
 import { Icon as LinkIcon } from "../../../../res/img/element-icons/room/composer/link.svg";
 import { Icon as UserIcon } from "../../../../res/img/compound/user.svg";
+import AllMember from "../../../utils/AllMember";
 
 export enum PillType {
     UserMention = "TYPE_USER_MENTION",
@@ -75,6 +76,17 @@ const PillMemberAvatar: React.FC<{
     return <UserIcon className="mx_Pill_UserIcon mx_BaseAvatar mx_BaseAvatar_image" />;
 };
 
+/**
+ * 是否被提及
+ * @param roomId 房间id
+ * @param userId 判断是否被提及的用户id
+ * @param resourceId @的id
+ * @param senderId 发送消息的用户id
+ */
+export function beMentioned(roomId: string, userId: string, resourceId: string, senderId: string): boolean {
+    return [userId, AllMember.instance().getAllMemberId(roomId)].includes(resourceId) && senderId !== userId
+}
+
 export interface PillProps {
     // The Type of this Pill. If url is given, this is auto-detected.
     type?: PillType;
@@ -86,10 +98,12 @@ export interface PillProps {
     room?: Room;
     // Whether to include an avatar in the pill
     shouldShowPillAvatar?: boolean;
+    senderId: string // 消息发送者id
 }
 
-export const Pill: React.FC<PillProps> = ({ type: propType, url, inMessage, room, shouldShowPillAvatar = true }) => {
+export const Pill: React.FC<PillProps> = ({ senderId, type: propType, url, inMessage, room, shouldShowPillAvatar = true }) => {
     const [hover, setHover] = useState(false);
+    const showTip = false;
     const { event, member, onClick, resourceId, targetRoom, text, type } = usePermalink({
         room,
         type: propType,
@@ -100,12 +114,15 @@ export const Pill: React.FC<PillProps> = ({ type: propType, url, inMessage, room
         return null;
     }
 
+
+    const currentUserId = MatrixClientPeg.get().getUserId();
+
     const classes = classNames("mx_Pill", {
         mx_AtRoomPill: type === PillType.AtRoomMention,
         mx_RoomPill: type === PillType.RoomMention,
         mx_SpacePill: type === "space",
         mx_UserPill: type === PillType.UserMention,
-        mx_UserPill_me: resourceId === MatrixClientPeg.get().getUserId(),
+        mx_UserPill_me: beMentioned(room.roomId, currentUserId, resourceId, senderId),
         mx_EventPill: type === PillType.EventInOtherRoom || type === PillType.EventInSameRoom,
     });
 
@@ -158,7 +175,7 @@ export const Pill: React.FC<PillProps> = ({ type: propType, url, inMessage, room
     return (
         <bdi>
             <MatrixClientContext.Provider value={MatrixClientPeg.get()}>
-                {inMessage && url ? (
+                {inMessage && url && !AllMember.instance().isAllMember(resourceId, room.roomId) ? (
                     <a
                         className={classes}
                         href={url}
@@ -168,13 +185,13 @@ export const Pill: React.FC<PillProps> = ({ type: propType, url, inMessage, room
                     >
                         {avatar}
                         <span className="mx_Pill_text">{pillText}</span>
-                        {tip}
+                        {showTip && tip}
                     </a>
                 ) : (
                     <span className={classes} onMouseOver={onMouseOver} onMouseLeave={onMouseLeave}>
                         {avatar}
                         <span className="mx_Pill_text">{pillText}</span>
-                        {tip}
+                        {showTip && tip}
                     </span>
                 )}
             </MatrixClientContext.Provider>

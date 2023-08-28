@@ -2,7 +2,7 @@
 FROM --platform=$BUILDPLATFORM node:16-bullseye as builder
 
 # Support custom branches of the react-sdk and js-sdk. This also helps us build
-# images of element-web develop.
+# images of chat-desktop develop.
 # ARG USE_CUSTOM_SDKS=true
 # ARG REACT_SDK_REPO="https://github.com/helium-os/matrix-react-sdk.git"
 # ARG REACT_SDK_BRANCH="users/tianhq/login"
