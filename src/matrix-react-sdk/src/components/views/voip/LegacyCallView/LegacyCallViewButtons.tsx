@@ -145,6 +145,7 @@ interface IState {
     showDialpad: boolean;
     hoveringControls: boolean;
     showMoreMenu: boolean;
+    showScreenShare: boolean;
 }
 
 export default class LegacyCallViewButtons extends React.Component<IProps, IState> {
@@ -156,6 +157,7 @@ export default class LegacyCallViewButtons extends React.Component<IProps, IStat
         super(props);
 
         this.state = {
+            showScreenShare: false,
             showDialpad: false,
             hoveringControls: false,
             showMoreMenu: false,
@@ -291,7 +293,7 @@ export default class LegacyCallViewButtons extends React.Component<IProps, IStat
                         deviceKinds={[MediaDeviceKindEnum.VideoInput]}
                     />
                 )}
-                {this.props.buttonsVisibility.screensharing && (
+                {this.state.showScreenShare && this.props.buttonsVisibility.screensharing && (
                     <LegacyCallViewToggleButton
                         state={this.props.buttonsState.screensharing}
                         className="mx_LegacyCallViewButtons_button_screensharing"
