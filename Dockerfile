@@ -17,6 +17,8 @@ WORKDIR /src
 COPY . /src
 # RUN dos2unix /src/scripts/docker-link-repos.sh && bash /src/scripts/docker-link-repos.sh
 RUN yarn --network-timeout=100000 install
+RUN yarn add app-sdk@1.0.5 --registry=https://easypayx-npm.pkg.coding.net/heliumos-app/npm/
+
 
 RUN dos2unix /src/scripts/docker-package.sh && bash /src/scripts/docker-package.sh
 

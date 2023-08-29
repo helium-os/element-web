@@ -146,6 +146,9 @@ import { NotificationColor } from "../../stores/notifications/NotificationColor"
 import { UserTab } from "../views/dialogs/UserTab";
 import {OwnProfileStore} from "../../stores/OwnProfileStore";
 
+import AppMessage from "app-sdk";
+import {appObserverKeyMap, observerKeyMap} from "../../../../vector/appConfig";
+
 // legacy export
 export { default as Views } from "../../Views";
 
@@ -426,8 +429,18 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         orgStore.setOrgList(orgList);
     }
 
+    private onLanguageChange(newLanguage): void {
+        console.log('app language config change', newLanguage);
+        const platform = PlatformPeg.get();
+        if (platform) {
+            platform.setLanguage([newLanguage]);
+            platform.reload();
+        }
+    }
+
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
+        AppMessage.addObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -449,6 +462,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         UIStore.destroy();
         this.state.resizeNotifier.removeListener("middlePanelResized", this.dispatchTimelineResize);
         window.removeEventListener("resize", this.onWindowResized);
+        AppMessage.removeObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
 
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();

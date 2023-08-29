@@ -138,6 +138,7 @@ module.exports = (env, argv) => {
     // don't have to call them over and over. We also resolve to the package.json instead of the src
     // directory, so we don't have to rely on an index.js or similar file existing.
     const jsSdkSrcDir = path.resolve(require.resolve("matrix-js-sdk/package.json"), "..", "src");
+    const appSdkDir = path.resolve(require.resolve("app-sdk/package.json"), "..", "src");
 
     const ACTIVE_THEMES = getActiveThemes();
     function getThemesImports() {
@@ -279,6 +280,9 @@ module.exports = (env, argv) => {
                         // path, these could be anywhere thanks to yarn link. We must also not
                         // include node modules inside these modules, so we add 'src'.
                         if (f.startsWith(jsSdkSrcDir)) return true;
+
+
+                        if (f.startsWith(appSdkDir)) return true;
 
                         // but we can't run all of our dependencies through babel (many of them still
                         // use module.exports which breaks if babel injects an 'include' for its
