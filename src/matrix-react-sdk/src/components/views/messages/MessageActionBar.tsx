@@ -565,7 +565,6 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
                 );
             }
 
-            console.log('this.props.mxEvent', this.props.mxEvent);
             // The menu button should be last, so dump it there.
             toolbarOpts.push(
                 <OptionsButton
