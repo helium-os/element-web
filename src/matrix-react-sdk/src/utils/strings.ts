@@ -23,32 +23,16 @@ limitations under the License.
 import { logger } from "matrix-js-sdk/src/logger";
 
 export async function copyPlaintext(text: string): Promise<boolean> {
+    if (navigator?.clipboard?.writeText) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch(error) {
+            console.error(error);
+        }
+    }
+
     try {
-        // if (navigator?.clipboard?.writeText) {
-        //     await navigator.clipboard.writeText(text);
-        //     return true;
-        // } else {
-        //     const textArea = document.createElement("textarea");
-        //     textArea.value = text;
-        //
-        //     // Avoid scrolling to bottom
-        //     textArea.style.top = "0";
-        //     textArea.style.left = "0";
-        //     textArea.style.position = "fixed";
-        //
-        //     document.body.appendChild(textArea);
-        //     const selection = document.getSelection()!;
-        //     const range = document.createRange();
-        //     // range.selectNodeContents(textArea);
-        //     range.selectNode(textArea);
-        //     selection.removeAllRanges();
-        //     selection.addRange(range);
-        //
-        //     const successful = document.execCommand("copy");
-        //     selection.removeAllRanges();
-        //     document.body.removeChild(textArea);
-        //     return successful;
-        // }
         const textArea = document.createElement("textarea");
         textArea.value = text;
 
