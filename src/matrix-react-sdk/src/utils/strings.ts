@@ -40,12 +40,14 @@ export async function copyPlaintext(text: string): Promise<boolean> {
         textArea.style.top = "0";
         textArea.style.left = "0";
         textArea.style.position = "fixed";
+        textArea.style.padding = "0";
+        textArea.style.margin = "0";
 
         document.body.appendChild(textArea);
         const selection = document.getSelection()!;
         const range = document.createRange();
-        range.selectNodeContents(textArea);
-        // range.selectNode(textArea);
+        // range.selectNodeContents(textArea);
+        range.selectNode(textArea);
         selection.removeAllRanges();
         selection.addRange(range);
 
@@ -54,6 +56,7 @@ export async function copyPlaintext(text: string): Promise<boolean> {
         document.body.removeChild(textArea);
         return successful;
     } catch (e) {
+        console.error("copyPlaintext failed", e);
         logger.error("copyPlaintext failed", e);
     }
     return false;
