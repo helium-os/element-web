@@ -148,7 +148,7 @@ import {OwnProfileStore} from "../../stores/OwnProfileStore";
 
 import AppMessage from "app-sdk";
 import * as languageHandler from "../../../src/languageHandler";
-import { appObserverKeyMap, observerKeyMap } from "../../../../vector/appConfig";
+import { appObserverKeyMap } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "../../../../i18n/map";
 
 // legacy export
