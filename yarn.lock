@@ -3276,6 +3276,13 @@ anymatch@^3.0.0, anymatch@^3.0.3, anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
+app-sdk@1.0.5:
+  version "1.0.5"
+  resolved "https://easypayx-npm.pkg.coding.net/heliumos-app/npm/app-sdk/-/app-sdk-1.0.5.tgz#a0f0eb799e25d99628026a3370b7b3b89697fab0"
+  integrity sha512-YUUdF5oDQbhX9YRfUmunIVWl+MK7Fr87Qt1grQfuLWdZ98ioMM6L9YQwTxyrDx8JJ/a/8ltHPVSViMrs/Hteig==
+  dependencies:
+    request "^2.88.2"
+
 aproba@^1.1.1:
   version "1.2.0"
   resolved "https://registry.npmmirror.com/aproba/-/aproba-1.2.0.tgz#6802e6264efd18c790a1b0d517f0f2627bf2c94a"

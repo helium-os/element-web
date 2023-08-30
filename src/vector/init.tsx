@@ -124,9 +124,10 @@ export async function loadLanguage(): Promise<void> {
         language = await getLanguage();
     } catch(error) {
         console.log(error);
+        language = defaultLanguage;
     }
 
-    const langs = [language || defaultLanguage];
+    const langs = [language];
     try {
         await languageHandler.setLanguage(langs);
         document.documentElement.setAttribute("lang", languageHandler.getCurrentLanguage());

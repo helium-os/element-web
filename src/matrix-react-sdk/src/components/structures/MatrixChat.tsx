@@ -148,6 +148,7 @@ import {OwnProfileStore} from "../../stores/OwnProfileStore";
 
 import AppMessage from "app-sdk";
 import {appObserverKeyMap, observerKeyMap} from "../../../../vector/appConfig";
+import {defaultLanguage, languageMap} from "../../../../i18n/map";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -433,7 +434,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         console.log('app language config change', newLanguage);
         const platform = PlatformPeg.get();
         if (platform) {
-            platform.setLanguage([newLanguage]);
+            platform.setLanguage([languageMap.get(newLanguage) || defaultLanguage]);
             platform.reload();
         }
     }
