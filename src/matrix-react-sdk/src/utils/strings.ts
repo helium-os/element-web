@@ -44,8 +44,8 @@ export async function copyPlaintext(text: string): Promise<boolean> {
         document.body.appendChild(textArea);
         const selection = document.getSelection()!;
         const range = document.createRange();
-        // range.selectNodeContents(textArea);
-        range.selectNode(textArea);
+        range.selectNodeContents(textArea);
+        // range.selectNode(textArea);
         selection.removeAllRanges();
         selection.addRange(range);
 
