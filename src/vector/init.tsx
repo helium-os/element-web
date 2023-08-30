@@ -123,7 +123,7 @@ export async function loadLanguage(): Promise<void> {
     try {
         language = await getLanguage();
     } catch(error) {
-        console.log(error);
+        console.error(error);
         language = defaultLanguage;
     }
 
