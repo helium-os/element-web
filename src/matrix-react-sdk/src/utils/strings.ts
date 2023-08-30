@@ -23,6 +23,7 @@ limitations under the License.
 import { logger } from "matrix-js-sdk/src/logger";
 
 export async function copyPlaintext(text: string): Promise<boolean> {
+    console.log('copyPlaintext text', text);
     if (navigator?.clipboard?.writeText) {
         try {
             await navigator.clipboard.writeText(text);
