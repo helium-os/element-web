@@ -147,8 +147,9 @@ import { UserTab } from "../views/dialogs/UserTab";
 import {OwnProfileStore} from "../../stores/OwnProfileStore";
 
 import AppMessage from "app-sdk";
-import {appObserverKeyMap, observerKeyMap} from "../../../../vector/appConfig";
-import {defaultLanguage, languageMap} from "../../../../i18n/map";
+import * as languageHandler from "../../../src/languageHandler";
+import { appObserverKeyMap, observerKeyMap } from "../../../../vector/appConfig";
+import { defaultLanguage, languageMap } from "../../../../i18n/map";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -430,11 +431,13 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         orgStore.setOrgList(orgList);
     }
 
-    private onLanguageChange(newLanguage): void {
-        console.log('app language config change', newLanguage);
+    private onLanguageChange(language): void {
+        console.log('app language config change', language);
+        const newLanguage = languageMap.get(language) || defaultLanguage;
+        if (newLanguage === languageHandler.getCurrentLanguage()) return;
         const platform = PlatformPeg.get();
         if (platform) {
-            platform.setLanguage([languageMap.get(newLanguage) || defaultLanguage]);
+            platform.setLanguage([newLanguage]);
             platform.reload();
         }
     }
