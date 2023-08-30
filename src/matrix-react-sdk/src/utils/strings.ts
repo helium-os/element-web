@@ -23,7 +23,6 @@ limitations under the License.
 import { logger } from "matrix-js-sdk/src/logger";
 
 export async function copyPlaintext(text: string): Promise<boolean> {
-    console.log('copyPlaintext text', text, text.indexOf('\n'));
     if (navigator?.clipboard?.writeText) {
         try {
             await navigator.clipboard.writeText(text);
@@ -41,20 +40,18 @@ export async function copyPlaintext(text: string): Promise<boolean> {
         textArea.style.top = "0";
         textArea.style.left = "0";
         textArea.style.position = "fixed";
-        textArea.style.padding = "0";
-        textArea.style.margin = "0";
 
         document.body.appendChild(textArea);
         const selection = document.getSelection()!;
+        selection.removeAllRanges();
         const range = document.createRange();
         // range.selectNodeContents(textArea);
         range.selectNode(textArea);
-        selection.removeAllRanges();
         selection.addRange(range);
 
         const successful = document.execCommand("copy");
-        selection.removeAllRanges();
-        document.body.removeChild(textArea);
+        // selection.removeAllRanges();
+        // document.body.removeChild(textArea);
         return successful;
     } catch (e) {
         console.error("copyPlaintext failed", e);
