@@ -485,21 +485,15 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         }
     };
 
-    private onKeyDownUp = (event: React.KeyboardEvent) => {
-        console.log('触发keyup事件', event.key);
-    }
-
     private onKeyDown = (event: React.KeyboardEvent): void => {
         const model = this.props.model;
         let handled = false;
 
-        console.log('onKeyDown enter 0');
         if (this.state.surroundWith && document.getSelection()!.type !== "Caret") {
             // This surrounds the selected text with a character. This is
             // intentionally left out of the keybinding manager as the keybinds
             // here shouldn't be changeable
 
-            console.log('onKeyDown enter 1');
             const selectionRange = getRangeForSelection(
                 this.editorRef.current,
                 this.props.model,
@@ -509,7 +503,6 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
             selectionRange.trim();
 
             if ([...SURROUND_WITH_DOUBLE_CHARACTERS.keys(), ...SURROUND_WITH_CHARACTERS].includes(event.key)) {
-                console.log('onKeyDown enter 2');
                 this.historyManager.ensureLastChangesPushed(this.props.model);
                 this.modifiedFlag = true;
                 toggleInlineFormat(selectionRange, event.key, SURROUND_WITH_DOUBLE_CHARACTERS.get(event.key));
@@ -520,7 +513,6 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         const autocompleteAction = getKeyBindingsManager().getAutocompleteAction(event);
         const accessibilityAction = getKeyBindingsManager().getAccessibilityAction(event);
         if (model.autoComplete?.hasCompletions()) {
-            console.log('onKeyDown enter 3');
             const autoComplete = model.autoComplete;
             switch (autocompleteAction) {
                 case KeyBindingAction.ForceCompleteAutocomplete:
@@ -546,25 +538,20 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
                     return; // don't preventDefault on anything else
             }
         } else if (autocompleteAction === KeyBindingAction.ForceCompleteAutocomplete && !this.state.showVisualBell) {
-            console.log('onKeyDown enter 4');
             // there is no current autocomplete window, try to open it
             this.tabCompleteName();
             handled = true;
         } else if ([KeyBindingAction.Delete, KeyBindingAction.Backspace].includes(accessibilityAction!)) {
-            console.log('onKeyDown enter 5');
             this.formatBarRef.current?.hide();
         }
 
         if (handled) {
-            console.log('onKeyDown enter 6');
             event.preventDefault();
             event.stopPropagation();
             return;
         }
 
-        console.log('onKeyDown enter 7');
         const action = getKeyBindingsManager().getMessageComposerAction(event);
-        console.log('onKeyDown action', action);
         switch (action) {
             case KeyBindingAction.FormatBold:
                 this.onFormatAction(Formatting.Bold);
@@ -609,7 +596,6 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
                 break;
             }
             case KeyBindingAction.NewLine:
-                console.log('onKeyDown enter KeyBindingAction NewLine');
                 this.insertText("\n");
                 handled = true;
                 break;
@@ -830,7 +816,6 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
                     onCut={this.onCut}
                     onPaste={this.onPaste}
                     onKeyDown={this.onKeyDown}
-                    onKeyUp={this.onKeyDownUp}
                     ref={this.editorRef}
                     aria-label={this.props.label}
                     role="textbox"
