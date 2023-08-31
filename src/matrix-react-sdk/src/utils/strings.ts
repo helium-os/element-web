@@ -50,8 +50,8 @@ export async function copyPlaintext(text: string): Promise<boolean> {
         selection.addRange(range);
 
         const successful = document.execCommand("copy");
-        // selection.removeAllRanges();
-        // document.body.removeChild(textArea);
+        selection.removeAllRanges();
+        document.body.removeChild(textArea);
         return successful;
     } catch (e) {
         console.error("copyPlaintext failed", e);
