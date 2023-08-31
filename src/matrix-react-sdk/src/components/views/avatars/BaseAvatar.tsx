@@ -138,7 +138,7 @@ const BaseAvatar: React.FC<IProps> = (props) => {
                 className="mx_BaseAvatar_image"
                 src={AvatarLogic.defaultAvatarUrlForString(idName || name)}
                 alt=""
-                title={title}
+                // title={title}
                 onError={onError}
                 style={{
                     width: toPx(width),
