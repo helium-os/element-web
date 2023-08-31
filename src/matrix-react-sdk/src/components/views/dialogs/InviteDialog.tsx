@@ -690,7 +690,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         const { userId, userName, userOrgId, userOrgAlias } = this.generateSearchUserInfo(term);
         console.log('userOrgId', userOrgId, 'userOrgAlias', userOrgAlias);
         if (!!userId) { return; } // 如果有用户id，不走查询接口；只有搜索用户名走查询接口
-        const name = userName + (userOrgId !== currentOrgId ? `@${userOrgAlias}` : '');
+        const name = userName + (userOrgId !== currentOrgId ? `@${userOrgId}` : '');
         fetch(`/heliumos-user-api/user/v1/users?name=${encodeURIComponent(name)}`)
             .then((response) => response.json())
             .then((res) => {
