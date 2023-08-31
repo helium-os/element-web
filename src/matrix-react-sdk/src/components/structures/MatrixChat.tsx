@@ -444,7 +444,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
-        AppMessage.addObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
+        AppMessage?.addObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -466,7 +466,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         UIStore.destroy();
         this.state.resizeNotifier.removeListener("middlePanelResized", this.dispatchTimelineResize);
         window.removeEventListener("resize", this.onWindowResized);
-        AppMessage.removeObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
+        AppMessage?.removeObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
 
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();

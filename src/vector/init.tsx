@@ -119,12 +119,11 @@ export function loadOlm(): Promise<void> {
 }
 
 export async function loadLanguage(): Promise<void> {
-    let language;
+    let language = defaultLanguage;
     try {
         language = await getLanguage();
     } catch(error) {
         console.error(error);
-        language = defaultLanguage;
     }
 
     const langs = [language];

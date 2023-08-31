@@ -7,7 +7,7 @@ export const appObserverKeyMap = {
 
 export function getLanguage(): Promise<string> {
     return new Promise((resolve, reject) => {
-        AppMessage.getMessage?.('system.getLanguage', (res) => {
+        AppMessage?.getMessage?.('system.getLanguage', (res) => {
             console.log('get app language config success', res);
             resolve(languageMap.get(res) || defaultLanguage);
         });
