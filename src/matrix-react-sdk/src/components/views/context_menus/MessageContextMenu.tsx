@@ -18,7 +18,7 @@ limitations under the License.
 
 import React, { createRef, useContext } from "react";
 import { EventStatus, MatrixEvent } from "matrix-js-sdk/src/models/event";
-import { EventType, RelationType } from "matrix-js-sdk/src/@types/event";
+import { EventType, MsgType, RelationType } from "matrix-js-sdk/src/@types/event";
 import { Relations } from "matrix-js-sdk/src/models/relations";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import { M_POLL_START } from "matrix-js-sdk/src/@types/polls";
@@ -310,7 +310,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
     };
 
     private onCopyClick = (): void => {
-        copyPlaintext(getSelectedText());
+        copyPlaintext(getSelectedText() || this.props.mxEvent.getContent()?.body); // 如果有选中的文本，优先复制选中的文本；如果没有，则复制整条消息
         this.closeMenu();
     };
 
@@ -396,6 +396,8 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             timelineRenderingType === TimelineRenderingType.Thread ||
             timelineRenderingType === TimelineRenderingType.ThreadsList;
         const isThreadRootEvent = isThread && mxEvent?.getThread()?.rootEvent === mxEvent;
+
+        const { msgtype } = mxEvent.getContent() || {};
 
         let resendReactionsButton: JSX.Element | undefined;
         if (!mxEvent.isRedacted() && unsentReactionsCount !== 0) {
@@ -606,7 +608,8 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let copyButton: JSX.Element | undefined;
-        if (rightClick && getSelectedText()) {
+        // 文本类型的消息展示复制按钮；其他类型（图片/文件）不展示
+        if (msgtype === MsgType.Text) {
             copyButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconCopy"
