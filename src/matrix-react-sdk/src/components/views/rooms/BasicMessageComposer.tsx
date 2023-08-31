@@ -485,6 +485,10 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         }
     };
 
+    private onKeyDownUp = (event: React.KeyboardEvent) => {
+        console.log('触发keyup事件', event.key);
+    }
+
     private onKeyDown = (event: React.KeyboardEvent): void => {
         const model = this.props.model;
         let handled = false;
@@ -826,6 +830,7 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
                     onCut={this.onCut}
                     onPaste={this.onPaste}
                     onKeyDown={this.onKeyDown}
+                    onKeyUp={this.onKeyDownUp}
                     ref={this.editorRef}
                     aria-label={this.props.label}
                     role="textbox"
