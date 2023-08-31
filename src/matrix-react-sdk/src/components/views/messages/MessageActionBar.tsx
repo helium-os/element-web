@@ -58,7 +58,7 @@ import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayloa
 import useFavouriteMessages from "../../../hooks/useFavouriteMessages";
 import { GetRelationsForEvent } from "../rooms/EventTile";
 import { VoiceBroadcastInfoEventType } from "../../../voice-broadcast/types";
-import {EventType} from "matrix-js-sdk/src/matrix";
+import { EventType } from "matrix-js-sdk/src/matrix";
 
 interface IOptionsButtonProps {
     mxEvent: MatrixEvent;
