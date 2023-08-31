@@ -58,6 +58,7 @@ import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayloa
 import useFavouriteMessages from "../../../hooks/useFavouriteMessages";
 import { GetRelationsForEvent } from "../rooms/EventTile";
 import { VoiceBroadcastInfoEventType } from "../../../voice-broadcast/types";
+import { EventType } from "matrix-js-sdk/src/matrix";
 
 interface IOptionsButtonProps {
     mxEvent: MatrixEvent;
@@ -580,10 +581,13 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
         }
 
         // aria-live=off to not have this read out automatically as navigating around timeline, gets repetitive.
+        // 撤回的消息 & 开启加密通知消息不展示更多按钮
         return (
-            <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
-                {toolbarOpts}
-            </Toolbar>
+            (!this.props.mxEvent.isRedacted() && this.props.mxEvent.getType() !== EventType.RoomEncryption)  && (
+                <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
+                    {toolbarOpts}
+                </Toolbar>
+            )
         );
     }
 }
