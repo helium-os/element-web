@@ -51,6 +51,6 @@ export default class AllMember {
     }
 
     public isAllMember(userId: string, roomId?: string): boolean {
-        return userId === this.getAllMemberId(roomId) || userId.split(':')[0].split('@')[1] === this.userId;
+        return (roomId && userId === this.getAllMemberId(roomId)) || userId.split(':')[0]?.split('@')?.[1] === this.userId;
     }
 }
