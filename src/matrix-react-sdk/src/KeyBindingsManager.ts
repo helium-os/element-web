@@ -47,6 +47,7 @@ export type KeyBinding = {
  * Note, this method is only exported for testing.
  */
 export function isKeyComboMatch(ev: KeyboardEvent | React.KeyboardEvent, combo: KeyCombo, onMac: boolean): boolean {
+    console.log('*************** isKeyComboMatch', 'ev.key', ev.key, 'ev.shiftKey', ev.shiftKey, 'combo', combo, 'onMac', onMac);
     if (combo.key !== undefined) {
         // When shift is pressed, letters are returned as upper case chars. In this case do a lower case comparison.
         // This works for letter combos such as shift + U as well for none letter combos such as shift + Escape.
@@ -114,9 +115,16 @@ export class KeyBindingsManager {
         getters: KeyBindingGetter[],
         ev: KeyboardEvent | React.KeyboardEvent,
     ): KeyBindingAction | undefined {
+        console.log('*************** getAction', 'getters', getters);
         for (const getter of getters) {
             const bindings = getter();
-            const binding = bindings.find((it) => isKeyComboMatch(ev, it.keyCombo, IS_MAC));
+            console.log('*************** bindings', bindings);
+            const binding = bindings.find((it) => {
+                const match =  isKeyComboMatch(ev, it.keyCombo, IS_MAC);
+                console.log('*************** match', match);
+                return match;
+            });
+            console.log('*************** binding', binding);
             if (binding) {
                 return binding.action;
             }
@@ -125,6 +133,7 @@ export class KeyBindingsManager {
     }
 
     public getMessageComposerAction(ev: KeyboardEvent | React.KeyboardEvent): KeyBindingAction | undefined {
+        console.log('*************** ------------------------ start getMessageComposerAction');
         return this.getAction(
             this.bindingsProviders.map((it) => it.getMessageComposerBindings),
             ev,
