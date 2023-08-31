@@ -188,7 +188,8 @@ export function createMessageContent(
 
     const content: IContent = {
         msgtype: isEmote ? "m.emote" : "m.text",
-        body: body.replace(/^\n+|\n+$/g, ''), // 去掉首尾换行符
+        body: body
+        // body: body.replace(/^\n+|\n+$/g, ''), // 去掉首尾换行符
     };
     const formattedBody = htmlSerializeIfNeeded(model, {
         forceHTML: !!replyToEvent,
