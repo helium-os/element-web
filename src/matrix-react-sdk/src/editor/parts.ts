@@ -492,7 +492,7 @@ class UserPillPart extends PillPart {
     }
 
     protected onClick = (): void => {
-        if (AllMember.instance().isAllMember(this.member.userId)) return; // @All不需要支持点击预览用户
+        if (AllMember.instance().isAllMember(this.member.userId, this.member.roomId)) return; // @All不需要支持点击预览用户
 
         defaultDispatcher.dispatch({
             action: Action.ViewUser,
