@@ -192,33 +192,14 @@ module.exports = (env, argv) => {
                         name: 'react-bucket',
                         priority: 8
                     },
-                    matrixOrg: {
-                        test: /[\\/]node_modules[\\/]@?matrix-org[\\/]/,
-                        name: 'matrix-org',
-                        priority: 8
-                    },
-                    matrixJsSdk: {
-                        test: /[\\/]node_modules[\\/]matrix-js-sdk[\\/]/,
-                        name: 'matrix-js-sdk',
-                        priority: 8
-                    },
                     matrixReactSdk: {
                         test:/[\\/]matrix-react-sdk[\\/]/,
                         name: 'matrix-react-sdk',
                         priority: 8
                     },
-                    vendors: {
-                        test: /[\\/]node_modules[\\/]/,
-                        name: 'vendors',
-                        priority: 7
-                    },
-                    commons: {
-                        name: 'chunk-commons',
-                        minChunks: 1,
-                        priority: 0,
+                    default: {
                         reuseExistingChunk: true,
-                    },
-                    default: false
+                    }
                 },
             },
 
