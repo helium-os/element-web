@@ -19,6 +19,7 @@ import React from "react";
 import AuthPage from "../../views/auth/AuthPage";
 import CompleteSecurityBody from "../../views/auth/CompleteSecurityBody";
 import CreateCrossSigningDialog from "../../views/dialogs/security/CreateCrossSigningDialog";
+import Spinner from "../../views/elements/Spinner";
 
 interface IProps {
     onFinished: () => void;
@@ -29,17 +30,22 @@ interface IProps {
 export default class E2eSetup extends React.Component<IProps> {
     public render(): React.ReactNode {
         return (
-            <div style={{display: 'none'}}>
-                <AuthPage>
-                    <CompleteSecurityBody>
-                        <CreateCrossSigningDialog
-                            onFinished={this.props.onFinished}
-                            accountPassword={this.props.accountPassword}
-                            tokenLogin={this.props.tokenLogin}
-                        />
-                    </CompleteSecurityBody>
-                </AuthPage>
-            </div>
+            <>
+                <div>
+                    <Spinner />
+                </div>
+                <div style={{display: 'none'}}>
+                    <AuthPage>
+                        <CompleteSecurityBody>
+                            <CreateCrossSigningDialog
+                                onFinished={this.props.onFinished}
+                                accountPassword={this.props.accountPassword}
+                                tokenLogin={this.props.tokenLogin}
+                            />
+                        </CompleteSecurityBody>
+                    </AuthPage>
+                </div>
+            </>
         );
     }
 }
