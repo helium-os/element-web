@@ -48,7 +48,7 @@ export interface ICompletion {
     href?: string;
 }
 
-const PROVIDERS = [UserProvider, RoomProvider, EmojiProvider, NotifProvider, CommandProvider, SpaceProvider];
+const PROVIDERS = [UserProvider, RoomProvider, EmojiProvider, CommandProvider, SpaceProvider];
 
 // Providers will get rejected if they take longer than this.
 const PROVIDER_COMPLETION_TIMEOUT = 3000;

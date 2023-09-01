@@ -776,7 +776,9 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
     };
 
     private onTimestampContextMenu = (ev: React.MouseEvent): void => {
-        this.showContextMenu(ev, this.props.permalinkCreator?.forEvent(this.props.mxEvent.getId()));
+        ev.stopPropagation();
+        ev.preventDefault();
+        // this.showContextMenu(ev, this.props.permalinkCreator?.forEvent(this.props.mxEvent.getId()));
     };
 
     private showContextMenu(ev: React.MouseEvent, permalink?: string): void {
@@ -793,7 +795,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         // Return if we're in a browser and click either an a tag or we have
         // selected text, as in those cases we want to use the native browser
         // menu
-        if (!PlatformPeg.get()?.allowOverridingNativeContextMenus() && (getSelectedText() || anchorElement)) return;
+        // if (!PlatformPeg.get()?.allowOverridingNativeContextMenus() && (getSelectedText() || anchorElement)) return;
 
         // We don't want to show the menu when editing a message
         if (this.props.editState) return;
@@ -1357,7 +1359,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         {ircPadlock}
                         {avatar}
                         <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu}>
-                            {/* {this.renderContextMenu()} */}
+                            {this.renderContextMenu()}
                             {groupTimestamp}
                             {/*{groupPadlock}*/}
                             {replyChain}

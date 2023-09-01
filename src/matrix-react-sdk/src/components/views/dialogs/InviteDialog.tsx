@@ -327,7 +327,7 @@ interface SearchInfo {
     userId?: string; // 用户id
     userName?: string; // 用户名
     userOrgId: string; // 用户所在组织id
-    userOrgName: string; // 用户所在组织名称
+    userOrgAlias: string; // 用户所在组织别名
 }
 
 export default class InviteDialog extends React.PureComponent<Props, IInviteDialogState> {
@@ -499,8 +499,8 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
         let userId,
             userName,
-            userOrgId,  // 查询用户所属的组织id
-            userOrgName; // 查询用户所属的组织名称
+            userOrgId,  // 所查询的用户所属的组织id
+            userOrgAlias; // 所查询的用户所属的组织别名
         if (!searchUser.includes("@")) {
             // 查询时不包含@，例如test_dyp，默认从当前服务查询
             userName = searchUser;
@@ -511,28 +511,28 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             [userId, chatServer] = searchUser.split('@')[1].split(':');
             userOrgId = chatServer.split('.').pop();
         } else {
-            // userName@orgName
-            [userName, userOrgName] = searchUser.split('@');
+            // userName@orgAlias
+            [userName, userOrgAlias] = searchUser.split('@');
         }
 
         // 补齐信息
-        if (userOrgName && !userOrgId) {
-            userOrgId = OrgStore.sharedInstance().getOrgIdByName(userOrgName);
-        } else if (userOrgId && !userOrgName) {
-            userOrgName = OrgStore.sharedInstance().getOrgNameById(userOrgId);
+        if (userOrgAlias && !userOrgId) {
+            userOrgId = OrgStore.sharedInstance().getOrgIdByAlias(userOrgAlias);
+        } else if (userOrgId && !userOrgAlias) {
+            userOrgAlias = OrgStore.sharedInstance().getOrgAliasById(userOrgId);
         }
         console.log('generateSearchUser  result', {
             userId,
             userName,
             userOrgId,
-            userOrgName
+            userOrgAlias
         });
 
         return {
             userId,
             userName,
             userOrgId,
-            userOrgName
+            userOrgAlias
         };
     }
 
@@ -687,10 +687,10 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
     private updateSuggestions = async (term: string): Promise<void> => {
         const results = [];
         const currentOrgId = this.getOrgId();
-        const { userId, userName, userOrgId, userOrgName } = this.generateSearchUserInfo(term);
-        console.log('userOrgId', userOrgId, 'userOrgName', userOrgName);
+        const { userId, userName, userOrgId, userOrgAlias } = this.generateSearchUserInfo(term);
+        console.log('userOrgId', userOrgId, 'userOrgAlias', userOrgAlias);
         if (!!userId) { return; } // 如果有用户id，不走查询接口；只有搜索用户名走查询接口
-        const name = userName + (userOrgId !== currentOrgId ? `@${userOrgName}` : '');
+        const name = userName + (userOrgId !== currentOrgId ? `@${userOrgId}` : '');
         fetch(`/heliumos-user-api/user/v1/users?name=${encodeURIComponent(name)}`)
             .then((response) => response.json())
             .then((res) => {

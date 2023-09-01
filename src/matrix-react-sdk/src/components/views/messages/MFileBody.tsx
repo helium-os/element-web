@@ -289,7 +289,7 @@ export default class MFileBody extends React.Component<IProps, IState> {
                                 src={url}
                                 onLoad={() => this.downloadFile(this.fileName, this.linkText)}
                                 ref={this.iframe}
-                                sandbox="allow-scripts allow-downloads allow-downloads-without-user-activation"
+                                sandbox="allow-scripts allow-same-origin allow-downloads allow-downloads-without-user-activation"
                             />
                         </div>
                     )}
