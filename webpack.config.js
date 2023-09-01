@@ -183,6 +183,7 @@ module.exports = (env, argv) => {
                     styles: {
                         name: "styles",
                         test: /\.css$/,
+                        priority: 10,
                         enforce: true,
                         // Do not add `chunks: 'all'` here because you'll break the app entry point.
                     },
@@ -215,10 +216,9 @@ module.exports = (env, argv) => {
                         name: 'chunk-commons',
                         minChunks: 1,
                         priority: 0,
-                    },
-                    default: {
                         reuseExistingChunk: true,
-                    }
+                    },
+                    default: false
                 },
             },
 
@@ -719,7 +719,7 @@ module.exports = (env, argv) => {
 
             new webpack.DefinePlugin(generateCustomDefinePlugin(customConfig.define)),
 
-            new BundleAnalyzerPlugin()
+            ...(devMode ? [new BundleAnalyzerPlugin()] : [])
         ].filter(Boolean),
 
         output: {
