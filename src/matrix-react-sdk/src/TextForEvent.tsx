@@ -84,8 +84,8 @@ function textForCallInviteEvent(event: MatrixEvent): (() => string) | null {
 
 function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents?: boolean): (() => string) | null {
     // XXX: SYJS-16 "sender is sometimes null for join messages"
-    const senderName = ev.sender?.name || getRoomMemberDisplayname(ev);
-    const targetName = ev.target?.name || getRoomMemberDisplayname(ev, ev.getStateKey());
+    const senderName = getRoomMemberDisplayname(ev) || ev.sender?.name;
+    const targetName = getRoomMemberDisplayname(ev, ev.getStateKey()) || ev.target?.name;
     const prevContent = ev.getPrevContent();
     const content = ev.getContent();
     const reason = content.reason;
