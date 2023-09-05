@@ -5,6 +5,8 @@ const loaderUtils = require("loader-utils");
 // copies the resources into the webapp directory.
 //
 
+const SUPPORT_LANGS = new Set(['zh_Hans', 'en_EN']);
+
 // Languages are listed manually so we can choose when to include
 // a translation in the app (because having a translation with only
 // 3 strings translated is just frustrating)
@@ -57,7 +59,7 @@ const INCLUDE_LANGS = [
     { value: "vls", label: "West-Vlaams" },
     { value: "zh_Hans", label: "简体中文" }, // simplified chinese
     { value: "zh_Hant", label: "繁體中文" }, // traditional chinese
-];
+].filter(item => SUPPORT_LANGS.has(item.value));
 
 // cpx includes globbed parts of the filename in the destination, but excludes
 // common parents. Hence, "res/{a,b}/**": the output will be "dest/a/..." and
