@@ -78,7 +78,7 @@ const PillMemberAvatar: React.FC<{
 
 /**
  * 是否被提及
- * @param roomId 房间id
+ * @param roomId 频道id
  * @param userId 判断是否被提及的用户id
  * @param resourceId @的id
  * @param senderId 发送消息的用户id

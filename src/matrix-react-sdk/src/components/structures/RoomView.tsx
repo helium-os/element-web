@@ -118,6 +118,7 @@ import { WidgetType } from "../../widgets/WidgetType";
 import WidgetUtils from "../../utils/WidgetUtils";
 import { shouldEncryptRoomWithSingle3rdPartyInvite } from "../../utils/room/shouldEncryptRoomWithSingle3rdPartyInvite";
 import { WaitingForThirdPartyRoomView } from "./WaitingForThirdPartyRoomView";
+import DMRoomMap from "../../utils/DMRoomMap";
 
 const DEBUG = false;
 const PREVENT_MULTIPLE_JITSI_WITHIN = 30_000;
@@ -162,6 +163,7 @@ export interface IRoomState {
     // used to trigger a rerender in TimelinePanel once the members are loaded,
     // so RR are rendered again (now with the members available), ...
     membersLoaded: boolean;
+    roomMembersCount: number; // 房间内的成员数
     // The event to be scrolled to initially
     initialEventId?: string;
     // The offset in pixels from the event with which to scroll vertically
@@ -397,6 +399,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             peekLoading: false,
             shouldPeek: true,
             membersLoaded: !llMembers,
+            roomMembersCount: 0,
             numUnreadMessages: 0,
             callState: undefined,
             activeCall: null,
@@ -1486,12 +1489,19 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     // rate limited because a power level change will emit an event for every member in the room.
     private updateRoomMembers = throttle(
         () => {
+            this.updateRoomMembersCount(this.state.room);
             this.updateDMState();
             this.updateE2EStatus(this.state.room);
         },
         500,
         { leading: true, trailing: true },
     );
+
+    private updateRoomMembersCount(room: Room): void {
+        this.setState({
+            roomMembersCount: room.getJoinedMemberCount() + room.getInvitedMemberCount()
+        });
+    }
 
     private checkDesktopNotifications(): void {
         const memberCount = this.state.room.getJoinedMemberCount() + this.state.room.getInvitedMemberCount();
@@ -2232,7 +2242,8 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         let messageComposer;
         const showComposer =
             // joined and not showing search results
-            myMembership === "join" && !this.state.search;
+            myMembership === "join" && !this.state.search &&
+            (!DMRoomMap.shared().getUserIdForRoomId(this.getRoomId()) || this.state.roomMembersCount > 1); // 主动离开私聊之后，另外一方除了看聊天记录以外不能做其他操作
         if (showComposer) {
             messageComposer = (
                 <MessageComposer

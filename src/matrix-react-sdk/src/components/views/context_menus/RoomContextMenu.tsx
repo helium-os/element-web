@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 import { logger } from "matrix-js-sdk/src/logger";
 
@@ -52,6 +52,7 @@ import DevtoolsDialog from "../dialogs/DevtoolsDialog";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import {UIComponent, UIFeature} from "../../../settings/UIFeature";
+import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 
 interface IProps extends IContextMenuProps {
     room: Room;
@@ -59,9 +60,25 @@ interface IProps extends IContextMenuProps {
 
 const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     const cli = useContext(MatrixClientContext);
+
+    const [roomMembersCount, setRoomMembersCount] = useState<number>(0); // 房间内的成员数
+    const [showSettings, setShowSettings] = useState<boolean>(false);
+
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
     );
+
+    const updateRoomMembersCount = (room: Room): void => {
+        setRoomMembersCount(room.getJoinedMemberCount() + room.getInvitedMemberCount());
+    }
+
+    useEventEmitterState(cli, RoomStateEvent.Update, () => updateRoomMembersCount(room));
+
+    useEffect(() => {
+        setShowSettings(!DMRoomMap.shared().getUserIdForRoomId(room.roomId) || roomMembersCount > 1);
+    }, [room.roomId, roomMembersCount]);
+
+
 
     let leaveOption: JSX.Element | undefined;
     if (roomTags.includes(DefaultTagID.Archived)) {
@@ -377,21 +394,25 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
                 {lowPriorityOption}
                 {copyLinkOption}
 
-                <IconizedContextMenuOption
-                    onClick={(ev: ButtonEvent) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
+                {
+                   showSettings && (
+                        <IconizedContextMenuOption
+                            onClick={(ev: ButtonEvent) => {
+                                ev.preventDefault();
+                                ev.stopPropagation();
 
-                        dis.dispatch({
-                            action: "open_room_settings",
-                            room_id: room.roomId,
-                        });
-                        onFinished();
-                        PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
-                    }}
-                    label={_t("Settings")}
-                    iconClassName="mx_RoomTile_iconSettings"
-                />
+                                dis.dispatch({
+                                    action: "open_room_settings",
+                                    room_id: room.roomId,
+                                });
+                                onFinished();
+                                PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
+                            }}
+                            label={_t("Settings")}
+                            iconClassName="mx_RoomTile_iconSettings"
+                        />
+                    )
+                }
 
                 {exportChatOption}
 

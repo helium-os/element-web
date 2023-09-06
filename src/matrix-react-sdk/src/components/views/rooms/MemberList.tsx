@@ -46,6 +46,7 @@ import { shouldShowComponent } from "../../../customisations/helpers/UIComponent
 import { UIComponent } from "../../../settings/UIFeature";
 import PosthogTrackers from "../../../PosthogTrackers";
 import { SDKContext } from "../../../contexts/SDKContext";
+import DMRoomMap from "../../../utils/DMRoomMap";
 
 const INITIAL_LOAD_NUM_MEMBERS = 30;
 const INITIAL_LOAD_NUM_INVITED = 5;
@@ -351,7 +352,10 @@ export default class MemberList extends React.Component<IProps, IState> {
         const room = cli.getRoom(this.props.roomId);
         let inviteButton;
 
-        if (room?.getMyMembership() === "join" && shouldShowComponent(UIComponent.InviteUsers)) {
+        if (
+            room?.getMyMembership() === "join" && shouldShowComponent(UIComponent.InviteUsers) &&
+            !DMRoomMap.shared().getUserIdForRoomId(room.roomId) // 私聊不展示邀请按钮
+        ) {
             let inviteButtonText = _t("Invite to this room");
             if (room.isSpaceRoom()) {
                 inviteButtonText = _t("Invite to this space");
