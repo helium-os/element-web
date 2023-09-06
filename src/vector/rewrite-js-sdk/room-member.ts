@@ -3,7 +3,13 @@ import {removeDirectionOverrideChars, removeHiddenChars} from "matrix-js-sdk/src
 import OrgStore from "../../matrix-react-sdk/src/stores/OrgStore";
 import {MatrixEvent} from "matrix-js-sdk/src/models/event";
 import {RoomState} from "matrix-js-sdk/src/models/room-state";
+import {PowerStatus} from "../../matrix-react-sdk/src/components/views/rooms/EntityTile";
 
+
+const powerStatusMap = new Map([
+    [100, PowerStatus.Admin],
+    [50, PowerStatus.Moderator],
+]);
 
 const _setMembershipEvent = RoomMember.prototype.setMembershipEvent;
 RoomMember.prototype.setMembershipEvent = function(event: MatrixEvent, roomState?: RoomState): void {
@@ -16,6 +22,25 @@ RoomMember.prototype.setMembershipEvent = function(event: MatrixEvent, roomState
         this.updateModifiedTime();
         this.emit(RoomMemberEvent.Name, event, this, oldName);
     }
+}
+
+// 获取成员在房间内的角色
+RoomMember.prototype.getPowerStatus = function(): PowerStatus {
+    // Find the nearest power level with a badge
+    let powerLevel = this.powerLevel;
+    for (const [pl] of powerStatusMap) {
+        if (this.powerLevel >= pl) {
+            powerLevel = pl;
+            break;
+        }
+    }
+
+    return powerStatusMap.get(powerLevel);
+}
+
+// 判断成员是否是该房间的管理员
+RoomMember.prototype.isAdmin = function(): boolean {
+    return this.getPowerStatus(this) === PowerStatus.Admin;
 }
 
 function calculateDisplayName(selfUserId: string, displayName: string | undefined, disambiguate: boolean): string {

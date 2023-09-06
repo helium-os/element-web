@@ -353,8 +353,7 @@ export default class MemberList extends React.Component<IProps, IState> {
         let inviteButton;
 
         if (
-            room?.getMyMembership() === "join" && shouldShowComponent(UIComponent.InviteUsers) &&
-            !DMRoomMap.shared().getUserIdForRoomId(room.roomId) // 私聊不展示邀请按钮
+            room?.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)
         ) {
             let inviteButtonText = _t("Invite to this room");
             if (room.isSpaceRoom()) {

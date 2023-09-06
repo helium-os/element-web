@@ -61,22 +61,17 @@ interface IProps extends IContextMenuProps {
 const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     const cli = useContext(MatrixClientContext);
 
-    const [roomMembersCount, setRoomMembersCount] = useState<number>(0); // 房间内的成员数
-    const [showSettings, setShowSettings] = useState<boolean>(false);
+    const [isAdminLeft, setIsAdminLeft] = useState<boolean>(false); // 管理员是否离开
 
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
     );
 
-    const updateRoomMembersCount = (room: Room): void => {
-        setRoomMembersCount(room.getJoinedMemberCount() + room.getInvitedMemberCount());
+    const updateAdminLeft = (room: Room): void => {
+        setIsAdminLeft(room.isAdminLeft());
     }
 
-    useEventEmitterState(cli, RoomStateEvent.Update, () => updateRoomMembersCount(room));
-
-    useEffect(() => {
-        setShowSettings(!DMRoomMap.shared().getUserIdForRoomId(room.roomId) || roomMembersCount > 1);
-    }, [room.roomId, roomMembersCount]);
+    useEventEmitterState(cli, RoomStateEvent.Update, () => updateAdminLeft(room));
 
 
 
@@ -384,57 +379,66 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomTile_contextMenu" compact>
             <IconizedContextMenuOptionList>
-                {inviteOption}
-                {notificationOption}
-                {favouriteOption}
-                {peopleOption}
-                {filesOption}
-                {pinsOption}
-                {widgetsOption}
-                {lowPriorityOption}
-                {copyLinkOption}
-
                 {
-                   showSettings && (
-                        <IconizedContextMenuOption
-                            onClick={(ev: ButtonEvent) => {
-                                ev.preventDefault();
-                                ev.stopPropagation();
-
-                                dis.dispatch({
-                                    action: "open_room_settings",
-                                    room_id: room.roomId,
-                                });
-                                onFinished();
-                                PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
-                            }}
-                            label={_t("Settings")}
-                            iconClassName="mx_RoomTile_iconSettings"
-                        />
+                    !isAdminLeft && (
+                        <>
+                            {inviteOption}
+                            {notificationOption}
+                            {favouriteOption}
+                        </>
                     )
                 }
 
-                {exportChatOption}
+                {peopleOption}
+                {
+                    !isAdminLeft && (
+                        <>
+                            {filesOption}
+                            {pinsOption}
+                            {widgetsOption}
+                            {lowPriorityOption}
+                            {copyLinkOption}
 
-                {SettingsStore.getValue("developerMode") && (
-                    <IconizedContextMenuOption
-                        onClick={(ev: ButtonEvent) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
+                            <IconizedContextMenuOption
+                                onClick={(ev: ButtonEvent) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
 
-                            Modal.createDialog(
-                                DevtoolsDialog,
-                                {
-                                    roomId: room.roomId,
-                                },
-                                "mx_DevtoolsDialog_wrapper",
-                            );
-                            onFinished();
-                        }}
-                        label={_t("Developer tools")}
-                        iconClassName="mx_RoomTile_iconDeveloperTools"
-                    />
-                )}
+                                    dis.dispatch({
+                                        action: "open_room_settings",
+                                        room_id: room.roomId,
+                                    });
+                                    onFinished();
+                                    PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
+                                }}
+                                label={_t("Settings")}
+                                iconClassName="mx_RoomTile_iconSettings"
+                            />
+
+                            {exportChatOption}
+
+                            {SettingsStore.getValue("developerMode") && (
+                                <IconizedContextMenuOption
+                                    onClick={(ev: ButtonEvent) => {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
+R
+                                        Modal.createDialog(
+                                            DevtoolsDialog,
+                                            {
+                                                roomId: room.roomId,
+                                            },
+                                            "mx_DevtoolsDialog_wrapper",
+                                        );
+                                        onFinished();
+                                    }}
+                                    label={_t("Developer tools")}
+                                    iconClassName="mx_RoomTile_iconDeveloperTools"
+                                />
+                            )}
+                        </>
+                    )
+                }
 
                 {leaveOption}
             </IconizedContextMenuOptionList>

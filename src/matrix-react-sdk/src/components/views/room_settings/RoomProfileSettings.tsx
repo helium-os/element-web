@@ -76,9 +76,9 @@ export default class RoomProfileSettings extends React.Component<IProps, IState>
             originalTopic: topic,
             topic: topic,
             profileFieldsTouched: {},
-            canSetName: room.currentState.maySendStateEvent(EventType.RoomName, userId),
-            canSetTopic: room.currentState.maySendStateEvent(EventType.RoomTopic, userId),
-            canSetAvatar: room.currentState.maySendStateEvent(EventType.RoomAvatar, userId),
+            canSetName: room.currentState.maySendStateEvent(EventType.RoomName, userId) && !room.isAdminLeft(),
+            canSetTopic: room.currentState.maySendStateEvent(EventType.RoomTopic, userId) && !room.isAdminLeft(),
+            canSetAvatar: room.currentState.maySendStateEvent(EventType.RoomAvatar, userId) && !room.isAdminLeft(),
         };
     }
 

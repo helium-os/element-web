@@ -1065,8 +1065,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const showMessageActionBar = (
             !isEditing && !this.props.forExport &&
             !this.props.mxEvent.isRedacted() && // 撤回的消息不展示操作按钮
-            this.props.mxEvent.getType() !== EventType.RoomEncryption && // 开启加密通知消息不展示操作按钮
-            (!DMRoomMap.shared().getUserIdForRoomId(this.props.mxEvent.getRoomId()) || this.state.roomMembersCount > 1) // 主动离开私聊之后，另外一方除了看聊天记录以外不能做其他操作
+            this.props.mxEvent.getType() !== EventType.RoomEncryption // 开启加密通知消息不展示操作按钮
         );
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
