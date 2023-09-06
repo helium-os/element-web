@@ -76,8 +76,6 @@ import { isLocalRoom } from "../../../utils/localRoom/isLocalRoom";
 import { ElementCall } from "../../../models/Call";
 import { UnreadNotificationBadge } from "./NotificationBadge/UnreadNotificationBadge";
 import { EventTileThreadToolbar } from "./EventTile/EventTileThreadToolbar";
-import DMRoomMap from "../../../utils/DMRoomMap";
-import {RoomState, RoomStateEvent} from "matrix-js-sdk/src/models/room-state";
 
 export type GetRelationsForEvent = (
     eventId: string,
@@ -241,8 +239,6 @@ interface IState {
 
     thread: Thread | null;
     threadNotification?: NotificationCountType;
-
-    roomMembersCount: number; // 当前房间内的成员数
 }
 
 // MUST be rendered within a RoomContext with a set timelineRenderingType
@@ -281,8 +277,6 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             hover: false,
 
             thread,
-
-            roomMembersCount: 0 // 房间内的成员数
         };
 
         // don't do RR animations until we are mounted
@@ -390,24 +384,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const room = client.getRoom(this.props.mxEvent.getRoomId());
         room?.on(ThreadEvent.New, this.onNewThread);
 
-        client.on(RoomStateEvent.Update, this.onRoomStateUpdate);
-
         this.verifyEvent();
-    }
-
-    private onRoomStateUpdate = (state: RoomState): void => {
-        // ignore members in other rooms
-        if (state.roomId !== this.props.mxEvent.getRoomId()) {
-            return;
-        }
-
-        this.updateRoomMembersCount(state);
-    };
-
-    private updateRoomMembersCount(roomState: RoomState): void {
-        this.setState({
-            roomMembersCount: roomState.getJoinedMemberCount() + roomState.getInvitedMemberCount()
-        });
     }
 
     private updateThread = (thread: Thread): void => {
@@ -428,7 +405,6 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             client.removeListener(CryptoEvent.DeviceVerificationChanged, this.onDeviceVerificationChanged);
             client.removeListener(CryptoEvent.UserTrustStatusChanged, this.onUserVerificationChanged);
             client.removeListener(RoomEvent.Receipt, this.onRoomReceipt);
-            client.removeListener(RoomStateEvent.Update, this.onRoomStateUpdate);
             const room = client.getRoom(this.props.mxEvent.getRoomId());
             room?.off(ThreadEvent.New, this.onNewThread);
         }

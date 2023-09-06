@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 import { logger } from "matrix-js-sdk/src/logger";
 
@@ -52,7 +52,7 @@ import DevtoolsDialog from "../dialogs/DevtoolsDialog";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import {UIComponent, UIFeature} from "../../../settings/UIFeature";
-import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+import RoomContext from "../../../contexts/RoomContext";
 
 interface IProps extends IContextMenuProps {
     room: Room;
@@ -61,17 +61,12 @@ interface IProps extends IContextMenuProps {
 const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     const cli = useContext(MatrixClientContext);
 
-    const [isAdminLeft, setIsAdminLeft] = useState<boolean>(false); // 管理员是否离开
+    const roomContext = useContext(RoomContext);
+    const { isAdminLeft } = roomContext;
 
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
     );
-
-    const updateAdminLeft = (room: Room): void => {
-        setIsAdminLeft(room.isAdminLeft());
-    }
-
-    useEventEmitterState(cli, RoomStateEvent.Update, () => updateAdminLeft(room));
 
 
 
@@ -422,7 +417,7 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
                                     onClick={(ev: ButtonEvent) => {
                                         ev.preventDefault();
                                         ev.stopPropagation();
-R
+
                                         Modal.createDialog(
                                             DevtoolsDialog,
                                             {
