@@ -692,7 +692,15 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         if (!!userId) { return; } // 如果有用户id，不走查询接口；只有搜索用户名走查询接口
         const name = userName + (userOrgId !== currentOrgId ? `@${userOrgId}` : '');
         fetch(`/heliumos-user-api/user/v1/users?name=${encodeURIComponent(name)}`)
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    this.setState({
+                        serverResultsMixin: []
+                    });
+                    throw response;
+                }
+                return response.json();
+            })
             .then((res) => {
                 const data = res.data;
                 if (data.length) {
@@ -716,6 +724,8 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                         user: new DirectoryMember(u),
                     })),
                 });
+            }).catch(error => {
+
             });
 
         // MatrixClientPeg.get()

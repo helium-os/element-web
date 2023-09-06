@@ -22,6 +22,7 @@ import classNames from "classnames";
 import { _t } from "../../../languageHandler";
 import { getUserNameColorClass } from "../../../utils/FormattingUtils";
 import UserIdentifier from "../../../customisations/UserIdentifier";
+import OrgStore from "../../../stores/OrgStore";
 
 interface IProps {
     member?: RoomMember | null;
@@ -47,11 +48,8 @@ export default class DisambiguatedProfile extends React.Component<IProps> {
         let title: string | undefined;
 
         if (mxid) {
-            const identifier =
-                UserIdentifier.getDisplayUserIdentifier?.(mxid, {
-                    withDisplayName: true,
-                    roomId: member.roomId,
-                }) ?? mxid;
+            const orgId = OrgStore.sharedInstance().getUserOrgId(mxid);
+            const identifier = OrgStore.sharedInstance().getOrgNameById(orgId);
             if (member?.disambiguate) {
                 mxidElement = <span className="mx_DisambiguatedProfile_mxid">{identifier}</span>;
             }
