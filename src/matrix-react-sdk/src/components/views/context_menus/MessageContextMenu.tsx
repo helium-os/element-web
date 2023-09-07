@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, createRef, useContext } from "react";
+import React, { createRef, useContext } from "react";
 import { EventStatus, MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { EventType, MsgType, RelationType } from "matrix-js-sdk/src/@types/event";
 import { Relations } from "matrix-js-sdk/src/models/relations";

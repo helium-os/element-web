@@ -343,7 +343,7 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
         const client = this.context;
         const history = this.state.history;
         const state = client.getRoom(this.props.roomId)?.currentState;
-        const canChangeHistory = state?.mayClientSendStateEvent(EventType.RoomHistoryVisibility, client) && state?.isAdminLeft();
+        const canChangeHistory = state?.mayClientSendStateEvent(EventType.RoomHistoryVisibility, client) && !state?.isAdminLeft();
 
         const options = [
             {
