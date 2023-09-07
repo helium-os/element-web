@@ -19,6 +19,7 @@ RoomMember.prototype.setMembershipEvent = function(event: MatrixEvent, roomState
     const displayName = event.getDirectionalContent().displayname ?? "";
     this.name = calculateDisplayName(this.userId, displayName, this.disambiguate);
     if (oldName !== this.name) {
+        // @ts-ignore
         this.updateModifiedTime();
         this.emit(RoomMemberEvent.Name, event, this, oldName);
     }
