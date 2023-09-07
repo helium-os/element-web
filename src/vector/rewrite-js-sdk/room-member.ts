@@ -40,7 +40,7 @@ RoomMember.prototype.getPowerStatus = function(): PowerStatus {
 
 // 判断成员是否是该房间的管理员
 RoomMember.prototype.isAdmin = function(): boolean {
-    return this.getPowerStatus(this) === PowerStatus.Admin;
+    return this.getPowerStatus() === PowerStatus.Admin;
 }
 
 function calculateDisplayName(selfUserId: string, displayName: string | undefined, disambiguate: boolean): string {

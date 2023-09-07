@@ -1,17 +1,24 @@
-import 'matrix-js-sdk';
+import 'matrix-js-sdk/src/models/room-state';
+import 'matrix-js-sdk/src/models/room';
+import 'matrix-js-sdk/src/models/room-member';
 import {PowerStatus} from "../matrix-react-sdk/src/components/views/rooms/EntityTile";
 
-declare module 'matrix-js-sdk' {
-    export interface RoomState {
+declare module 'matrix-js-sdk/src/models/room-state' {
+    interface RoomState {
         isAdminLeft(): boolean;
     }
+}
 
+
+declare module 'matrix-js-sdk/src/models/room' {
     export interface Room {
         isAdminLeft(): boolean;
         isPeopleRoom(): boolean;
     }
+}
 
-    export interface RoomMember {
+declare module 'matrix-js-sdk/src/models/room-member' {
+    interface RoomMember {
         getPowerStatus(): PowerStatus;
         isAdmin(): boolean;
     }
