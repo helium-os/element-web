@@ -1,6 +1,3 @@
-import 'matrix-js-sdk/src/models/room-state';
-import 'matrix-js-sdk/src/models/room';
-import 'matrix-js-sdk/src/models/room-member';
 import {PowerStatus} from "../matrix-react-sdk/src/components/views/rooms/EntityTile";
 
 declare module 'matrix-js-sdk/src/models/room-state' {
