@@ -49,7 +49,6 @@ import NotificationBadge from "./NotificationBadge";
 import LegacyCallEventGrouper from "../../structures/LegacyCallEventGrouper";
 import { ComposerInsertPayload } from "../../../dispatcher/payloads/ComposerInsertPayload";
 import { Action } from "../../../dispatcher/actions";
-import PlatformPeg from "../../../PlatformPeg";
 import MemberAvatar from "../avatars/MemberAvatar";
 import SenderProfile from "../messages/SenderProfile";
 import MessageTimestamp from "../messages/MessageTimestamp";
@@ -260,6 +259,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
     public static contextType = RoomContext;
     public context!: React.ContextType<typeof RoomContext>;
+
+    private mxEventTileContentRef = React.createRef<HTMLDivElement>();
 
     public constructor(props: EventTileProps, context: React.ContextType<typeof MatrixClientContext>) {
         super(props, context);
@@ -875,6 +876,10 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             noBubbleEvent,
             isSeeingThroughMessageHiddenForModeration,
         } = getEventDisplayInfo(this.props.mxEvent, this.context.showHiddenEvents, this.shouldHideEvent());
+
+        // Use `getSender()` because searched events might not have a proper `sender`.
+        const isOwnEvent = this.props.mxEvent?.getSender() === MatrixClientPeg.get().getUserId();
+
         const { isQuoteExpanded } = this.state;
         // This shouldn't happen: the caller should check we support this type
         // before trying to instantiate us
@@ -1039,8 +1044,10 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         }
 
         const showMessageActionBar = !isEditing && !this.props.forExport;
+        const { width = 10, height = 0 } = this.mxEventTileContentRef.current?.getBoundingClientRect() || {};
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
+                wrapStyle={{ ...(isInfoMessage ? { right: 20 } : { [isOwnEvent ? 'right' : 'left']: width + 10 }), top: height / 2 }}
                 mxEvent={this.props.mxEvent}
                 reactions={this.state.reactions}
                 permalinkCreator={this.props.permalinkCreator}
@@ -1073,13 +1080,17 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
         const messageTimestamp = (
             <MessageTimestamp
-                showRelative={this.context.timelineRenderingType === TimelineRenderingType.ThreadsList}
+                showRelative={true}
                 showTwelveHour={this.props.isTwelveHour}
                 ts={ts}
             />
         );
 
-        const timestamp = showTimestamp && ts ? messageTimestamp : null;
+        const timestamp = (
+            ts &&
+            eventType !== EventType.RoomEncryption &&  // 房间开启加密该消息不需要额外添加时间（自身UI携带）
+            (eventType !== EventType.RoomMessage || !this.props.continuation) // 非文本/图片/文件消息展示时间；文本/图片/文件消息连续时只展示一次时间
+        ) ? messageTimestamp : null;
 
         let reactionsRow;
         if (!isRedacted) {
@@ -1147,9 +1158,6 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 />
             );
         }
-
-        // Use `getSender()` because searched events might not have a proper `sender`.
-        const isOwnEvent = this.props.mxEvent?.getSender() === MatrixClientPeg.get().getUserId();
 
         switch (this.context.timelineRenderingType) {
             case TimelineRenderingType.Thread: {
@@ -1355,12 +1363,16 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                     },
                     <>
                         {ircTimestamp}
-                        {sender}
+                        <div className="mx_EventTile_msgDetails">
+                            {sender}
+                            <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
+                                {groupTimestamp}
+                            </div>
+                        </div>
                         {ircPadlock}
                         {avatar}
-                        <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu}>
+                        <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu} ref={this.mxEventTileContentRef}>
                             {this.renderContextMenu()}
-                            {groupTimestamp}
                             {/*{groupPadlock}*/}
                             {replyChain}
                             {renderTile(

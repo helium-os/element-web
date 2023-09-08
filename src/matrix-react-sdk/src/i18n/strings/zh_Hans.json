@@ -322,6 +322,8 @@
     "%(weekDayName)s, %(monthName)s %(day)s %(time)s": "%(monthName)s %(day)s %(time)s，%(weekDayName)s",
     "%(weekDayName)s, %(monthName)s %(day)s %(fullYear)s": "%(fullYear)s %(monthName)s %(day)s，%(weekDayName)s",
     "%(weekDayName)s, %(monthName)s %(day)s %(fullYear)s %(time)s": "%(fullYear)s %(monthName)s %(day)s %(time)s，%(weekDayName)s",
+    "MxEventFullTime": "%(fullYear)s年%(month)s月%(day)s日 %(time)s",
+    "MxEventTimeNoYear": "%(month)s月%(day)s日 %(time)s",
     "Enable inline URL previews by default": "默认启用行内URL预览",
     "Send an encrypted reply…": "发送加密回复…",
     "Send an encrypted message…": "发送加密消息……",

@@ -289,7 +289,14 @@ const FavouriteButton: React.FC<IFavouriteButtonProp> = ({ mxEvent }) => {
     );
 };
 
+interface ActionBarStyle {
+    left?: string | number;
+    right?: string | number;
+    top?: string | number;
+}
+
 interface IMessageActionBarProps {
+    wrapStyle?: ActionBarStyle;
     mxEvent: MatrixEvent;
     reactions?: Relations | null | undefined;
     // TODO: Types
@@ -584,7 +591,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
         // 撤回的消息 & 开启加密通知消息不展示更多按钮
         return (
             (!this.props.mxEvent.isRedacted() && this.props.mxEvent.getType() !== EventType.RoomEncryption)  && (
-                <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
+                <Toolbar style={this.props.wrapStyle} className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
                     {toolbarOpts}
                 </Toolbar>
             )
