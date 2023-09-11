@@ -118,6 +118,7 @@ import { WidgetType } from "../../widgets/WidgetType";
 import WidgetUtils from "../../utils/WidgetUtils";
 import { shouldEncryptRoomWithSingle3rdPartyInvite } from "../../utils/room/shouldEncryptRoomWithSingle3rdPartyInvite";
 import { WaitingForThirdPartyRoomView } from "./WaitingForThirdPartyRoomView";
+import { ViewHomePagePayload } from "matrix-react-sdk/src/dispatcher/payloads/ViewHomePagePayload";
 
 const DEBUG = false;
 const PREVENT_MULTIPLE_JITSI_WITHIN = 30_000;
@@ -2192,7 +2193,9 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 />
             );
             if (!this.state.canPeek && !this.state.room?.isSpaceRoom()) {
-                return <div className="mx_RoomView">{previewBar}</div>;
+                // return <div className="mx_RoomView">{previewBar}</div>;
+                dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
+                return null;
             }
         } else if (hiddenHighlightCount > 0) {
             aux = (
