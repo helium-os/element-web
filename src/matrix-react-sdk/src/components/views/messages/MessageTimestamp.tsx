@@ -17,7 +17,12 @@ limitations under the License.
 
 import React from "react";
 
-import { formatFullDate, formatTime, formatFullTime, formatRelativeTime } from "../../../DateUtils";
+import {
+    formatFullDate,
+    formatTime,
+    formatFullTime,
+    formatFullRelativeTime
+} from "../../../DateUtils";
 
 interface IProps {
     ts: number;
@@ -32,7 +37,7 @@ export default class MessageTimestamp extends React.Component<IProps> {
         const date = new Date(this.props.ts);
         let timestamp;
         if (this.props.showRelative) {
-            timestamp = formatRelativeTime(date, this.props.showTwelveHour);
+            timestamp = formatFullRelativeTime(date, this.props.showTwelveHour, false);
         } else if (this.props.showFullDate) {
             timestamp = formatFullDate(date, this.props.showTwelveHour, this.props.showSeconds);
         } else if (this.props.showSeconds) {
@@ -44,7 +49,6 @@ export default class MessageTimestamp extends React.Component<IProps> {
         return (
             <span
                 className="mx_MessageTimestamp"
-                title={formatFullDate(date, this.props.showTwelveHour)}
                 aria-hidden={true}
             >
                 {timestamp}

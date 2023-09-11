@@ -288,7 +288,14 @@ const FavouriteButton: React.FC<IFavouriteButtonProp> = ({ mxEvent }) => {
     );
 };
 
+interface ActionBarStyle {
+    left?: string | number;
+    right?: string | number;
+    top?: string | number;
+}
+
 interface IMessageActionBarProps {
+    wrapStyle?: ActionBarStyle;
     mxEvent: MatrixEvent;
     reactions?: Relations | null | undefined;
     // TODO: Types

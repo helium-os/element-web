@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { _t } from "./languageHandler";
+import { _t, getCurrentLanguage } from "./languageHandler";
 
 function getDaysArray(): string[] {
     return [_t("Sun"), _t("Mon"), _t("Tue"), _t("Wed"), _t("Thu"), _t("Fri"), _t("Sat")];
@@ -38,6 +38,8 @@ function getMonthsArray(): string[] {
         _t("Dec"),
     ];
 }
+
+const monthToEnArr: string[] = ['Jan','Feb','Mar','Apr' ,'May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
 
 function pad(n: number): string {
     return (n < 10 ? "0" : "") + n;
@@ -229,6 +231,31 @@ export function formatFullDateNoDayISO(date: Date): string {
 
 export function formatFullDateNoDayNoTime(date: Date): string {
     return date.getFullYear() + "/" + pad(date.getMonth() + 1) + "/" + pad(date.getDate());
+}
+
+export function formatFullRelativeTime(date: Date, showTwelveHour = false, showSeconds = false): string {
+    const now = new Date(Date.now());
+    if (withinCurrentDay(date, now)) {
+        return formatTime(date, showTwelveHour);
+    } else {
+        const day = date.getDate();
+        const month = getCurrentLanguage() !== 'en' ? date.getMonth() + 1 : monthToEnArr[date.getMonth()];
+        const time = showSeconds ? formatFullTime(date, showTwelveHour) : formatTime(date, showTwelveHour);
+        if (withinCurrentYear(date, now)) {
+            return _t("MxEventTimeNoYear", {
+                month,
+                day,
+                time
+            });
+        }
+
+        return _t("MxEventFullTime", {
+            fullYear: date.getFullYear(),
+            month,
+            day,
+            time
+        })
+    }
 }
 
 export function formatRelativeTime(date: Date, showTwelveHour = false): string {
