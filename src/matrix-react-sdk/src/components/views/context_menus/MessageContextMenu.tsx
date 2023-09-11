@@ -391,7 +391,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         const permalink = this.props.permalinkCreator?.forEvent(this.props.mxEvent.getId()!);
         // status is SENT before remote-echo, null after
         const isSent = !eventStatus || eventStatus === EventStatus.SENT;
-        const { timelineRenderingType, canReact, canSendMessages } = this.context;
+        const { timelineRenderingType, canReact, canSendMessages, isAdminLeft } = this.context;
         const isThread =
             timelineRenderingType === TimelineRenderingType.Thread ||
             timelineRenderingType === TimelineRenderingType.ThreadsList;
@@ -411,7 +411,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let redactButton: JSX.Element | undefined;
-        if (isSent && this.state.canRedact) {
+        if (isSent && this.state.canRedact && !isAdminLeft) {
             redactButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconRedact"
@@ -577,7 +577,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let reportEventButton: JSX.Element | undefined;
-        if (mxEvent.getSender() !== me) {
+        if (mxEvent.getSender() !== me && !isAdminLeft) {
             reportEventButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconReport"
@@ -621,7 +621,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let editButton: JSX.Element | undefined;
-        if (rightClick && canEditContent(mxEvent)) {
+        if (rightClick && canEditContent(mxEvent) && !isAdminLeft) {
             editButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconEdit"
@@ -653,6 +653,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             replyInThreadButton = <ReplyInThreadButton mxEvent={mxEvent} closeMenu={this.closeMenu} />;
         }
 
+        // 回应
         let reactButton: JSX.Element | undefined;
         if (rightClick && contentActionable && canReact) {
             reactButton = (

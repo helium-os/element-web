@@ -90,7 +90,7 @@ export const TAG_ORDER: TagID[] = [
     DefaultTagID.LowPriority,
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
-    DefaultTagID.Archived,
+    // DefaultTagID.Archived,
 ];
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
 

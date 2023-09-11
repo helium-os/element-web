@@ -16,7 +16,7 @@ limitations under the License.
 
 import { logger } from "matrix-js-sdk/src/logger";
 import { Room } from "matrix-js-sdk/src/models/room";
-import React, { useContext } from "react";
+import React, { useState, useEffect, useContext } from "react";
 
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import RoomListActions from "../../../actions/RoomListActions";
@@ -65,6 +65,13 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
     ...props
 }) => {
     const cli = useContext(MatrixClientContext);
+
+    const [isAdminLeft, setIsAdminLeft] = useState(false);
+
+    useEffect(() => {
+        setIsAdminLeft(room.isAdminLeft());
+    }, [room]);
+
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
     );
@@ -224,7 +231,7 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomGeneralContextMenu" compact>
             <IconizedContextMenuOptionList>
                 {markAsReadOption}
-                {!roomTags.includes(DefaultTagID.Archived) && (
+                {!roomTags.includes(DefaultTagID.Archived) && !isAdminLeft && (
                     <>
                         {favoriteOption}
                         {lowPriorityOption}

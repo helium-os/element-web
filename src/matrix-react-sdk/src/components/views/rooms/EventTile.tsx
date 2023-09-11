@@ -1043,7 +1043,11 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             }
         }
 
-        const showMessageActionBar = !isEditing && !this.props.forExport;
+        const showMessageActionBar = (
+            !isEditing && !this.props.forExport
+            && !this.props.mxEvent.isRedacted()// 撤回的消息不展示操作按钮
+            && this.props.mxEvent.getType() !== EventType.RoomEncryption // 开启加密通知消息不展示操作按钮
+        );
         const { width = 10, height = 0 } = this.mxEventTileContentRef.current?.getBoundingClientRect() || {};
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
