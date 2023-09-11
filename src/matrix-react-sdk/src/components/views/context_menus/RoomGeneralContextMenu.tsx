@@ -163,7 +163,8 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
         );
     }
 
-    const settingsOption: JSX.Element = (
+    const isPeopleRoom = room.isPeopleRoom();
+    const settingsOption: JSX.Element = !isPeopleRoom && (
         <IconizedContextMenuOption
             onClick={wrapHandler(
                 () =>

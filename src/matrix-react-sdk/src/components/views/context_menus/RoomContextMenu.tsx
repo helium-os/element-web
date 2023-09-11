@@ -222,6 +222,7 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
 
     let peopleOption: JSX.Element | undefined;
     let copyLinkOption: JSX.Element | undefined;
+    const roomTypeLabel = room.getRoomTypeLabel();
     if (!isDm) {
         peopleOption = (
             <IconizedContextMenuOption
@@ -234,7 +235,9 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
                     onFinished();
                     PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuPeopleItem", ev);
                 }}
-                label={_t("People")}
+                label={_t("Members", {
+                    roomType: roomTypeLabel
+                })}
                 iconClassName="mx_RoomTile_iconPeople"
             >
                 <span className="mx_IconizedContextMenu_sublabel">{room.getJoinedMemberCount()}</span>
@@ -371,6 +374,8 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
         );
     };
 
+    const isPeopleRoom = room.isPeopleRoom();
+
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomTile_contextMenu" compact>
             <IconizedContextMenuOptionList>
@@ -394,21 +399,25 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
                             {lowPriorityOption}
                             {copyLinkOption}
 
-                            <IconizedContextMenuOption
-                                onClick={(ev: ButtonEvent) => {
-                                    ev.preventDefault();
-                                    ev.stopPropagation();
+                            {
+                                !isPeopleRoom && (
+                                    <IconizedContextMenuOption
+                                        onClick={(ev: ButtonEvent) => {
+                                            ev.preventDefault();
+                                            ev.stopPropagation();
 
-                                    dis.dispatch({
-                                        action: "open_room_settings",
-                                        room_id: room.roomId,
-                                    });
-                                    onFinished();
-                                    PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
-                                }}
-                                label={_t("Settings")}
-                                iconClassName="mx_RoomTile_iconSettings"
-                            />
+                                            dis.dispatch({
+                                                action: "open_room_settings",
+                                                room_id: room.roomId,
+                                            });
+                                            onFinished();
+                                            PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
+                                        }}
+                                        label={_t("Settings")}
+                                        iconClassName="mx_RoomTile_iconSettings"
+                                    />
+                                )
+                            }
 
                             {exportChatOption}
 
