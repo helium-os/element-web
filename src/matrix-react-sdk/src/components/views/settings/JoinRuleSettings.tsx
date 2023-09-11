@@ -59,7 +59,7 @@ const JoinRuleSettings: React.FC<IProps> = ({
     const preferredRestrictionVersion =
         !roomSupportsRestricted && promptUpgrade ? PreferredRoomVersions.RestrictedRooms : undefined;
 
-    const disabled = !room.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli);
+    const disabled = !room.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli) || room.isAdminLeft();
 
     const [content, setContent] = useLocalEcho<IJoinRuleEventContent>(
         () => room.currentState.getStateEvents(EventType.RoomJoinRules, "")?.getContent(),

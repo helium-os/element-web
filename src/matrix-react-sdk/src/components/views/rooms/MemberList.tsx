@@ -351,7 +351,9 @@ export default class MemberList extends React.Component<IProps, IState> {
         const room = cli.getRoom(this.props.roomId);
         let inviteButton;
 
-        if (room?.getMyMembership() === "join" && shouldShowComponent(UIComponent.InviteUsers)) {
+        if (
+            room?.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)
+        ) {
             let inviteButtonText = _t("Invite to this room");
             if (room.isSpaceRoom()) {
                 inviteButtonText = _t("Invite to this space");

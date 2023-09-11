@@ -49,7 +49,6 @@ import NotificationBadge from "./NotificationBadge";
 import LegacyCallEventGrouper from "../../structures/LegacyCallEventGrouper";
 import { ComposerInsertPayload } from "../../../dispatcher/payloads/ComposerInsertPayload";
 import { Action } from "../../../dispatcher/actions";
-import PlatformPeg from "../../../PlatformPeg";
 import MemberAvatar from "../avatars/MemberAvatar";
 import SenderProfile from "../messages/SenderProfile";
 import MessageTimestamp from "../messages/MessageTimestamp";
@@ -1038,7 +1037,12 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             }
         }
 
-        const showMessageActionBar = !isEditing && !this.props.forExport;
+
+        const showMessageActionBar = (
+            !isEditing && !this.props.forExport &&
+            !this.props.mxEvent.isRedacted() && // 撤回的消息不展示操作按钮
+            this.props.mxEvent.getType() !== EventType.RoomEncryption // 开启加密通知消息不展示操作按钮
+        );
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
                 mxEvent={this.props.mxEvent}

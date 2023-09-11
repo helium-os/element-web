@@ -52,6 +52,7 @@ import DevtoolsDialog from "../dialogs/DevtoolsDialog";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import {UIComponent, UIFeature} from "../../../settings/UIFeature";
+import RoomContext from "../../../contexts/RoomContext";
 
 interface IProps extends IContextMenuProps {
     room: Room;
@@ -59,9 +60,15 @@ interface IProps extends IContextMenuProps {
 
 const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     const cli = useContext(MatrixClientContext);
+
+    const roomContext = useContext(RoomContext);
+    const { isAdminLeft } = roomContext;
+
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
     );
+
+
 
     let leaveOption: JSX.Element | undefined;
     if (roomTags.includes(DefaultTagID.Archived)) {
@@ -367,53 +374,66 @@ const RoomContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomTile_contextMenu" compact>
             <IconizedContextMenuOptionList>
-                {inviteOption}
-                {notificationOption}
-                {favouriteOption}
+                {
+                    !isAdminLeft && (
+                        <>
+                            {inviteOption}
+                            {notificationOption}
+                            {favouriteOption}
+                        </>
+                    )
+                }
+
                 {peopleOption}
-                {filesOption}
-                {pinsOption}
-                {widgetsOption}
-                {lowPriorityOption}
-                {copyLinkOption}
+                {
+                    !isAdminLeft && (
+                        <>
+                            {filesOption}
+                            {pinsOption}
+                            {widgetsOption}
+                            {lowPriorityOption}
+                            {copyLinkOption}
 
-                <IconizedContextMenuOption
-                    onClick={(ev: ButtonEvent) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
+                            <IconizedContextMenuOption
+                                onClick={(ev: ButtonEvent) => {
+                                    ev.preventDefault();
+                                    ev.stopPropagation();
 
-                        dis.dispatch({
-                            action: "open_room_settings",
-                            room_id: room.roomId,
-                        });
-                        onFinished();
-                        PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
-                    }}
-                    label={_t("Settings")}
-                    iconClassName="mx_RoomTile_iconSettings"
-                />
+                                    dis.dispatch({
+                                        action: "open_room_settings",
+                                        room_id: room.roomId,
+                                    });
+                                    onFinished();
+                                    PosthogTrackers.trackInteraction("WebRoomHeaderContextMenuSettingsItem", ev);
+                                }}
+                                label={_t("Settings")}
+                                iconClassName="mx_RoomTile_iconSettings"
+                            />
 
-                {exportChatOption}
+                            {exportChatOption}
 
-                {SettingsStore.getValue("developerMode") && (
-                    <IconizedContextMenuOption
-                        onClick={(ev: ButtonEvent) => {
-                            ev.preventDefault();
-                            ev.stopPropagation();
+                            {SettingsStore.getValue("developerMode") && (
+                                <IconizedContextMenuOption
+                                    onClick={(ev: ButtonEvent) => {
+                                        ev.preventDefault();
+                                        ev.stopPropagation();
 
-                            Modal.createDialog(
-                                DevtoolsDialog,
-                                {
-                                    roomId: room.roomId,
-                                },
-                                "mx_DevtoolsDialog_wrapper",
-                            );
-                            onFinished();
-                        }}
-                        label={_t("Developer tools")}
-                        iconClassName="mx_RoomTile_iconDeveloperTools"
-                    />
-                )}
+                                        Modal.createDialog(
+                                            DevtoolsDialog,
+                                            {
+                                                roomId: room.roomId,
+                                            },
+                                            "mx_DevtoolsDialog_wrapper",
+                                        );
+                                        onFinished();
+                                    }}
+                                    label={_t("Developer tools")}
+                                    iconClassName="mx_RoomTile_iconDeveloperTools"
+                                />
+                            )}
+                        </>
+                    )
+                }
 
                 {leaveOption}
             </IconizedContextMenuOptionList>
