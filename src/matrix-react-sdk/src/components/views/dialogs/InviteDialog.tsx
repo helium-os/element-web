@@ -1536,14 +1536,14 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 <div className="mx_InviteDialog_userSections">
                     {this.renderSection("recents")}
                     {this.renderSection("suggestions")}
-                    {extraSection}
+                    {/*{extraSection}*/}
                 </div>
             );
         }
 
         const usersSection = (
             <React.Fragment>
-                <p className="mx_InviteDialog_helpText">{helpText}</p>
+                {/*<p className="mx_InviteDialog_helpText">{helpText}</p>*/}
                 <div className="mx_InviteDialog_addressBar">
                     {this.renderEditor()}
                     <div className="mx_InviteDialog_buttonAndSpinner">

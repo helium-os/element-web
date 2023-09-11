@@ -54,11 +54,15 @@ export default class RoomAvatarEvent extends React.Component<IProps> {
     public render(): React.ReactNode {
         const ev = this.props.mxEvent;
         const senderDisplayName = ev.sender && ev.sender.name ? ev.sender.name : ev.getSender();
+        const roomTypeLabel = ev.getRoomTypeLabel();
 
         if (!ev.getContent().url || ev.getContent().url.trim().length === 0) {
             return (
                 <div className="mx_TextualEvent">
-                    {_t("%(senderDisplayName)s removed the room avatar.", { senderDisplayName })}
+                    {_t("%(senderDisplayName)s removed the room avatar.", {
+                        senderDisplayName,
+                        roomType: roomTypeLabel
+                    })}
                 </div>
             );
         }
@@ -74,7 +78,10 @@ export default class RoomAvatarEvent extends React.Component<IProps> {
             <div className="mx_RoomAvatarEvent">
                 {_t(
                     "%(senderDisplayName)s changed the room avatar to <img/>",
-                    { senderDisplayName: senderDisplayName },
+                    {
+                        senderDisplayName: senderDisplayName,
+                        roomType: roomTypeLabel
+                    },
                     {
                         img: () => (
                             <AccessibleButton

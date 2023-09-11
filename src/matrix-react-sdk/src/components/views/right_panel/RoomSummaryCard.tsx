@@ -334,11 +334,15 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
     const showExportChat = SettingsStore.getValue(UIFeature.RoomExportChat);
     const showShareRoom = SettingsStore.getValue(UIFeature.RoomShare);
 
+    const roomTypeLabel = room.getRoomTypeLabel();
+
     return (
         <BaseCard header={header} className="mx_RoomSummaryCard" onClose={onClose}>
             <Group title={_t("About")} className="mx_RoomSummaryCard_aboutGroup">
                 <Button className="mx_RoomSummaryCard_icon_people" onClick={onRoomMembersClick}>
-                    {_t("People")}
+                    {_t("Members", {
+                        roomType: roomTypeLabel
+                    })}
                     <span className="mx_BaseCard_Button_sublabel">{memberCount}</span>
                 </Button>
                 {showFile && !isVideoRoom && (
@@ -373,9 +377,13 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
                         </Button>
                     )
                 }
-                <Button className="mx_RoomSummaryCard_icon_settings" onClick={onRoomSettingsClick}>
-                    {_t("Room settings")}
-                </Button>
+                {
+                    !room.isPeopleRoom() && (
+                        <Button className="mx_RoomSummaryCard_icon_settings" onClick={onRoomSettingsClick}>
+                            {_t("Room settings")}
+                        </Button>
+                    )
+                }
             </Group>
 
             {SettingsStore.getValue(UIFeature.Widgets) &&
