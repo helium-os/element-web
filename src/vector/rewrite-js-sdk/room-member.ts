@@ -1,6 +1,6 @@
 import {RoomMember, RoomMemberEvent} from "matrix-js-sdk/src/models/room-member";
 import {removeDirectionOverrideChars, removeHiddenChars} from "matrix-js-sdk/src/utils";
-import OrgStore from "../../matrix-react-sdk/src/stores/OrgStore";
+import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 import {MatrixEvent} from "matrix-js-sdk/src/models/event";
 import {RoomState} from "matrix-js-sdk/src/models/room-state";
 import {PowerStatus} from "../../matrix-react-sdk/src/components/views/rooms/EntityTile";

@@ -16,7 +16,10 @@
         "lib": ["es2019", "dom", "dom.iterable"],
         "alwaysStrict": true,
         "strictBindCallApply": true,
-        "noImplicitThis": true
+        "noImplicitThis": true,
+        "paths": {
+            "matrix-react-sdk/*": ["./src/matrix-react-sdk/*"]
+        }
     },
     "include": [
         "./node_modules/matrix-js-sdk/src/@types/*.d.ts",

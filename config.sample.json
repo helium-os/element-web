@@ -1,9 +1,4 @@
 {
-    "default_server_config": {
-        "m.homeserver": {
-            "base_url": "http://chat.org2"
-        }
-    },
     "brand": "chat",
     "embedded_pages": {
         "login_for_welcome": true
