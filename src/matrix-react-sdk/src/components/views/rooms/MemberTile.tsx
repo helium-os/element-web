@@ -195,21 +195,7 @@ export default class MemberTile extends React.Component<IProps, IState> {
         }
         this.memberLastModifiedTime = member.getLastModifiedTime();
 
-        const powerStatusMap = new Map([
-            [100, PowerStatus.Admin],
-            [50, PowerStatus.Moderator],
-        ]);
-
-        // Find the nearest power level with a badge
-        let powerLevel = this.props.member.powerLevel;
-        for (const [pl] of powerStatusMap) {
-            if (this.props.member.powerLevel >= pl) {
-                powerLevel = pl;
-                break;
-            }
-        }
-
-        const powerStatus = powerStatusMap.get(powerLevel);
+        const powerStatus = this.props.member.getPowerStatus();
 
         let e2eStatus: E2EState | undefined;
         if (this.state.isRoomEncrypted) {

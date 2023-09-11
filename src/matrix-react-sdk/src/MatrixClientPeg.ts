@@ -424,9 +424,7 @@ class MatrixClientPegClass implements IMatrixClientPeg {
                         }
                     case RoomNameType.EmptyRoom:
                         if (state.oldName) {
-                            return _t("Empty room (was %(oldName)s)", {
-                                oldName: state.oldName,
-                            });
+                            return state.oldName;
                         } else {
                             return _t("Empty room");
                         }

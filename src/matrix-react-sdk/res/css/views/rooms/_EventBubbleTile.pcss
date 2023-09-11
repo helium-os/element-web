@@ -140,7 +140,6 @@ limitations under the License.
     }
 
     .mx_MessageActionBar {
-        top: -28px;
         z-index: 9; /* above the avatar */
     }
 
@@ -187,9 +186,15 @@ limitations under the License.
             left: -34px;
         }
 
+        .mx_DisambiguatedProfile {
+            margin-right: 10px;
+        }
+        .mx_Event_timestamp {
+            text-align: left;
+        }
+
         .mx_MessageActionBar {
             inset-inline-start: calc(100% - var(--MessageActionBar-size-box));
-            right: initial; /* Reset the default value */
         }
 
         .mx_ThreadSummary {
@@ -247,8 +252,18 @@ limitations under the License.
         }
 
         .mx_EventTile_avatar {
-            top: -19px; /* height of the sender block */
+            top: 0; /* height of the sender block */
             right: -35px;
+        }
+
+        .mx_EventTile_msgDetails {
+            flex-direction: row-reverse;
+        }
+        .mx_DisambiguatedProfile {
+            margin-left: 10px;
+        }
+        .mx_Event_timestamp {
+            text-align: right;
         }
 
         .mx_MediaBody {
@@ -347,7 +362,7 @@ limitations under the License.
             .mx_EventTile_content by 1px */
         /* to avoid anti-zalgo cutting off our larger than text emojis. */
         padding: calc(var(--gutterSize) - 1px);
-        padding-right: 60px; /* space for the timestamp */
+        padding-right: 20px; /* space for the timestamp */
         background: var(--backgroundColor);
 
         .mx_EventTile_content {
@@ -418,7 +433,7 @@ limitations under the License.
 
     &.mx_EventTile_noSender {
         .mx_EventTile_avatar {
-            top: -19px;
+            top: 0;
         }
     }
 
@@ -582,7 +597,6 @@ limitations under the License.
 
     .mx_EventTile_avatar {
         position: static;
-        order: -1;
         margin-inline-end: var(--EventTile_bubble_gap-inline); /* Same spacing between E2E icon and a hidden event */
     }
 
@@ -605,14 +619,20 @@ limitations under the License.
             }
         }
     }
+
+
+    .mx_EventTile_msgDetails {
+        order: 1;
+    }
 }
 
 .mx_GenericEventListSummary[data-layout="bubble"] {
     .mx_EventTile.mx_EventTile_info .mx_EventTile_line {
         /* Avoid overflow of event info by cancelling width settings */
-        width: 100%;
+        flex: 1;
+        width: auto;
         min-width: 0;
-        max-width: 100%;
+        max-width: 80%;
     }
 
     /* increase margin between ELS and the next Event to not have our user avatar overlap the expand/collapse button */
@@ -637,6 +657,13 @@ limitations under the License.
 
         &::before {
             inset-inline-end: 0; /* match alignment of the hover background to that of chat bubbles */
+        }
+
+        .mx_EventTile_msgDetails {
+            flex-direction: row;
+        }
+        .mx_Event_timestamp {
+            text-align: left;
         }
     }
 }

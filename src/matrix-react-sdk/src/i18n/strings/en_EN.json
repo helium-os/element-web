@@ -48,6 +48,8 @@
     "%(weekDayName)s, %(monthName)s %(day)s %(time)s": "%(weekDayName)s, %(monthName)s %(day)s %(time)s",
     "%(weekDayName)s, %(monthName)s %(day)s %(fullYear)s": "%(weekDayName)s, %(monthName)s %(day)s %(fullYear)s",
     "%(weekDayName)s, %(monthName)s %(day)s %(fullYear)s %(time)s": "%(weekDayName)s, %(monthName)s %(day)s %(fullYear)s %(time)s",
+    "MxEventFullTime": "%(month)s. %(day)s, %(fullYear)s  %(time)s",
+    "MxEventTimeNoYear": "%(month)s. %(day)s, %(time)s",
     "%(hours)sh %(minutes)sm %(seconds)ss left": "%(hours)sh %(minutes)sm %(seconds)ss left",
     "%(minutes)sm %(seconds)ss left": "%(minutes)sm %(seconds)ss left",
     "%(seconds)ss left": "%(seconds)ss left",

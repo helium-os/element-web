@@ -58,7 +58,6 @@ import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayloa
 import useFavouriteMessages from "../../../hooks/useFavouriteMessages";
 import { GetRelationsForEvent } from "../rooms/EventTile";
 import { VoiceBroadcastInfoEventType } from "../../../voice-broadcast/types";
-import { EventType } from "matrix-js-sdk/src/matrix";
 
 interface IOptionsButtonProps {
     mxEvent: MatrixEvent;
@@ -289,7 +288,14 @@ const FavouriteButton: React.FC<IFavouriteButtonProp> = ({ mxEvent }) => {
     );
 };
 
+interface ActionBarStyle {
+    left?: string | number;
+    right?: string | number;
+    top?: string | number;
+}
+
 interface IMessageActionBarProps {
+    wrapStyle?: ActionBarStyle;
     mxEvent: MatrixEvent;
     reactions?: Relations | null | undefined;
     // TODO: Types
@@ -423,7 +429,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
 
     public render(): React.ReactNode {
         const toolbarOpts: JSX.Element[] = [];
-        if (canEditContent(this.props.mxEvent)) {
+        if (canEditContent(this.props.mxEvent) && !this.context.isAdminLeft) {
             toolbarOpts.push(
                 <RovingAccessibleTooltipButton
                     className="mx_MessageActionBar_iconButton"
@@ -581,13 +587,10 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
         }
 
         // aria-live=off to not have this read out automatically as navigating around timeline, gets repetitive.
-        // 撤回的消息 & 开启加密通知消息不展示更多按钮
         return (
-            (!this.props.mxEvent.isRedacted() && this.props.mxEvent.getType() !== EventType.RoomEncryption)  && (
-                <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
-                    {toolbarOpts}
-                </Toolbar>
-            )
+            <Toolbar className="mx_MessageActionBar" aria-label={_t("Message Actions")} aria-live="off">
+                {toolbarOpts}
+            </Toolbar>
         );
     }
 }

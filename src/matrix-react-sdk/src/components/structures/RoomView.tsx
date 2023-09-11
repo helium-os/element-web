@@ -230,6 +230,7 @@ export interface IRoomState {
     // List of undecryptable events currently visible on-screen
     visibleDecryptionFailures?: MatrixEvent[];
     msc3946ProcessDynamicPredecessor: boolean;
+    isAdminLeft: boolean; // 管理员是否离开房间
 }
 
 interface LocalRoomViewProps {
@@ -430,6 +431,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             narrow: false,
             visibleDecryptionFailures: [],
             msc3946ProcessDynamicPredecessor: SettingsStore.getValue("feature_dynamic_room_predecessors"),
+            isAdminLeft: false
         };
 
         this.dispatcherRef = dis.register(this.onAction);
@@ -931,12 +933,15 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         return hasPropsDiff || hasStateDiff;
     }
 
-    public componentDidUpdate(): void {
+    public componentDidUpdate(prevProps, prevState): void {
         // Note: We check the ref here with a flag because componentDidMount, despite
         // documentation, does not define our messagePanel ref. It looks like our spinner
         // in render() prevents the ref from being set on first mount, so we try and
         // catch the messagePanel when it does mount. Because we only want the ref once,
         // we use a boolean flag to avoid duplicate work.
+        if (this.state.room && this.getRoomId() !== prevState.roomId) {
+            this.updateAdminLeft(this.state.room);
+        }
         if (this.messagePanel && this.state.atEndOfLiveTimeline === undefined) {
             this.setState({
                 atEndOfLiveTimeline: this.messagePanel.isAtEndOfLiveTimeline(),
@@ -1470,9 +1475,10 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     private updatePermissions(room: Room): void {
         if (room) {
             const me = this.context.client.getSafeUserId();
+            const isAdminLeft = room.isAdminLeft();
             const canReact =
-                room.getMyMembership() === "join" && room.currentState.maySendEvent(EventType.Reaction, me);
-            const canSendMessages = room.maySendMessage();
+                room.getMyMembership() === "join" && room.currentState.maySendEvent(EventType.Reaction, me) && !isAdminLeft;
+            const canSendMessages = room.maySendMessage() && !isAdminLeft;
             const canSelfRedact = room.currentState.maySendEvent(EventType.RoomRedaction, me);
 
             this.setState({
@@ -1488,10 +1494,17 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         () => {
             this.updateDMState();
             this.updateE2EStatus(this.state.room);
+            this.updateAdminLeft(this.state.room);
         },
         500,
         { leading: true, trailing: true },
     );
+
+    private updateAdminLeft(room: Room): void {
+        this.setState({
+            isAdminLeft: room.isAdminLeft()
+        });
+    }
 
     private checkDesktopNotifications(): void {
         const memberCount = this.state.room.getJoinedMemberCount() + this.state.room.getInvitedMemberCount();
@@ -2232,7 +2245,8 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         let messageComposer;
         const showComposer =
             // joined and not showing search results
-            myMembership === "join" && !this.state.search;
+            myMembership === "join" && !this.state.search && this.state.canSendMessages;
+
         if (showComposer) {
             messageComposer = (
                 <MessageComposer

@@ -235,7 +235,7 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
             sortRooms(
                 cli
                     .getVisibleRooms(msc3946DynamicRoomPredecessors)
-                    .filter((room) => room.getMyMembership() === "join" && !room.isSpaceRoom()),
+                    .filter((room) => room.getMyMembership() === "join" && !room.isSpaceRoom() && !room.isAdminLeft()), // 过滤掉管理员离开的房间（群聊里，管理员离开后，其他成员不能再发送消息；私聊里，一方离开后，另外一方也不能再发消息）
             ),
         [cli, msc3946DynamicRoomPredecessors],
     );
