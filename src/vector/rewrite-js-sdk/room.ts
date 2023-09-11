@@ -33,12 +33,12 @@ Room.prototype.canInvite = function(userId: string): boolean {
     return canInvite && !this.isPeopleRoom() && !this.isAdminLeft(); // 私聊不展示邀请按钮；群聊房间如果管理员离开了也不展示邀请按钮
 }
 
-// 获取聊天类型  私聊|频道（群聊）
+// 获取房间类型  私聊|频道（群聊）
 Room.prototype.getRoomType = function(): RoomType {
     return getRoomType(this.roomId);
 }
 
-// 获取聊天类型文本
+// 获取房间类型文本
 Room.prototype.getRoomTypeLabel = function(): string {
     return _t(this.getRoomType());
 }
