@@ -103,6 +103,7 @@ interface IState {
     isWysiwygLabEnabled: boolean;
     isRichTextEnabled: boolean;
     initialComposerContent: string;
+    showE2E: boolean;
 }
 
 export class MessageComposer extends React.Component<IProps, IState> {
@@ -140,6 +141,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
             isWysiwygLabEnabled: SettingsStore.getValue<boolean>("feature_wysiwyg_composer"),
             isRichTextEnabled: true,
             initialComposerContent: "",
+            showE2E: false
         };
 
         this.instanceId = instanceCount++;
@@ -295,17 +297,17 @@ export class MessageComposer extends React.Component<IProps, IState> {
     private renderPlaceholderText = (): string => {
         if (this.props.replyToEvent) {
             const replyingToThread = this.props.relation?.rel_type === THREAD_RELATION_TYPE.name;
-            if (replyingToThread && this.props.e2eStatus) {
+            if (replyingToThread && this.state.showE2E && this.props.e2eStatus) {
                 return _t("Reply to encrypted thread…");
             } else if (replyingToThread) {
                 return _t("Reply to thread…");
-            } else if (this.props.e2eStatus) {
+            } else if (this.state.showE2E && this.props.e2eStatus) {
                 return _t("Send an encrypted reply…");
             } else {
                 return _t("Send a reply…");
             }
         } else {
-            if (this.props.e2eStatus) {
+            if (this.state.showE2E && this.props.e2eStatus) {
                 return _t("Send an encrypted message…");
             } else {
                 return _t("Send a message…");
@@ -467,7 +469,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
 
     public render(): React.ReactNode {
         const hasE2EIcon = Boolean(!this.state.isWysiwygLabEnabled && this.props.e2eStatus);
-        const e2eIcon = hasE2EIcon && (
+        const e2eIcon = this.state.showE2E && hasE2EIcon && (
             <E2EIcon key="e2eIcon" status={this.props.e2eStatus} className="mx_MessageComposer_e2eIcon" />
         );
 

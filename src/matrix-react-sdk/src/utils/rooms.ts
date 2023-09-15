@@ -17,6 +17,9 @@ limitations under the License.
 import { getE2EEWellKnown } from "./WellKnownUtils";
 
 export function privateShouldBeEncrypted(): boolean {
+    return false; // 默认不加密
+
+
     const e2eeWellKnown = getE2EEWellKnown();
     if (e2eeWellKnown) {
         const defaultDisabled = e2eeWellKnown["default"] === false;
