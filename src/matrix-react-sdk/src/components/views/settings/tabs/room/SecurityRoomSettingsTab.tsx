@@ -52,6 +52,7 @@ interface IState {
     hasAliases: boolean;
     encrypted: boolean;
     showAdvancedSection: boolean;
+    showChangeEncryption: boolean;
 }
 
 export default class SecurityRoomSettingsTab extends React.Component<IProps, IState> {
@@ -77,6 +78,7 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
             hasAliases: false, // async loaded in componentDidMount
             encrypted: context.isRoomEncrypted(this.props.roomId),
             showAdvancedSection: false,
+            showChangeEncryption: false,
         };
     }
 
@@ -455,18 +457,22 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
             <div className="mx_SettingsTab mx_SecurityRoomSettingsTab">
                 <div className="mx_SettingsTab_heading">{_t("Security & Privacy")}</div>
 
-                <SettingsFieldset
-                    legend={_t("Encryption")}
-                    description={_t("Once enabled, encryption cannot be disabled.")}
-                >
-                    <LabelledToggleSwitch
-                        value={isEncrypted}
-                        onChange={this.onEncryptionChange}
-                        label={_t("Encrypted")}
-                        disabled={!canEnableEncryption}
-                    />
-                    {encryptionSettings}
-                </SettingsFieldset>
+                {
+                    this.state.showChangeEncryption && (
+                        <SettingsFieldset
+                            legend={_t("Encryption")}
+                            description={_t("Once enabled, encryption cannot be disabled.")}
+                        >
+                            <LabelledToggleSwitch
+                                value={isEncrypted}
+                                onChange={this.onEncryptionChange}
+                                label={_t("Encrypted")}
+                                disabled={!canEnableEncryption}
+                            />
+                            {encryptionSettings}
+                        </SettingsFieldset>
+                    )
+                }
 
                 {this.renderJoinRule()}
 
