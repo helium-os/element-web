@@ -102,6 +102,15 @@ export default class UserProvider extends AutocompleteProvider {
         this.users = null;
     };
 
+    private getAllUser = (query: string): [RoomMember] | [] => {
+        if(query === '@') {
+            const allMember = AllMember.instance().getAllMember(this.room.roomId);
+            return [allMember];
+        }
+
+        return [];
+    }
+
     public async getCompletions(
         rawQuery: string,
         selection: ISelectionRange,
@@ -118,13 +127,13 @@ export default class UserProvider extends AutocompleteProvider {
         if (fullMatch) {
             // Don't include the '@' in our search query - it's only used as a way to trigger completion
             const query = fullMatch;
-            const allMemberItem = AllMember.instance().getAllMember(this.room.roomId);
-            return [allMemberItem, ...this.matcher.match(query, limit)].map((user) => {
+            return [...this.getAllUser(query), ...this.matcher.match(query, limit)].map((user) => {
                 const description = UserIdentifierCustomisations.getDisplayUserIdentifier?.(user.userId, {
                     roomId: this.room.roomId,
                     withDisplayName: true,
                 });
                 const displayName = user.name || user.userId || "";
+                const isAllMember = AllMember.instance().isAllMember(user.userId, this.room.roomId);
                 return {
                     // Length of completion should equal length of text in decorator. draft-js
                     // relies on the length of the entity === length of the text in the decoration.
@@ -133,7 +142,7 @@ export default class UserProvider extends AutocompleteProvider {
                     type: "user",
                     // suffix: selection.beginning && range!.start === 0 ? ": " : " ",
                     suffix: " ",
-                    href: makeUserPermalink(user.userId),
+                    ...(!isAllMember ? { href: makeUserPermalink(user.userId) } : { }),
                     component: (
                         <PillCompletion title={displayName} description={description}>
                             <MemberAvatar member={user} width={24} height={24} />

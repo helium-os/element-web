@@ -31,8 +31,7 @@ export default class OrgStore {
     private currentOrgId: string = '';
 
     private constructor() {
-        const mxUserId = localStorage.getItem("mx_user_id");
-        this.currentOrgId = mxUserId.split(":")[1]?.split('.').pop();
+        this.setCurrentOrgId();
     }
 
     public static sharedInstance(): OrgStore {
@@ -51,12 +50,23 @@ export default class OrgStore {
 
     // 获取组织列表
     public getOrgList(): OrgItem[] {
-        return this.orgList;
+        return this.orgList || [];
     }
 
     // 设置组织列表
     public setOrgList(orgList: OrgItem[]): void {
        this.orgList = orgList;
+    }
+
+    // 获取用户所在的org id
+    public getUserOrgId(userId: string): string {
+        return userId.split(":")[1]?.split('.').pop();
+    }
+
+    // 设置当前用户所在组织id
+    public setCurrentOrgId(): void {
+        const mxUserId = localStorage.getItem("mx_user_id");
+        this.currentOrgId = this.getUserOrgId(mxUserId);
     }
 
     // 获取当前用户所在组织id

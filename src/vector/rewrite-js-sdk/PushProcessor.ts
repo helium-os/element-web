@@ -1,15 +1,12 @@
 import {IContainsDisplayNameCondition} from "matrix-js-sdk/src/@types/PushRules";
 import {MatrixEvent} from "matrix-js-sdk/src/models/event";
-import {escapeRegExp} from "matrix-js-sdk/src/utils";
 import {PushProcessor} from "matrix-js-sdk/src/pushprocessor";
 
-import {getResourceInfoFromUrl} from "../../matrix-react-sdk/src/hooks/usePermalink";
-import AllMember from "../../matrix-react-sdk/src/utils/AllMember";
-import {beMentioned} from "../../matrix-react-sdk/src/components/views/elements/Pill";
+import {getResourceInfoFromUrl} from "matrix-react-sdk/src/hooks/usePermalink";
+import {beMentioned} from "matrix-react-sdk/src/components/views/elements/Pill";
 
 PushProcessor.prototype.eventFulfillsDisplayNameCondition = function(cond: IContainsDisplayNameCondition, ev: MatrixEvent): boolean {
     let content = ev.getContent();
-    console.log('content', content, 'ev', ev);
     if (ev.isEncrypted() && ev.getClearContent()) {
         content = ev.getClearContent()!;
     }

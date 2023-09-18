@@ -18,7 +18,7 @@ limitations under the License.
 
 import React, { createRef, useContext } from "react";
 import { EventStatus, MatrixEvent } from "matrix-js-sdk/src/models/event";
-import { EventType, RelationType } from "matrix-js-sdk/src/@types/event";
+import { EventType, MsgType, RelationType } from "matrix-js-sdk/src/@types/event";
 import { Relations } from "matrix-js-sdk/src/models/relations";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import { M_POLL_START } from "matrix-js-sdk/src/@types/polls";
@@ -310,7 +310,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
     };
 
     private onCopyClick = (): void => {
-        copyPlaintext(getSelectedText());
+        copyPlaintext(getSelectedText() || this.props.mxEvent.getContent()?.body); // 如果有选中的文本，优先复制选中的文本；如果没有，则复制整条消息
         this.closeMenu();
     };
 
@@ -391,11 +391,13 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         const permalink = this.props.permalinkCreator?.forEvent(this.props.mxEvent.getId()!);
         // status is SENT before remote-echo, null after
         const isSent = !eventStatus || eventStatus === EventStatus.SENT;
-        const { timelineRenderingType, canReact, canSendMessages } = this.context;
+        const { timelineRenderingType, canReact, canSendMessages, isAdminLeft } = this.context;
         const isThread =
             timelineRenderingType === TimelineRenderingType.Thread ||
             timelineRenderingType === TimelineRenderingType.ThreadsList;
         const isThreadRootEvent = isThread && mxEvent?.getThread()?.rootEvent === mxEvent;
+
+        const { msgtype } = mxEvent.getContent() || {};
 
         let resendReactionsButton: JSX.Element | undefined;
         if (!mxEvent.isRedacted() && unsentReactionsCount !== 0) {
@@ -409,7 +411,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let redactButton: JSX.Element | undefined;
-        if (isSent && this.state.canRedact) {
+        if (isSent && this.state.canRedact && !isAdminLeft) {
             redactButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconRedact"
@@ -575,7 +577,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let reportEventButton: JSX.Element | undefined;
-        if (mxEvent.getSender() !== me) {
+        if (mxEvent.getSender() !== me && !isAdminLeft) {
             reportEventButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconReport"
@@ -606,7 +608,8 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let copyButton: JSX.Element | undefined;
-        if (rightClick && getSelectedText()) {
+        // 文本类型的消息展示复制按钮；其他类型（图片/文件）不展示
+        if (msgtype === MsgType.Text) {
             copyButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconCopy"
@@ -618,7 +621,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let editButton: JSX.Element | undefined;
-        if (rightClick && canEditContent(mxEvent)) {
+        if (rightClick && canEditContent(mxEvent) && !isAdminLeft) {
             editButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconEdit"
@@ -650,6 +653,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             replyInThreadButton = <ReplyInThreadButton mxEvent={mxEvent} closeMenu={this.closeMenu} />;
         }
 
+        // 回应
         let reactButton: JSX.Element | undefined;
         if (rightClick && contentActionable && canReact) {
             reactButton = (

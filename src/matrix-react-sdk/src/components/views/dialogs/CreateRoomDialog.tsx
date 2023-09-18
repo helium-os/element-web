@@ -34,6 +34,7 @@ import JoinRuleDropdown from "../elements/JoinRuleDropdown";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
+import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 
 interface IProps {
     type?: RoomType;
@@ -312,10 +313,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
             );
         }
 
-        let federateLabel = _t(
-            "You might enable this if the room will only be used for collaborating with internal " +
-                "teams on your homeserver. This cannot be changed later.",
-        );
+        let federateLabel = _t("This cannot be changed later.");
         if (SdkConfig.get().default_federate === false) {
             // We only change the label if the default setting is different to avoid jarring text changes to the
             // user. They will have read the implications of turning this off/on, so no need to rephrase for them.
@@ -375,8 +373,8 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
                                 {this.state.detailsOpen ? _t("Hide advanced") : _t("Show advanced")}
                             </summary>
                             <LabelledToggleSwitch
-                                label={_t("Block anyone not part of %(serverName)s from ever joining this room.", {
-                                    serverName: MatrixClientPeg.getHomeserverName(),
+                                label={_t("EnableJoinOrgName", {
+                                    orgName: OrgStore.sharedInstance().getCurrentOrgName(),
                                 })}
                                 onChange={this.onNoFederateChange}
                                 value={this.state.noFederate}

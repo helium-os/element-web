@@ -109,14 +109,18 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
     (platform as VectorBasePlatform).startUpdater();
 
+    const orgId = getOrgId();
+
     // Don't bother loading the app until the config is verified
+    SdkConfig.add({
+        default_server_config: {
+            'm.homeserver': {
+                base_url:  `https://${hsNamePrefix}.${orgId}`
+            }
+        }
+    });
     const config = await verifyServerConfig();
 
-    const orgId = getOrgId();
-    console.log('orgId', orgId);
-    if (orgId) {
-        config.default_server_config["m.homeserver"].base_url = `${window.location.protocol}//${hsNamePrefix}.${orgId}`;
-    }
     const snakedConfig = new SnakedObject<IConfigOptions>(config);
 
     // Before we continue, let's see if we're supposed to do an SSO redirect
@@ -164,7 +168,6 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
 
 async function verifyServerConfig(): Promise<IConfigOptions> {
     let validatedConfig;
-    let orgId;
     try {
         logger.log("Verifying homeserver configuration");
 
@@ -230,7 +233,6 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
             discoveryResult = await AutoDiscovery.findClientConfig(serverName);
         }
 
-        orgId = getOrgId();
         validatedConfig = AutoDiscoveryUtils.buildValidatedConfigFromDiscovery(serverName, discoveryResult, true);
     } catch (e) {
         const { hsUrl, isUrl, userId } = await Lifecycle.getStoredSessionVars();
@@ -247,10 +249,6 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
     }
 
     validatedConfig.isDefault = true;
-    if (orgId) {
-        validatedConfig.hsUrl = `${window.location.protocol}//${hsNamePrefix}.${orgId}`;
-        validatedConfig.hsName = `${hsNamePrefix}.${orgId}`;
-    }
 
     // Just in case we ever have to debug this
     logger.log("Using homeserver config:", validatedConfig);

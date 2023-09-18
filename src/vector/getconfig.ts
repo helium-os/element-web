@@ -21,18 +21,18 @@ import type { IConfigOptions } from "matrix-react-sdk/src/IConfigOptions";
 export async function getVectorConfig(relativeLocation = ""): Promise<IConfigOptions> {
     if (relativeLocation !== "" && !relativeLocation.endsWith("/")) relativeLocation += "/";
 
-    const specificConfigPromise = getConfig(`${relativeLocation}config.${document.domain}.json`);
+    // const specificConfigPromise = getConfig(`${relativeLocation}config.${document.domain}.json`);
     const generalConfigPromise = getConfig(relativeLocation + "config.json");
 
     try {
-        const configJson = await specificConfigPromise;
+        const configJson = await generalConfigPromise;
         // 404s succeed with an empty json config, so check that there are keys
         if (Object.keys(configJson).length === 0) {
             throw new Error(); // throw to enter the catch
         }
         return configJson;
     } catch (e) {
-        return generalConfigPromise;
+        return {};
     }
 }
 

@@ -47,7 +47,7 @@ function getManagedIframe(): { iframe: HTMLIFrameElement; onLoadPromise: Promise
 
     // @ts-ignore
     // noinspection JSConstantReassignment
-    managedIframe.sandbox = "allow-scripts allow-downloads allow-downloads-without-user-activation";
+    managedIframe.sandbox = "allow-scripts allow-same-origin allow-downloads allow-downloads-without-user-activation";
 
     onLoadPromise = new Promise((resolve) => {
         managedIframe.onload = () => {

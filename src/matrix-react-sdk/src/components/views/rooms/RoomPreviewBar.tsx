@@ -481,8 +481,8 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
                 if (inviteMember) {
                     inviterElement = (
                         <span>
-                            <span className="mx_RoomPreviewBar_inviter">{inviteMember.rawDisplayName}</span> (
-                            {inviteMember.userId})
+                            <span className="mx_RoomPreviewBar_inviter">{inviteMember.rawDisplayName}</span>
+                            {/*({inviteMember.userId})*/}
                         </span>
                     );
                 } else {

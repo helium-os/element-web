@@ -57,10 +57,33 @@
         <% }
     } %>
 
+      <style>
+          .loading-wrap {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, 0);
+              z-index: 999;
+          }
+          .loading {
+              border: 2px solid #e3e8f0;
+              border-top: 2px solid #5e6266;
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              display: inline-block;
+              animation: spin 1s linear infinite;
+          }
+      </style>
+
   </head>
   <body style="height: 100%; margin: 0;">
     <noscript>Sorry, Element requires JavaScript to be enabled.</noscript> <!-- TODO: Translate this? -->
-    <section id="matrixchat" style="height: 100%;" class="notranslate"></section>
+    <section id="matrixchat" style="height: 100%;" class="notranslate">
+        <div class="loading-wrap">
+            <div class="loading"></div>
+        </div>
+    </section>
     <script src="<%= htmlWebpackPlugin.files.js.find(entry => entry.includes("bundle.js")) %>"></script>
 
     <!-- Legacy supporting Prefetch images -->
