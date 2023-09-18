@@ -479,6 +479,7 @@ export interface IProps {
 interface IState {
     contextMenuPosition?: DOMRect;
     rightPanelOpen: boolean;
+    showE2EIcon: boolean;
 }
 
 export default class RoomHeader extends React.Component<IProps, IState> {
@@ -499,6 +500,7 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         notiStore.on(NotificationStateEvents.Update, this.onNotificationUpdate);
         this.state = {
             rightPanelOpen: RightPanelStore.instance.isOpen,
+            showE2EIcon: false
         };
     }
 
@@ -732,7 +734,7 @@ export default class RoomHeader extends React.Component<IProps, IState> {
 
         const icon = this.props.viewingCall ? (
             <div className="mx_RoomHeader_icon mx_RoomHeader_icon_video" />
-        ) : this.props.e2eStatus ? (
+        ) : !this.state.showE2EIcon ? null : this.props.e2eStatus ? (
             <E2EIcon className="mx_RoomHeader_icon" status={this.props.e2eStatus} tooltipAlignment={Alignment.Bottom} />
         ) : // If we're expecting an E2EE status to come in, but it hasn't
         // yet been loaded, insert a blank div to reserve space

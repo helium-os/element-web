@@ -57,6 +57,7 @@ interface IState {
     noFederate: boolean;
     nameIsValid: boolean;
     canChangeEncryption: boolean;
+    showChangeEncryption: boolean; // 是否展示更改"加密"设置区域
 }
 
 export default class CreateRoomDialog extends React.Component<IProps, IState> {
@@ -87,6 +88,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
             noFederate: SdkConfig.get().default_federate === false,
             nameIsValid: false,
             canChangeEncryption: true,
+            showChangeEncryption: false
         };
 
         MatrixClientPeg.get()
@@ -283,7 +285,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
         }
 
         let e2eeSection: JSX.Element | undefined;
-        if (this.state.joinRule !== JoinRule.Public) {
+        if (this.state.joinRule !== JoinRule.Public && this.state.showChangeEncryption) {
             let microcopy: string;
             if (privateShouldBeEncrypted()) {
                 if (this.state.canChangeEncryption) {
