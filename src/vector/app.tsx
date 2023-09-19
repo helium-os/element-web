@@ -99,11 +99,11 @@ function getOrgId(): string {
 }
 
 export async function loadApp(fragParams: {}): Promise<ReactElement> {
+    initRouting();
     console.log('test', {
         a: 1,
         b: 2
-    });
-    initRouting();
+    })
     const platform = PlatformPeg.get();
 
     const params = parseQs(window.location);
