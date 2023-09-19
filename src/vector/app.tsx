@@ -111,6 +111,7 @@ export async function loadApp(fragParams): Promise<ReactElement> {
         g: 7,
         h: 8,
         i: 9,
+        j: 10,
     });
     initRouting();
     const platform = PlatformPeg.get();
