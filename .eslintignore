@@ -1,10 +1,14 @@
+/node_modules/
+
+
 src/vector/modernizr.js
 # Legacy skinning file that some people might still have
 src/component-index.js
 # Auto-generated file
 src/modules.ts
+src/test/
 
-
+src/matrix-react-sdk/test/
 src/matrix-react-sdk/test/end-to-end-tests/node_modules/
 src/matrix-react-sdk/test/end-to-end-tests/element/
 src/matrix-react-sdk/test/end-to-end-tests/synapse/

@@ -3,4 +3,4 @@
 
 echo 'Husky pre-commit'
 
-yarn --no-install lint-staged
+yarn lint-staged

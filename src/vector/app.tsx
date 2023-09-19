@@ -48,7 +48,7 @@ window.matrixLogger = logger;
 
 const isDev = process.env.NODE_ENV === "development";
 
-const hsNamePrefix = 'matrix.system.service';
+const hsNamePrefix = "matrix.system.service";
 
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
@@ -93,22 +93,25 @@ function onTokenLoginCompleted(): void {
 }
 
 function getOrgId(): string {
-    if (isDev) { return CHAT_ENV_ORG_ID; }
+    if (isDev) {
+        return CHAT_ENV_ORG_ID;
+    }
     const { hostname } = window.location;
     return hostname.split(".").pop();
 }
 
-export async function loadApp(fragParams: {}): Promise<ReactElement> {
-    console.log('test6', {
+export async function loadApp(fragParams): Promise<ReactElement> {
+    console.log("test7", {
         a: 1,
         b: 2,
         c: 3,
         d: 4,
         e: 5,
-        f:6,
-        g:7,
-        h:8
-    })
+        f: 6,
+        g: 7,
+        h: 8,
+        i: 9,
+    });
     initRouting();
     const platform = PlatformPeg.get();
 
@@ -124,10 +127,10 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     // Don't bother loading the app until the config is verified
     SdkConfig.add({
         default_server_config: {
-            'm.homeserver': {
-                base_url:  `https://${hsNamePrefix}.${orgId}`
-            }
-        }
+            "m.homeserver": {
+                base_url: `https://${hsNamePrefix}.${orgId}`,
+            },
+        },
     });
     const config = await verifyServerConfig();
 
@@ -159,7 +162,7 @@ export async function loadApp(fragParams: {}): Promise<ReactElement> {
     }
 
     const defaultDeviceName = snakedConfig.get("default_device_display_name") ?? platform.getDefaultDeviceDisplayName();
-    console.log('----config', config);
+    console.log("----config", config);
     return (
         <MatrixChat
             onNewScreen={onNewScreen}
