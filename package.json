@@ -51,9 +51,11 @@
         "start:https": "concurrently --kill-others-on-fail --prefix \"{time} [{name}]\" -n res,element-js \"yarn start:res\" \"yarn start:js --https\"",
         "start:res": "yarn build:jitsi && node scripts/copy-res.js -w",
         "start:js": "webpack-dev-server --host=0.0.0.0 --output-filename=bundles/_dev_/[name].js --output-chunk-filename=bundles/_dev_/[name].js -w --mode development --disable-host-check --hot",
-        "lint:fix": "eslint --fix --ext .js,.jsx,.ts,.tsx .",
-        "prettier": "prettier --write .",
-        "lint:prettier": "yarn lint:fix && yarn prettier",
+        "lint:fix": "eslint --fix",
+        "prettier": "prettier --write",
+        "lint:fix:all": "yarn lint:fix .",
+        "prettier:all": "yarn prettier .",
+        "lint:prettier:all": "yarn lint:fix:all && yarn prettier:all",
         "lint": "yarn lint:types && yarn lint:js && yarn lint:style",
         "lint:js": "yarn lint:js:src && yarn lint:js:module_system",
         "lint:js:src": "eslint --max-warnings 0 src test && prettier --check .",
@@ -332,15 +334,10 @@
         "outputName": "jest-sonar-report.xml",
         "relativePaths": true
     },
-    "husky": {
-        "hooks": {
-            "pre-commit": "echo \"[Husky] pre-commit1\""
-        }
-    },
     "lint-staged": {
         "*.{ts,tsx,js,jsx}": [
-            "eslint --fix",
-            "prettier --write"
+            "yarn lint:fix",
+            "yarn prettier"
         ]
     }
 }
