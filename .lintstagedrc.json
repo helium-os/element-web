@@ -1,0 +1,9 @@
+{
+    "lint-staged": {
+        "*.{vue,js,jsx,ts,tsx}": [
+            "yarn lint:fix",
+            "yarn prettier",
+            "git add"
+        ]
+    }
+}
