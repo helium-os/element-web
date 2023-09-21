@@ -145,9 +145,9 @@ import { NotificationColor } from "../../stores/notifications/NotificationColor"
 import { UserTab } from "../views/dialogs/UserTab";
 import {OwnProfileStore} from "../../stores/OwnProfileStore";
 
-import AppMessage from "app-sdk";
+import SDK from "heliumos-js-sdk";
 import * as languageHandler from "../../../src/languageHandler";
-import { appObserverKeyMap } from "../../../../vector/appConfig";
+import { appEventKeyMap } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "../../../../i18n/map";
 
 // legacy export
@@ -437,7 +437,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
-        AppMessage?.addObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
+        SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -459,7 +459,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         UIStore.destroy();
         this.state.resizeNotifier.removeListener("middlePanelResized", this.dispatchTimelineResize);
         window.removeEventListener("resize", this.onWindowResized);
-        AppMessage?.removeObserver?.(appObserverKeyMap.languageChange, this.onLanguageChange);
+        SDK.unsubscribe(appEventKeyMap.languageChange, this.onLanguageChange);
 
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();

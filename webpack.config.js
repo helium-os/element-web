@@ -140,7 +140,7 @@ module.exports = (env, argv) => {
     // don't have to call them over and over. We also resolve to the package.json instead of the src
     // directory, so we don't have to rely on an index.js or similar file existing.
     const jsSdkSrcDir = path.resolve(require.resolve("matrix-js-sdk/package.json"), "..", "src");
-    const appSdkDir = path.resolve(require.resolve("app-sdk/package.json"), "..", "src");
+    const appSdkDir = path.resolve(require.resolve("heliumos-js-sdk/package.json"), "..", "src");
 
     const ACTIVE_THEMES = getActiveThemes();
     function getThemesImports() {
