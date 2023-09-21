@@ -275,6 +275,8 @@ const onRoomSettingsClick = (ev: ButtonEvent): void => {
 const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) => {
     const cli = useContext(MatrixClientContext);
 
+    const showE2E = false;
+
     const onShareRoomClick = (): void => {
         Modal.createDialog(ShareDialog, {
             target: room,
@@ -308,14 +310,18 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
         <React.Fragment>
             <div className="mx_RoomSummaryCard_avatar" role="presentation">
                 <RoomAvatar room={room} height={54} width={54} viewAvatarOnClick />
-                <TextWithTooltip
-                    tooltip={isRoomEncrypted ? _t("Encrypted") : _t("Not encrypted")}
-                    class={classNames("mx_RoomSummaryCard_e2ee", {
-                        mx_RoomSummaryCard_e2ee_normal: isRoomEncrypted,
-                        mx_RoomSummaryCard_e2ee_warning: isRoomEncrypted && e2eStatus === E2EStatus.Warning,
-                        mx_RoomSummaryCard_e2ee_verified: isRoomEncrypted && e2eStatus === E2EStatus.Verified,
-                    })}
-                />
+                {
+                    showE2E && (
+                        <TextWithTooltip
+                            tooltip={isRoomEncrypted ? _t("Encrypted") : _t("Not encrypted")}
+                            class={classNames("mx_RoomSummaryCard_e2ee", {
+                                mx_RoomSummaryCard_e2ee_normal: isRoomEncrypted,
+                                mx_RoomSummaryCard_e2ee_warning: isRoomEncrypted && e2eStatus === E2EStatus.Warning,
+                                mx_RoomSummaryCard_e2ee_verified: isRoomEncrypted && e2eStatus === E2EStatus.Verified,
+                            })}
+                        />
+                    )
+                }
             </div>
 
             <RoomName room={room}>{(name) => <h2 title={name}>{name}</h2>}</RoomName>
@@ -334,11 +340,15 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
     const showExportChat = SettingsStore.getValue(UIFeature.RoomExportChat);
     const showShareRoom = SettingsStore.getValue(UIFeature.RoomShare);
 
+    const roomTypeLabel = room.getRoomTypeLabel();
+
     return (
         <BaseCard header={header} className="mx_RoomSummaryCard" onClose={onClose}>
             <Group title={_t("About")} className="mx_RoomSummaryCard_aboutGroup">
                 <Button className="mx_RoomSummaryCard_icon_people" onClick={onRoomMembersClick}>
-                    {_t("People")}
+                    {_t("Members", {
+                        roomType: roomTypeLabel
+                    })}
                     <span className="mx_BaseCard_Button_sublabel">{memberCount}</span>
                 </Button>
                 {showFile && !isVideoRoom && (
@@ -373,9 +383,13 @@ const RoomSummaryCard: React.FC<IProps> = ({ room, permalinkCreator, onClose }) 
                         </Button>
                     )
                 }
-                <Button className="mx_RoomSummaryCard_icon_settings" onClick={onRoomSettingsClick}>
-                    {_t("Room settings")}
-                </Button>
+                {
+                    !room.isPeopleRoom() && (
+                        <Button className="mx_RoomSummaryCard_icon_settings" onClick={onRoomSettingsClick}>
+                            {_t("Room settings")}
+                        </Button>
+                    )
+                }
             </Group>
 
             {SettingsStore.getValue(UIFeature.Widgets) &&

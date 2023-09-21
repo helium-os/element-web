@@ -12,6 +12,8 @@ const SentryCliPlugin = require("@sentry/webpack-plugin");
 const crypto = require("crypto");
 const { merge } = require('webpack-merge');
 
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
 // require对应的config文件
 const defaultORG = 'org2';
 const ORG = process.env.ORG || defaultORG;
@@ -171,6 +173,8 @@ module.exports = (env, argv) => {
             ...(useHMR ? {} : cssThemes),
         },
 
+        devtool: devMode ? 'eval-cheap-module-source-map' : false,
+
         optimization: {
             // Put all of our CSS into one useful place - this is needed for MiniCssExtractPlugin.
             // Previously we used a different extraction plugin that did this magic for us, but
@@ -180,12 +184,23 @@ module.exports = (env, argv) => {
                     styles: {
                         name: "styles",
                         test: /\.css$/,
+                        priority: 10,
                         enforce: true,
                         // Do not add `chunks: 'all'` here because you'll break the app entry point.
                     },
+                    react: {
+                        test: /[\\/]node_modules[\\/]react(.)*[\\/]/,
+                        name: 'react-bucket',
+                        priority: 8
+                    },
+                    matrixReactSdk: {
+                        test:/[\\/]matrix-react-sdk[\\/]/,
+                        name: 'matrix-react-sdk',
+                        priority: 8
+                    },
                     default: {
                         reuseExistingChunk: true,
-                    },
+                    }
                 },
             },
 
@@ -303,14 +318,12 @@ module.exports = (env, argv) => {
                             loader: "css-loader",
                             options: {
                                 importLoaders: 1,
-                                sourceMap: true,
                             },
                         },
                         {
                             loader: "postcss-loader",
                             ident: "postcss",
                             options: {
-                                "sourceMap": true,
                                 "plugins": () => [
                                     // Note that we use significantly fewer plugins on the plain
                                     // CSS parser. If we start to parse plain CSS, we end with all
@@ -386,14 +399,12 @@ module.exports = (env, argv) => {
                             loader: "css-loader",
                             options: {
                                 importLoaders: 1,
-                                sourceMap: true,
                             },
                         },
                         {
                             loader: "postcss-loader",
                             ident: "postcss",
                             options: {
-                                "sourceMap": true,
                                 "plugins": () => [
                                     // Note that we use slightly different plugins for PostCSS.
                                     require("postcss-import")(),
@@ -691,7 +702,9 @@ module.exports = (env, argv) => {
                 }),
             new webpack.EnvironmentPlugin(["VERSION"]),
 
-            new webpack.DefinePlugin(generateCustomDefinePlugin(customConfig.define))
+            new webpack.DefinePlugin(generateCustomDefinePlugin(customConfig.define)),
+
+            ...(devMode ? [new BundleAnalyzerPlugin()] : [])
         ].filter(Boolean),
 
         output: {

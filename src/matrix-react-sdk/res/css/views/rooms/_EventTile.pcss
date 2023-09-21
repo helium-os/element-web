@@ -98,6 +98,19 @@ $left-gutter: 64px;
         }
     }
 
+    .mx_EventTile_msgDetails {
+        display: flex;
+        align-items: center;
+    }
+    .mx_Event_timestamp {
+        flex: 1;
+        overflow: hidden;
+        line-height: 22px;
+        .mx_MessageTimestamp {
+            max-width: 100%;
+        }
+    }
+
     .mx_DisambiguatedProfile {
         color: $primary-content;
         font-size: $font-14px;

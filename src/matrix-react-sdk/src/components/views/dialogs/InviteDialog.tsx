@@ -537,11 +537,9 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
     }
 
     private convertFilter(): Member[] {
-        console.log('!!!!!enter convertFilter');
         // Check to see if there's anything to convert first
         if (!this.state.filterText || getAddressType(this.state.filterText) !== AddressType.MatrixUserId) return this.state.targets || [];
 
-        console.log('!!!!!this.canInviteMore()', this.canInviteMore());
         if (!this.canInviteMore()) {
             // There should only be one third-party invite → do not allow more targets
             return this.state.targets;
@@ -553,7 +551,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             newMember = new DirectoryMember({ user_id: this.state.filterText });
         } else if (SettingsStore.getValue(UIFeature.IdentityServer)) {
             // Assume email
-            console.log('!!!!this.canInviteThirdParty()', this.canInviteThirdParty());
             if (this.canInviteThirdParty()) {
                 newMember = new ThreepidMember(this.state.filterText);
             }
@@ -573,7 +570,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         try {
             const cli = MatrixClientPeg.get();
             const targets = this.convertFilter();
-            console.log('!!!!!targets', targets);
             await startDmOnFirstMessage(cli, targets);
             this.props.onFinished(true);
         } catch (err) {
@@ -692,7 +688,15 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         if (!!userId) { return; } // 如果有用户id，不走查询接口；只有搜索用户名走查询接口
         const name = userName + (userOrgId !== currentOrgId ? `@${userOrgId}` : '');
         fetch(`/heliumos-user-api/user/v1/users?name=${encodeURIComponent(name)}`)
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    this.setState({
+                        serverResultsMixin: []
+                    });
+                    throw response;
+                }
+                return response.json();
+            })
             .then((res) => {
                 const data = res.data;
                 if (data.length) {
@@ -716,6 +720,8 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                         user: new DirectoryMember(u),
                     })),
                 });
+            }).catch(error => {
+
             });
 
         // MatrixClientPeg.get()
@@ -1526,14 +1532,14 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 <div className="mx_InviteDialog_userSections">
                     {this.renderSection("recents")}
                     {this.renderSection("suggestions")}
-                    {extraSection}
+                    {/*{extraSection}*/}
                 </div>
             );
         }
 
         const usersSection = (
             <React.Fragment>
-                <p className="mx_InviteDialog_helpText">{helpText}</p>
+                {/*<p className="mx_InviteDialog_helpText">{helpText}</p>*/}
                 <div className="mx_InviteDialog_addressBar">
                     {this.renderEditor()}
                     <div className="mx_InviteDialog_buttonAndSpinner">

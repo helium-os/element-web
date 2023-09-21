@@ -103,6 +103,7 @@ interface IState {
     accountEmails?: string[];
     invitedEmailMxid?: string;
     threePidFetchError?: MatrixError;
+    showRejectAndIgnore: boolean;
 }
 
 export default class RoomPreviewBar extends React.Component<IProps, IState> {
@@ -115,6 +116,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
 
         this.state = {
             busy: false,
+            showRejectAndIgnore: false
         };
     }
 
@@ -481,8 +483,8 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
                 if (inviteMember) {
                     inviterElement = (
                         <span>
-                            <span className="mx_RoomPreviewBar_inviter">{inviteMember.rawDisplayName}</span> (
-                            {inviteMember.userId})
+                            <span className="mx_RoomPreviewBar_inviter">{inviteMember.rawDisplayName}</span>
+                            {/*({inviteMember.userId})*/}
                         </span>
                     );
                 } else {
@@ -517,7 +519,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
                 secondaryActionLabel = _t("Reject");
                 secondaryActionHandler = this.props.onRejectClick;
 
-                if (this.props.onRejectAndIgnoreClick) {
+                if (this.state.showRejectAndIgnore && this.props.onRejectAndIgnoreClick) {
                     extraComponents.push(
                         <AccessibleButton kind="secondary" onClick={this.props.onRejectAndIgnoreClick} key="ignore">
                             {_t("Reject & Ignore user")}

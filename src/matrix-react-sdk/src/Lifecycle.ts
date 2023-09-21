@@ -63,6 +63,7 @@ import { Action } from "./dispatcher/actions";
 import AbstractLocalStorageSettingsHandler from "./settings/handlers/AbstractLocalStorageSettingsHandler";
 import { OverwriteLoginPayload } from "./dispatcher/payloads/OverwriteLoginPayload";
 import { SdkContextClass } from "./contexts/SDKContext";
+import OrgStore from "./stores/OrgStore";
 
 const HOMESERVER_URL_KEY = "mx_hs_url";
 const ID_SERVER_URL_KEY = "mx_is_url";
@@ -640,10 +641,17 @@ async function doSetLoggedIn(credentials: IMatrixClientCreds, clearStorageEnable
         logger.warn("No local storage available: can't persist session!");
     }
 
+    await setOrgList();
     dis.fire(Action.OnLoggedIn);
     await startMatrixClient(/*startSyncing=*/ !softLogout);
 
     return client;
+}
+
+async function setOrgList(): Promise<void> {
+    const orgStore = OrgStore.sharedInstance();
+    const orgList = await orgStore.queryOrgList();
+    orgStore.setOrgList(orgList);
 }
 
 function showStorageEvictedDialog(): Promise<boolean> {
