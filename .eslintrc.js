@@ -20,7 +20,7 @@ module.exports = {
         "plugin:import/recommended",
         "plugin:react/recommended",
         "plugin:react-hooks/recommended",
-        "plugin:prettier/recommended", // eslint-plugin-prettier
+        "plugin:prettier/recommended", // eslint-config-prettier
     ],
     rules: {
         // 函数括号前的空格
@@ -34,7 +34,7 @@ module.exports = {
         ],
         // eslint-plugin-react
         // 大括号内的换行符
-        "react/jsx-curly-newline": ["error", { multiline: "require", singleline: "consistent" }],
+        // "react/jsx-curly-newline": ["error", { multiline: "require", singleline: "consistent" }],
         // 大括号内的空格
         "react/jsx-curly-spacing": ["error", { when: "never", children: { when: "always" } }],
         // 禁止target="_blank"不带rel="noreferrer"属性
