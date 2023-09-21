@@ -38,7 +38,7 @@ import { initRageshake, initRageshakeStore } from "./rageshakesetup";
 // @ts-ignore - this path is created at runtime and therefore won't exist at typecheck time
 import { INSTALLED_MODULES } from "../modules";
 import { getLanguage } from "./appConfig";
-import { defaultLanguage } from "../i18n/map";
+import { defaultLanguage } from "matrix-react-sdk/src/languageHandler";
 
 export const rageshakePromise = initRageshake();
 

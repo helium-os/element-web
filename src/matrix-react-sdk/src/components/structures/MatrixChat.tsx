@@ -148,7 +148,7 @@ import {OwnProfileStore} from "../../stores/OwnProfileStore";
 import SDK from "heliumos-js-sdk";
 import * as languageHandler from "../../../src/languageHandler";
 import { appEventKeyMap } from "../../../../vector/appConfig";
-import { defaultLanguage, languageMap } from "../../../../i18n/map";
+import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 
 // legacy export
 export { default as Views } from "../../Views";

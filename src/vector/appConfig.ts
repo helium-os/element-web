@@ -1,5 +1,5 @@
 import SDK from "heliumos-js-sdk";
-import { defaultLanguage, languageMap } from "../i18n/map";
+import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 
 export const appEventKeyMap = {
     languageChange: 'system.language_changed'

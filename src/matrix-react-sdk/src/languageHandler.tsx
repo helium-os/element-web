@@ -53,6 +53,13 @@ interface ErrorOptions {
     cause: unknown | undefined;
 }
 
+export const defaultLanguage = 'zh-hans';
+
+export const languageMap = new Map([
+    ['zh', 'zh-hans'],
+    ['en', 'en']
+]);
+
 /**
  * Used to rethrow an error with a user-friendly translatable message while maintaining
  * access to that original underlying error. Downstream consumers can display the
