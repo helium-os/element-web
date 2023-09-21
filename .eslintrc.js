@@ -20,7 +20,7 @@ module.exports = {
         "plugin:import/recommended",
         "plugin:react/recommended",
         "plugin:react-hooks/recommended",
-        "plugin:prettier/recommended", // eslint-config-prettier
+        "plugin:prettier/recommended", // eslint-plugin-prettier
     ],
     rules: {
         // // 取消函数参数需要重新赋值给另一个变量才能使用

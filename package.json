@@ -336,8 +336,7 @@
     },
     "lint-staged": {
         "*.{ts,tsx,js,jsx}": [
-            "yarn lint:fix",
-            "yarn prettier"
+            "yarn lint:fix"
         ]
     }
 }

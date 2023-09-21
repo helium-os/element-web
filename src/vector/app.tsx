@@ -101,6 +101,10 @@ function getOrgId(): string {
 }
 
 export async function loadApp(fragParams): Promise<ReactElement> {
+    console.log("pre-commit test", {
+        a: 1,
+        b: 2,
+    });
     initRouting();
     const platform = PlatformPeg.get();
 
