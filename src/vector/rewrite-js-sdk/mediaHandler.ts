@@ -1,14 +1,14 @@
 import { MediaHandler } from "matrix-js-sdk/src/webrtc/mediaHandler";
-import SDK from "heliumos-js-sdk";
+import { askForMediaAccess } from "../appConfig";
 
 const _getUserMediaStream = MediaHandler.prototype.getUserMediaStream;
 // @ts-ignore
-MediaHandler.prototype.getUserMediaStream = async function (...args): Promise<MediaStream | void> {
-    SDK.invoke("system.askForMediaAccess", (res) => {
-        console.log("get app media access success", res);
-        if (!res) {
-            return Promise.reject("media access from app is false");
-        }
+MediaHandler.prototype.getUserMediaStream = async function (...args): Promise<MediaStream | string> {
+    try {
+        await askForMediaAccess();
         return _getUserMediaStream.call(this, ...args);
-    });
+    } catch (error) {
+        console.log("获取desktop音视频权限失败", error);
+        return Promise.reject(error);
+    }
 };
