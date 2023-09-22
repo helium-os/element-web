@@ -7316,6 +7316,11 @@ he@^1.2.0:
   resolved "https://registry.npmmirror.com/he/-/he-1.2.0.tgz#84ae65fa7eafb165fddb61566ae14baf05664f0f"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
+heliumos-js-sdk@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmmirror.com/heliumos-js-sdk/-/heliumos-js-sdk-1.0.0.tgz#13026643b57cdb82e7221e1009fecf12bd9060f4"
+  integrity sha512-r2/pJqbZS3iMpPrYO9Re8C1HysFOg9dvuMSO7dq2NR/vpDEBMBzqw4QXYQcSThsJLzqVDGEb8bm1+wWkwiccsg==
+
 highlight.js@^11.3.1:
   version "11.7.0"
   resolved "https://registry.npmmirror.com/highlight.js/-/highlight.js-11.7.0.tgz#3ff0165bc843f8c9bce1fd89e2fda9143d24b11e"

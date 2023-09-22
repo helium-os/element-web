@@ -143,7 +143,12 @@ import { findDMForUser } from "../../utils/dm/findDMForUser";
 import { Linkify } from "../../HtmlUtils";
 import { NotificationColor } from "../../stores/notifications/NotificationColor";
 import { UserTab } from "../views/dialogs/UserTab";
-import {OwnProfileStore} from "../../stores/OwnProfileStore";
+import { OwnProfileStore } from "../../stores/OwnProfileStore";
+
+import SDK from "heliumos-js-sdk";
+import * as languageHandler from "../../../src/languageHandler";
+import { appEventKeyMap } from "../../../../vector/appConfig";
+import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -419,8 +424,20 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         super.setState<K>(state, callback);
     }
 
+    private onLanguageChange(language): void {
+        console.log("app language config change", language);
+        const newLanguage = languageMap.get(language) || defaultLanguage;
+        if (newLanguage === languageHandler.getCurrentLanguage()) return;
+        const platform = PlatformPeg.get();
+        if (platform) {
+            platform.setLanguage([newLanguage]);
+            platform.reload();
+        }
+    }
+
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
+        SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -442,6 +459,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         UIStore.destroy();
         this.state.resizeNotifier.removeListener("middlePanelResized", this.dispatchTimelineResize);
         window.removeEventListener("resize", this.onWindowResized);
+        SDK.unsubscribe(appEventKeyMap.languageChange, this.onLanguageChange);
 
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();
@@ -1496,10 +1514,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         });
 
         cli.on(ClientEvent.Sync, (state: SyncState, prevState: SyncState | null, data?: ISyncStateData) => {
-            console.log('订阅到ClientEvent.Sync事件', state, data);
+            console.log("订阅到ClientEvent.Sync事件", state, data);
             if (!this.state.idbReady) {
                 this.setState({
-                    idbReady: state === SyncState.Prepared && !data?.fromCache
+                    idbReady: state === SyncState.Prepared && !data?.fromCache,
                 });
             }
             if (state === SyncState.Error || state === SyncState.Reconnecting) {
@@ -1517,7 +1535,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
              * 因为matrix-js-sdk不会派发RoomStateEvent.Events事件，导致在OwnProfileStore里订阅不到RoomStateEvent.Events事件，也就不会派发UPDATE_EVENT事件，所以首页用户名和头像不会修改
              * matrix-js-sdk RoomStateEvent.Events事件是针对room变化的
              */
-            if(state === SyncState.Syncing && this.props.getScreenFromLocation(window.location)?.screen === 'home') {
+            if (state === SyncState.Syncing && this.props.getScreenFromLocation(window.location)?.screen === "home") {
                 OwnProfileStore.instance.onProfileUpdate();
             }
 
@@ -1929,7 +1947,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     // 修改是否为通过token登录
     private onChangeTokenLogin = (tokenLogin: boolean): void => {
         this.tokenLogin = tokenLogin;
-    }
+    };
 
     private onLoginClick = (): void => {
         this.showScreen("login");
