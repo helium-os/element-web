@@ -353,22 +353,23 @@ function mapLanguage(language: string): string {
 // and a non-nullish input specifies the label of a specific device to use.
 // Same for video inputs.
 async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
-    try {
-        await askForMediaAccess(true, true);
-    } catch (error) {
-        console.error("多人会议获取音视频权限失败", error);
-        const title = _t("Unable to access webcam / microphone");
-        const description = "";
-        Modal.createDialog(
-            ErrorDialog,
-            {
-                title,
-                description,
-            },
-            undefined,
-            true,
-        );
-    }
+    // try {
+    //     await askForMediaAccess(true, true);
+    // } catch (error) {
+    //     console.error("多人会议获取音视频权限失败", error);
+    //     const title = _t("Unable to access webcam / microphone");
+    //     // const description = "";
+    //     Modal.createDialog(
+    //         ErrorDialog,
+    //         {
+    //             title,
+    //             // description,
+    //         },
+    //         undefined,
+    //         true,
+    //     );
+    //     return;
+    // }
 
     let jwt;
     if (jitsiAuth === JITSI_OPENIDTOKEN_JWT_AUTH) {
