@@ -23,23 +23,23 @@ module.exports = {
         "plugin:prettier/recommended", // eslint-config-prettier
     ],
     rules: {
-        // 函数括号前的空格
-        "space-before-function-paren": [
-            "error",
-            {
-                anonymous: "never", // 匿名函数不需要空格
-                named: "never", // 命名函数不需要空格
-                asyncArrow: "always", // 箭头函数需要空格
-            },
-        ],
-        // eslint-plugin-react
+        // 关闭禁止使用未声明的变量
+        "no-unused-vars": "off",
+
+        // ------------@typescript-eslint
+        "@typescript-eslint/no-var-requires": "off",
+        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/ban-ts-comment": "off",
+
+        // ------------eslint-plugin-react
         // 大括号内的换行符
         // "react/jsx-curly-newline": ["error", { multiline: "require", singleline: "consistent" }],
         // 大括号内的空格
         "react/jsx-curly-spacing": ["error", { when: "never", children: { when: "always" } }],
         // 禁止target="_blank"不带rel="noreferrer"属性
         "react/jsx-no-target-blank": ["off"],
-        // eslint-plugin-import
+
+        // ------------eslint-plugin-import
         "import/no-unresolved": ["off"],
     },
 };
