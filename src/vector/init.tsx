@@ -24,7 +24,6 @@ import Olm from "@matrix-org/olm";
 import * as ReactDOM from "react-dom";
 import * as React from "react";
 import * as languageHandler from "matrix-react-sdk/src/languageHandler";
-import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
 import PlatformPeg from "matrix-react-sdk/src/PlatformPeg";
 import SdkConfig from "matrix-react-sdk/src/SdkConfig";
 import { setTheme } from "matrix-react-sdk/src/theme";
@@ -38,6 +37,8 @@ import { initRageshake, initRageshakeStore } from "./rageshakesetup";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - this path is created at runtime and therefore won't exist at typecheck time
 import { INSTALLED_MODULES } from "../modules";
+import { getLanguage } from "./appConfig";
+import { defaultLanguage } from "matrix-react-sdk/src/languageHandler";
 
 export const rageshakePromise = initRageshake();
 
@@ -118,16 +119,14 @@ export function loadOlm(): Promise<void> {
 }
 
 export async function loadLanguage(): Promise<void> {
-    const prefLang = SettingsStore.getValue("language", null, /*excludeDefault=*/ true);
-    let langs = [];
-
-    if (!prefLang) {
-        languageHandler.getLanguagesFromBrowser().forEach((l) => {
-            langs.push(...languageHandler.getNormalizedLanguageKeys(l));
-        });
-    } else {
-        langs = [prefLang];
+    let language = defaultLanguage;
+    try {
+        language = await getLanguage();
+    } catch(error) {
+        console.error(error);
     }
+
+    const langs = [language];
     try {
         await languageHandler.setLanguage(langs);
         document.documentElement.setAttribute("lang", languageHandler.getCurrentLanguage());
