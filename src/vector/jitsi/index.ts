@@ -31,6 +31,10 @@ import { SnakedObject } from "matrix-react-sdk/src/utils/SnakedObject";
 import { ElementWidgetCapabilities } from "matrix-react-sdk/src/stores/widgets/ElementWidgetCapabilities";
 
 import { getVectorConfig } from "../getconfig";
+import { askForMediaAccess } from "../appConfig";
+import Modal from "matrix-react-sdk/src/Modal";
+import ErrorDialog from "matrix-react-sdk/src/components/views/dialogs/ErrorDialog";
+import { _t } from "matrix-react-sdk/src/languageHandler";
 
 // We have to trick webpack into loading our CSS for us.
 require("./index.pcss");
@@ -349,6 +353,23 @@ function mapLanguage(language: string): string {
 // and a non-nullish input specifies the label of a specific device to use.
 // Same for video inputs.
 async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
+    try {
+        await askForMediaAccess(true, true);
+    } catch (error) {
+        console.error("多人会议获取音视频权限失败", error);
+        const title = _t("Unable to access webcam / microphone");
+        const description = "";
+        Modal.createDialog(
+            ErrorDialog,
+            {
+                title,
+                description,
+            },
+            undefined,
+            true,
+        );
+    }
+
     let jwt;
     if (jitsiAuth === JITSI_OPENIDTOKEN_JWT_AUTH) {
         // See https://github.com/matrix-org/prosody-mod-auth-matrix-user-verification
