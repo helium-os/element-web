@@ -366,7 +366,6 @@ export function replaceByRegexes(text: string, mapping: IVariables | Tags): stri
                 let replaced: SubstitutionValue;
                 // If substitution is a function, call it
                 if (mapping[regexpString] instanceof Function) {
-                    // eslint-disable-next-line @typescript-eslint/ban-types
                     replaced = ((mapping as Tags)[regexpString] as Function)(...capturedGroups);
                 } else {
                     replaced = mapping[regexpString];
@@ -507,7 +506,6 @@ export function getAllLanguagesFromJson(): Promise<Language[]> {
     return getLangsJson().then((langsObject) => {
         const langs: Language[] = [];
         for (const langKey in langsObject) {
-            // eslint-disable-next-line no-prototype-builtins
             if (langsObject.hasOwnProperty(langKey)) {
                 langs.push({
                     value: langKey,

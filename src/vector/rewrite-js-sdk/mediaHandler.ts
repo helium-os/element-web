@@ -8,7 +8,7 @@ MediaHandler.prototype.getUserMediaStream = async function (...args): Promise<Me
         await askForMediaAccess();
         return _getUserMediaStream.call(this, ...args);
     } catch (error) {
-        console.log("获取desktop音视频权限失败", error);
+        console.log("desktop没有打开录音&摄像头权限，error is", error);
         return Promise.reject(error);
     }
 };

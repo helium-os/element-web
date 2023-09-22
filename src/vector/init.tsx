@@ -146,7 +146,6 @@ export async function loadApp(fragParams: {}): Promise<void> {
         /* webpackPreload: true */
         "./app"
     );
-    // eslint-disable-next-line react/no-deprecated,react/no-render-return-value
     window.matrixChat = ReactDOM.render(await module.loadApp(fragParams), document.getElementById("matrixchat"));
 }
 
