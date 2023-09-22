@@ -21,9 +21,9 @@ export function askForMediaAccess(): Promise<void> {
         SDK.invoke("system.askForMediaAccess", (res) => {
             console.log("get app media access success", res);
             if (!res) {
-                throw "media access from app is false";
+                return reject("media access from app is false");
             }
-            resolve();
+            return resolve();
         });
     });
 }
