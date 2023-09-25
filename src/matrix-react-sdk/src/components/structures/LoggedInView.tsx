@@ -209,18 +209,10 @@ class LoggedInView extends React.Component<IProps, IState> {
     };
 
     private async onMessage(event: MessageEvent<any>): Promise<void> {
-        const { data, source } = event;
+        const { data } = event;
         switch (data.type) {
-            case "askForMediaAccess":
-                try {
-                    await askForMediaAccess(data.audio, data.video);
-                } catch (error) {
-                    console.error("获取音视频权限失败", error);
-                    LegacyCallHandler.instance.showMediaCaptureError(data.video ? CallType.Video : CallType.Voice);
-                }
-                source.postMessage({
-                    type: "askForMediaAccessCompleted",
-                });
+            case "showNoMediaAccessDialog":
+                LegacyCallHandler.instance.showMediaCaptureError(data.video ? CallType.Video : CallType.Voice);
                 break;
             default:
                 break;

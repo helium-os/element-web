@@ -18,17 +18,20 @@ export function getLanguage(): Promise<string> {
 // 请求desktop音视频权限
 export function askForMediaAccess(audio: boolean, video: boolean): Promise<void> {
     return new Promise((resolve, reject) => {
+        const reqAccess = [audio, video];
         SDK.invoke(
             "system.askForMediaAccess",
-            (res) => {
+            (res: [boolean, boolean]) => {
                 console.log("get app media access success", res);
-                if (!res) {
+                const result = !reqAccess.find((reqAccess, index) => reqAccess && !res[index]);
+
+                if (!result) {
                     return reject("media access from app is false");
                 }
                 return resolve();
             },
             {
-                data: [audio, video],
+                data: reqAccess,
             },
         );
     });

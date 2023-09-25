@@ -31,6 +31,7 @@ import { SnakedObject } from "matrix-react-sdk/src/utils/SnakedObject";
 import { ElementWidgetCapabilities } from "matrix-react-sdk/src/stores/widgets/ElementWidgetCapabilities";
 
 import { getVectorConfig } from "../getconfig";
+import { askForMediaAccess } from "../appConfig";
 
 // We have to trick webpack into loading our CSS for us.
 require("./index.pcss");
@@ -229,16 +230,6 @@ const setupCompleted = (async (): Promise<string | void> => {
             skipToJitsiSplashScreen();
         }
 
-        window.addEventListener(
-            "message",
-            (event) => {
-                if (event.data.type === "askForMediaAccessCompleted") {
-                    onJoinConference();
-                }
-            },
-            false,
-        );
-
         enableJoinButton(); // always enable the button
     } catch (e) {
         logger.error("Error setting up Jitsi widget", e);
@@ -352,23 +343,27 @@ function mapLanguage(language: string): string {
     }
 }
 
-async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
-    window.parent?.postMessage(
-        {
-            type: "askForMediaAccess",
-            audio: true,
-            video: true,
-        },
-        "*",
-    );
-}
-
 // event handler bound in HTML
 // An audio input of undefined instructs Jitsi to start unmuted with whatever
 // audio input it can find, while an input of null instructs it to start muted,
 // and a non-nullish input specifies the label of a specific device to use.
 // Same for video inputs.
-async function onJoinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
+async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
+    // 获取desktop音视频权限
+    try {
+        await askForMediaAccess(true, true);
+    } catch (error) {
+        console.error("获取音视频权限失败", error);
+        window.parent?.postMessage(
+            {
+                type: "showNoMediaAccessDialog",
+                audio: true,
+                video: true,
+            },
+            "*",
+        );
+    }
+
     let jwt;
     if (jitsiAuth === JITSI_OPENIDTOKEN_JWT_AUTH) {
         // See https://github.com/matrix-org/prosody-mod-auth-matrix-user-verification
