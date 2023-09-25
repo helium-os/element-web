@@ -32,9 +32,6 @@ import { ElementWidgetCapabilities } from "matrix-react-sdk/src/stores/widgets/E
 
 import { getVectorConfig } from "../getconfig";
 import { askForMediaAccess } from "../appConfig";
-import Modal from "matrix-react-sdk/src/Modal";
-import ErrorDialog from "matrix-react-sdk/src/components/views/dialogs/ErrorDialog";
-import { _t } from "matrix-react-sdk/src/languageHandler";
 
 // We have to trick webpack into loading our CSS for us.
 require("./index.pcss");
@@ -233,6 +230,16 @@ const setupCompleted = (async (): Promise<string | void> => {
             skipToJitsiSplashScreen();
         }
 
+        window.addEventListener(
+            "message",
+            (event) => {
+                if (event.data.type === "askForMediaAccessCompleted") {
+                    onJoinConference();
+                }
+            },
+            false,
+        );
+
         enableJoinButton(); // always enable the button
     } catch (e) {
         logger.error("Error setting up Jitsi widget", e);
@@ -333,7 +340,6 @@ function normalizeLanguage(language: string): string {
 
     return lang + variant.toUpperCase();
 }
-
 function mapLanguage(language: string): string {
     // Element and Jitsi don't agree how to interpret en, so we go with Elements
     // interpretation to stay consistent
@@ -347,30 +353,23 @@ function mapLanguage(language: string): string {
     }
 }
 
+async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
+    window.parent?.postMessage(
+        {
+            type: "askForMediaAccess",
+            audio: true,
+            video: true,
+        },
+        "*",
+    );
+}
+
 // event handler bound in HTML
 // An audio input of undefined instructs Jitsi to start unmuted with whatever
 // audio input it can find, while an input of null instructs it to start muted,
 // and a non-nullish input specifies the label of a specific device to use.
 // Same for video inputs.
-async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
-    // try {
-    //     await askForMediaAccess(true, true);
-    // } catch (error) {
-    //     console.error("多人会议获取音视频权限失败", error);
-    //     const title = _t("Unable to access webcam / microphone");
-    //     // const description = "";
-    //     Modal.createDialog(
-    //         ErrorDialog,
-    //         {
-    //             title,
-    //             // description,
-    //         },
-    //         undefined,
-    //         true,
-    //     );
-    //     return;
-    // }
-
+async function onJoinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
     let jwt;
     if (jitsiAuth === JITSI_OPENIDTOKEN_JWT_AUTH) {
         // See https://github.com/matrix-org/prosody-mod-auth-matrix-user-verification

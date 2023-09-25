@@ -559,7 +559,7 @@ export default class LegacyCallHandler extends EventEmitter {
             logger.error("Call error:", err);
 
             if (err.code === CallErrorCode.NoUserMedia) {
-                this.showMediaCaptureError(call);
+                this.showMediaCaptureError(call.type);
                 return;
             }
 
@@ -848,11 +848,11 @@ export default class LegacyCallHandler extends EventEmitter {
         );
     }
 
-    private showMediaCaptureError(call: MatrixCall): void {
+    public showMediaCaptureError(type: CallType): void {
         let title;
         let description;
 
-        if (call.type === CallType.Voice) {
+        if (type === CallType.Voice) {
             title = _t("Unable to access microphone");
             description = (
                 <div>
@@ -862,7 +862,7 @@ export default class LegacyCallHandler extends EventEmitter {
                     )}
                 </div>
             );
-        } else if (call.type === CallType.Video) {
+        } else if (type === CallType.Video) {
             title = _t("Unable to access webcam / microphone");
             description = (
                 <div>
