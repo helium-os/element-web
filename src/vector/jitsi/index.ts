@@ -31,7 +31,6 @@ import { SnakedObject } from "matrix-react-sdk/src/utils/SnakedObject";
 import { ElementWidgetCapabilities } from "matrix-react-sdk/src/stores/widgets/ElementWidgetCapabilities";
 
 import { getVectorConfig } from "../getconfig";
-import { askForMediaAccess } from "../appConfig";
 
 // We have to trick webpack into loading our CSS for us.
 require("./index.pcss");

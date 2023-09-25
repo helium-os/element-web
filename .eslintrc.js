@@ -39,11 +39,7 @@ module.exports = {
         "@typescript-eslint/ban-types": "off",
 
         // ------------eslint-plugin-react
-        // 大括号内的换行符
-        // "react/jsx-curly-newline": ["error", { multiline: "require", singleline: "consistent" }],
-        // 大括号内的空格
-        // "react/jsx-curly-spacing": ["error", { when: "never", children: { when: "always" } }],
-        // 禁止target="_blank"不带rel="noreferrer"属性
+        // 关闭target="_blank"不带rel="noreferrer"属性校验
         "react/jsx-no-target-blank": "off",
         // 允许使用已弃用的方法（当前项目需要）
         "react/no-deprecated": "off",
