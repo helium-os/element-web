@@ -22,9 +22,9 @@ export function askForMediaAccess(audio: boolean, video: boolean): Promise<void>
         SDK.invoke(
             "system.askForMediaAccess",
             (res: [boolean, boolean]) => {
-                console.log("get app media access success", res);
                 const result = !reqAccess.find((reqAccess, index) => reqAccess && !res[index]);
 
+                console.log("askForMediaAccess", "reqAccess", reqAccess, "resAccess", res, "result", result);
                 if (!result) {
                     return reject("media access from app is false");
                 }
