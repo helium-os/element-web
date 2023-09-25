@@ -74,7 +74,6 @@ import { monitorSyncedPushRules } from "../../utils/pushRules/monitorSyncedPushR
 import { accessSecretStorage } from "../../SecurityManager";
 import SetupEncryptionDialog from "../views/dialogs/security/SetupEncryptionDialog";
 import { UIFeature } from "../../settings/UIFeature";
-import { askForMediaAccess } from "../../../../vector/appConfig";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -211,8 +210,8 @@ class LoggedInView extends React.Component<IProps, IState> {
     private async onMessage(event: MessageEvent<any>): Promise<void> {
         const { data } = event;
         switch (data.type) {
-            case "showNoMediaAccessDialog":
-                LegacyCallHandler.instance.showMediaCaptureError(data.video ? CallType.Video : CallType.Voice);
+            case "showMediaCaptureErrorTipsDialog":
+                LegacyCallHandler.instance.showMediaCaptureErrorTips(data.video ? CallType.Video : CallType.Voice);
                 break;
             default:
                 break;

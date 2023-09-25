@@ -887,6 +887,38 @@ export default class LegacyCallHandler extends EventEmitter {
         );
     }
 
+    public showMediaCaptureErrorTips(type: CallType): void {
+        let title;
+        let description;
+
+        if (type === CallType.Voice) {
+            title = _t("Unable to access microphone");
+            description = <div>{_t("Check Microphone Tips")}</div>;
+        } else if (type === CallType.Video) {
+            title = _t("Unable to access webcam / microphone");
+            description = (
+                <div>
+                    {_t("Webcam Or Microphone Not Accessed") + _t("Please Check")}
+                    <ul>
+                        <li>{_t("A microphone and webcam are plugged in and set up correctly")}</li>
+                        <li>{_t("Permission is granted to use the webcam")}</li>
+                        <li>{_t("No other application is using the webcam")}</li>
+                    </ul>
+                </div>
+            );
+        }
+
+        Modal.createDialog(
+            ErrorDialog,
+            {
+                title,
+                description,
+            },
+            undefined,
+            true,
+        );
+    }
+
     private async placeMatrixCall(roomId: string, type: CallType, transferee?: MatrixCall): Promise<void> {
         const mappedRoomId = (await VoipUserMapper.sharedInstance().getOrCreateVirtualRoomForRoom(roomId)) || roomId;
         logger.debug("Mapped real room " + roomId + " to room ID " + mappedRoomId);

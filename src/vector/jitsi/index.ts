@@ -356,7 +356,7 @@ async function joinConference(audioInput?: string | null, videoInput?: string | 
         console.error("获取音视频权限失败", error);
         window.parent?.postMessage(
             {
-                type: "showNoMediaAccessDialog",
+                type: "showMediaCaptureErrorTipsDialog",
                 audio: true,
                 video: true,
             },
