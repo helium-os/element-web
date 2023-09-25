@@ -17,7 +17,6 @@ export function getLanguage(): Promise<string> {
 
 // 请求desktop音视频权限
 export function askForMediaAccess(audio: boolean, video: boolean): Promise<void> {
-    console.log("enter askForMediaAccess", "SDK.invoke", SDK.invoke);
     return new Promise((resolve, reject) => {
         const reqAccess = [audio, video];
         SDK.invoke(
