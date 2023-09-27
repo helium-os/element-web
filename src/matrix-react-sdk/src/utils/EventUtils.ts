@@ -34,6 +34,17 @@ import { Action } from "../dispatcher/actions";
 import { ViewRoomPayload } from "../dispatcher/payloads/ViewRoomPayload";
 import { VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from "../voice-broadcast/types";
 
+// 需要渲染展示到聊天面板中的Event列表
+export const displayEventType = [
+    EventType.RoomCreate,
+    EventType.RoomJoinRules,
+    EventType.RoomMember,
+    EventType.RoomName,
+    EventType.RoomTopic,
+    EventType.RoomAvatar,
+    EventType.RoomMessage,
+];
+
 /**
  * Returns whether an event should allow actions like reply, reactions, edit, etc.
  * which effectively checks whether it's a regular message that has been sent and that we

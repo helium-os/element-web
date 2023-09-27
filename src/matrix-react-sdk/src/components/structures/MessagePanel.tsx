@@ -55,7 +55,7 @@ import { getEventDisplayInfo } from "../../utils/EventRenderingUtils";
 import { IReadReceiptInfo } from "../views/rooms/ReadReceiptMarker";
 import { haveRendererForEvent } from "../../events/EventTileFactory";
 import { editorRoomKey } from "../../Editing";
-import { hasThreadSummary } from "../../utils/EventUtils";
+import { displayEventType, hasThreadSummary } from "../../utils/EventUtils";
 import { VoiceBroadcastInfoEventType } from "../../voice-broadcast";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -776,37 +776,39 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
         const callEventGrouper = this.props.callEventGroupers.get(mxEv.getContent().call_id);
         // use txnId as key if available so that we don't remount during sending
-        ret.push(
-            <EventTile
-                key={mxEv.getTxnId() || eventId}
-                as="li"
-                ref={this.collectEventTile.bind(this, eventId)}
-                alwaysShowTimestamps={this.props.alwaysShowTimestamps}
-                mxEvent={mxEv}
-                continuation={continuation}
-                isRedacted={mxEv.isRedacted()}
-                replacingEventId={mxEv.replacingEventId()}
-                editState={isEditing ? this.props.editState : undefined}
-                onHeightChanged={this.onHeightChanged}
-                readReceipts={readReceipts}
-                readReceiptMap={this.readReceiptMap}
-                showUrlPreview={this.props.showUrlPreview}
-                checkUnmounting={this.isUnmounting}
-                eventSendStatus={mxEv.getAssociatedStatus() ?? undefined}
-                isTwelveHour={this.props.isTwelveHour}
-                permalinkCreator={this.props.permalinkCreator}
-                last={last}
-                lastInSection={lastInSection}
-                lastSuccessful={isLastSuccessful}
-                isSelectedEvent={highlight}
-                getRelationsForEvent={this.props.getRelationsForEvent}
-                showReactions={this.props.showReactions}
-                layout={this.props.layout}
-                showReadReceipts={this.props.showReadReceipts}
-                callEventGrouper={callEventGrouper}
-                hideSender={this.state.hideSender}
-            />,
-        );
+        if (displayEventType.includes(mxEv.getType() as EventType)) {
+            ret.push(
+                <EventTile
+                    key={mxEv.getTxnId() || eventId}
+                    as="li"
+                    ref={this.collectEventTile.bind(this, eventId)}
+                    alwaysShowTimestamps={this.props.alwaysShowTimestamps}
+                    mxEvent={mxEv}
+                    continuation={continuation}
+                    isRedacted={mxEv.isRedacted()}
+                    replacingEventId={mxEv.replacingEventId()}
+                    editState={isEditing ? this.props.editState : undefined}
+                    onHeightChanged={this.onHeightChanged}
+                    readReceipts={readReceipts}
+                    readReceiptMap={this.readReceiptMap}
+                    showUrlPreview={this.props.showUrlPreview}
+                    checkUnmounting={this.isUnmounting}
+                    eventSendStatus={mxEv.getAssociatedStatus() ?? undefined}
+                    isTwelveHour={this.props.isTwelveHour}
+                    permalinkCreator={this.props.permalinkCreator}
+                    last={last}
+                    lastInSection={lastInSection}
+                    lastSuccessful={isLastSuccessful}
+                    isSelectedEvent={highlight}
+                    getRelationsForEvent={this.props.getRelationsForEvent}
+                    showReactions={this.props.showReactions}
+                    layout={this.props.layout}
+                    showReadReceipts={this.props.showReadReceipts}
+                    callEventGrouper={callEventGrouper}
+                    hideSender={this.state.hideSender}
+                />,
+            );
+        }
 
         return ret;
     }
