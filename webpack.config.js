@@ -10,20 +10,18 @@ const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 const HtmlWebpackInjectPreload = require("@principalstudio/html-webpack-inject-preload");
 const SentryCliPlugin = require("@sentry/webpack-plugin");
 const crypto = require("crypto");
-const { merge } = require('webpack-merge');
+const { merge } = require("webpack-merge");
 
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 // require对应的config文件
-const defaultORG = 'org2';
+const defaultORG = "org2";
 const ORG = process.env.ORG || defaultORG;
 let orgConfig;
 try {
-    orgConfig = require(`./config/config.${ORG}.ts`)
-} catch(error) {
-}
-const customConfig = merge(require('./config/config.ts'), orgConfig || {});
-
+    orgConfig = require(`./config/config.${ORG}.ts`);
+} catch (error) {}
+const customConfig = merge(require("./config/config.ts"), orgConfig || {});
 
 // XXX: mangle Crypto::createHash to replace md4 with sha256, output.hashFunction is insufficient as multiple bits
 // of webpack hardcode md4. The proper fix it to upgrade to webpack 5.
@@ -49,8 +47,7 @@ const cssThemes = {
     "theme-legacy-light": "./src/matrix-react-sdk/res/themes/legacy-light/css/legacy-light.pcss",
     "theme-legacy-dark": "./src/matrix-react-sdk/res/themes/legacy-dark/css/legacy-dark.pcss",
     "theme-light": "./src/matrix-react-sdk/res/themes/light/css/light.pcss",
-    "theme-light-high-contrast":
-        "./src/matrix-react-sdk/res/themes/light-high-contrast/css/light-high-contrast.pcss",
+    "theme-light-high-contrast": "./src/matrix-react-sdk/res/themes/light-high-contrast/css/light-high-contrast.pcss",
     "theme-dark": "./src/matrix-react-sdk/res/themes/dark/css/dark.pcss",
     "theme-light-custom": "./src/matrix-react-sdk/res/themes/light-custom/css/light-custom.pcss",
     "theme-dark-custom": "./src/matrix-react-sdk/res/themes/dark-custom/css/dark-custom.pcss",
@@ -98,13 +95,11 @@ const moduleReplacementPlugins = [
 
 function generateCustomDefinePlugin(obj) {
     const definePlugin = {};
-    for(const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(obj)) {
         definePlugin[`CHAT_ENV_${key}`] = JSON.stringify(value);
     }
     return definePlugin;
 }
-
-
 
 module.exports = (env, argv) => {
     // Establish settings based on the environment and args.
@@ -173,7 +168,7 @@ module.exports = (env, argv) => {
             ...(useHMR ? {} : cssThemes),
         },
 
-        devtool: devMode ? 'eval-cheap-module-source-map' : false,
+        devtool: devMode ? "eval-cheap-module-source-map" : false,
 
         optimization: {
             // Put all of our CSS into one useful place - this is needed for MiniCssExtractPlugin.
@@ -190,17 +185,17 @@ module.exports = (env, argv) => {
                     },
                     react: {
                         test: /[\\/]node_modules[\\/]react(.)*[\\/]/,
-                        name: 'react-bucket',
-                        priority: 8
+                        name: "react-bucket",
+                        priority: 8,
                     },
                     matrixReactSdk: {
-                        test:/[\\/]matrix-react-sdk[\\/]/,
-                        name: 'matrix-react-sdk',
-                        priority: 8
+                        test: /[\\/]matrix-react-sdk[\\/]/,
+                        name: "matrix-react-sdk",
+                        priority: 8,
                     },
                     default: {
                         reuseExistingChunk: true,
-                    }
+                    },
                 },
             },
 
@@ -247,7 +242,7 @@ module.exports = (env, argv) => {
                 // "sanitize-html": path.resolve(__dirname, "node_modules/sanitize-html"),
 
                 // Define a variable so the i18n stuff can load
-                "$webapp": path.resolve(__dirname, "webapp"),
+                $webapp: path.resolve(__dirname, "webapp"),
             },
         },
 
@@ -296,7 +291,6 @@ module.exports = (env, argv) => {
                         // include node modules inside these modules, so we add 'src'.
                         if (f.startsWith(jsSdkSrcDir)) return true;
 
-
                         if (f.startsWith(appSdkDir)) return true;
 
                         // but we can't run all of our dependencies through babel (many of them still
@@ -324,7 +318,7 @@ module.exports = (env, argv) => {
                             loader: "postcss-loader",
                             ident: "postcss",
                             options: {
-                                "plugins": () => [
+                                plugins: () => [
                                     // Note that we use significantly fewer plugins on the plain
                                     // CSS parser. If we start to parse plain CSS, we end with all
                                     // kinds of nasty problems (like stylesheets not loading).
@@ -350,7 +344,7 @@ module.exports = (env, argv) => {
                                     // up with broken CSS.
                                     require("postcss-preset-env")({ stage: 3, browsers: "last 2 versions" }),
                                 ],
-                                "parser": "postcss-scss",
+                                parser: "postcss-scss",
                                 "local-plugins": true,
                             },
                         },
@@ -405,7 +399,7 @@ module.exports = (env, argv) => {
                             loader: "postcss-loader",
                             ident: "postcss",
                             options: {
-                                "plugins": () => [
+                                plugins: () => [
                                     // Note that we use slightly different plugins for PostCSS.
                                     require("postcss-import")(),
                                     require("postcss-mixins")(),
@@ -418,7 +412,7 @@ module.exports = (env, argv) => {
                                     // up with broken CSS.
                                     require("postcss-preset-env")({ stage: 3, browsers: "last 2 versions" }),
                                 ],
-                                "parser": "postcss-scss",
+                                parser: "postcss-scss",
                                 "local-plugins": true,
                             },
                         },
@@ -527,7 +521,7 @@ module.exports = (env, argv) => {
                             options: {
                                 namedExport: "Icon",
                                 svgProps: {
-                                    "role": "presentation",
+                                    role: "presentation",
                                     "aria-hidden": true,
                                 },
                                 // props set on the svg will override defaults
@@ -704,7 +698,7 @@ module.exports = (env, argv) => {
 
             new webpack.DefinePlugin(generateCustomDefinePlugin(customConfig.define)),
 
-            ...(devMode ? [new BundleAnalyzerPlugin()] : [])
+            ...(devMode ? [new BundleAnalyzerPlugin()] : []),
         ].filter(Boolean),
 
         output: {
@@ -734,7 +728,7 @@ module.exports = (env, argv) => {
             inline: true,
 
             proxy: {
-                ...customConfig.proxy
+                ...customConfig.proxy,
             },
         },
     };

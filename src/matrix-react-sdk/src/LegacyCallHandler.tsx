@@ -559,7 +559,7 @@ export default class LegacyCallHandler extends EventEmitter {
             logger.error("Call error:", err);
 
             if (err.code === CallErrorCode.NoUserMedia) {
-                this.showMediaCaptureError(call);
+                this.showMediaCaptureError(call.type);
                 return;
             }
 
@@ -848,11 +848,11 @@ export default class LegacyCallHandler extends EventEmitter {
         );
     }
 
-    private showMediaCaptureError(call: MatrixCall): void {
+    public showMediaCaptureError(type: CallType): void {
         let title;
         let description;
 
-        if (call.type === CallType.Voice) {
+        if (type === CallType.Voice) {
             title = _t("Unable to access microphone");
             description = (
                 <div>
@@ -862,11 +862,43 @@ export default class LegacyCallHandler extends EventEmitter {
                     )}
                 </div>
             );
-        } else if (call.type === CallType.Video) {
+        } else if (type === CallType.Video) {
             title = _t("Unable to access webcam / microphone");
             description = (
                 <div>
                     {_t("Call failed because webcam or microphone could not be accessed. Check that:")}
+                    <ul>
+                        <li>{_t("A microphone and webcam are plugged in and set up correctly")}</li>
+                        <li>{_t("Permission is granted to use the webcam")}</li>
+                        <li>{_t("No other application is using the webcam")}</li>
+                    </ul>
+                </div>
+            );
+        }
+
+        Modal.createDialog(
+            ErrorDialog,
+            {
+                title,
+                description,
+            },
+            undefined,
+            true,
+        );
+    }
+
+    public showMediaCaptureErrorTips(type: CallType): void {
+        let title;
+        let description;
+
+        if (type === CallType.Voice) {
+            title = _t("Unable to access microphone");
+            description = <div>{_t("Check Microphone Tips")}</div>;
+        } else if (type === CallType.Video) {
+            title = _t("Unable to access webcam / microphone");
+            description = (
+                <div>
+                    {_t("Webcam Or Microphone Not Accessed") + _t("Please Check")}
                     <ul>
                         <li>{_t("A microphone and webcam are plugged in and set up correctly")}</li>
                         <li>{_t("Permission is granted to use the webcam")}</li>

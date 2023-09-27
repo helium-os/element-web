@@ -17,7 +17,7 @@ limitations under the License.
 import React, { ClipboardEvent } from "react";
 import { ClientEvent, MatrixClient } from "matrix-js-sdk/src/client";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
-import { MatrixCall } from "matrix-js-sdk/src/webrtc/call";
+import { CallType, MatrixCall } from "matrix-js-sdk/src/webrtc/call";
 import classNames from "classnames";
 import { ISyncStateData, SyncState } from "matrix-js-sdk/src/sync";
 import { IUsageLimit } from "matrix-js-sdk/src/@types/partials";
@@ -29,7 +29,7 @@ import PageTypes from "../../PageTypes";
 import MediaDeviceHandler from "../../MediaDeviceHandler";
 import { fixupColorFonts } from "../../utils/FontManager";
 import dis from "../../dispatcher/dispatcher";
-import {IMatrixClientCreds, MatrixClientPeg} from "../../MatrixClientPeg";
+import { IMatrixClientCreds, MatrixClientPeg } from "../../MatrixClientPeg";
 import SettingsStore from "../../settings/SettingsStore";
 import { SettingLevel } from "../../settings/SettingLevel";
 import ResizeHandle from "../views/elements/ResizeHandle";
@@ -59,7 +59,7 @@ import type { RoomView as RoomViewType } from "./RoomView";
 import ToastContainer from "./ToastContainer";
 import UserView from "./UserView";
 import BackdropPanel from "./BackdropPanel";
-import {getHttpUrlFromMxc} from "../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../customisations/Media";
 import { UserTab } from "../views/dialogs/UserTab";
 import { OpenToTabPayload } from "../../dispatcher/payloads/OpenToTabPayload";
 import RightPanelStore from "../../stores/right-panel/RightPanelStore";
@@ -71,9 +71,9 @@ import LeftPanelLiveShareWarning from "../views/beacon/LeftPanelLiveShareWarning
 import { UserOnboardingPage } from "../views/user-onboarding/UserOnboardingPage";
 import { PipContainer } from "./PipContainer";
 import { monitorSyncedPushRules } from "../../utils/pushRules/monitorSyncedPushRules";
-import {accessSecretStorage} from "../../SecurityManager";
+import { accessSecretStorage } from "../../SecurityManager";
 import SetupEncryptionDialog from "../views/dialogs/security/SetupEncryptionDialog";
-import {UIFeature} from "../../settings/UIFeature";
+import { UIFeature } from "../../settings/UIFeature";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -170,13 +170,14 @@ class LoggedInView extends React.Component<IProps, IState> {
      * 会出现设备首次设置备份密钥后刷新页面，因为判断的时候idb数据没有加载完成，导致crossSigningPrivateKeysInStorage判断为false，会再次设置备份密钥
      */
     private onVerifyDevice = async (): Promise<void> => {
-        console.log('~~~~~enter onVerifyDevice');
-        if (!this.props.idbReady) { return; }
-        console.log('~~~~~onVerifyDevice start');
+        console.log("~~~~~enter onVerifyDevice");
+        if (!this.props.idbReady) {
+            return;
+        }
+        console.log("~~~~~onVerifyDevice start");
         const cli = MatrixClientPeg.get();
-        const homeserverSupportsCrossSigning = await cli.doesServerSupportUnstableFeature(
-            "org.matrix.e2e_cross_signing",
-        );
+        const homeserverSupportsCrossSigning =
+            await cli.doesServerSupportUnstableFeature("org.matrix.e2e_cross_signing");
         const crossSigning = cli.crypto!.crossSigningInfo;
         const secretStorage = cli.crypto!.secretStorage;
         const crossSigningPrivateKeysInStorage = Boolean(await crossSigning.isStoredInSecretStorage(secretStorage));
@@ -184,29 +185,41 @@ class LoggedInView extends React.Component<IProps, IState> {
 
         if (homeserverSupportsCrossSigning === undefined) {
             // loading
-            console.log('~~~ loading');
+            console.log("~~~ loading");
         } else if (!homeserverSupportsCrossSigning) {
             // 主服务器不支持交叉签名
-            console.log('~~~ 主服务器不支持交叉签名');
+            console.log("~~~ 主服务器不支持交叉签名");
         } else if (crossSigningReady && crossSigningPrivateKeysInStorage) {
             // ✅ 交叉签名已可用
-            console.log('~~~ 交叉签名已可用');
+            console.log("~~~ 交叉签名已可用");
         } else if (crossSigningReady && !crossSigningPrivateKeysInStorage) {
             // ⚠️ 交叉签名已就绪，但尚未备份密钥，则设置备份密钥
-            console.log('~~~ 交叉签名已就绪，但尚未备份密钥，设置备份密钥');
+            console.log("~~~ 交叉签名已就绪，但尚未备份密钥，设置备份密钥");
             accessSecretStorage();
         } else if (crossSigningPrivateKeysInStorage) {
             // 账户在秘密存储中有交叉签名身份，但并没有被此会话信任，则信任此会话
-            console.log('~~~ 账户在秘密存储中有交叉签名身份，但并没有被此会话信任，信任此会话');
+            console.log("~~~ 账户在秘密存储中有交叉签名身份，但并没有被此会话信任，信任此会话");
             Modal.createDialog(SetupEncryptionDialog, {}, undefined, /* priority = */ false, /* static = */ true);
         } else {
             // 未设置交叉签名，则设置备份密钥
-            console.log('~~~ 未设置交叉签名，设置备份密钥');
+            console.log("~~~ 未设置交叉签名，设置备份密钥");
             accessSecretStorage();
         }
     };
 
+    private async onMessage(event: MessageEvent<any>): Promise<void> {
+        const { data } = event;
+        switch (data.type) {
+            case "showMediaCaptureErrorTipsDialog":
+                LegacyCallHandler.instance.showMediaCaptureErrorTips(data.video ? CallType.Video : CallType.Voice);
+                break;
+            default:
+                break;
+        }
+    }
+
     public componentDidMount(): void {
+        window.addEventListener("message", this.onMessage, false);
         document.addEventListener("keydown", this.onNativeKeyDown, false);
         LegacyCallHandler.instance.addListener(LegacyCallHandlerEvent.CallState, this.onCallState);
 
@@ -248,6 +261,7 @@ class LoggedInView extends React.Component<IProps, IState> {
     }
 
     public componentWillUnmount(): void {
+        window.removeEventListener("message", this.onMessage, false);
         document.removeEventListener("keydown", this.onNativeKeyDown, false);
         LegacyCallHandler.instance.removeListener(LegacyCallHandlerEvent.CallState, this.onCallState);
         this._matrixClient.removeListener(ClientEvent.AccountData, this.onAccountData);
@@ -709,7 +723,7 @@ class LoggedInView extends React.Component<IProps, IState> {
             mx_MatrixChat_useCompactLayout: this.state.useCompactLayout,
         });
         const bodyClasses = classNames({
-            "mx_MatrixChat": true,
+            mx_MatrixChat: true,
             "mx_MatrixChat--with-avatar": this.state.backgroundImage,
         });
 
@@ -731,9 +745,7 @@ class LoggedInView extends React.Component<IProps, IState> {
                             <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
                             <nav className="mx_LeftPanel_wrapper">
                                 <BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />
-                                {
-                                    SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />
-                                }
+                                {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
                                 <BackdropPanel backgroundImage={this.state.backgroundImage} />
                                 <div
                                     className="mx_LeftPanel_wrapper--user"

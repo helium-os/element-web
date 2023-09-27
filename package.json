@@ -102,7 +102,7 @@
         "focus-visible": "^5.2.0",
         "gfm.css": "^1.1.2",
         "glob-to-regexp": "^0.4.1",
-        "heliumos-js-sdk": "^1.0.0",
+        "heliumos-js-sdk": "^1.0.2",
         "highlight.js": "^11.3.1",
         "html-entities": "^2.0.0",
         "is-ip": "^3.1.0",
