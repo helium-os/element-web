@@ -15,7 +15,7 @@ module.exports = {
             agent,
         },
         "/heliumos-user-api": {
-            target: "https://user.system.app.org2",
+            target: "http://user-org2",
             changeOrigin: true,
             secure: false,
             pathRewrite: { "^/heliumos-user-api": "" },

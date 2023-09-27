@@ -772,7 +772,13 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         });
     };
 
-    private onContextMenu = (ev: React.MouseEvent): void => {
+    private onContextMenu = (isInfoMessage: boolean, ev: React.MouseEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        if (isInfoMessage) {
+            return;
+        }
         this.showContextMenu(ev);
     };
 
@@ -801,8 +807,6 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         // We don't want to show the menu when editing a message
         if (this.props.editState) return;
 
-        ev.preventDefault();
-        ev.stopPropagation();
         this.setState({
             contextMenu: {
                 position: {
@@ -1043,15 +1047,18 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             }
         }
 
-        const showMessageActionBar = (
-            !isEditing && !this.props.forExport
-            && !this.props.mxEvent.isRedacted()// 撤回的消息不展示操作按钮
-            && this.props.mxEvent.getType() !== EventType.RoomEncryption // 开启加密通知消息不展示操作按钮
-        );
+        const showMessageActionBar =
+            !isEditing &&
+            !this.props.forExport &&
+            !this.props.mxEvent.isRedacted() && // 撤回的消息不展示操作按钮
+            !isInfoMessage; // 提示消息不展示操作按钮
         const { width = 10, height = 0 } = this.mxEventTileContentRef.current?.getBoundingClientRect() || {};
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
-                wrapStyle={{ ...(isInfoMessage ? { right: 20 } : { [isOwnEvent ? 'right' : 'left']: width + 10 }), top: height / 2 }}
+                wrapStyle={{
+                    ...(isInfoMessage ? { right: 20 } : { [isOwnEvent ? "right" : "left"]: width + 10 }),
+                    top: height / 2,
+                }}
                 mxEvent={this.props.mxEvent}
                 reactions={this.state.reactions}
                 permalinkCreator={this.props.permalinkCreator}
@@ -1083,18 +1090,15 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         }
 
         const messageTimestamp = (
-            <MessageTimestamp
-                showRelative={true}
-                showTwelveHour={this.props.isTwelveHour}
-                ts={ts}
-            />
+            <MessageTimestamp showRelative={true} showTwelveHour={this.props.isTwelveHour} ts={ts} />
         );
 
-        const timestamp = (
+        const timestamp =
             ts &&
-            eventType !== EventType.RoomEncryption &&  // 房间开启加密该消息不需要额外添加时间（自身UI携带）
+            eventType !== EventType.RoomEncryption && // 房间开启加密该消息不需要额外添加时间（自身UI携带）
             (eventType !== EventType.RoomMessage || !this.props.continuation) // 非文本/图片/文件消息展示时间；文本/图片/文件消息连续时只展示一次时间
-        ) ? messageTimestamp : null;
+                ? messageTimestamp
+                : null;
 
         let reactionsRow;
         if (!isRedacted) {
@@ -1168,8 +1172,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 return React.createElement(
                     this.props.as || "li",
                     {
-                        "ref": this.ref,
-                        "className": classes,
+                        ref: this.ref,
+                        className: classes,
                         "aria-live": ariaLive,
                         "aria-atomic": true,
                         "data-scroll-tokens": scrollToken,
@@ -1177,15 +1181,19 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "data-layout": this.props.layout,
                         "data-self": isOwnEvent,
                         "data-event-id": this.props.mxEvent.getId(),
-                        "onMouseEnter": () => this.setState({ hover: true }),
-                        "onMouseLeave": () => this.setState({ hover: false }),
+                        onMouseEnter: () => this.setState({ hover: true }),
+                        onMouseLeave: () => this.setState({ hover: false }),
                     },
                     [
                         <div className="mx_EventTile_senderDetails" key="mx_EventTile_senderDetails">
                             {avatar}
                             {sender}
                         </div>,
-                        <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu}>
+                        <div
+                            className={lineClasses}
+                            key="mx_EventTile_line"
+                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
+                        >
                             {this.renderContextMenu()}
                             {replyChain}
                             {renderTile(
@@ -1222,9 +1230,9 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 return React.createElement(
                     this.props.as || "li",
                     {
-                        "ref": this.ref,
-                        "className": classes,
-                        "tabIndex": -1,
+                        ref: this.ref,
+                        className: classes,
+                        tabIndex: -1,
                         "aria-live": ariaLive,
                         "aria-atomic": "true",
                         "data-scroll-tokens": scrollToken,
@@ -1232,9 +1240,9 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "data-shape": this.context.timelineRenderingType,
                         "data-self": isOwnEvent,
                         "data-has-reply": !!replyChain,
-                        "onMouseEnter": () => this.setState({ hover: true }),
-                        "onMouseLeave": () => this.setState({ hover: false }),
-                        "onClick": (ev: MouseEvent) => {
+                        onMouseEnter: () => this.setState({ hover: true }),
+                        onMouseLeave: () => this.setState({ hover: false }),
+                        onClick: (ev: MouseEvent) => {
                             const target = ev.currentTarget as HTMLElement;
                             let index = -1;
                             if (target.parentElement) index = Array.from(target.parentElement.children).indexOf(target);
@@ -1305,13 +1313,17 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 return React.createElement(
                     this.props.as || "li",
                     {
-                        "className": classes,
+                        className: classes,
                         "aria-live": ariaLive,
                         "aria-atomic": true,
                         "data-scroll-tokens": scrollToken,
                     },
                     [
-                        <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu}>
+                        <div
+                            className={lineClasses}
+                            key="mx_EventTile_line"
+                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
+                        >
                             {this.renderContextMenu()}
                             {renderTile(
                                 TimelineRenderingType.File,
@@ -1352,9 +1364,9 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 return React.createElement(
                     this.props.as || "li",
                     {
-                        "ref": this.ref,
-                        "className": classes,
-                        "tabIndex": -1,
+                        ref: this.ref,
+                        className: classes,
+                        tabIndex: -1,
                         "aria-live": ariaLive,
                         "aria-atomic": "true",
                         "data-scroll-tokens": scrollToken,
@@ -1362,8 +1374,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "data-self": isOwnEvent,
                         "data-event-id": this.props.mxEvent.getId(),
                         "data-has-reply": !!replyChain,
-                        "onMouseEnter": () => this.setState({ hover: true }),
-                        "onMouseLeave": () => this.setState({ hover: false }),
+                        onMouseEnter: () => this.setState({ hover: true }),
+                        onMouseLeave: () => this.setState({ hover: false }),
                     },
                     <>
                         {ircTimestamp}
@@ -1375,7 +1387,12 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         </div>
                         {ircPadlock}
                         {avatar}
-                        <div className={lineClasses} key="mx_EventTile_line" onContextMenu={this.onContextMenu} ref={this.mxEventTileContentRef}>
+                        <div
+                            className={lineClasses}
+                            key="mx_EventTile_line"
+                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
+                            ref={this.mxEventTileContentRef}
+                        >
                             {this.renderContextMenu()}
                             {/*{groupPadlock}*/}
                             {replyChain}
@@ -1420,7 +1437,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 }
 
 // Wrap all event tiles with the tile error boundary so that any throws even during construction are captured
-const SafeEventTile = forwardRef((props: EventTileProps, ref: RefObject<UnwrappedEventTile>) => {
+const SafeEventTile = (props: EventTileProps, ref: RefObject<UnwrappedEventTile>) => {
     return (
         <>
             <TileErrorBoundary mxEvent={props.mxEvent} layout={props.layout}>
@@ -1428,8 +1445,8 @@ const SafeEventTile = forwardRef((props: EventTileProps, ref: RefObject<Unwrappe
             </TileErrorBoundary>
         </>
     );
-});
-export default SafeEventTile;
+};
+export default forwardRef(SafeEventTile);
 
 function E2ePadlockUnverified(props: Omit<IE2ePadlockProps, "title" | "icon">): JSX.Element {
     return <E2ePadlock title={_t("Encrypted by an unverified session")} icon={E2ePadlockIcon.Warning} {...props} />;
