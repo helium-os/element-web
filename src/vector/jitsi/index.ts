@@ -31,6 +31,7 @@ import { SnakedObject } from "matrix-react-sdk/src/utils/SnakedObject";
 import { ElementWidgetCapabilities } from "matrix-react-sdk/src/stores/widgets/ElementWidgetCapabilities";
 
 import { getVectorConfig } from "../getconfig";
+import { askForMediaAccess } from "../appConfig";
 
 // We have to trick webpack into loading our CSS for us.
 require("./index.pcss");
@@ -329,7 +330,6 @@ function normalizeLanguage(language: string): string {
 
     return lang + variant.toUpperCase();
 }
-
 function mapLanguage(language: string): string {
     // Element and Jitsi don't agree how to interpret en, so we go with Elements
     // interpretation to stay consistent
@@ -349,6 +349,21 @@ function mapLanguage(language: string): string {
 // and a non-nullish input specifies the label of a specific device to use.
 // Same for video inputs.
 async function joinConference(audioInput?: string | null, videoInput?: string | null): Promise<void> {
+    // 获取desktop音视频权限
+    try {
+        await askForMediaAccess(true, true);
+    } catch (error) {
+        console.error("获取音视频权限失败", error);
+        window.parent?.postMessage(
+            {
+                type: "showMediaCaptureErrorTipsDialog",
+                audio: true,
+                video: true,
+            },
+            "*",
+        );
+    }
+
     let jwt;
     if (jitsiAuth === JITSI_OPENIDTOKEN_JWT_AUTH) {
         // See https://github.com/matrix-org/prosody-mod-auth-matrix-user-verification

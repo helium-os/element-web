@@ -1,9 +1,9 @@
-const { HttpsProxyAgent } = require('https-proxy-agent');
-const agent = new HttpsProxyAgent('http://127.0.0.1:61717'); // 端口号是起desktop后，proxy随机生成的port
+const { HttpsProxyAgent } = require("https-proxy-agent");
+const agent = new HttpsProxyAgent("http://127.0.0.1:51487"); // 端口号是起desktop后，proxy随机生成的port
 
 module.exports = {
     define: {
-        ORG_ID: 'heliumos'
+        ORG_ID: "heliumos",
     },
     theme: {},
     proxy: {
@@ -27,6 +27,6 @@ module.exports = {
             secure: false,
             pathRewrite: { "^/heliumos-org-api": "" },
             agent,
-        }
-    }
-}
+        },
+    },
+};

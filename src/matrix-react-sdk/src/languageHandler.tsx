@@ -53,11 +53,11 @@ interface ErrorOptions {
     cause: unknown | undefined;
 }
 
-export const defaultLanguage = 'zh-hans';
+export const defaultLanguage = "zh-hans";
 
 export const languageMap = new Map([
-    ['zh', 'zh-hans'],
-    ['en', 'en']
+    ["zh", "zh-hans"],
+    ["en", "en"],
 ]);
 
 /**
