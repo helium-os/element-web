@@ -79,6 +79,7 @@ import RightPanel from "./RightPanel";
 import SpaceHierarchy, { showRoom } from "./SpaceHierarchy";
 import { RoomPermalinkCreator } from "../../utils/permalinks/Permalinks";
 import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
 interface IProps {
     space: Room;
@@ -180,7 +181,7 @@ const SpaceLandingAddButton: React.FC<{ space: Room }> = ({ space }) => {
                             }}
                         />
                     )}
-                    {canCreateSpace && (
+                    {canCreateSpace && UserStore.instance().canCreateSpace() && (
                         <IconizedContextMenuOption
                             label={_t("Add space")}
                             iconClassName="mx_RoomList_iconPlus"

@@ -72,6 +72,7 @@ import { NotificationState } from "../../../stores/notifications/NotificationSta
 import { ALTERNATE_KEY_NAME } from "../../../accessibility/KeyboardShortcuts";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../../settings/UIFeature";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
 const useSpaces = (): [Room[], MetaSpace[], Room[], SpaceKey] => {
     const invites = useEventEmitterState<Room[]>(SpaceStore.instance, UPDATE_INVITED_SPACES, () => {
@@ -327,7 +328,7 @@ const SpacePanelInner: React.FC<IInnerSpacePanelProps> = ({
                 </Draggable>
             ))}
             {children}
-            {shouldShowComponent(UIComponent.CreateSpaces) && (
+            {shouldShowComponent(UIComponent.CreateSpaces) && UserStore.instance().canCreateSpace() && (
                 <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
             )}
         </IndicatorScrollbar>
