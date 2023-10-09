@@ -3,7 +3,7 @@ export default class UserStore {
     roles: Roles = [];
 
     public static instance(): UserStore {
-        if (!window.userInstance) {
+        if (!window.mxUserStore) {
             window.mxUserStore = new UserStore();
         }
         return window.mxUserStore;
