@@ -27,10 +27,11 @@ import Modal from "./Modal";
 import { _t } from "./languageHandler";
 import InviteDialog from "./components/views/dialogs/InviteDialog";
 import BaseAvatar from "./components/views/avatars/BaseAvatar";
-import {getHttpUrlFromMxc} from "./customisations/Media";
+import { getHttpUrlFromMxc } from "./customisations/Media";
 import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import { InviteKind } from "./components/views/dialogs/InviteDialogTypes";
 import { Member } from "./utils/direct-messages";
+import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 
 export interface IInviteResult {
     states: CompletionStates;
@@ -169,6 +170,10 @@ export function showAnyInviteErrors(
                             const user = userMap?.get(addr) || cli.getUser(addr);
                             const name = (user as Member).name || (user as User).rawDisplayName;
                             const avatarUrl = (user as Member).getMxcAvatarUrl?.() || (user as User).avatarUrl;
+
+                            const orgInstance = OrgStore.sharedInstance();
+                            const orgId = orgInstance.getUserOrgId(user?.userId);
+                            const orgName = orgInstance.getOrgNameById(orgId);
                             return (
                                 <div key={addr} className="mx_InviteDialog_tile mx_InviteDialog_tile--inviterError">
                                     <div className="mx_InviteDialog_tile_avatarStack">
@@ -182,7 +187,7 @@ export function showAnyInviteErrors(
                                     </div>
                                     <div className="mx_InviteDialog_tile_nameStack">
                                         <span className="mx_InviteDialog_tile_nameStack_name">{name}</span>
-                                        <span className="mx_InviteDialog_tile_nameStack_userId">{user?.userId}</span>
+                                        <span className="mx_InviteDialog_tile_nameStack_userId">{orgName}</span>
                                     </div>
                                     <div className="mx_InviteDialog_tile--inviterError_errorText">
                                         {inviter.getErrorText(addr)}
