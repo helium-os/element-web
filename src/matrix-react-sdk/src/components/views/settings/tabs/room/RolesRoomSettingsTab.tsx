@@ -278,32 +278,32 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
         }
 
         const powerLevelDescriptors: Record<string, IPowerLevelDescriptor> = {
-            "users_default": {
+            users_default: {
                 desc: _t("Default role"),
                 defaultValue: 0,
             },
-            "events_default": {
+            events_default: {
                 desc: _t("Send messages"),
                 defaultValue: 0,
                 hideForSpace: true,
             },
-            "invite": {
+            invite: {
                 desc: _t("Invite users"),
                 defaultValue: 0,
             },
-            "state_default": {
+            state_default: {
                 desc: _t("Change settings"),
                 defaultValue: 50,
             },
-            "kick": {
+            kick: {
                 desc: _t("Remove users"),
                 defaultValue: 50,
             },
-            "ban": {
+            ban: {
                 desc: _t("Ban users"),
                 defaultValue: 50,
             },
-            "redact": {
+            redact: {
                 desc: _t("Remove messages sent by others"),
                 defaultValue: 50,
                 hideForSpace: true,
@@ -340,17 +340,25 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
             const privilegedUsers: JSX.Element[] = [];
             const mutedUsers: JSX.Element[] = [];
 
+            // 社区内拥有修改用户角色权限的用户
+            const canChangeLevelsUsers = Object.keys(userLevels).filter(
+                (userId) => room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, userId),
+            );
+
             Object.keys(userLevels).forEach((user) => {
                 if (!Number.isInteger(userLevels[user])) return;
                 const isMe = user === client.getUserId();
-                const canChange = canChangeLevels && (userLevels[user] < currentUserLevel || isMe);
+                const canChange =
+                    canChangeLevels && // 当前用户拥有修改社区内用户角色的权限
+                    ((isMe && canChangeLevelsUsers.length > 1) || // 如果是当前用户，必须保证当前社区内拥有修改角色权限的用户数 > 1时，才允许当前用户修改自己的角色权限
+                        currentUserLevel > userLevels[user]); // 如果当前用户的level > 某个用户的level，则当前用户可以修改该用户的角色权限
                 if (userLevels[user] > defaultUserLevel) {
                     // privileged
                     privilegedUsers.push(
                         <PowerSelector
                             value={userLevels[user]}
                             disabled={!canChange}
-                            label={user}
+                            label={room.getMemberEmail(user)}
                             key={user}
                             powerLevelKey={user} // Will be sent as the second parameter to `onChange`
                             onChange={this.onUserPowerLevelChanged}
@@ -362,7 +370,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
                         <PowerSelector
                             value={userLevels[user]}
                             disabled={!canChange}
-                            label={user}
+                            label={room.getMemberEmail(user)}
                             key={user}
                             powerLevelKey={user} // Will be sent as the second parameter to `onChange`
                             onChange={this.onUserPowerLevelChanged}

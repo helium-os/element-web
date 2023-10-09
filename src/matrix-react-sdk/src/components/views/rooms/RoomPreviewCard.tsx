@@ -107,7 +107,7 @@ const RoomPreviewCard: FC<IProps> = ({ room, onJoinButtonClicked, onRejectButton
                                 },
                             )}
                         </div>
-                        {inviter ? <div className="mx_RoomPreviewCard_inviter_mxid">{inviteSender}</div> : null}
+                        {/*{inviter ? <div className="mx_RoomPreviewCard_inviter_mxid">{inviteSender}</div> : null}*/}
                     </div>
                 </div>
             );
