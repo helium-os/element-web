@@ -1,4 +1,3 @@
-
 interface HsInfo {
     prefix: string;
     orgId: string;
@@ -24,13 +23,16 @@ export default class Host {
         return this.getHsInfoByHsName(hsName)?.prefix;
     }
 
+    public getOrgIdByHsName(hsName: string): string {
+        return this.getHsInfoByHsName(hsName)?.orgId;
+    }
+
     public getHsInfoByHsName(hsName: string): HsInfo {
-        const hsNameArr = hsName.split('.');
+        const hsNameArr = hsName.split(".");
         const [orgId] = hsNameArr.splice(-1, 1);
         return {
-            prefix: hsNameArr.join('.'),
-            orgId
-        }
+            prefix: hsNameArr.join("."),
+            orgId,
+        };
     }
 }
-

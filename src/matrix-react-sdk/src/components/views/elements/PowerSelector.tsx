@@ -173,7 +173,7 @@ export default class PowerSelector<K extends undefined | string> extends React.C
                     text: Roles.textualPowerLevel(level, this.props.usersDefault),
                 };
             });
-            options.push({ value: CUSTOM_VALUE, text: _t("Custom level") });
+            // options.push({ value: CUSTOM_VALUE, text: _t("Custom level") });
             const optionsElements = options.map((op) => {
                 return (
                     <option value={op.value} key={op.value} data-testid={`power-level-option-${op.value}`}>

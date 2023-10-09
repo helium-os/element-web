@@ -78,7 +78,7 @@ export default class LeftPanel extends React.Component<IProps, IState> {
         this.state = {
             activeSpace: SpaceStore.instance.activeSpace,
             showBreadcrumbs: LeftPanel.breadcrumbsMode,
-            showRoomListHeader: false,
+            showRoomListHeader: true,
         };
 
         BreadcrumbsStore.instance.on(UPDATE_EVENT, this.onBreadcrumbsUpdate);
@@ -397,7 +397,9 @@ export default class LeftPanel extends React.Component<IProps, IState> {
                 <div className="mx_LeftPanel_roomListContainer">
                     {/* {shouldShowComponent(UIComponent.FilterContainer) && this.renderSearchDialExplore()} */}
                     {this.renderBreadcrumbs()}
-                    {this.state.showRoomListHeader && !this.props.isMinimized && <RoomListHeader onVisibilityChange={this.refreshStickyHeaders} />}
+                    {this.state.showRoomListHeader && !this.props.isMinimized && (
+                        <RoomListHeader onVisibilityChange={this.refreshStickyHeaders} />
+                    )}
                     <UserOnboardingButton
                         selected={this.props.pageType === PageType.HomePage}
                         minimized={this.props.isMinimized}

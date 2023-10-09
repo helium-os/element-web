@@ -183,6 +183,8 @@ const NewRoomIntro: React.FC = () => {
             parentSpace = SpaceStore.instance.activeSpaceRoom;
         }
 
+        const showJustInviteToRoom = false;
+
         let buttons: JSX.Element | undefined;
         if (parentSpace && shouldShowComponent(UIComponent.InviteUsers)) {
             buttons = (
@@ -196,7 +198,7 @@ const NewRoomIntro: React.FC = () => {
                     >
                         {_t("Invite to %(spaceName)s", { spaceName: parentSpace.name })}
                     </AccessibleButton>
-                    {room.canInvite(cli.getSafeUserId()) && (
+                    {showJustInviteToRoom && room.canInvite(cli.getSafeUserId()) && (
                         <AccessibleButton
                             className="mx_NewRoomIntro_inviteButton"
                             kind="primary_outline"

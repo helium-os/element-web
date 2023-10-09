@@ -54,6 +54,8 @@ module.exports = {
 
         // ------------eslint-plugin-import
         // 提醒导入了未解析到的模块
-        "import/no-unresolved": ["warn"],
+        "import/no-unresolved": "warn",
+        // 提醒导入了未命名导出的变量
+        "import/named": "warn",
     },
 };
