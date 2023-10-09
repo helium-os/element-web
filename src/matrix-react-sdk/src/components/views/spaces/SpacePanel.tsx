@@ -338,6 +338,7 @@ const InnerSpacePanel = React.memo(SpacePanelInner);
 
 const SpacePanel: React.FC = () => {
     const showUserMenu = false;
+    const showQuickSettingBtn = false;
     const [isPanelCollapsed, setPanelCollapsed] = useState(true);
     const ref = useRef<HTMLDivElement>();
     useLayoutEffect(() => {
@@ -404,7 +405,7 @@ const SpacePanel: React.FC = () => {
                             )}
                         </Droppable>
 
-                        <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />
+                        {showQuickSettingBtn && <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />}
                     </div>
                 )}
             </RovingTabIndexProvider>
