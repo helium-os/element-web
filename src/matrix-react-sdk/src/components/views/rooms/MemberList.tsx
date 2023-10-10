@@ -46,6 +46,7 @@ import { shouldShowComponent } from "../../../customisations/helpers/UIComponent
 import { UIComponent } from "../../../settings/UIFeature";
 import PosthogTrackers from "../../../PosthogTrackers";
 import { SDKContext } from "../../../contexts/SDKContext";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 const INITIAL_LOAD_NUM_MEMBERS = 30;
 const INITIAL_LOAD_NUM_INVITED = 5;
@@ -351,23 +352,31 @@ export default class MemberList extends React.Component<IProps, IState> {
         const room = cli.getRoom(this.props.roomId);
         let inviteButton;
 
-        if (
-            room?.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)
-        ) {
-            let inviteButtonText = _t("Invite to this room");
+        if (room?.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)) {
+            const parentSpace = SpaceStore.instance.activeSpaceRoom;
+
+            let inviteButtonText = "";
             if (room.isSpaceRoom()) {
+                // 社区所在channel展示邀请到此社区按钮
                 inviteButtonText = _t("Invite to this space");
+            } else if (!parentSpace) {
+                // 非社区内的房间展示邀请到此频道按钮
+                inviteButtonText = _t("Invite to this room");
+            } else {
+                // 社区内的channel不展示邀请按钮
             }
 
-            inviteButton = (
-                <AccessibleButton
-                    className="mx_MemberList_invite"
-                    onClick={this.onInviteButtonClick}
-                    disabled={!this.state.canInvite}
-                >
-                    <span>{inviteButtonText}</span>
-                </AccessibleButton>
-            );
+            if (inviteButtonText) {
+                inviteButton = (
+                    <AccessibleButton
+                        className="mx_MemberList_invite"
+                        onClick={this.onInviteButtonClick}
+                        disabled={!this.state.canInvite}
+                    >
+                        <span>{inviteButtonText}</span>
+                    </AccessibleButton>
+                );
+            }
         }
 
         let invitedHeader;
