@@ -18,7 +18,7 @@ export function getLanguage(): Promise<string> {
 // 获取desktop当前用户权限
 export function getUserRoles() {
     return new Promise((resolve, reject) => {
-        SDK.invoke("system.getUserRole", (res) => {
+        SDK.invoke("user.getRoles", (res) => {
             console.log("get app user roles success", res);
             resolve(res);
         });
