@@ -87,6 +87,8 @@ export default class LeftPanel extends React.Component<IProps, IState> {
     }
 
     private static get breadcrumbsMode(): BreadcrumbsMode {
+        return BreadcrumbsMode.Disabled;
+
         if (!BreadcrumbsStore.instance.visible) return BreadcrumbsMode.Disabled;
         return SettingsStore.getValue("feature_breadcrumbs_v2") ? BreadcrumbsMode.Labs : BreadcrumbsMode.Legacy;
     }
