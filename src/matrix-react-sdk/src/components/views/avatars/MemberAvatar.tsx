@@ -22,7 +22,7 @@ import { ResizeMethod } from "matrix-js-sdk/src/@types/partials";
 import dis from "../../../dispatcher/dispatcher";
 import { Action } from "../../../dispatcher/actions";
 import BaseAvatar from "./BaseAvatar";
-import {getSourceHttpUrlFromMxc} from "../../../customisations/Media";
+import { getSourceHttpUrlFromMxc } from "../../../customisations/Media";
 import { CardContext } from "../right_panel/context";
 import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
 import { useRoomMemberProfile } from "../../../hooks/room/useRoomMemberProfile";
@@ -45,7 +45,7 @@ interface IProps extends Omit<React.ComponentProps<typeof BaseAvatar>, "name" | 
     children?: ReactNode;
 }
 
-export default function MemberAvatar({
+function MemberAvatar({
     width,
     height,
     resizeMethod = "crop",
@@ -104,6 +104,8 @@ export default function MemberAvatar({
         />
     );
 }
+
+export default React.memo(MemberAvatar);
 
 export class LegacyMemberAvatar extends React.Component<IProps> {
     public render(): React.ReactNode {

@@ -27,7 +27,7 @@ import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import Modal from "../../../Modal";
 import * as Avatar from "../../../Avatar";
 import DMRoomMap from "../../../utils/DMRoomMap";
-import {getSourceHttpUrlFromMxc} from "../../../customisations/Media";
+import { getSourceHttpUrlFromMxc } from "../../../customisations/Media";
 import { IOOBData } from "../../../stores/ThreepidInviteStore";
 import { LocalRoom } from "../../../models/LocalRoom";
 import { filterBoolean } from "../../../utils/arrays";
@@ -48,7 +48,7 @@ interface IState {
     urls: string[];
 }
 
-export default class RoomAvatar extends React.Component<IProps, IState> {
+export default class RoomAvatar extends React.PureComponent<IProps, IState> {
     public static defaultProps = {
         width: 36,
         height: 36,

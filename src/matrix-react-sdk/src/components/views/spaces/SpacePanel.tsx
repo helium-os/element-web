@@ -414,4 +414,4 @@ const SpacePanel: React.FC = () => {
     );
 };
 
-export default SpacePanel;
+export default React.memo(SpacePanel);

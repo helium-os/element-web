@@ -66,7 +66,7 @@ interface IState {
     showRoomListHeader: boolean;
 }
 
-export default class LeftPanel extends React.Component<IProps, IState> {
+export default class LeftPanel extends React.PureComponent<IProps, IState> {
     private listContainerRef = createRef<HTMLDivElement>();
     private roomListRef = createRef<RoomList>();
     private focusedElement: Element | null = null;
