@@ -20,7 +20,7 @@ export default class UserStore {
     }
 
     // 判断当前用户是否拥有新建社区的权限
-    public canCreateSpace(): boolean {
+    public get canCreateSpace(): boolean {
         return !!this.isOrgAdmin;
     }
 }

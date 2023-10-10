@@ -181,7 +181,7 @@ const SpaceLandingAddButton: React.FC<{ space: Room }> = ({ space }) => {
                             }}
                         />
                     )}
-                    {canCreateSpace && UserStore.instance().canCreateSpace() && (
+                    {canCreateSpace && UserStore.instance().canCreateSpace && (
                         <IconizedContextMenuOption
                             label={_t("Add space")}
                             iconClassName="mx_RoomList_iconPlus"
