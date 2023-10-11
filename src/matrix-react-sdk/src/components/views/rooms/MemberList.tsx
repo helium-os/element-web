@@ -353,7 +353,7 @@ export default class MemberList extends React.Component<IProps, IState> {
         let inviteButton;
 
         if (room?.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)) {
-            const parentSpace = SpaceStore.instance.activeSpaceRoom;
+            const parentSpace = SpaceStore.instance.getCanonicalParent(room.roomId);
 
             let inviteButtonText = "";
             if (room.isSpaceRoom()) {
