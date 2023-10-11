@@ -119,6 +119,7 @@ import WidgetUtils from "../../utils/WidgetUtils";
 import { shouldEncryptRoomWithSingle3rdPartyInvite } from "../../utils/room/shouldEncryptRoomWithSingle3rdPartyInvite";
 import { WaitingForThirdPartyRoomView } from "./WaitingForThirdPartyRoomView";
 import { ViewHomePagePayload } from "matrix-react-sdk/src/dispatcher/payloads/ViewHomePagePayload";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 const DEBUG = false;
 const PREVENT_MULTIPLE_JITSI_WITHIN = 30_000;
@@ -432,7 +433,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             narrow: false,
             visibleDecryptionFailures: [],
             msc3946ProcessDynamicPredecessor: SettingsStore.getValue("feature_dynamic_room_predecessors"),
-            isAdminLeft: false
+            isAdminLeft: false,
         };
 
         this.dispatcherRef = dis.register(this.onAction);
@@ -609,6 +610,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             return;
         }
 
+        console.log("viewRoom  onRoomViewStoreUpdate 开始执行 ");
         const roomId = this.context.roomViewStore.getRoomId() ?? null;
         const room = this.context.client?.getRoom(roomId ?? undefined) ?? undefined;
 
@@ -733,8 +735,15 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         // the RoomView instance
         if (initial) {
             newState.room = this.context.client!.getRoom(newState.roomId) || undefined;
+            console.log(
+                "viewRoom  onRoomViewStoreUpdate newState.room",
+                newState.room,
+                "newState.roomId",
+                newState.roomId,
+            );
             if (newState.room) {
                 newState.showApps = this.shouldShowApps(newState.room);
+                console.log("viewRoom  onRoomViewStoreUpdate onRoomLoaded");
                 this.onRoomLoaded(newState.room);
             }
         }
@@ -860,6 +869,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                             room: room,
                             peekLoading: false,
                         });
+                        console.log("viewRoom onRoomLoaded  setupRoom");
                         this.onRoomLoaded(room);
                     })
                     .catch((err) => {
@@ -909,6 +919,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     }
 
     public componentDidMount(): void {
+        console.log("viewRoom RoomView组件加载完成");
         this.onRoomViewStoreUpdate(true);
 
         const call = this.getCallForRoom();
@@ -951,6 +962,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     }
 
     public componentWillUnmount(): void {
+        console.log("viewRoom RoomView组件卸载");
         // set a boolean to say we've been unmounted, which any pending
         // promises can use to throw away their results.
         //
@@ -1360,7 +1372,15 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     }
 
     private calculatePeekRules(room: Room): void {
+        console.log("viewRoom calculatePeekRules", "room", room);
         const historyVisibility = room.currentState.getStateEvents(EventType.RoomHistoryVisibility, "");
+        console.log(
+            "viewRoom calculatePeekRules",
+            "historyVisibility",
+            historyVisibility,
+            "historyVisibility?.getContent().history_visibility",
+            historyVisibility?.getContent().history_visibility,
+        );
         this.setState({
             canPeek: historyVisibility?.getContent().history_visibility === HistoryVisibility.WorldReadable,
         });
@@ -1392,6 +1412,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 room: room,
             },
             () => {
+                console.log("viewRoom onRoomLoaded  onRoom");
                 this.onRoomLoaded(room);
             },
         );
@@ -1478,7 +1499,9 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             const me = this.context.client.getSafeUserId();
             const isAdminLeft = room.isAdminLeft();
             const canReact =
-                room.getMyMembership() === "join" && room.currentState.maySendEvent(EventType.Reaction, me) && !isAdminLeft;
+                room.getMyMembership() === "join" &&
+                room.currentState.maySendEvent(EventType.Reaction, me) &&
+                !isAdminLeft;
             const canSendMessages = room.maySendMessage() && !isAdminLeft;
             const canSelfRedact = room.currentState.maySendEvent(EventType.RoomRedaction, me);
 
@@ -1503,7 +1526,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
     private updateAdminLeft(room: Room): void {
         this.setState({
-            isAdminLeft: room.isAdminLeft()
+            isAdminLeft: room.isAdminLeft(),
         });
     }
 
@@ -1676,6 +1699,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         });
         this.context.client.leave(this.state.roomId).then(
             () => {
+                console.log("viewRoom Action.ViewHomePage here9");
                 dis.dispatch({ action: Action.ViewHomePage });
                 this.setState({
                     rejecting: false,
@@ -1711,6 +1735,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             await this.context.client.setIgnoredUsers(ignoredUsers);
 
             await this.context.client.leave(this.state.roomId);
+            console.log("viewRoom Action.ViewHomePage here10");
             dis.dispatch({ action: Action.ViewHomePage });
             this.setState({
                 rejecting: false,
@@ -1968,11 +1993,14 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     }
 
     public render(): React.ReactNode {
+        console.log("viewRoom RoomView组件render");
         if (this.state.room instanceof LocalRoom) {
             if (this.state.room.state === LocalRoomState.CREATING) {
+                console.log("viewRoom render1");
                 return this.renderLocalRoomCreateLoader(this.state.room);
             }
 
+            console.log("viewRoom render2");
             return this.renderLocalRoomView(this.state.room);
         }
 
@@ -1980,15 +2008,27 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             const { shouldEncrypt, inviteEvent } = shouldEncryptRoomWithSingle3rdPartyInvite(this.state.room);
 
             if (shouldEncrypt) {
+                console.log("viewRoom render3");
                 return this.renderWaitingForThirdPartyRoomView(inviteEvent);
             }
         }
 
         if (!this.state.room) {
             const loading = !this.state.matrixClientIsReady || this.state.roomLoading || this.state.peekLoading;
+            console.log(
+                "viewRoom loading ",
+                loading,
+                "this.state.matrixClientIsReady",
+                this.state.matrixClientIsReady,
+                "this.state.roomLoading",
+                this.state.roomLoading,
+                "this.state.peekLoading",
+                this.state.peekLoading,
+            );
             if (loading) {
                 // Assume preview loading if we don't have a ready client or a room ID (still resolving the alias)
                 const previewLoading = !this.state.matrixClientIsReady || !this.state.roomId || this.state.peekLoading;
+                console.log("viewRoom render4");
                 return (
                     <div className="mx_RoomView">
                         <ErrorBoundary>
@@ -2014,6 +2054,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 // We have no room object for this room, only the ID.
                 // We've got to this room by following a link, possibly a third party invite.
                 const roomAlias = this.state.roomAlias;
+                console.log("viewRoom render5");
                 return (
                     <div className="mx_RoomView">
                         <ErrorBoundary>
@@ -2042,6 +2083,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             isVideoRoom(this.state.room) &&
             !(SettingsStore.getValue("feature_video_rooms") && myMembership === "join")
         ) {
+            console.log("viewRoom render6");
             return (
                 <ErrorBoundary>
                     <div className="mx_MainSplit">
@@ -2059,6 +2101,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         // SpaceRoomView handles invites itself
         if (myMembership === "invite" && !this.state.room.isSpaceRoom()) {
             if (this.state.joining || this.state.rejecting) {
+                console.log("viewRoom render7");
                 return (
                     <ErrorBoundary>
                         <RoomPreviewBar
@@ -2084,6 +2127,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 // XXX: in future we could give the option of a 'Preview' button which lets them view anyway.
 
                 // We have a regular invite for this room.
+                console.log("viewRoom render8");
                 return (
                     <div className="mx_RoomView">
                         <ErrorBoundary>
@@ -2192,9 +2236,21 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                     roomId={this.state.roomId}
                 />
             );
-            if (!this.state.canPeek && !this.state.room?.isSpaceRoom()) {
+            console.log(
+                "~~~~~~~~~viewRoom",
+                "myMembership",
+                myMembership,
+                "this.state.peekLoading",
+                this.state.peekLoading,
+                "this.state.canPeek",
+                this.state.canPeek,
+                "this.state.room?.isSpaceRoom()",
+                this.state.room?.isSpaceRoom(),
+            );
+            if (!this.state.peekLoading && !this.state.canPeek && !this.state.room?.isSpaceRoom()) {
                 // return <div className="mx_RoomView">{previewBar}</div>;
                 dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
+                console.log("-------viewRoom render9 null");
                 return null;
             }
         } else if (hiddenHighlightCount > 0) {
@@ -2217,6 +2273,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         }
 
         if (this.state.room?.isSpaceRoom() && !this.props.forceTimeline) {
+            console.log("viewRoom render10");
             return (
                 <SpaceRoomView
                     space={this.state.room}
@@ -2451,6 +2508,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 viewingCall = true;
         }
 
+        console.log("viewRoom render11");
         return (
             <RoomContext.Provider value={this.state}>
                 <main className={mainClasses} ref={this.roomView} onKeyDown={this.onReactKeyDown}>

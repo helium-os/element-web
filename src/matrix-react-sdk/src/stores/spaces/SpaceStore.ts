@@ -876,7 +876,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     };
 
     private switchSpaceIfNeeded = (roomId = SdkContextClass.instance.roomViewStore.getRoomId()): void => {
-        if (!roomId) return;
+        if (!roomId || !this.matrixClient.getRoom(roomId)) return;
+
         if (!this.isRoomInSpace(this.activeSpace, roomId) && !this.matrixClient.getRoom(roomId)?.isSpaceRoom()) {
             this.switchToRelatedSpace(roomId);
         }
