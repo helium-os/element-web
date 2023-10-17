@@ -218,5 +218,5 @@ const BaseAvatar: React.FC<IProps> = (props) => {
     }
 };
 
-export default BaseAvatar;
+export default React.memo(BaseAvatar);
 export type BaseAvatarType = React.FC<IProps>;

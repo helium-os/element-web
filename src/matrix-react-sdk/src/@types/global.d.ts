@@ -53,6 +53,9 @@ import { IConfigOptions } from "../IConfigOptions";
 import { MatrixDispatcher } from "../dispatcher/dispatcher";
 import OrgStore from "../stores/OrgStore";
 import AllMember from "../utils/AllMember";
+import Host from "matrix-react-sdk/src/utils/Host";
+import User from "matrix-react-sdk/src/utils/User";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
@@ -112,6 +115,9 @@ declare global {
         mxAutoRageshakeStore?: AutoRageshakeStore;
         mxDispatcher: MatrixDispatcher;
         mxOrgStore: OrgStore;
+        mxUserStore: UserStore;
+        hostInstance: Host;
+        userInstance: User;
         allMemberInstance: AllMember;
     }
 

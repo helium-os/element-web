@@ -55,6 +55,7 @@ import SpaceContextMenu from "../context_menus/SpaceContextMenu";
 import InlineSpinner from "../elements/InlineSpinner";
 import TooltipTarget from "../elements/TooltipTarget";
 import { HomeButtonContextMenu } from "../spaces/SpacePanel";
+import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
 
 const contextMenuBelow = (elementRect: DOMRect): MenuProps => {
     // align the context menu's icons with the icon which opened the context menu
@@ -145,7 +146,8 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
 
     const canExploreRooms = shouldShowComponent(UIComponent.ExploreRooms);
     const canCreateRooms = shouldShowComponent(UIComponent.CreateRooms);
-    const canCreateSpaces = shouldShowComponent(UIComponent.CreateSpaces);
+    const canCreateSpaces =
+        SettingsStore.getValue("Spaces.addSubSpace") && shouldShowComponent(UIComponent.CreateSpaces);
 
     const hasPermissionToAddSpaceChild = activeSpace?.currentState?.maySendStateEvent(
         EventType.SpaceChild,
@@ -253,20 +255,24 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
                             PosthogTrackers.trackInteraction("WebRoomListHeaderPlusMenuExploreRoomsItem", e);
                         }}
                     />
-                    <IconizedContextMenuOption
-                        label={_t("Add existing room")}
-                        iconClassName="mx_RoomListHeader_iconPlus"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            showAddExistingRooms(activeSpace);
-                            closePlusMenu();
-                        }}
-                        disabled={!canAddSubRooms}
-                        tooltip={
-                            !canAddSubRooms ? _t("You do not have permissions to add rooms to this space") : undefined
-                        }
-                    />
+                    {SettingsStore.getValue("Spaces.addExistingRoom") && (
+                        <IconizedContextMenuOption
+                            label={_t("Add existing room")}
+                            iconClassName="mx_RoomListHeader_iconPlus"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                showAddExistingRooms(activeSpace);
+                                closePlusMenu();
+                            }}
+                            disabled={!canAddSubRooms}
+                            tooltip={
+                                !canAddSubRooms
+                                    ? _t("You do not have permissions to add rooms to this space")
+                                    : undefined
+                            }
+                        />
+                    )}
                     {canCreateSpaces && (
                         <IconizedContextMenuOption
                             label={_t("Add space")}

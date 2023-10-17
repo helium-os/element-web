@@ -72,6 +72,7 @@ import { NotificationState } from "../../../stores/notifications/NotificationSta
 import { ALTERNATE_KEY_NAME } from "../../../accessibility/KeyboardShortcuts";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../../settings/UIFeature";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
 const useSpaces = (): [Room[], MetaSpace[], Room[], SpaceKey] => {
     const invites = useEventEmitterState<Room[]>(SpaceStore.instance, UPDATE_INVITED_SPACES, () => {
@@ -267,72 +268,78 @@ interface IInnerSpacePanelProps extends DroppableProvidedProps {
 }
 
 // Optimisation based on https://github.com/atlassian/react-beautiful-dnd/blob/master/docs/api/droppable.md#recommended-droppable--performance-optimisation
-const InnerSpacePanel = React.memo<IInnerSpacePanelProps>(
-    ({ children, isPanelCollapsed, setPanelCollapsed, isDraggingOver, innerRef, ...props }) => {
-        const [invites, metaSpaces, actualSpaces, activeSpace] = useSpaces();
-        const activeSpaces = activeSpace ? [activeSpace] : [];
+const SpacePanelInner: React.FC<IInnerSpacePanelProps> = ({
+    children,
+    isPanelCollapsed,
+    setPanelCollapsed,
+    isDraggingOver,
+    innerRef,
+    ...props
+}) => {
+    const [invites, metaSpaces, actualSpaces, activeSpace] = useSpaces();
+    const activeSpaces = activeSpace ? [activeSpace] : [];
 
-        // 自定义修改
-        const defineToEp = true;
+    const metaSpacesSection = metaSpaces.map((key) => {
+        const Component = metaSpaceComponentMap[key];
+        return <Component key={key} selected={activeSpace === key} isPanelCollapsed={isPanelCollapsed} />;
+    });
 
-        const metaSpacesSection = metaSpaces.map((key) => {
-            const Component = metaSpaceComponentMap[key];
-            return <Component key={key} selected={activeSpace === key} isPanelCollapsed={isPanelCollapsed} />;
-        });
+    return (
+        <IndicatorScrollbar
+            {...props}
+            wrappedRef={innerRef}
+            className="mx_SpaceTreeLevel"
+            style={
+                isDraggingOver
+                    ? {
+                          pointerEvents: "none",
+                      }
+                    : undefined
+            }
+            element="ul"
+            role="tree"
+            aria-label={_t("Spaces")}
+        >
+            {metaSpacesSection}
+            {invites.map((s) => (
+                <SpaceItem
+                    key={s.roomId}
+                    space={s}
+                    activeSpaces={activeSpaces}
+                    isPanelCollapsed={isPanelCollapsed}
+                    onExpand={() => setPanelCollapsed(false)}
+                />
+            ))}
+            {actualSpaces.map((s, i) => (
+                <Draggable key={s.roomId} draggableId={s.roomId} index={i}>
+                    {(provided, snapshot) => (
+                        <SpaceItem
+                            {...provided.draggableProps}
+                            dragHandleProps={provided.dragHandleProps}
+                            key={s.roomId}
+                            innerRef={provided.innerRef}
+                            className={snapshot.isDragging ? "mx_SpaceItem_dragging" : undefined}
+                            space={s}
+                            activeSpaces={activeSpaces}
+                            isPanelCollapsed={isPanelCollapsed}
+                            onExpand={() => setPanelCollapsed(false)}
+                        />
+                    )}
+                </Draggable>
+            ))}
+            {children}
+            {shouldShowComponent(UIComponent.CreateSpaces) && UserStore.instance().canCreateSpace && (
+                <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
+            )}
+        </IndicatorScrollbar>
+    );
+};
 
-        return (
-            <IndicatorScrollbar
-                {...props}
-                wrappedRef={innerRef}
-                className="mx_SpaceTreeLevel"
-                style={
-                    isDraggingOver
-                        ? {
-                              pointerEvents: "none",
-                          }
-                        : undefined
-                }
-                element="ul"
-                role="tree"
-                aria-label={_t("Spaces")}
-            >
-                {metaSpacesSection}
-                {invites.map((s) => (
-                    <SpaceItem
-                        key={s.roomId}
-                        space={s}
-                        activeSpaces={activeSpaces}
-                        isPanelCollapsed={isPanelCollapsed}
-                        onExpand={() => setPanelCollapsed(false)}
-                    />
-                ))}
-                {actualSpaces.map((s, i) => (
-                    <Draggable key={s.roomId} draggableId={s.roomId} index={i}>
-                        {(provided, snapshot) => (
-                            <SpaceItem
-                                {...provided.draggableProps}
-                                dragHandleProps={provided.dragHandleProps}
-                                key={s.roomId}
-                                innerRef={provided.innerRef}
-                                className={snapshot.isDragging ? "mx_SpaceItem_dragging" : undefined}
-                                space={s}
-                                activeSpaces={activeSpaces}
-                                isPanelCollapsed={isPanelCollapsed}
-                                onExpand={() => setPanelCollapsed(false)}
-                            />
-                        )}
-                    </Draggable>
-                ))}
-                {children}
-                {!defineToEp && shouldShowComponent(UIComponent.CreateSpaces) && (
-                    <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
-                )}
-            </IndicatorScrollbar>
-        );
-    },
-);
+const InnerSpacePanel = React.memo(SpacePanelInner);
 
 const SpacePanel: React.FC = () => {
+    const showUserMenu = false;
+    const showQuickSettingBtn = false;
     const [isPanelCollapsed, setPanelCollapsed] = useState(true);
     const ref = useRef<HTMLDivElement>();
     useLayoutEffect(() => {
@@ -345,6 +352,26 @@ const SpacePanel: React.FC = () => {
             setPanelCollapsed(!isPanelCollapsed);
         }
     });
+
+    const toggleBtn = (
+        <AccessibleTooltipButton
+            className={classNames("mx_SpacePanel_toggleCollapse", {
+                expanded: !isPanelCollapsed,
+            })}
+            onClick={() => setPanelCollapsed(!isPanelCollapsed)}
+            title={isPanelCollapsed ? _t("Expand") : _t("Collapse")}
+            tooltip={
+                <div>
+                    <div className="mx_Tooltip_title">{isPanelCollapsed ? _t("Expand") : _t("Collapse")}</div>
+                    <div className="mx_Tooltip_sub">
+                        {IS_MAC
+                            ? "⌘ + ⇧ + D"
+                            : _t(ALTERNATE_KEY_NAME[Key.CONTROL]) + " + " + _t(ALTERNATE_KEY_NAME[Key.SHIFT]) + " + D"}
+                    </div>
+                </div>
+            }
+        />
+    );
 
     return (
         <DragDropContext
@@ -360,28 +387,11 @@ const SpacePanel: React.FC = () => {
                         onKeyDown={onKeyDownHandler}
                         ref={ref}
                     >
-                        <UserMenu isPanelCollapsed={isPanelCollapsed}>
-                            <AccessibleTooltipButton
-                                className={classNames("mx_SpacePanel_toggleCollapse", { expanded: !isPanelCollapsed })}
-                                onClick={() => setPanelCollapsed(!isPanelCollapsed)}
-                                title={isPanelCollapsed ? _t("Expand") : _t("Collapse")}
-                                tooltip={
-                                    <div>
-                                        <div className="mx_Tooltip_title">
-                                            {isPanelCollapsed ? _t("Expand") : _t("Collapse")}
-                                        </div>
-                                        <div className="mx_Tooltip_sub">
-                                            {IS_MAC
-                                                ? "⌘ + ⇧ + D"
-                                                : _t(ALTERNATE_KEY_NAME[Key.CONTROL]) +
-                                                  " + " +
-                                                  _t(ALTERNATE_KEY_NAME[Key.SHIFT]) +
-                                                  " + D"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        </UserMenu>
+                        {showUserMenu ? (
+                            <UserMenu isPanelCollapsed={isPanelCollapsed}>{toggleBtn}</UserMenu>
+                        ) : (
+                            toggleBtn
+                        )}
                         <Droppable droppableId="top-level-spaces">
                             {(provided, snapshot) => (
                                 <InnerSpacePanel
@@ -396,7 +406,7 @@ const SpacePanel: React.FC = () => {
                             )}
                         </Droppable>
 
-                        <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />
+                        {showQuickSettingBtn && <QuickSettingsButton isPanelCollapsed={isPanelCollapsed} />}
                     </div>
                 )}
             </RovingTabIndexProvider>
@@ -404,4 +414,4 @@ const SpacePanel: React.FC = () => {
     );
 };
 
-export default SpacePanel;
+export default React.memo(SpacePanel);

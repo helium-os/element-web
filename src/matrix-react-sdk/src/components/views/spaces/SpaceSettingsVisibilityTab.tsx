@@ -30,6 +30,8 @@ import JoinRuleSettings from "../settings/JoinRuleSettings";
 import { useRoomState } from "../../../hooks/useRoomState";
 import SettingsFieldset from "../settings/SettingsFieldset";
 import { useAsyncMemo } from "../../../hooks/useAsyncMemo";
+import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
+import { UIFeature } from "matrix-react-sdk/src/settings/UIFeature";
 
 interface IProps {
     matrixClient: MatrixClient;
@@ -121,7 +123,7 @@ const SpaceSettingsVisibilityTab: React.FC<IProps> = ({ matrixClient: cli, space
     }
 
     let addressesSection: JSX.Element | undefined;
-    if (space.getJoinRule() === JoinRule.Public) {
+    if (SettingsStore.getValue(UIFeature.SpaceAddressSettings) && space.getJoinRule() === JoinRule.Public) {
         addressesSection = (
             <>
                 <span className="mx_SettingsTab_subheading">{_t("Address")}</span>

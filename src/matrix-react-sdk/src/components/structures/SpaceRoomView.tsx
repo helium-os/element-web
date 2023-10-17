@@ -78,6 +78,8 @@ import MainSplit from "./MainSplit";
 import RightPanel from "./RightPanel";
 import SpaceHierarchy, { showRoom } from "./SpaceHierarchy";
 import { RoomPermalinkCreator } from "../../utils/permalinks/Permalinks";
+import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
 interface IProps {
     space: Room;
@@ -167,17 +169,19 @@ const SpaceLandingAddButton: React.FC<{ space: Room }> = ({ space }) => {
                             )}
                         </>
                     )}
-                    <IconizedContextMenuOption
-                        label={_t("Add existing room")}
-                        iconClassName="mx_RoomList_iconAddExistingRoom"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            closeMenu();
-                            showAddExistingRooms(space);
-                        }}
-                    />
-                    {canCreateSpace && (
+                    {SettingsStore.getValue("Spaces.addExistingRoom") && (
+                        <IconizedContextMenuOption
+                            label={_t("Add existing room")}
+                            iconClassName="mx_RoomList_iconAddExistingRoom"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                closeMenu();
+                                showAddExistingRooms(space);
+                            }}
+                        />
+                    )}
+                    {canCreateSpace && UserStore.instance().canCreateSpace && (
                         <IconizedContextMenuOption
                             label={_t("Add space")}
                             iconClassName="mx_RoomList_iconPlus"

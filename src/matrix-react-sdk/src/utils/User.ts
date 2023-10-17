@@ -1,4 +1,5 @@
-import Host from './Host';
+import Host from "./Host";
+
 export default class User {
     public static instance(): User {
         if (!window.userInstance) {
@@ -6,7 +7,6 @@ export default class User {
         }
         return window.userInstance;
     }
-
     public generateUserIdByBaseUrl(userId: string, baseUrl: string, orgId?: string): string {
         const hsName = Host.instance().getHsNameByBaseUrl(baseUrl);
         return this.generateUserIdByHsName(userId, hsName, orgId);
@@ -24,7 +24,6 @@ export default class User {
     }
 
     public generateUserId(userId: string, hsName: string): string {
-        return `@${userId}:${hsName}`
+        return `@${userId}:${hsName}`;
     }
 }
-

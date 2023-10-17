@@ -51,9 +51,13 @@ module.exports = {
         "react/no-render-return-value": "warn",
         // 提醒使用了findDOMNode方法（当前项目需要）
         "react/no-find-dom-node": "warn",
+        // 提醒使用了字符串 ref
+        "react/no-string-refs": "warn",
 
         // ------------eslint-plugin-import
         // 提醒导入了未解析到的模块
-        "import/no-unresolved": ["warn"],
+        "import/no-unresolved": "warn",
+        // 提醒导入了未命名导出的变量
+        "import/named": "warn",
     },
 };

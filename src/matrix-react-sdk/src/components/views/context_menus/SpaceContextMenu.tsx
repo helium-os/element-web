@@ -26,7 +26,7 @@ import {
     showCreateNewRoom,
     showCreateNewSubspace,
     showSpaceInvite,
-    // showSpacePreferences,
+    showSpacePreferences,
     showSpaceSettings,
 } from "../../../utils/space";
 import { leaveSpace } from "../../../utils/leave-behaviour";
@@ -141,7 +141,10 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
     const hasPermissionToAddSpaceChild = space.currentState.maySendStateEvent(EventType.SpaceChild, userId);
     const canAddRooms = hasPermissionToAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms);
     const canAddVideoRooms = canAddRooms && videoRoomsEnabled;
-    const canAddSubSpaces = hasPermissionToAddSpaceChild && shouldShowComponent(UIComponent.CreateSpaces);
+    const canAddSubSpaces =
+        SettingsStore.getValue("Spaces.addSubSpace") &&
+        hasPermissionToAddSpaceChild &&
+        shouldShowComponent(UIComponent.CreateSpaces);
 
     let newRoomSection: JSX.Element | null = null;
     if (canAddRooms || canAddSubSpaces) {
@@ -207,56 +210,56 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
         );
     }
 
-    // const onPreferencesClick = (ev: ButtonEvent): void => {
-    //     ev.preventDefault();
-    //     ev.stopPropagation();
+    const onPreferencesClick = (ev: ButtonEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
 
-    //     showSpacePreferences(space);
-    //     onFinished();
-    // };
+        showSpacePreferences(space);
+        onFinished();
+    };
 
-    // const openSpace = (ev: ButtonEvent): void => {
-    //     ev.preventDefault();
-    //     ev.stopPropagation();
+    const openSpace = (ev: ButtonEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
 
-    //     defaultDispatcher.dispatch<ViewRoomPayload>({
-    //         action: Action.ViewRoom,
-    //         room_id: space.roomId,
-    //         metricsTrigger: undefined, // other
-    //     });
-    //     onFinished();
-    // };
+        defaultDispatcher.dispatch<ViewRoomPayload>({
+            action: Action.ViewRoom,
+            room_id: space.roomId,
+            metricsTrigger: undefined, // other
+        });
+        onFinished();
+    };
 
-    // const onExploreRoomsClick = (ev: ButtonEvent): void => {
-    //     PosthogTrackers.trackInteraction("WebSpaceContextMenuExploreRoomsItem", ev);
-    //     openSpace(ev);
-    // };
+    const onExploreRoomsClick = (ev: ButtonEvent): void => {
+        PosthogTrackers.trackInteraction("WebSpaceContextMenuExploreRoomsItem", ev);
+        openSpace(ev);
+    };
 
-    // const onHomeClick = (ev: ButtonEvent): void => {
-    //     PosthogTrackers.trackInteraction("WebSpaceContextMenuHomeItem", ev);
-    //     openSpace(ev);
-    // };
+    const onHomeClick = (ev: ButtonEvent): void => {
+        PosthogTrackers.trackInteraction("WebSpaceContextMenuHomeItem", ev);
+        openSpace(ev);
+    };
 
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_SpacePanel_contextMenu" compact>
             {!hideHeader && <div className="mx_SpacePanel_contextMenu_header">{space.name}</div>}
             <IconizedContextMenuOptionList first>
-                {/* <IconizedContextMenuOption
+                <IconizedContextMenuOption
                     iconClassName="mx_SpacePanel_iconHome"
                     label={_t("Space home")}
                     onClick={onHomeClick}
-                /> */}
-                {inviteOption}
-                {/* <IconizedContextMenuOption
-                    iconClassName="mx_SpacePanel_iconExplore"
-                    label={canAddRooms ? _t("Manage & explore rooms") : _t("Explore rooms")}
-                    onClick={onExploreRoomsClick}
                 />
-                <IconizedContextMenuOption
-                    iconClassName="mx_SpacePanel_iconPreferences"
-                    label={_t("Preferences")}
-                    onClick={onPreferencesClick}
-                /> */}
+                {inviteOption}
+                {/*<IconizedContextMenuOption*/}
+                {/*    iconClassName="mx_SpacePanel_iconExplore"*/}
+                {/*    label={canAddRooms ? _t("Manage & explore rooms") : _t("Explore rooms")}*/}
+                {/*    onClick={onExploreRoomsClick}*/}
+                {/*/>*/}
+                {/*<IconizedContextMenuOption*/}
+                {/*    iconClassName="mx_SpacePanel_iconPreferences"*/}
+                {/*    label={_t("Preferences")}*/}
+                {/*    onClick={onPreferencesClick}*/}
+                {/*/>*/}
                 {devtoolsOption}
                 {settingsOption}
                 {leaveOption}

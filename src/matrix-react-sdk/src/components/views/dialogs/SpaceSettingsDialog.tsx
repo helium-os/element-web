@@ -72,7 +72,7 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
                 "mx_RoomSettingsDialog_rolesIcon",
                 <RolesRoomSettingsTab roomId={space.roomId} />,
             ),
-            SettingsStore.getValue(UIFeature.AdvancedSettings)
+            SettingsStore.getValue(UIFeature.SpaceAdvancedSettings)
                 ? new Tab(
                       SpaceSettingsTab.Advanced,
                       _td("Advanced"),

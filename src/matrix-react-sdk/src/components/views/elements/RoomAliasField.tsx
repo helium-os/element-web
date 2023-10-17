@@ -20,6 +20,8 @@ import { _t } from "../../../languageHandler";
 import withValidation, { IFieldState, IValidationResult } from "./Validation";
 import Field, { IValidateOpts } from "./Field";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
+import Host from "matrix-react-sdk/src/utils/Host";
+import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 
 interface IProps {
     domain?: string;
@@ -68,7 +70,14 @@ export default class RoomAliasField extends React.PureComponent<IProps, IState> 
     } {
         const { domain } = this.props;
         const prefix = <span>#</span>;
-        const postfix = domain ? <span title={`:${domain}`}>{`:${domain}`}</span> : <span />;
+        let postfix;
+        if (domain) {
+            const orgId = Host.instance().getOrgIdByHsName(domain);
+            const orgAlias = OrgStore.sharedInstance().getOrgAliasById(orgId);
+            postfix = <span title={orgAlias}>{orgAlias}</span>;
+        } else {
+            postfix = <span />;
+        }
         const maxlength = domain ? 255 - domain.length - 2 : 255 - 1; // 2 for # and :
         const value = domain
             ? this.props.value.substring(1, this.props.value.length - domain.length - 1)

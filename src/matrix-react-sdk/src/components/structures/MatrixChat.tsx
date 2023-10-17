@@ -147,8 +147,9 @@ import { OwnProfileStore } from "../../stores/OwnProfileStore";
 
 import SDK from "heliumos-js-sdk";
 import * as languageHandler from "../../../src/languageHandler";
-import { appEventKeyMap } from "../../../../vector/appConfig";
+import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -438,6 +439,9 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
         SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
+        getUserRoles().then((res) => {
+            UserStore.instance().setUserRoles(res);
+        });
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {

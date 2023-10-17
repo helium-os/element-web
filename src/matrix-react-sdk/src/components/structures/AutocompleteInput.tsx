@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, ReactNode, ChangeEvent, KeyboardEvent, useRef, ReactElement } from "react";
+import React, { useState, useEffect, ReactNode, ChangeEvent, KeyboardEvent, useRef, ReactElement } from "react";
 import classNames from "classnames";
 
 import Autocompleter from "../../autocomplete/AutocompleteProvider";
@@ -24,6 +24,7 @@ import AccessibleButton from "../../components/views/elements/AccessibleButton";
 import { Icon as PillRemoveIcon } from "../../../res/img/icon-pill-remove.svg";
 import { Icon as SearchIcon } from "../../../res/img/element-icons/roomlist/search.svg";
 import useFocus from "../../hooks/useFocus";
+import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 
 interface AutocompleteInputProps {
     provider: Autocompleter;
@@ -52,6 +53,25 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     const editorContainerRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<HTMLInputElement>(null);
 
+    useEffect(() => {
+        (async () => {
+            if (!query) return;
+
+            let matches = await provider.getCompletions(
+                query,
+                { start: query.length, end: query.length },
+                true,
+                maxSuggestions,
+            );
+
+            if (additionalFilter) {
+                matches = matches.filter(additionalFilter);
+            }
+
+            setSuggestions(matches);
+        })();
+    }, [query, maxSuggestions, additionalFilter]);
+
     const focusEditor = (): void => {
         editorRef?.current?.focus();
     };
@@ -59,19 +79,6 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     const onQueryChange = async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
         const value = e.target.value.trim();
         setQuery(value);
-
-        let matches = await provider.getCompletions(
-            query,
-            { start: query.length, end: query.length },
-            true,
-            maxSuggestions,
-        );
-
-        if (additionalFilter) {
-            matches = matches.filter(additionalFilter);
-        }
-
-        setSuggestions(matches);
     };
 
     const onClickInputArea = (): void => {
@@ -118,7 +125,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             <div
                 ref={editorContainerRef}
                 className={classNames({
-                    "mx_AutocompleteInput_editor": true,
+                    mx_AutocompleteInput_editor: true,
                     "mx_AutocompleteInput_editor--focused": isFocused,
                     "mx_AutocompleteInput_editor--has-suggestions": suggestions.length > 0,
                 })}
@@ -205,11 +212,20 @@ type SuggestionItemProps = {
 };
 
 const SuggestionItem: React.FC<SuggestionItemProps> = ({ item, selection, onClick, render }) => {
+    const [orgName, setOrgName] = useState<string>("");
     const isSelected = selection.some((selection) => selection.completionId === item.completionId);
     const classes = classNames({
-        "mx_AutocompleteInput_suggestion": true,
+        mx_AutocompleteInput_suggestion: true,
         "mx_AutocompleteInput_suggestion--selected": isSelected,
     });
+
+    // 获取用户对应的组织名
+    useEffect(() => {
+        const orgInstance = OrgStore.sharedInstance();
+        const orgId = orgInstance.getUserOrgId(item.completionId);
+        const orgName = orgInstance.getOrgNameById(orgId);
+        setOrgName(orgName);
+    }, [item.completionId]);
 
     const withContainer = (children: ReactNode): ReactElement => (
         <div
@@ -232,7 +248,7 @@ const SuggestionItem: React.FC<SuggestionItemProps> = ({ item, selection, onClic
     return withContainer(
         <>
             <span className="mx_AutocompleteInput_suggestion_title">{item.completion}</span>
-            <span className="mx_AutocompleteInput_suggestion_description">{item.completionId}</span>
+            <span className="mx_AutocompleteInput_suggestion_description">{orgName}</span>
         </>,
     );
 };

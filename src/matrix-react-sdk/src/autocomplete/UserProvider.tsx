@@ -102,14 +102,14 @@ export default class UserProvider extends AutocompleteProvider {
         this.users = null;
     };
 
-    private getAllUser = (query: string): [RoomMember] | [] => {
-        if(query === '@') {
+    private getAllMemberUser = (query: string): [RoomMember] | [] => {
+        if (query === "@") {
             const allMember = AllMember.instance().getAllMember(this.room.roomId);
             return [allMember];
         }
 
         return [];
-    }
+    };
 
     public async getCompletions(
         rawQuery: string,
@@ -127,7 +127,7 @@ export default class UserProvider extends AutocompleteProvider {
         if (fullMatch) {
             // Don't include the '@' in our search query - it's only used as a way to trigger completion
             const query = fullMatch;
-            return [...this.getAllUser(query), ...this.matcher.match(query, limit)].map((user) => {
+            return [...this.getAllMemberUser(query), ...this.matcher.match(query, limit)].map((user) => {
                 const description = UserIdentifierCustomisations.getDisplayUserIdentifier?.(user.userId, {
                     roomId: this.room.roomId,
                     withDisplayName: true,
@@ -142,7 +142,7 @@ export default class UserProvider extends AutocompleteProvider {
                     type: "user",
                     // suffix: selection.beginning && range!.start === 0 ? ": " : " ",
                     suffix: " ",
-                    ...(!isAllMember ? { href: makeUserPermalink(user.userId) } : { }),
+                    ...(!isAllMember ? { href: makeUserPermalink(user.userId) } : {}),
                     component: (
                         <PillCompletion title={displayName} description={description}>
                             <MemberAvatar member={user} width={24} height={24} />

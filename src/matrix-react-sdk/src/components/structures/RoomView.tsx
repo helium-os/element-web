@@ -432,7 +432,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             narrow: false,
             visibleDecryptionFailures: [],
             msc3946ProcessDynamicPredecessor: SettingsStore.getValue("feature_dynamic_room_predecessors"),
-            isAdminLeft: false
+            isAdminLeft: false,
         };
 
         this.dispatcherRef = dis.register(this.onAction);
@@ -1478,7 +1478,9 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             const me = this.context.client.getSafeUserId();
             const isAdminLeft = room.isAdminLeft();
             const canReact =
-                room.getMyMembership() === "join" && room.currentState.maySendEvent(EventType.Reaction, me) && !isAdminLeft;
+                room.getMyMembership() === "join" &&
+                room.currentState.maySendEvent(EventType.Reaction, me) &&
+                !isAdminLeft;
             const canSendMessages = room.maySendMessage() && !isAdminLeft;
             const canSelfRedact = room.currentState.maySendEvent(EventType.RoomRedaction, me);
 
@@ -1503,7 +1505,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
     private updateAdminLeft(room: Room): void {
         this.setState({
-            isAdminLeft: room.isAdminLeft()
+            isAdminLeft: room.isAdminLeft(),
         });
     }
 
@@ -2192,7 +2194,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                     roomId={this.state.roomId}
                 />
             );
-            if (!this.state.canPeek && !this.state.room?.isSpaceRoom()) {
+            if (!this.state.peekLoading && !this.state.canPeek && !this.state.room?.isSpaceRoom()) {
                 // return <div className="mx_RoomView">{previewBar}</div>;
                 dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
                 return null;
