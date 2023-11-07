@@ -1,5 +1,12 @@
 import { PowerStatus } from "matrix-react-sdk/src/components/views/rooms/EntityTile";
 import { RoomType } from "../vector/rewrite-js-sdk/room";
+import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
+
+declare module "matrix-js-sdk/src/client" {
+    interface MatrixClient {
+        setRoomOnlyTags(roomId: string, tags: any): Promise<ISendEventResponse>;
+    }
+}
 
 declare module "matrix-js-sdk/src/models/room-state" {
     interface RoomState {
@@ -15,6 +22,9 @@ declare module "matrix-js-sdk/src/models/room" {
         getRoomTypeLabel(): string;
         getMemberName(userId: string): string;
         getMemberEmail(userId: string): string;
+        getRoomTags(): Record<string, Record<string, any>>;
+        getUserTags(): Record<string, Record<string, any>>;
+        getAllTags(): Record<string, Record<string, any>>;
     }
 }
 

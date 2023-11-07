@@ -46,7 +46,7 @@ import SearchBox from "./SearchBox";
 import RoomAvatar from "../views/avatars/RoomAvatar";
 import StyledCheckbox from "../views/elements/StyledCheckbox";
 import BaseAvatar from "../views/avatars/BaseAvatar";
-import {getHttpUrlFromMxc} from "../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../customisations/Media";
 import InfoTooltip from "../views/elements/InfoTooltip";
 import TextWithTooltip from "../views/elements/TextWithTooltip";
 import { useStateToggle } from "../../hooks/useStateToggle";
@@ -57,6 +57,7 @@ import { useDispatcher } from "../../hooks/useDispatcher";
 import { Action } from "../../dispatcher/actions";
 import { IState, RovingTabIndexProvider, useRovingTabIndex } from "../../accessibility/RovingTabIndex";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
+import { SDKContext, SdkContext, SdkContextClass } from "../../contexts/SDKContext";
 import { useTypedEventEmitterState } from "../../hooks/useEventEmitter";
 import { IOOBData } from "../../stores/ThreepidInviteStore";
 import { awaitRoomDownSync } from "../../utils/RoomUpgrade";
@@ -66,9 +67,9 @@ import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { Alignment } from "../views/elements/Tooltip";
 import { getTopic } from "../../hooks/room/useTopic";
-import { SdkContextClass } from "../../contexts/SDKContext";
 import { getDisplayAliasForAliasSet } from "../../Rooms";
 import SettingsStore from "../../settings/SettingsStore";
+import { UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
 
 interface IProps {
     space: Room;
@@ -570,6 +571,8 @@ export const useRoomHierarchy = (
     const resetHierarchy = useCallback(() => {
         setError(undefined);
         const hierarchy = new RoomHierarchy(space, INITIAL_PAGE_SIZE);
+
+        console.log("hierarchy load3");
         hierarchy.load().then(() => {
             if (space !== hierarchy.root) return; // discard stale results
             setRooms(hierarchy.rooms ?? []);
@@ -588,6 +591,8 @@ export const useRoomHierarchy = (
     const loadMore = useCallback(
         async (pageSize?: number): Promise<void> => {
             if (!hierarchy || hierarchy.loading || !hierarchy.canLoadMore || hierarchy.noSupport || error) return;
+
+            console.log("hierarchy load2");
             await hierarchy.load(pageSize).catch(setError);
             setRooms(hierarchy.rooms ?? []);
         },
@@ -754,6 +759,18 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
 
     const { loading, rooms, hierarchy, loadMore, error: hierarchyError } = useRoomHierarchy(space);
 
+    const [spaceTags, setSpaceTags] = useState({});
+
+    useEffect(() => {
+        const updateSpaceTags = (tags) => {
+            setSpaceTags(tags);
+        };
+        SdkContextClass.instance.spaceStore.on(UPDATE_SPACE_TAGS, updateSpaceTags);
+        return () => {
+            SdkContextClass.instance.spaceStore.off(UPDATE_SPACE_TAGS, updateSpaceTags);
+        };
+    }, []);
+
     const filteredRoomSet = useMemo<Set<IHierarchyRoom>>(() => {
         if (!rooms?.length || !hierarchy) return new Set();
         const lcQuery = query.toLowerCase().trim();
@@ -904,6 +921,14 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
                             onKeyDown={onKeyDownHandler}
                         />
 
+                        <h3>分组列表</h3>
+                        <ul>
+                            {Object.entries(spaceTags).map(([key, value]) => (
+                                <li key={key}>
+                                    <p>{value.tagName}</p>
+                                </li>
+                            ))}
+                        </ul>
                         {content}
                     </>
                 );

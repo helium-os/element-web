@@ -15,27 +15,27 @@ limitations under the License.
 */
 
 export enum DefaultTagID {
-    Invite = "im.vector.fake.invite",
+    Invite = "im.vector.fake.invite", // 邀请
     Untagged = "im.vector.fake.recent", // legacy: used to just be 'recent rooms' but now it's all untagged rooms
-    Archived = "im.vector.fake.archived",
-    LowPriority = "m.lowpriority",
-    Favourite = "m.favourite",
-    DM = "im.vector.fake.direct",
-    ServerNotice = "m.server_notice",
-    Suggested = "im.vector.fake.suggested",
-    SavedItems = "im.vector.fake.saved_items",
+    Archived = "im.vector.fake.archived", // 历史房间（已离开的房间）
+    LowPriority = "m.lowpriority", // 低优先级
+    Favourite = "m.favourite", // 收藏夹
+    DM = "im.vector.fake.direct", // 私聊
+    ServerNotice = "m.server_notice", // 系统警告
+    Suggested = "im.vector.fake.suggested", // 建议的频道
+    SavedItems = "im.vector.fake.saved_items", // 已保存
 }
 
 export const OrderedDefaultTagIDs = [
+    DefaultTagID.Untagged,
     DefaultTagID.Invite,
     DefaultTagID.Favourite,
     DefaultTagID.SavedItems,
     DefaultTagID.DM,
-    DefaultTagID.Untagged,
     DefaultTagID.LowPriority,
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
-    DefaultTagID.Archived,
+    // DefaultTagID.Archived
 ];
 
 export type TagID = string | DefaultTagID;

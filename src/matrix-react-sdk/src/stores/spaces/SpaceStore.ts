@@ -32,7 +32,7 @@ import DMRoomMap from "../../utils/DMRoomMap";
 import { FetchRoomFn } from "../notifications/ListNotificationState";
 import { SpaceNotificationState } from "../notifications/SpaceNotificationState";
 import { RoomNotificationStateStore } from "../notifications/RoomNotificationStateStore";
-import { DefaultTagID } from "../room-list/models";
+import { DefaultTagID, OrderedDefaultTagIDs } from "../room-list/models";
 import { EnhancedMap, mapDiff } from "../../utils/maps";
 import { setDiff, setHasDiff } from "../../utils/sets";
 import { Action } from "../../dispatcher/actions";
@@ -48,6 +48,7 @@ import {
     UPDATE_HOME_BEHAVIOUR,
     UPDATE_INVITED_SPACES,
     UPDATE_SELECTED_SPACE,
+    UPDATE_SPACE_TAGS,
     UPDATE_SUGGESTED_ROOMS,
     UPDATE_TOP_LEVEL_SPACES,
 } from ".";
@@ -151,6 +152,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     /** Whether the feature flag is set for MSC3946 */
     private _msc3946ProcessDynamicPredecessor: boolean = SettingsStore.getValue("feature_dynamic_room_predecessors");
 
+    private _spaceTags = {}; // 组织（tag）列表
+
     public constructor() {
         super(defaultDispatcher, {});
 
@@ -189,6 +192,19 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         return this._allRoomsInHome;
     }
 
+    public get spaceTags(): any {
+        return this._spaceTags;
+    }
+
+    public setSpaceTags(tags) {
+        this._spaceTags = tags;
+        this.emit(UPDATE_SPACE_TAGS, this._spaceTags);
+    }
+
+    public async sendSpaceTags(tags) {
+        return this.matrixClient?.setRoomOnlyTags(this.activeSpace, tags);
+    }
+
     public setActiveRoomInSpace(space: SpaceKey): void {
         if (!isMetaSpace(space) && !this.matrixClient?.getRoom(space)?.isSpaceRoom()) return;
         if (space !== this.activeSpace) this.setActiveSpace(space, false);
@@ -202,6 +218,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                 metricsTrigger: "WebSpacePanelNotificationBadge",
             });
         } else {
+            console.log("dyptest getOrderedLists5");
             const lists = RoomListStore.instance.orderedLists;
             for (let i = 0; i < TAG_ORDER.length; i++) {
                 const t = TAG_ORDER[i];
@@ -283,6 +300,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.emit(UPDATE_SUGGESTED_ROOMS, (this._suggestedRooms = []));
 
         if (cliSpace) {
+            console.log("loadSuggestedRooms2");
             this.loadSuggestedRooms(cliSpace);
 
             // Load all members for the selected space and its subspaces,
@@ -306,8 +324,9 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     }
 
     public fetchSuggestedRooms = async (space: Room, limit = MAX_SUGGESTED_ROOMS): Promise<ISuggestedRoom[]> => {
+        console.log("fetchSuggestedRooms");
         try {
-            const { rooms } = await this.matrixClient.getRoomHierarchy(space.roomId, limit, 1, true);
+            const { rooms } = await this.matrixClient.getRoomHierarchy(space.roomId, limit, 1, false);
 
             const viaMap = new EnhancedMap<string, Set<string>>();
             rooms.forEach((room) => {
@@ -996,6 +1015,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                     target?.getMyMembership() !== "join" && // target not joined
                     ev.getPrevContent().suggested !== ev.getContent().suggested // suggested flag changed
                 ) {
+                    console.log("loadSuggestedRooms1");
                     this.loadSuggestedRooms(room);
                 }
 

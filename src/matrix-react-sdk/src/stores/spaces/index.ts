@@ -26,6 +26,8 @@ export const UPDATE_INVITED_SPACES = Symbol("invited-spaces");
 export const UPDATE_SELECTED_SPACE = Symbol("selected-space");
 export const UPDATE_HOME_BEHAVIOUR = Symbol("home-behaviour");
 export const UPDATE_SUGGESTED_ROOMS = Symbol("suggested-rooms");
+
+export const UPDATE_SPACE_TAGS = Symbol("space-tags");
 // Space Key will be emitted when a Space's children change
 
 export enum MetaSpace {

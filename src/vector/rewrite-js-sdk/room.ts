@@ -2,6 +2,8 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import DMRoomMap from "../../matrix-react-sdk/src/utils/DMRoomMap";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 export enum RoomType {
     people = "people", // 私聊
@@ -56,4 +58,23 @@ Room.prototype.getMemberEmail = function (userId: string): string {
     const orgId = OrgStore.sharedInstance().getUserOrgId(userId);
     const orgAlias = OrgStore.sharedInstance().getOrgAliasById(orgId);
     return `${name}@${orgAlias}`;
+};
+
+// 获取只打在room上的tag
+Room.prototype.getRoomTags = function (): Record<string, Record<string, any>> {
+    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent().tags;
+};
+
+// 获取当前用户打在room上的tag（获取打在user + room上的tag）
+Room.prototype.getUserTags = function (): Record<string, Record<string, any>> {
+    return this.tags;
+};
+
+// 获取当前room的所有tag
+Room.prototype.getAllTags = function (): Record<string, Record<string, any>> {
+    const tags = this.getRoomTags();
+    return {
+        ...this.getUserTags(), // 打在user + room上的tag
+        ...tags, // 只打在room上的tag
+    };
 };

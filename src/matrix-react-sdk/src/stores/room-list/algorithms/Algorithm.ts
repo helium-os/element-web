@@ -35,6 +35,7 @@ import { OrderingAlgorithm } from "./list-ordering/OrderingAlgorithm";
 import { getListAlgorithmInstance } from "./list-ordering";
 import { VisibilityProvider } from "../filters/VisibilityProvider";
 import { CallStore, CallStoreEvent } from "../../CallStore";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 /**
  * Fired when the Algorithm has determined a list has been updated.
@@ -99,6 +100,7 @@ export class Algorithm extends EventEmitter {
     }
 
     protected set cachedRooms(val: ITagMap) {
+        console.log("修改_cachedRooms 6");
         this._cachedRooms = val;
         this.recalculateStickyRoom();
         this.recalculateActiveCallRooms();
@@ -138,6 +140,8 @@ export class Algorithm extends EventEmitter {
 
         const algorithm: OrderingAlgorithm = this.algorithms[tagId];
         algorithm.setSortAlgorithm(sort);
+
+        console.log("修改_cachedRooms 5");
         this._cachedRooms[tagId] = algorithm.orderedRooms;
         this.recalculateStickyRoom(tagId); // update sticky room to make sure it appears if needed
         this.recalculateActiveCallRooms(tagId);
@@ -160,6 +164,8 @@ export class Algorithm extends EventEmitter {
         this.algorithms[tagId] = algorithm;
 
         algorithm.setRooms(this._cachedRooms[tagId]);
+
+        console.log("修改_cachedRooms 4");
         this._cachedRooms[tagId] = algorithm.orderedRooms;
         this.recalculateStickyRoom(tagId); // update sticky room to make sure it appears if needed
         this.recalculateActiveCallRooms(tagId);
@@ -336,7 +342,7 @@ export class Algorithm extends EventEmitter {
 
         if (!this._stickyRoom) {
             // If there's no sticky room, just do nothing useful.
-            if (!!this._cachedStickyRooms) {
+            if (this._cachedStickyRooms) {
                 // Clear the cache if we won't be needing it
                 this._cachedStickyRooms = null;
                 if (this.updatesInhibited) return;
@@ -420,6 +426,7 @@ export class Algorithm extends EventEmitter {
      * @param {IListOrderingMap} listOrderingMap The ordering of those tags.
      */
     public populateTags(tagSortingMap: ITagSortingMap, listOrderingMap: IListOrderingMap): void {
+        console.log("dyptest populateTags", "this.rooms", this.rooms);
         if (!tagSortingMap) throw new Error(`Sorting map cannot be null or empty`);
         if (!listOrderingMap) throw new Error(`Ordering ma cannot be null or empty`);
         if (arrayHasDiff(Object.keys(tagSortingMap), Object.keys(listOrderingMap))) {
@@ -431,6 +438,7 @@ export class Algorithm extends EventEmitter {
         for (const tag of Object.keys(tagSortingMap)) {
             this.algorithms[tag] = getListAlgorithmInstance(this.listAlgorithms[tag], tag, this.sortAlgorithms[tag]);
         }
+        console.log("dyptest setKnownRooms2");
         return this.setKnownRooms(this.rooms);
     }
 
@@ -440,6 +448,14 @@ export class Algorithm extends EventEmitter {
      * for each tag. May be empty, but never null/undefined.
      */
     public getOrderedRooms(): ITagMap {
+        console.log(
+            "dyptest",
+            "getOrderedRooms",
+            "this._cachedStickyRooms",
+            this._cachedStickyRooms,
+            "this.cachedRooms",
+            { ...this.cachedRooms },
+        );
         return this._cachedStickyRooms || this.cachedRooms;
     }
 
@@ -460,6 +476,7 @@ export class Algorithm extends EventEmitter {
      * @param {Room[]} rooms The rooms to force the algorithm to use.
      */
     public setKnownRooms(rooms: Room[]): void {
+        console.log("dyptest setKnownRooms", "rooms", rooms);
         if (isNullOrUndefined(rooms)) throw new Error(`Array of rooms cannot be null`);
         if (!this.sortAlgorithms) throw new Error(`Cannot set known rooms without a tag sorting map`);
 
@@ -478,14 +495,17 @@ export class Algorithm extends EventEmitter {
         this.rooms = rooms;
 
         const newTags: ITagMap = {};
+        console.log("this.sortAlgorithms", this.sortAlgorithms);
         for (const tagId in this.sortAlgorithms) {
             // noinspection JSUnfilteredForInLoop
             newTags[tagId] = [];
         }
+        console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@dyptest setKnownRooms", "newTags1", { ...newTags });
 
         // If we can avoid doing work, do so.
         if (!rooms.length) {
             this.generateFreshTags(newTags); // just in case it wants to do something
+            console.log("设置cachedRooms 1", { ...newTags });
             this.cachedRooms = newTags;
             return;
         }
@@ -525,7 +545,9 @@ export class Algorithm extends EventEmitter {
 
         this.generateFreshTags(newTags);
 
+        console.log("#################################dyptest setKnownRooms", "final newTags", { ...newTags });
         this.cachedRooms = newTags; // this recalculates the filtered rooms for us
+        console.log("dyptest setKnownRooms", "set cachedRooms", { ...newTags });
         this.updateTagsFromCache();
 
         // Now that we've finished generation, we need to update the sticky room to what
@@ -562,7 +584,9 @@ export class Algorithm extends EventEmitter {
     }
 
     private getTagsOfJoinedRoom(room: Room): TagID[] {
-        let tags = Object.keys(room.tags || {});
+        const roomTags = room.getRoomTags();
+        console.log("getTagsOfJoinedRoom room", room, "roomTags", roomTags);
+        let tags = Object.keys({ ...room.tags, ...roomTags });
 
         if (tags.length === 0) {
             // Check to see if it's a DM if it isn't anything else
@@ -622,6 +646,7 @@ export class Algorithm extends EventEmitter {
      * should be called after processing.
      */
     public handleRoomUpdate(room: Room, cause: RoomUpdateCause): boolean {
+        console.log("onDispatchAsync handleRoomUpdate ", "room", room);
         if (!this.algorithms) throw new Error("Not ready: no algorithms to determine tags from");
 
         // Note: check the isSticky against the room ID just in case the reference is wrong
@@ -675,12 +700,23 @@ export class Algorithm extends EventEmitter {
         if (cause === RoomUpdateCause.PossibleTagChange) {
             const oldTags = this.roomIdsToTags[room.roomId] || [];
             const newTags = this.getTagsForRoom(room);
+            console.log(
+                "onDispatchAsync handleRoomUpdate RoomUpdateCause.PossibleTagChange",
+                "oldTags",
+                oldTags,
+                "newTags",
+                newTags,
+                "this.algorithms",
+                this.algorithms,
+            );
             const diff = arrayDiff(oldTags, newTags);
             if (diff.removed.length > 0 || diff.added.length > 0) {
                 for (const rmTag of diff.removed) {
                     const algorithm: OrderingAlgorithm = this.algorithms[rmTag];
                     if (!algorithm) throw new Error(`No algorithm for ${rmTag}`);
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.RoomRemoved);
+
+                    console.log("修改_cachedRooms 2");
                     this._cachedRooms[rmTag] = algorithm.orderedRooms;
                     this.recalculateStickyRoom(rmTag); // update sticky room to make sure it moves if needed
                     this.recalculateActiveCallRooms(rmTag);
@@ -688,7 +724,10 @@ export class Algorithm extends EventEmitter {
                 for (const addTag of diff.added) {
                     const algorithm: OrderingAlgorithm = this.algorithms[addTag];
                     if (!algorithm) throw new Error(`No algorithm for ${addTag}`);
+                    console.log("RoomEvent.Tags handleRoomUpdate1", algorithm.handleRoomUpdate);
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.NewRoom);
+
+                    console.log("修改_cachedRooms 3");
                     this._cachedRooms[addTag] = algorithm.orderedRooms;
                 }
 
@@ -754,7 +793,9 @@ export class Algorithm extends EventEmitter {
             const algorithm: OrderingAlgorithm = this.algorithms[tag];
             if (!algorithm) throw new Error(`No algorithm for ${tag}`);
 
+            console.log("RoomEvent.Tags handleRoomUpdate2", algorithm.handleRoomUpdate);
             algorithm.handleRoomUpdate(room, cause);
+            console.log("修改_cachedRooms 1");
             this._cachedRooms[tag] = algorithm.orderedRooms;
 
             // Flag that we've done something

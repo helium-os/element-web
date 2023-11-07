@@ -35,7 +35,7 @@ import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { UIComponent } from "../../../settings/UIFeature";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ITagMap } from "../../../stores/room-list/algorithms/models";
-import { DefaultTagID, TagID } from "../../../stores/room-list/models";
+import { DefaultTagID, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
 import { UPDATE_EVENT } from "../../../stores/AsyncStore";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "../../../stores/room-list/RoomListStore";
 import {
@@ -44,6 +44,7 @@ import {
     MetaSpace,
     SpaceKey,
     UPDATE_SELECTED_SPACE,
+    UPDATE_SPACE_TAGS,
     UPDATE_SUGGESTED_ROOMS,
 } from "../../../stores/spaces";
 import SpaceStore from "../../../stores/spaces/SpaceStore";
@@ -79,19 +80,11 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
+    spaceTags: any;
+    spaceTagAesthetics: TagAestheticsMap;
+    alwaysVisibleTags: string[];
 }
 
-export const TAG_ORDER: TagID[] = [
-    DefaultTagID.Invite,
-    DefaultTagID.SavedItems,
-    DefaultTagID.Favourite,
-    DefaultTagID.DM,
-    DefaultTagID.Untagged,
-    DefaultTagID.LowPriority,
-    DefaultTagID.ServerNotice,
-    DefaultTagID.Suggested,
-    // DefaultTagID.Archived,
-];
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
 
 interface ITagAesthetics {
@@ -391,59 +384,6 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
     return null;
 };
 
-const TAG_AESTHETICS: TagAestheticsMap = {
-    [DefaultTagID.Invite]: {
-        sectionLabel: _td("Invites"),
-        isInvite: true,
-        defaultHidden: false,
-    },
-    [DefaultTagID.Favourite]: {
-        sectionLabel: _td("Favourites"),
-        isInvite: false,
-        defaultHidden: false,
-    },
-    [DefaultTagID.SavedItems]: {
-        sectionLabel: _td("Saved Items"),
-        isInvite: false,
-        defaultHidden: false,
-    },
-    [DefaultTagID.DM]: {
-        sectionLabel: _td("People"),
-        isInvite: false,
-        defaultHidden: false,
-        AuxButtonComponent: DmAuxButton,
-    },
-    [DefaultTagID.Untagged]: {
-        sectionLabel: _td("Rooms"),
-        isInvite: false,
-        defaultHidden: false,
-        AuxButtonComponent: UntaggedAuxButton,
-    },
-    [DefaultTagID.LowPriority]: {
-        sectionLabel: _td("Low priority"),
-        isInvite: false,
-        defaultHidden: false,
-    },
-    [DefaultTagID.ServerNotice]: {
-        sectionLabel: _td("System Alerts"),
-        isInvite: false,
-        defaultHidden: false,
-    },
-
-    // TODO: Replace with archived view: https://github.com/vector-im/element-web/issues/14038
-    [DefaultTagID.Archived]: {
-        sectionLabel: _td("Historical"),
-        isInvite: false,
-        defaultHidden: true,
-    },
-
-    [DefaultTagID.Suggested]: {
-        sectionLabel: _td("Suggested Rooms"),
-        isInvite: false,
-        defaultHidden: false,
-    },
-};
-
 export default class RoomList extends React.PureComponent<IProps, IState> {
     private dispatcherRef?: string;
     private treeRef = createRef<HTMLDivElement>();
@@ -452,6 +392,59 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     public static contextType = MatrixClientContext;
     public context!: React.ContextType<typeof MatrixClientContext>;
 
+    public TAG_AESTHETICS: TagAestheticsMap = {
+        [DefaultTagID.Invite]: {
+            sectionLabel: _t("Invites"),
+            isInvite: true,
+            defaultHidden: false,
+        },
+        [DefaultTagID.Favourite]: {
+            sectionLabel: _t("Favourites"),
+            isInvite: false,
+            defaultHidden: false,
+        },
+        [DefaultTagID.SavedItems]: {
+            sectionLabel: _t("Saved Items"),
+            isInvite: false,
+            defaultHidden: false,
+        },
+        [DefaultTagID.DM]: {
+            sectionLabel: _t("People"),
+            isInvite: false,
+            defaultHidden: false,
+            AuxButtonComponent: DmAuxButton,
+        },
+        [DefaultTagID.Untagged]: {
+            sectionLabel: _t("Rooms"),
+            isInvite: false,
+            defaultHidden: false,
+            AuxButtonComponent: UntaggedAuxButton,
+        },
+        [DefaultTagID.LowPriority]: {
+            sectionLabel: _t("Low priority"),
+            isInvite: false,
+            defaultHidden: false,
+        },
+        [DefaultTagID.ServerNotice]: {
+            sectionLabel: _t("System Alerts"),
+            isInvite: false,
+            defaultHidden: false,
+        },
+
+        // TODO: Replace with archived view: https://github.com/vector-im/element-web/issues/14038
+        [DefaultTagID.Archived]: {
+            sectionLabel: _t("Historical"),
+            isInvite: false,
+            defaultHidden: true,
+        },
+
+        [DefaultTagID.Suggested]: {
+            sectionLabel: _t("Suggested Rooms"),
+            isInvite: false,
+            defaultHidden: false,
+        },
+    };
+
     public constructor(props: IProps) {
         super(props);
 
@@ -459,6 +452,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             sublists: {},
             suggestedRooms: SpaceStore.instance.suggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
+            spaceTags: {},
+            spaceTagAesthetics: {},
+            alwaysVisibleTags: [...ALWAYS_VISIBLE_TAGS],
         };
     }
 
@@ -475,6 +471,15 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             },
         );
         this.updateLists(); // trigger the first update
+
+        SdkContextClass.instance.spaceStore.on(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
+        this.refreshSpaceTagsInfo();
+    }
+
+    public componentDidUpdate(prevProps, prevState): void {
+        if (this.state.spaceTags !== prevState.spaceTags) {
+            this.refreshSpaceTagsInfo();
+        }
     }
 
     public componentWillUnmount(): void {
@@ -483,7 +488,32 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         SettingsStore.unwatchSetting(this.favouriteMessageWatcher);
         if (this.dispatcherRef) defaultDispatcher.unregister(this.dispatcherRef);
         SdkContextClass.instance.roomViewStore.off(UPDATE_EVENT, this.onRoomViewStoreUpdate);
+
+        SdkContextClass.instance.spaceStore.off(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
     }
+
+    private onSpaceTagsUpdate = (spaceTags) => {
+        this.setState({
+            spaceTags,
+        });
+    };
+
+    private refreshSpaceTagsInfo = (spaceTags = this.state.spaceTags) => {
+        const spaceTagAesthetics = {};
+
+        for (const [key, value] of Object.entries(spaceTags)) {
+            spaceTagAesthetics[key] = {
+                sectionLabel: value.tagName,
+                isInvite: false,
+                defaultHidden: false,
+            };
+        }
+
+        this.setState({
+            spaceTagAesthetics,
+            alwaysVisibleTags: [...ALWAYS_VISIBLE_TAGS, ...Object.keys(spaceTags)],
+        });
+    };
 
     private onRoomViewStoreUpdate = (): void => {
         this.setState({
@@ -513,7 +543,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     private getRoomDelta = (roomId: string, delta: number, unread = false): Room => {
         const lists = RoomListStore.instance.orderedLists;
         const rooms: Room[] = [];
-        TAG_ORDER.forEach((t) => {
+        [...OrderedDefaultTagIDs].forEach((t) => {
             let listRooms = lists[t];
 
             if (unread) {
@@ -538,7 +568,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     };
 
     private updateLists = (): void => {
+        console.log("dyptest getOrderedLists11");
         const newLists = RoomListStore.instance.orderedLists;
+        console.log("updateLists newLists", newLists);
         const previousListIds = Object.keys(this.state.sublists);
         const newListIds = Object.keys(newLists);
 
@@ -640,7 +672,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             !this.state.suggestedRooms?.length &&
             Object.values(RoomListStore.instance.orderedLists).every((list) => !list?.length);
 
-        return TAG_ORDER.map((orderedTagId) => {
+        return [...OrderedDefaultTagIDs, ...Object.keys(this.state.spaceTags)].map((orderedTagId) => {
             let extraTiles: ReactComponentElement<typeof ExtraTile>[] | undefined;
             if (orderedTagId === DefaultTagID.Suggested) {
                 extraTiles = this.renderSuggestedRooms();
@@ -648,10 +680,11 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                 extraTiles = this.renderFavoriteMessagesList();
             }
 
-            const aesthetics = TAG_AESTHETICS[orderedTagId];
+            const aesthetics = { ...this.TAG_AESTHETICS, ...this.state.spaceTagAesthetics }[orderedTagId];
+            if (!aesthetics) return;
             if (!aesthetics) throw new Error(`Tag ${orderedTagId} does not have aesthetics`);
 
-            let alwaysVisible = ALWAYS_VISIBLE_TAGS.includes(orderedTagId);
+            let alwaysVisible = this.state.alwaysVisibleTags.includes(orderedTagId);
             if (
                 (this.props.activeSpace === MetaSpace.Favourites && orderedTagId !== DefaultTagID.Favourite) ||
                 (this.props.activeSpace === MetaSpace.People && orderedTagId !== DefaultTagID.DM) ||
@@ -678,7 +711,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                     tagId={orderedTagId}
                     forRooms={true}
                     startAsHidden={aesthetics.defaultHidden}
-                    label={aesthetics.sectionLabelRaw ? aesthetics.sectionLabelRaw : _t(aesthetics.sectionLabel)}
+                    label={aesthetics.sectionLabelRaw || aesthetics.sectionLabel}
                     AuxButtonComponent={aesthetics.AuxButtonComponent}
                     isMinimized={this.props.isMinimized}
                     showSkeleton={showSkeleton}
