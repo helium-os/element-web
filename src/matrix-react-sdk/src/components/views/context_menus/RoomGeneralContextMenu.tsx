@@ -40,6 +40,7 @@ import IconizedContextMenu, {
 import { ButtonEvent } from "../elements/AccessibleButton";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../../settings/UIFeature";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 export interface RoomGeneralContextMenuProps extends IContextMenuProps {
     room: Room;
@@ -239,6 +240,38 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
                         {inviteOption}
                         {copyLinkOption}
                         {settingsOption}
+
+                        <IconizedContextMenuCheckbox
+                            onClick={() => {
+                                const tagsArrs = [];
+                                const spaceTags = SpaceStore.instance.spaceTags;
+                                for (const [key, value] of Object.entries(spaceTags)) {
+                                    tagsArrs.push({
+                                        key,
+                                        name: value.tagName,
+                                    });
+                                }
+
+                                const randomIndex = Math.round(Math.random() * (tagsArrs.length - 1));
+                                const addTag = tagsArrs[randomIndex];
+
+                                cli.setRoomOnlyTags(room.roomId, {
+                                    [addTag.key]: {},
+                                }).then((res) => {
+                                    alert(`成功添加到${addTag.name}分组`);
+                                });
+                            }}
+                            label={"添加到test tag"}
+                            iconClassName="mx_RoomGeneralContextMenu_iconStar"
+                        />
+
+                        <IconizedContextMenuCheckbox
+                            onClick={() => {
+                                console.log("当前room tag", room.getAllTags());
+                            }}
+                            label={"获取当前room tag"}
+                            iconClassName="mx_RoomGeneralContextMenu_iconStar"
+                        />
                     </>
                 )}
             </IconizedContextMenuOptionList>

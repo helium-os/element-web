@@ -27,18 +27,43 @@ export enum DefaultTagID {
 }
 
 export const OrderedDefaultTagIDs = [
-    DefaultTagID.Untagged,
     DefaultTagID.Invite,
     DefaultTagID.Favourite,
     DefaultTagID.SavedItems,
     DefaultTagID.DM,
+    DefaultTagID.Untagged,
     DefaultTagID.LowPriority,
     DefaultTagID.ServerNotice,
     DefaultTagID.Suggested,
-    // DefaultTagID.Archived
+    DefaultTagID.Archived,
 ];
 
 export type TagID = string | DefaultTagID;
+
+export interface Tag {
+    tagId: TagID;
+    tagName: string;
+    order: number;
+}
+
+export type TagMap = {
+    [tagId in TagID]: Omit<Tag, "tagId">;
+};
+
+export function transformTagsObjToArr(tagsObj: TagMap) {
+    const tagsArr: Tag[] = [];
+    for (const [key, value] of Object.entries(tagsObj)) {
+        tagsArr.push({
+            tagId: key,
+            ...value,
+        });
+    }
+    return tagsArr;
+}
+
+export const tagOrderCompareFn = function (a: Tag, b: Tag) {
+    return a.order - b.order;
+};
 
 export enum RoomUpdateCause {
     Timeline = "TIMELINE",

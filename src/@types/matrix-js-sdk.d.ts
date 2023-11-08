@@ -5,6 +5,7 @@ import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 declare module "matrix-js-sdk/src/client" {
     interface MatrixClient {
         setRoomOnlyTags(roomId: string, tags: any): Promise<ISendEventResponse>;
+        getRoomOnlyTags(roomId: string): Promise<Record<string, any>>;
     }
 }
 

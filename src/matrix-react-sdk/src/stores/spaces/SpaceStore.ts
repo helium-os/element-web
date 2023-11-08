@@ -179,6 +179,10 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         return this._activeSpace;
     }
 
+    public get isHomeSpace(): boolean {
+        return this.activeSpace === MetaSpace.Home;
+    }
+
     public get activeSpaceRoom(): Room | null {
         if (isMetaSpace(this._activeSpace)) return null;
         return this.matrixClient?.getRoom(this._activeSpace);

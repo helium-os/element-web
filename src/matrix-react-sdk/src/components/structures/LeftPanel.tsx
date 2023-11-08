@@ -48,7 +48,6 @@ import PosthogTrackers from "../../PosthogTrackers";
 import PageType from "../../PageTypes";
 import { UserOnboardingButton } from "../views/user-onboarding/UserOnboardingButton";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import { SdkContextClass } from "matrix-react-sdk/src/contexts/SDKContext";
 
 interface IProps {
     isMinimized: boolean;
@@ -120,21 +119,16 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
         }
     }
 
-    // 更新社区分组列表
+    // 切换社区时，更新社区分组列表
     private refreshSpaceTags = (spaceId = this.state.activeSpace) => {
         if (!spaceId || spaceId === MetaSpace.Home) {
             SpaceStore.instance.setSpaceTags({});
             return;
         }
 
-        try {
-            const spaceRoom = MatrixClientPeg.get().getRoom(spaceId);
-            const tags = spaceRoom.getRoomTags();
-            console.log("获取space tag", "spaceRoom", spaceRoom, "tags", tags);
-            SpaceStore.instance.setSpaceTags(tags);
-        } catch (error) {
-            SpaceStore.instance.setSpaceTags({});
-        }
+        const spaceRoom = MatrixClientPeg.get().getRoom(spaceId);
+        const tags = spaceRoom.getRoomTags();
+        SpaceStore.instance.setSpaceTags(tags);
     };
 
     private updateActiveSpace = (activeSpace: SpaceKey): void => {
@@ -393,17 +387,19 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
         );
     }
 
+    // 新增分组
     private async onAddSpaceTag(): Promise<void> {
+        const num = Math.round((Math.random() + 3) * 100);
         const tags = {
             ...SpaceStore.instance.spaceTags,
-            "m.testTag9": {
-                tagName: "测试tag9",
-                order: 9,
+            [`m.testTag${num}`]: {
+                tagName: `测试tag${num}`,
+                order: num,
             },
         };
 
         await SpaceStore.instance.sendSpaceTags(tags);
-        SpaceStore.instance.setSpaceTags(tags);
+        alert(`成功添加分组 - 测试tag${num}`);
     }
 
     public render(): React.ReactNode {
@@ -440,7 +436,7 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
                         selected={this.props.pageType === PageType.HomePage}
                         minimized={this.props.isMinimized}
                     />
-                    <button onClick={() => this.onAddSpaceTag()}>新增分组</button>
+                    {!SpaceStore.instance.isHomeSpace && <button onClick={() => this.onAddSpaceTag()}>新增分组</button>}
                     <div className="mx_LeftPanel_roomListWrapper">
                         <div
                             className={roomListClasses}

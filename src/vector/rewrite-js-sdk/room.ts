@@ -2,7 +2,6 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import DMRoomMap from "../../matrix-react-sdk/src/utils/DMRoomMap";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
-import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 
 export enum RoomType {

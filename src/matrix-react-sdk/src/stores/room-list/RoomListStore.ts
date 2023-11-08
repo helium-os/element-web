@@ -40,6 +40,7 @@ import { RoomListStore as Interface, RoomListStoreEvent } from "./Interface";
 import { SlidingRoomListStoreClass } from "./SlidingRoomListStore";
 import { UPDATE_EVENT } from "../AsyncStore";
 import { SdkContextClass } from "../../contexts/SDKContext";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 interface IState {
     // state is tracked in underlying classes
 }
@@ -216,7 +217,7 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
             }
         } else if (
             payload.action === "MatrixActions.Room.tags" ||
-            (payload.action === "MatrixActions.Room.timeline" && payload.event.getType() === "m.tag")
+            (payload.action === "MatrixActions.Room.timeline" && payload.event.getType() === EventType.Tag)
         ) {
             console.log("MatrixActions.Room.tags", payload);
             await this.handleRoomUpdate(payload.room, RoomUpdateCause.PossibleTagChange);
@@ -356,6 +357,16 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
             // to do the things it needs to do to decide if we should show this room or not, so
             // an even wouldn't et us do that.
             await VisibilityProvider.instance.onNewInvitedRoom(room);
+        }
+
+        // 如果是space tags（社区分组列表）更新，修改store spaceTags，并触发regenerateAllLists方法重新生成algorithms
+        if (
+            cause === RoomUpdateCause.PossibleTagChange &&
+            room.isSpaceRoom() &&
+            room.roomId === SpaceStore.instance.activeSpace
+        ) {
+            SpaceStore.instance.setSpaceTags(room.getRoomTags());
+            return;
         }
 
         if (!VisibilityProvider.instance.isRoomVisible(room)) {

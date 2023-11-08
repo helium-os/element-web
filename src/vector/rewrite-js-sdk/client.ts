@@ -10,3 +10,8 @@ MatrixClient.prototype.setRoomOnlyTags = function (roomId: string, tags: any) {
         tags,
     });
 };
+
+// 获取只打在room上的tag
+MatrixClient.prototype.getRoomOnlyTags = function (roomId: string) {
+    return this.getStateEvent(roomId, EventType.Tag, "");
+};

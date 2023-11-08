@@ -35,7 +35,14 @@ import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { UIComponent } from "../../../settings/UIFeature";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ITagMap } from "../../../stores/room-list/algorithms/models";
-import { DefaultTagID, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
+import {
+    DefaultTagID,
+    OrderedDefaultTagIDs,
+    TagID,
+    TagMap,
+    tagOrderCompareFn,
+    transformTagsObjToArr,
+} from "../../../stores/room-list/models";
 import { UPDATE_EVENT } from "../../../stores/AsyncStore";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "../../../stores/room-list/RoomListStore";
 import {
@@ -80,9 +87,10 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
-    spaceTags: any;
-    spaceTagAesthetics: TagAestheticsMap;
-    alwaysVisibleTags: string[];
+    spaceTags: TagMap;
+    allTagIds: TagID[];
+    tagAesthetics: TagAestheticsMap;
+    alwaysVisibleTags: TagID[];
 }
 
 const ALWAYS_VISIBLE_TAGS: TagID[] = [DefaultTagID.DM, DefaultTagID.Untagged];
@@ -384,15 +392,8 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
     return null;
 };
 
-export default class RoomList extends React.PureComponent<IProps, IState> {
-    private dispatcherRef?: string;
-    private treeRef = createRef<HTMLDivElement>();
-    private favouriteMessageWatcher: string;
-
-    public static contextType = MatrixClientContext;
-    public context!: React.ContextType<typeof MatrixClientContext>;
-
-    public TAG_AESTHETICS: TagAestheticsMap = {
+function generateTagAesthetics(isHomeSpace): TagAestheticsMap {
+    return {
         [DefaultTagID.Invite]: {
             sectionLabel: _t("Invites"),
             isInvite: true,
@@ -415,7 +416,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             AuxButtonComponent: DmAuxButton,
         },
         [DefaultTagID.Untagged]: {
-            sectionLabel: _t("Rooms"),
+            sectionLabel: _t(isHomeSpace ? "Rooms" : "Channel"),
             isInvite: false,
             defaultHidden: false,
             AuxButtonComponent: UntaggedAuxButton,
@@ -444,6 +445,15 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             defaultHidden: false,
         },
     };
+}
+
+export default class RoomList extends React.PureComponent<IProps, IState> {
+    private dispatcherRef?: string;
+    private treeRef = createRef<HTMLDivElement>();
+    private favouriteMessageWatcher: string;
+
+    public static contextType = MatrixClientContext;
+    public context!: React.ContextType<typeof MatrixClientContext>;
 
     public constructor(props: IProps) {
         super(props);
@@ -453,8 +463,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             suggestedRooms: SpaceStore.instance.suggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
             spaceTags: {},
-            spaceTagAesthetics: {},
-            alwaysVisibleTags: [...ALWAYS_VISIBLE_TAGS],
+            allTagIds: [],
+            alwaysVisibleTags: [],
+            tagAesthetics: {},
         };
     }
 
@@ -473,12 +484,12 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         this.updateLists(); // trigger the first update
 
         SdkContextClass.instance.spaceStore.on(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
-        this.refreshSpaceTagsInfo();
+        this.refreshSpaceTagsRelatedInfo();
     }
 
     public componentDidUpdate(prevProps, prevState): void {
         if (this.state.spaceTags !== prevState.spaceTags) {
-            this.refreshSpaceTagsInfo();
+            this.refreshSpaceTagsRelatedInfo();
         }
     }
 
@@ -498,9 +509,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         });
     };
 
-    private refreshSpaceTagsInfo = (spaceTags = this.state.spaceTags) => {
+    // 更新和spaceTags相关的信息
+    private refreshSpaceTagsRelatedInfo = (spaceTags = this.state.spaceTags) => {
         const spaceTagAesthetics = {};
-
         for (const [key, value] of Object.entries(spaceTags)) {
             spaceTagAesthetics[key] = {
                 sectionLabel: value.tagName,
@@ -509,8 +520,21 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             };
         }
 
+        const isHomeSpace = SpaceStore.instance.isHomeSpace;
+
+        // 对userTags进行排序
+        const userTagIds = new Set([...(!isHomeSpace ? [DefaultTagID.Untagged] : []), ...OrderedDefaultTagIDs]);
+        // 对spaceTag进行排序
+        const spaceTagIds = transformTagsObjToArr(spaceTags)
+            .sort(tagOrderCompareFn)
+            .map((item) => item.tagId);
+
         this.setState({
-            spaceTagAesthetics,
+            tagAesthetics: {
+                ...generateTagAesthetics(isHomeSpace),
+                ...spaceTagAesthetics,
+            },
+            allTagIds: [...userTagIds, ...spaceTagIds].filter((item) => item !== DefaultTagID.Archived),
             alwaysVisibleTags: [...ALWAYS_VISIBLE_TAGS, ...Object.keys(spaceTags)],
         });
     };
@@ -543,7 +567,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     private getRoomDelta = (roomId: string, delta: number, unread = false): Room => {
         const lists = RoomListStore.instance.orderedLists;
         const rooms: Room[] = [];
-        [...OrderedDefaultTagIDs].forEach((t) => {
+        this.state.allTagIds.forEach((t) => {
             let listRooms = lists[t];
 
             if (unread) {
@@ -672,7 +696,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             !this.state.suggestedRooms?.length &&
             Object.values(RoomListStore.instance.orderedLists).every((list) => !list?.length);
 
-        return [...OrderedDefaultTagIDs, ...Object.keys(this.state.spaceTags)].map((orderedTagId) => {
+        return this.state.allTagIds.map((orderedTagId) => {
             let extraTiles: ReactComponentElement<typeof ExtraTile>[] | undefined;
             if (orderedTagId === DefaultTagID.Suggested) {
                 extraTiles = this.renderSuggestedRooms();
@@ -680,7 +704,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                 extraTiles = this.renderFavoriteMessagesList();
             }
 
-            const aesthetics = { ...this.TAG_AESTHETICS, ...this.state.spaceTagAesthetics }[orderedTagId];
+            const aesthetics = this.state.tagAesthetics[orderedTagId];
             if (!aesthetics) return;
             if (!aesthetics) throw new Error(`Tag ${orderedTagId} does not have aesthetics`);
 

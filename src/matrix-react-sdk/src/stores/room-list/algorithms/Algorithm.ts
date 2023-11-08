@@ -584,9 +584,9 @@ export class Algorithm extends EventEmitter {
     }
 
     private getTagsOfJoinedRoom(room: Room): TagID[] {
-        const roomTags = room.getRoomTags();
+        const roomTags = room.getAllTags();
         console.log("getTagsOfJoinedRoom room", room, "roomTags", roomTags);
-        let tags = Object.keys({ ...room.tags, ...roomTags });
+        let tags = Object.keys(roomTags);
 
         if (tags.length === 0) {
             // Check to see if it's a DM if it isn't anything else

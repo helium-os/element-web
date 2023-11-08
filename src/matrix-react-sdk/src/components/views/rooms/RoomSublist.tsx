@@ -36,7 +36,7 @@ import { ListNotificationState } from "../../../stores/notifications/ListNotific
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ListAlgorithm, SortAlgorithm } from "../../../stores/room-list/algorithms/models";
 import { ListLayout } from "../../../stores/room-list/ListLayout";
-import { DefaultTagID, TagID } from "../../../stores/room-list/models";
+import { DefaultTagID, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
 import RoomListLayoutStore from "../../../stores/room-list/RoomListLayoutStore";
 import RoomListStore, { LISTS_UPDATE_EVENT, LISTS_LOADING_EVENT } from "../../../stores/room-list/RoomListStore";
 import { arrayFastClone, arrayHasOrderChange } from "../../../utils/arrays";
@@ -55,6 +55,7 @@ import SettingsStore from "../../../settings/SettingsStore";
 import { SlidingSyncManager } from "../../../SlidingSyncManager";
 import NotificationBadge from "./NotificationBadge";
 import RoomTile from "./RoomTile";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -601,6 +602,9 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 >
                     <div className="mx_RoomSublist_contextMenu">
                         <div>
+                            {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
+                                <button onClick={() => this.onRemoveSpaceTag(this.props.tagId)}>删除分组</button>
+                            )}
                             <div className="mx_RoomSublist_contextMenu_title">{_t("Sort by")}</div>
                             <StyledMenuItemRadio
                                 onClose={this.onCloseMenu}
@@ -674,6 +678,8 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     const classes = classNames({
                         mx_RoomSublist_headerContainer: true,
                         mx_RoomSublist_headerContainer_withAux: !!addRoomButton,
+                        mx_RoomSublist_headerContainer_hidden:
+                            !SpaceStore.instance.isHomeSpace && this.props.tagId === DefaultTagID.Untagged,
                     });
 
                     const badgeContainer = <div className="mx_RoomSublist_badgeContainer">{badge}</div>;
@@ -730,6 +736,15 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         // the RoomTile calls scrollIntoView and the browser may scroll a div we do not wish to be scrollable
         // this fixes https://github.com/vector-im/element-web/issues/14413
         (e.target as HTMLDivElement).scrollTop = 0;
+    }
+
+    // 删除分组
+    private async onRemoveSpaceTag(tagId: TagID): Promise<void> {
+        const tags = { ...SpaceStore.instance.spaceTags };
+        Reflect.deleteProperty(tags, tagId);
+
+        await SpaceStore.instance.sendSpaceTags(tags);
+        alert(`成功删除分组 - ${tagId}`);
     }
 
     public render(): React.ReactElement {
