@@ -576,9 +576,9 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
 
         const sorts: ITagSortingMap = {};
         const orders: IListOrderingMap = {};
-        const allTags = [...OrderedDefaultTagIDs, ...Object.keys(spaceTags)];
-        console.log("dyptest regenerateAllLists populateTags allTags", allTags);
-        for (const tagId of allTags) {
+        const spaceTagIds = spaceTags.map((item) => item.tagId);
+        const allTagIds = [...OrderedDefaultTagIDs, ...spaceTagIds];
+        for (const tagId of allTagIds) {
             sorts[tagId] = this.calculateTagSorting(tagId);
             orders[tagId] = this.calculateListOrder(tagId);
 

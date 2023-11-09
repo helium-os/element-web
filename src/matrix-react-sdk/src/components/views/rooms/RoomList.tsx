@@ -18,6 +18,9 @@ import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 import { Room } from "matrix-js-sdk/src/models/room";
 import React, { ComponentType, createRef, ReactComponentElement, RefObject, SyntheticEvent } from "react";
 
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import type { DropResult } from "react-beautiful-dnd";
+
 import { IState as IRovingTabIndexState, RovingTabIndexProvider } from "../../../accessibility/RovingTabIndex";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
@@ -27,7 +30,7 @@ import { ActionPayload } from "../../../dispatcher/payloads";
 import { ViewRoomDeltaPayload } from "../../../dispatcher/payloads/ViewRoomDeltaPayload";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { useEventEmitterState } from "../../../hooks/useEventEmitter";
-import { _t, _td } from "../../../languageHandler";
+import { _t } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import PosthogTrackers from "../../../PosthogTrackers";
 import SettingsStore from "../../../settings/SettingsStore";
@@ -35,14 +38,7 @@ import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { UIComponent } from "../../../settings/UIFeature";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ITagMap } from "../../../stores/room-list/algorithms/models";
-import {
-    DefaultTagID,
-    OrderedDefaultTagIDs,
-    TagID,
-    TagMap,
-    tagOrderCompareFn,
-    transformTagsObjToArr,
-} from "../../../stores/room-list/models";
+import { DefaultTagID, DragType, OrderedDefaultTagIDs, TagID, Tag } from "../../../stores/room-list/models";
 import { UPDATE_EVENT } from "../../../stores/AsyncStore";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "../../../stores/room-list/RoomListStore";
 import {
@@ -87,8 +83,9 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
-    spaceTags: TagMap;
-    allTagIds: TagID[];
+    spaceTags: Tag[];
+    userTagIds: TagID[];
+    spaceTagIds: TagID[];
     tagAesthetics: TagAestheticsMap;
     alwaysVisibleTags: TagID[];
 }
@@ -462,8 +459,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             sublists: {},
             suggestedRooms: SpaceStore.instance.suggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
-            spaceTags: {},
-            allTagIds: [],
+            spaceTags: [],
+            spaceTagIds: [],
+            userTagIds: [],
             alwaysVisibleTags: [],
             tagAesthetics: {},
         };
@@ -483,6 +481,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         );
         this.updateLists(); // trigger the first update
 
+        SdkContextClass.instance.spaceStore.on(UPDATE_SELECTED_SPACE, this.onActiveSpaceUpdate);
         SdkContextClass.instance.spaceStore.on(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
         this.refreshSpaceTagsRelatedInfo();
     }
@@ -500,8 +499,19 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         if (this.dispatcherRef) defaultDispatcher.unregister(this.dispatcherRef);
         SdkContextClass.instance.roomViewStore.off(UPDATE_EVENT, this.onRoomViewStoreUpdate);
 
+        SdkContextClass.instance.spaceStore.off(UPDATE_SELECTED_SPACE, this.onActiveSpaceUpdate);
         SdkContextClass.instance.spaceStore.off(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
     }
+
+    private onActiveSpaceUpdate = () => {
+        const orderedTagIds = new Set([
+            ...(!SpaceStore.instance.isHomeSpace ? [DefaultTagID.Untagged] : []),
+            ...OrderedDefaultTagIDs,
+        ]);
+        this.setState({
+            userTagIds: [...orderedTagIds].filter((item) => item !== DefaultTagID.Archived),
+        });
+    };
 
     private onSpaceTagsUpdate = (spaceTags) => {
         this.setState({
@@ -512,30 +522,23 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     // 更新和spaceTags相关的信息
     private refreshSpaceTagsRelatedInfo = (spaceTags = this.state.spaceTags) => {
         const spaceTagAesthetics = {};
-        for (const [key, value] of Object.entries(spaceTags)) {
-            spaceTagAesthetics[key] = {
-                sectionLabel: value.tagName,
+        for (const item of spaceTags) {
+            spaceTagAesthetics[item.tagId] = {
+                sectionLabel: item.tagName,
                 isInvite: false,
                 defaultHidden: false,
             };
         }
 
-        const isHomeSpace = SpaceStore.instance.isHomeSpace;
-
-        // 对userTags进行排序
-        const userTagIds = new Set([...(!isHomeSpace ? [DefaultTagID.Untagged] : []), ...OrderedDefaultTagIDs]);
-        // 对spaceTag进行排序
-        const spaceTagIds = transformTagsObjToArr(spaceTags)
-            .sort(tagOrderCompareFn)
-            .map((item) => item.tagId);
+        const spaceTagIds = spaceTags.map((item) => item.tagId);
 
         this.setState({
             tagAesthetics: {
-                ...generateTagAesthetics(isHomeSpace),
+                ...generateTagAesthetics(SpaceStore.instance.isHomeSpace),
                 ...spaceTagAesthetics,
             },
-            allTagIds: [...userTagIds, ...spaceTagIds].filter((item) => item !== DefaultTagID.Archived),
-            alwaysVisibleTags: [...ALWAYS_VISIBLE_TAGS, ...Object.keys(spaceTags)],
+            spaceTagIds,
+            alwaysVisibleTags: [...ALWAYS_VISIBLE_TAGS, ...spaceTagIds],
         });
     };
 
@@ -567,7 +570,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     private getRoomDelta = (roomId: string, delta: number, unread = false): Room => {
         const lists = RoomListStore.instance.orderedLists;
         const rooms: Room[] = [];
-        this.state.allTagIds.forEach((t) => {
+        [...this.state.userTagIds, ...this.state.spaceTagIds].forEach((t) => {
             let listRooms = lists[t];
 
             if (unread) {
@@ -592,9 +595,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     };
 
     private updateLists = (): void => {
-        console.log("dyptest getOrderedLists11");
         const newLists = RoomListStore.instance.orderedLists;
-        console.log("updateLists newLists", newLists);
         const previousListIds = Object.keys(this.state.sublists);
         const newListIds = Object.keys(newLists);
 
@@ -696,7 +697,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             !this.state.suggestedRooms?.length &&
             Object.values(RoomListStore.instance.orderedLists).every((list) => !list?.length);
 
-        return this.state.allTagIds.map((orderedTagId) => {
+        return [...this.state.userTagIds, ...this.state.spaceTagIds].map((orderedTagId, index) => {
             let extraTiles: ReactComponentElement<typeof ExtraTile>[] | undefined;
             if (orderedTagId === DefaultTagID.Suggested) {
                 extraTiles = this.renderSuggestedRooms();
@@ -732,6 +733,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             return (
                 <RoomSublist
                     key={`sublist-${orderedTagId}`}
+                    index={this.state.spaceTagIds.indexOf(orderedTagId)}
                     tagId={orderedTagId}
                     forRooms={true}
                     startAsHidden={aesthetics.defaultHidden}
@@ -756,22 +758,55 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         [...treeItems].find((e) => e.offsetParent !== null)?.focus();
     }
 
+    private onDragEnd(result: DropResult) {
+        console.log("拖拽结束", result);
+        if (!result.destination) return;
+
+        const { droppableId } = result.destination;
+
+        // 拖拽修改分组
+        if (result.type === DragType.Channel) {
+            const roomId = result.draggableId;
+            const tagId = droppableId;
+            MatrixClientPeg.get().setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
+            return;
+        }
+
+        // 拖拽修改社区分组顺序
+        const { index: targetIndex } = result.destination;
+        const { index: originalIndex } = result.source;
+        if (targetIndex === originalIndex) return;
+
+        const tags = Array.from(SpaceStore.instance.spaceTags);
+        const [removed] = tags.splice(originalIndex, 1);
+        tags.splice(targetIndex, 0, removed);
+        SpaceStore.instance.sendSpaceTags(tags);
+    }
+
     public render(): React.ReactNode {
         const sublists = this.renderSublists();
         return (
             <RovingTabIndexProvider handleHomeEnd handleUpDown onKeyDown={this.props.onKeyDown}>
                 {({ onKeyDownHandler }) => (
-                    <div
-                        onFocus={this.props.onFocus}
-                        onBlur={this.props.onBlur}
-                        onKeyDown={onKeyDownHandler}
-                        className="mx_RoomList"
-                        role="tree"
-                        aria-label={_t("Rooms")}
-                        ref={this.treeRef}
-                    >
-                        {sublists}
-                    </div>
+                    <DragDropContext onDragEnd={this.onDragEnd}>
+                        <Droppable droppableId="spaceTag-droppable" type={DragType.SpaceTag}>
+                            {(droppableProvided, droppableSnapshot) => (
+                                <div ref={droppableProvided.innerRef}>
+                                    <div
+                                        onFocus={this.props.onFocus}
+                                        onBlur={this.props.onBlur}
+                                        onKeyDown={onKeyDownHandler}
+                                        className="mx_RoomList"
+                                        role="tree"
+                                        aria-label={_t("Rooms")}
+                                        ref={this.treeRef}
+                                    >
+                                        {sublists}
+                                    </div>
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
                 )}
             </RovingTabIndexProvider>
         );

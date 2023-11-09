@@ -40,29 +40,14 @@ export const OrderedDefaultTagIDs = [
 
 export type TagID = string | DefaultTagID;
 
-export interface Tag {
+export type Tag = {
     tagId: TagID;
-    tagName: string;
-    order: number;
-}
+    tagName?: string;
+    [key: string]: any;
+};
 
 export type TagMap = {
     [tagId in TagID]: Omit<Tag, "tagId">;
-};
-
-export function transformTagsObjToArr(tagsObj: TagMap) {
-    const tagsArr: Tag[] = [];
-    for (const [key, value] of Object.entries(tagsObj)) {
-        tagsArr.push({
-            tagId: key,
-            ...value,
-        });
-    }
-    return tagsArr;
-}
-
-export const tagOrderCompareFn = function (a: Tag, b: Tag) {
-    return a.order - b.order;
 };
 
 export enum RoomUpdateCause {
@@ -71,4 +56,10 @@ export enum RoomUpdateCause {
     ReadReceipt = "READ_RECEIPT",
     NewRoom = "NEW_ROOM",
     RoomRemoved = "ROOM_REMOVED",
+}
+
+// 拖拽相关
+export enum DragType {
+    Channel = "CHANNEL", // 拖拽频道修改频道所属分组
+    SpaceTag = "SPACE_TAG", // 拖拽社区分组修改分组排序
 }

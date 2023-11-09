@@ -60,20 +60,23 @@ Room.prototype.getMemberEmail = function (userId: string): string {
 };
 
 // 获取只打在room上的tag
-Room.prototype.getRoomTags = function (): Record<string, Record<string, any>> {
-    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent().tags;
+Room.prototype.getRoomTags = function () {
+    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent().tags || [];
 };
 
 // 获取当前用户打在room上的tag（获取打在user + room上的tag）
-Room.prototype.getUserTags = function (): Record<string, Record<string, any>> {
-    return this.tags;
+Room.prototype.getUserTags = function () {
+    return Object.entries(this.tags).map(([key, value]) => ({
+        tagId: key,
+        ...value,
+    }));
 };
 
 // 获取当前room的所有tag
-Room.prototype.getAllTags = function (): Record<string, Record<string, any>> {
+Room.prototype.getAllTags = function () {
     const tags = this.getRoomTags();
-    return {
+    return [
         ...this.getUserTags(), // 打在user + room上的tag
         ...tags, // 只打在room上的tag
-    };
+    ];
 };

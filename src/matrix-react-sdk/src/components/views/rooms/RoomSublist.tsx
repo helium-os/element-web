@@ -23,6 +23,8 @@ import { Direction } from "re-resizable/lib/resizer";
 import * as React from "react";
 import { ComponentType, createRef, ReactComponentElement, ReactNode } from "react";
 
+import { Droppable, Draggable } from "react-beautiful-dnd";
+
 import { polyfillTouchEvent } from "../../../@types/polyfill";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { RovingAccessibleButton, RovingTabIndexWrapper } from "../../../accessibility/RovingTabIndex";
@@ -36,7 +38,7 @@ import { ListNotificationState } from "../../../stores/notifications/ListNotific
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ListAlgorithm, SortAlgorithm } from "../../../stores/room-list/algorithms/models";
 import { ListLayout } from "../../../stores/room-list/ListLayout";
-import { DefaultTagID, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
+import { DefaultTagID, DragType, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
 import RoomListLayoutStore from "../../../stores/room-list/RoomListLayoutStore";
 import RoomListStore, { LISTS_UPDATE_EVENT, LISTS_LOADING_EVENT } from "../../../stores/room-list/RoomListStore";
 import { arrayFastClone, arrayHasOrderChange } from "../../../utils/arrays";
@@ -72,6 +74,7 @@ export interface IAuxButtonProps {
 }
 
 interface IProps {
+    index: number;
     forRooms: boolean;
     startAsHidden: boolean;
     label: string;
@@ -524,15 +527,24 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 visibleRooms = visibleRooms.slice(0, this.numVisibleTiles);
             }
 
-            for (const room of visibleRooms) {
+            for (const [index, room] of visibleRooms.entries()) {
                 tiles.push(
-                    <RoomTile
-                        room={room}
-                        key={`room-${room.roomId}`}
-                        showMessagePreview={this.layout.showPreviews}
-                        isMinimized={this.props.isMinimized}
-                        tag={this.props.tagId}
-                    />,
+                    <Draggable key={`channel-${room.roomId}`} draggableId={room.roomId} index={index}>
+                        {(draggableProvided, draggableSnapshot) => (
+                            <div
+                                ref={draggableProvided.innerRef}
+                                {...draggableProvided.draggableProps}
+                                {...draggableProvided.dragHandleProps}
+                            >
+                                <RoomTile
+                                    room={room}
+                                    showMessagePreview={this.layout.showPreviews}
+                                    isMinimized={this.props.isMinimized}
+                                    tag={this.props.tagId}
+                                />
+                            </div>
+                        )}
+                    </Draggable>,
                 );
             }
         }
@@ -740,8 +752,11 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
     // 删除分组
     private async onRemoveSpaceTag(tagId: TagID): Promise<void> {
-        const tags = { ...SpaceStore.instance.spaceTags };
-        Reflect.deleteProperty(tags, tagId);
+        const tags = [...SpaceStore.instance.spaceTags];
+        const index = tags.findIndex((item) => item.tagId === tagId);
+        if (index !== -1) {
+            tags.splice(index, 1);
+        }
 
         await SpaceStore.instance.sendSpaceTags(tags);
         alert(`成功删除分组 - ${tagId}`);
@@ -888,17 +903,42 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         }
 
         return (
-            <div
-                ref={this.sublistRef}
-                className={classes}
-                role="group"
-                aria-hidden={hidden}
-                aria-label={this.props.label}
-                onKeyDown={this.onKeyDown}
+            <Draggable
+                isDragDisabled={OrderedDefaultTagIDs.includes(this.props.tagId)}
+                draggableId={this.props.tagId}
+                index={this.props.index}
             >
-                {this.renderHeader()}
-                {content}
-            </div>
+                {(draggableProvided, draggableSnapshot) => (
+                    <div
+                        ref={draggableProvided.innerRef}
+                        {...draggableProvided.draggableProps}
+                        {...draggableProvided.dragHandleProps}
+                    >
+                        <div
+                            ref={this.sublistRef}
+                            className={classes}
+                            role="group"
+                            aria-hidden={hidden}
+                            aria-label={this.props.label}
+                            onKeyDown={this.onKeyDown}
+                        >
+                            {this.renderHeader()}
+                            <Droppable
+                                isDropDisabled={
+                                    OrderedDefaultTagIDs.includes(this.props.tagId) &&
+                                    this.props.tagId !== DefaultTagID.Untagged
+                                }
+                                droppableId={this.props.tagId}
+                                type={DragType.Channel}
+                            >
+                                {(droppableProvided, droppableSnapshot) => (
+                                    <div ref={droppableProvided.innerRef}>{content}</div>
+                                )}
+                            </Droppable>
+                        </div>
+                    </div>
+                )}
+            </Draggable>
         );
     }
 }

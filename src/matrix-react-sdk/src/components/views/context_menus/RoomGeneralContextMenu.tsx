@@ -243,22 +243,17 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
 
                         <IconizedContextMenuCheckbox
                             onClick={() => {
-                                const tagsArrs = [];
                                 const spaceTags = SpaceStore.instance.spaceTags;
-                                for (const [key, value] of Object.entries(spaceTags)) {
-                                    tagsArrs.push({
-                                        key,
-                                        name: value.tagName,
-                                    });
-                                }
 
-                                const randomIndex = Math.round(Math.random() * (tagsArrs.length - 1));
-                                const addTag = tagsArrs[randomIndex];
+                                const randomIndex = Math.round(Math.random() * (spaceTags.length - 1));
+                                const addTag = spaceTags[randomIndex];
 
-                                cli.setRoomOnlyTags(room.roomId, {
-                                    [addTag.key]: {},
-                                }).then((res) => {
-                                    alert(`成功添加到${addTag.name}分组`);
+                                cli.setRoomOnlyTags(room.roomId, [
+                                    {
+                                        tagId: addTag.tagId,
+                                    },
+                                ]).then((res) => {
+                                    alert(`成功添加到${addTag.tagName}分组`);
                                 });
                             }}
                             label={"添加到test tag"}

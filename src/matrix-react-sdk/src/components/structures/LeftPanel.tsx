@@ -122,7 +122,7 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
     // 切换社区时，更新社区分组列表
     private refreshSpaceTags = (spaceId = this.state.activeSpace) => {
         if (!spaceId || spaceId === MetaSpace.Home) {
-            SpaceStore.instance.setSpaceTags({});
+            SpaceStore.instance.setSpaceTags([]);
             return;
         }
 
@@ -389,14 +389,14 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
 
     // 新增分组
     private async onAddSpaceTag(): Promise<void> {
-        const num = Math.round((Math.random() + 3) * 100);
-        const tags = {
+        const num = Math.round(Math.random() * 100);
+        const tags = [
             ...SpaceStore.instance.spaceTags,
-            [`m.testTag${num}`]: {
+            {
+                tagId: `m.testTag${num}`,
                 tagName: `测试tag${num}`,
-                order: num,
             },
-        };
+        ];
 
         await SpaceStore.instance.sendSpaceTags(tags);
         alert(`成功添加分组 - 测试tag${num}`);

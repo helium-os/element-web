@@ -32,13 +32,12 @@ import DMRoomMap from "../../utils/DMRoomMap";
 import { FetchRoomFn } from "../notifications/ListNotificationState";
 import { SpaceNotificationState } from "../notifications/SpaceNotificationState";
 import { RoomNotificationStateStore } from "../notifications/RoomNotificationStateStore";
-import { DefaultTagID, OrderedDefaultTagIDs } from "../room-list/models";
+import { DefaultTagID, OrderedDefaultTagIDs, Tag } from "../room-list/models";
 import { EnhancedMap, mapDiff } from "../../utils/maps";
 import { setDiff, setHasDiff } from "../../utils/sets";
 import { Action } from "../../dispatcher/actions";
 import { arrayHasDiff, arrayHasOrderChange, filterBoolean } from "../../utils/arrays";
 import { reorderLexicographically } from "../../utils/stringOrderField";
-import { TAG_ORDER } from "../../components/views/rooms/RoomList";
 import { SettingUpdatedPayload } from "../../dispatcher/payloads/SettingUpdatedPayload";
 import {
     isMetaSpace,
@@ -152,7 +151,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     /** Whether the feature flag is set for MSC3946 */
     private _msc3946ProcessDynamicPredecessor: boolean = SettingsStore.getValue("feature_dynamic_room_predecessors");
 
-    private _spaceTags = {}; // 组织（tag）列表
+    private _spaceTags: Tag[] = []; // 组织（tag）列表
 
     public constructor() {
         super(defaultDispatcher, {});
@@ -196,16 +195,16 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         return this._allRoomsInHome;
     }
 
-    public get spaceTags(): any {
+    public get spaceTags(): Tag[] {
         return this._spaceTags;
     }
 
-    public setSpaceTags(tags) {
+    public setSpaceTags(tags: Tag[]) {
         this._spaceTags = tags;
         this.emit(UPDATE_SPACE_TAGS, this._spaceTags);
     }
 
-    public async sendSpaceTags(tags) {
+    public async sendSpaceTags(tags: Tag[]) {
         return this.matrixClient?.setRoomOnlyTags(this.activeSpace, tags);
     }
 
@@ -222,10 +221,9 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                 metricsTrigger: "WebSpacePanelNotificationBadge",
             });
         } else {
-            console.log("dyptest getOrderedLists5");
             const lists = RoomListStore.instance.orderedLists;
-            for (let i = 0; i < TAG_ORDER.length; i++) {
-                const t = TAG_ORDER[i];
+            for (let i = 0; i < OrderedDefaultTagIDs.length; i++) {
+                const t = OrderedDefaultTagIDs[i];
                 const listRooms = lists[t];
                 const unreadRoom = listRooms.find((r: Room) => {
                     if (this.showInHomeSpace(r)) {

@@ -35,7 +35,6 @@ import { OrderingAlgorithm } from "./list-ordering/OrderingAlgorithm";
 import { getListAlgorithmInstance } from "./list-ordering";
 import { VisibilityProvider } from "../filters/VisibilityProvider";
 import { CallStore, CallStoreEvent } from "../../CallStore";
-import { EventType } from "matrix-js-sdk/src/@types/event";
 
 /**
  * Fired when the Algorithm has determined a list has been updated.
@@ -586,16 +585,16 @@ export class Algorithm extends EventEmitter {
     private getTagsOfJoinedRoom(room: Room): TagID[] {
         const roomTags = room.getAllTags();
         console.log("getTagsOfJoinedRoom room", room, "roomTags", roomTags);
-        let tags = Object.keys(roomTags);
+        let tagIds: TagID[] = roomTags.map((item) => item.tagId);
 
-        if (tags.length === 0) {
+        if (tagIds.length === 0) {
             // Check to see if it's a DM if it isn't anything else
             if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) {
-                tags = [DefaultTagID.DM];
+                tagIds = [DefaultTagID.DM];
             }
         }
 
-        return tags;
+        return tagIds;
     }
 
     /**
