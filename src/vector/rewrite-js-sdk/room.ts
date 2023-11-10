@@ -74,9 +74,13 @@ Room.prototype.getUserTags = function () {
 
 // 获取当前room的所有tag
 Room.prototype.getAllTags = function () {
-    const tags = this.getRoomTags();
-    return [
-        ...this.getUserTags(), // 打在user + room上的tag
-        ...tags, // 只打在room上的tag
-    ];
+    try {
+        const tags = this.getRoomTags();
+        return [
+            ...this.getUserTags(), // 打在user + room上的tag
+            ...tags, // 只打在room上的tag
+        ];
+    } catch (error) {
+        return this.getUserTags();
+    }
 };

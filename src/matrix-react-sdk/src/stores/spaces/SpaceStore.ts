@@ -1157,6 +1157,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             this.matrixClient.removeListener(ClientEvent.AccountData, this.onAccountData);
         }
         await this.reset();
+
+        this.off(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
     }
 
     protected async onReady(): Promise<void> {
@@ -1166,6 +1168,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.matrixClient.on(RoomStateEvent.Events, this.onRoomState);
         this.matrixClient.on(RoomStateEvent.Members, this.onRoomStateMembers);
         this.matrixClient.on(ClientEvent.AccountData, this.onAccountData);
+
+        this.on(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
 
         const oldMetaSpaces = this._enabledMetaSpaces;
         const enabledMetaSpaces = SettingsStore.getValue("Spaces.enabledMetaSpaces");
@@ -1192,6 +1196,17 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         } else {
             this.switchSpaceIfNeeded();
         }
+    }
+
+    // 切换社区时，更新社区分组列表
+    private refreshSpaceTags() {
+        if (!this.activeSpace || this.activeSpace === MetaSpace.Home) {
+            this.setSpaceTags([]);
+            return;
+        }
+
+        const tags = this.activeSpaceRoom.getRoomTags();
+        this.setSpaceTags(tags);
     }
 
     private sendUserProperties(): void {

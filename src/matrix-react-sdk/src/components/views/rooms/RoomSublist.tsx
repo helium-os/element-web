@@ -530,7 +530,15 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
             for (const [index, room] of visibleRooms.entries()) {
                 tiles.push(
-                    <Draggable key={`channel-${room.roomId}`} draggableId={room.roomId} index={index}>
+                    <Draggable
+                        key={`channel-${room.roomId}`}
+                        isDragDisabled={
+                            OrderedDefaultTagIDs.includes(this.props.tagId) &&
+                            this.props.tagId !== DefaultTagID.Untagged
+                        }
+                        draggableId={room.roomId}
+                        index={index}
+                    >
                         {(draggableProvided, draggableSnapshot) => (
                             <div
                                 ref={draggableProvided.innerRef}
@@ -617,6 +625,9 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                         <div>
                             {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
                                 <button onClick={() => this.onRemoveSpaceTag(this.props.tagId)}>删除分组</button>
+                            )}
+                            {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
+                                <button onClick={() => this.onChangeTagName(this.props.tagId)}>修改分组名称</button>
                             )}
                             {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
                                 <button onClick={() => this.onCreateRoom()}>新建频道</button>
@@ -760,10 +771,26 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         const index = tags.findIndex((item) => item.tagId === tagId);
         if (index !== -1) {
             tags.splice(index, 1);
-        }
 
-        await SpaceStore.instance.sendSpaceTags(tags);
-        alert(`成功删除分组 - ${tagId}`);
+            await SpaceStore.instance.sendSpaceTags(tags);
+            alert(`成功删除分组 - ${tagId}`);
+        }
+    }
+
+    // 修改分组名称
+    private async onChangeTagName(tagId: TagID): Promise<void> {
+        const tags = [...SpaceStore.instance.spaceTags];
+        const index = tags.findIndex((item) => item.tagId === tagId);
+        const num = Math.round((Math.random() + 1) * 100);
+        if (index !== -1) {
+            tags.splice(index, 1, {
+                ...tags[index],
+                tagName: `测试tag：${num}`,
+            });
+
+            await SpaceStore.instance.sendSpaceTags(tags);
+            alert(`成功修改分组名称为 - 测试tag：${num}`);
+        }
     }
 
     // 在当前分组下创建频道

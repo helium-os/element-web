@@ -95,7 +95,6 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
     }
 
     public componentDidMount(): void {
-        this.refreshSpaceTags();
         UIStore.instance.trackElementDimensions("ListContainer", this.listContainerRef.current);
         UIStore.instance.on("ListContainer", this.refreshStickyHeaders);
         // Using the passive option to not block the main thread
@@ -115,21 +114,8 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
         if (prevState.activeSpace !== this.state.activeSpace) {
             this.refreshStickyHeaders();
-            this.refreshSpaceTags(); // 切换space时重新获取分组列表
         }
     }
-
-    // 切换社区时，更新社区分组列表
-    private refreshSpaceTags = (spaceId = this.state.activeSpace) => {
-        if (!spaceId || spaceId === MetaSpace.Home) {
-            SpaceStore.instance.setSpaceTags([]);
-            return;
-        }
-
-        const spaceRoom = MatrixClientPeg.get().getRoom(spaceId);
-        const tags = spaceRoom.getRoomTags();
-        SpaceStore.instance.setSpaceTags(tags);
-    };
 
     private updateActiveSpace = (activeSpace: SpaceKey): void => {
         this.setState({ activeSpace });
@@ -389,17 +375,22 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
 
     // 新增分组
     private async onAddSpaceTag(): Promise<void> {
+        const cli = MatrixClientPeg.get();
+        const tagId = `${new Date().getTime()}/${cli.getUserId()}/${cli.getDeviceId()}`;
         const num = Math.round(Math.random() * 100);
-        const tags = [
-            ...SpaceStore.instance.spaceTags,
-            {
-                tagId: `m.testTag${num}`,
-                tagName: `测试tag${num}`,
-            },
-        ];
+
+        // 添加前做去重处理
+        const tags = [...SpaceStore.instance.spaceTags];
+        const index = tags.findIndex((item) => item.tagId === tagId);
+        if (index !== -1) {
+            tags.splice(index, 1, {
+                tagId,
+                tagName: `测试tag：${num}`,
+            });
+        }
 
         await SpaceStore.instance.sendSpaceTags(tags);
-        alert(`成功添加分组 - 测试tag${num}`);
+        alert(`成功添加分组 - 测试tag：${num}`);
     }
 
     public render(): React.ReactNode {

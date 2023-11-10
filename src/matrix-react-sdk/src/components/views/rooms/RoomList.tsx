@@ -758,29 +758,39 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         [...treeItems].find((e) => e.offsetParent !== null)?.focus();
     }
 
-    private onDragEnd(result: DropResult) {
+    private async onDragEnd(result: DropResult): Promise<void> {
         console.log("拖拽结束", result);
         if (!result.destination) return;
 
         const { droppableId } = result.destination;
 
-        // 拖拽修改分组
+        // 拖拽修改频道所属分组
         if (result.type === DragType.Channel) {
             const roomId = result.draggableId;
             const tagId = droppableId;
-            MatrixClientPeg.get().setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
+            try {
+                await MatrixClientPeg.get().setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
+            } catch (error) {
+                alert(error.message);
+            }
             return;
         }
 
         // 拖拽修改社区分组顺序
         const { index: targetIndex } = result.destination;
+        if (targetIndex === -1) return; // 为-1时，表示拖拽到了默认分组之前，不做任何处理
+
         const { index: originalIndex } = result.source;
         if (targetIndex === originalIndex) return;
 
         const tags = Array.from(SpaceStore.instance.spaceTags);
         const [removed] = tags.splice(originalIndex, 1);
         tags.splice(targetIndex, 0, removed);
-        SpaceStore.instance.sendSpaceTags(tags);
+        try {
+            await SpaceStore.instance.sendSpaceTags(tags);
+        } catch (error) {
+            alert(error.message);
+        }
     }
 
     public render(): React.ReactNode {
