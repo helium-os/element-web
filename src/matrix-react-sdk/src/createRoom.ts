@@ -47,6 +47,7 @@ import { privateShouldBeEncrypted } from "./utils/rooms";
 import { waitForMember } from "./utils/membership";
 import { PreferredRoomVersions } from "./utils/PreferredRoomVersions";
 import SettingsStore from "./settings/SettingsStore";
+import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 
 // we define a number of interfaces which take their names from the js-sdk
 /* eslint-disable camelcase */
@@ -66,6 +67,7 @@ export interface IOpts {
     // contextually only makes sense if parentSpace is specified, if true then will be added to parentSpace as suggested
     suggested?: boolean;
     joinRule?: JoinRule;
+    tags?: Tag[];
 }
 
 const DEFAULT_EVENT_POWER_LEVELS = {
@@ -263,6 +265,15 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
             type: EventType.RoomHistoryVisibility,
             content: {
                 history_visibility: opts.historyVisibility,
+            },
+        });
+    }
+
+    if (opts.tags) {
+        createOpts.initial_state.push({
+            type: EventType.Tag,
+            content: {
+                tags: opts.tags,
             },
         });
     }

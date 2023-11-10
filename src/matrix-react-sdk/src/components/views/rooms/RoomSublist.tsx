@@ -58,6 +58,7 @@ import { SlidingSyncManager } from "../../../SlidingSyncManager";
 import NotificationBadge from "./NotificationBadge";
 import RoomTile from "./RoomTile";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { showCreateNewRoom } from "matrix-react-sdk/src/utils/space";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -617,6 +618,9 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                             {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
                                 <button onClick={() => this.onRemoveSpaceTag(this.props.tagId)}>删除分组</button>
                             )}
+                            {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
+                                <button onClick={() => this.onCreateRoom()}>新建频道</button>
+                            )}
                             <div className="mx_RoomSublist_contextMenu_title">{_t("Sort by")}</div>
                             <StyledMenuItemRadio
                                 onClose={this.onCloseMenu}
@@ -760,6 +764,11 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
         await SpaceStore.instance.sendSpaceTags(tags);
         alert(`成功删除分组 - ${tagId}`);
+    }
+
+    // 在当前分组下创建频道
+    private async onCreateRoom() {
+        showCreateNewRoom(SpaceStore.instance.activeSpaceRoom, undefined, [{ tagId: this.props.tagId }]);
     }
 
     public render(): React.ReactElement {
@@ -914,28 +923,30 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                         {...draggableProvided.draggableProps}
                         {...draggableProvided.dragHandleProps}
                     >
-                        <div
-                            ref={this.sublistRef}
-                            className={classes}
-                            role="group"
-                            aria-hidden={hidden}
-                            aria-label={this.props.label}
-                            onKeyDown={this.onKeyDown}
+                        <Droppable
+                            isDropDisabled={
+                                OrderedDefaultTagIDs.includes(this.props.tagId) &&
+                                this.props.tagId !== DefaultTagID.Untagged
+                            }
+                            droppableId={this.props.tagId}
+                            type={DragType.Channel}
                         >
-                            {this.renderHeader()}
-                            <Droppable
-                                isDropDisabled={
-                                    OrderedDefaultTagIDs.includes(this.props.tagId) &&
-                                    this.props.tagId !== DefaultTagID.Untagged
-                                }
-                                droppableId={this.props.tagId}
-                                type={DragType.Channel}
-                            >
-                                {(droppableProvided, droppableSnapshot) => (
-                                    <div ref={droppableProvided.innerRef}>{content}</div>
-                                )}
-                            </Droppable>
-                        </div>
+                            {(droppableProvided, droppableSnapshot) => (
+                                <div ref={droppableProvided.innerRef}>
+                                    <div
+                                        ref={this.sublistRef}
+                                        className={classes}
+                                        role="group"
+                                        aria-hidden={hidden}
+                                        aria-label={this.props.label}
+                                        onKeyDown={this.onKeyDown}
+                                    >
+                                        {this.renderHeader()}
+                                        {content}
+                                    </div>
+                                </div>
+                            )}
+                        </Droppable>
                     </div>
                 )}
             </Draggable>

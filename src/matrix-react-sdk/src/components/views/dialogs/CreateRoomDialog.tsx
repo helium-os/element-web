@@ -35,9 +35,11 @@ import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
 import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
+import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 
 interface IProps {
     type?: RoomType;
+    tags?: Tag[];
     defaultPublic?: boolean;
     defaultName?: string;
     parentSpace?: Room;
@@ -88,7 +90,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
             noFederate: SdkConfig.get().default_federate === false,
             nameIsValid: false,
             canChangeEncryption: true,
-            showChangeEncryption: false
+            showChangeEncryption: false,
         };
 
         MatrixClientPeg.get()
@@ -100,6 +102,7 @@ export default class CreateRoomDialog extends React.Component<IProps, IState> {
         const opts: IOpts = {};
         const createOpts: IOpts["createOpts"] = (opts.createOpts = {});
         opts.roomType = this.props.type;
+        opts.tags = this.props.tags;
         createOpts.name = this.state.name;
 
         if (this.state.joinRule === JoinRule.Public) {

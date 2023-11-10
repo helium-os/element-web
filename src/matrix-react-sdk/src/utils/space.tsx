@@ -39,6 +39,7 @@ import { OpenSpacePreferencesPayload, SpacePreferenceTab } from "../dispatcher/p
 import { OpenSpaceSettingsPayload } from "../dispatcher/payloads/OpenSpaceSettingsPayload";
 import { OpenAddExistingToSpaceDialogPayload } from "../dispatcher/payloads/OpenAddExistingToSpaceDialogPayload";
 import { SdkContextClass } from "../contexts/SDKContext";
+import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 
 export const shouldShowSpaceSettings = (space: Room): boolean => {
     const userId = space.client.getUserId()!;
@@ -74,11 +75,12 @@ export const showAddExistingRooms = (space: Room): void => {
     });
 };
 
-export const showCreateNewRoom = async (space: Room, type?: RoomType): Promise<boolean> => {
+export const showCreateNewRoom = async (space: Room, type?: RoomType, tags?: Tag[]): Promise<boolean> => {
     const modal = Modal.createDialog(CreateRoomDialog, {
         type,
         defaultPublic: space.getJoinRule() === JoinRule.Public,
         parentSpace: space,
+        tags,
     });
     const [shouldCreate, opts] = await modal.finished;
     if (shouldCreate) {

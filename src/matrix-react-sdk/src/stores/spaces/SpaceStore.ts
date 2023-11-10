@@ -141,7 +141,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         userIdsBySpace: new Map<Room["roomId"], Set<string>>(),
     };
     // The space currently selected in the Space Panel
-    private _activeSpace: SpaceKey = MetaSpace.Home; // set properly by onReady
+    private _activeSpace: SpaceKey; // set properly by onReady
     private _suggestedRooms: ISuggestedRoom[] = [];
     private _invitedSpaces = new Set<Room>();
     private spaceOrderLocalEchoMap = new Map<string, string>();
@@ -155,6 +155,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     public constructor() {
         super(defaultDispatcher, {});
+
+        this.setActiveSpace(MetaSpace.Home, false);
 
         SettingsStore.monitorSetting("Spaces.allRoomsInHome", null);
         SettingsStore.monitorSetting("Spaces.enabledMetaSpaces", null);
