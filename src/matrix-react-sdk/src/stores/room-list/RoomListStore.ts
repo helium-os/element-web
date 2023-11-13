@@ -561,7 +561,7 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
      * @param trigger Set to false to prevent a list update from being sent. Should only
      * be used if the calling code will manually trigger the update.
      */
-    public regenerateAllLists({ trigger = true, spaceTags = {} }): void {
+    public regenerateAllLists({ trigger = true, spaceTags = [] }): void {
         logger.warn("Regenerating all room lists");
 
         const rooms = this.getPlausibleRooms();

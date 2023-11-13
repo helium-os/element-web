@@ -51,7 +51,7 @@ export class SpaceFilterCondition extends EventEmitter implements IFilterConditi
 
         const beforeShowPeopleInSpace = this.showPeopleInSpace;
         this.showPeopleInSpace =
-            isMetaSpace(this.space[0]) || SettingsStore.getValue("Spaces.showPeopleInSpace", this.space);
+            isMetaSpace(this.space) || SettingsStore.getValue("Spaces.showPeopleInSpace", this.space);
 
         if (
             forceUpdate ||
