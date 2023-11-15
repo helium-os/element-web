@@ -329,12 +329,6 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         if (!this.showContextMenu) return null; // no menu to show
         return (
             <React.Fragment>
-                <ContextMenuTooltipButton
-                    className="mx_RoomTile_menuButton"
-                    onClick={this.onGeneralMenuOpenClick}
-                    title={_t("Room options")}
-                    isExpanded={!!this.state.generalMenuPosition}
-                />
                 {this.state.generalMenuPosition && (
                     <RoomGeneralContextMenu
                         {...contextMenuBelow(this.state.generalMenuPosition)}
@@ -465,7 +459,7 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
                             inputRef={ref}
                             className={classes}
                             onClick={this.onTileClick}
-                            onContextMenu={this.onContextMenu}
+                            // onContextMenu={this.onContextMenu}
                             role="treeitem"
                             aria-label={ariaLabel}
                             aria-selected={this.state.selected}
@@ -479,8 +473,7 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
                             />
                             {titleContainer}
                             {badge}
-                            {this.renderGeneralMenu()}
-                            {this.renderNotificationsMenu(isActive)}
+                            {/*{this.renderGeneralMenu()}*/}
                         </Button>
                     )}
                 </RovingTabIndexWrapper>

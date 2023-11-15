@@ -41,6 +41,7 @@ import { shouldShowComponent } from "../../../customisations/helpers/UIComponent
 import { UIComponent } from "../../../settings/UIFeature";
 import PosthogTrackers from "../../../PosthogTrackers";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
+import SpaceStore from "../../../stores/spaces/SpaceStore";
 
 interface IProps extends IContextMenuProps {
     space: Room;
@@ -66,7 +67,7 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 data-testid="invite-option"
                 className="mx_SpacePanel_contextMenu_inviteButton"
                 iconClassName="mx_SpacePanel_iconInvite"
-                label={_t("Invite")}
+                label={_t("Invite people")}
                 onClick={onInviteClick}
             />
         );
@@ -175,22 +176,19 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
 
         newRoomSection = (
             <>
-                <div data-testid="add-to-space-header" className="mx_SpacePanel_contextMenu_separatorLabel">
-                    {_t("Add")}
-                </div>
                 {canAddRooms && (
                     <IconizedContextMenuOption
                         data-testid="new-room-option"
-                        iconClassName="mx_SpacePanel_iconPlus"
-                        label={_t("Room")}
+                        iconClassName="mx_SpacePanel_iconAddChannel"
+                        label={_t("Create room")}
                         onClick={onNewRoomClick}
                     />
                 )}
                 {canAddVideoRooms && (
                     <IconizedContextMenuOption
                         data-testid="new-video-room-option"
-                        iconClassName="mx_SpacePanel_iconPlus"
-                        label={_t("Video room")}
+                        iconClassName="mx_SpacePanel_iconAddChannel"
+                        label={_t("Create video room")}
                         onClick={onNewVideoRoomClick}
                     >
                         <BetaPill />
@@ -199,7 +197,7 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 {canAddSubSpaces && (
                     <IconizedContextMenuOption
                         data-testid="new-subspace-option"
-                        iconClassName="mx_SpacePanel_iconPlus"
+                        iconClassName="mx_SpacePanel_iconAddChannel"
                         label={_t("Space")}
                         onClick={onNewSubspaceClick}
                     >
@@ -235,21 +233,34 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
         openSpace(ev);
     };
 
-    const onHomeClick = (ev: ButtonEvent): void => {
-        PosthogTrackers.trackInteraction("WebSpaceContextMenuHomeItem", ev);
-        openSpace(ev);
+    // 新增分组
+    const onAddSpaceTag = async (): Promise<void> => {
+        const tagId = `${new Date().getTime()}/${cli.getUserId()}/${cli.getDeviceId()}`;
+        const num = Math.round(Math.random() * 100);
+
+        // 添加前做去重处理
+        const tags = [...SpaceStore.instance.spaceTags];
+        const newTag = {
+            tagId,
+            tagName: `测试tag：${num}`,
+        };
+        const index = tags.findIndex((item) => item.tagId === tagId);
+        if (index !== -1) {
+            tags.splice(index, 1, newTag);
+        } else {
+            tags.push(newTag);
+        }
+
+        await SpaceStore.instance.sendSpaceTags(tags);
+        alert(`成功添加分组 - 测试tag：${num}`);
     };
 
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_SpacePanel_contextMenu" compact>
             {!hideHeader && <div className="mx_SpacePanel_contextMenu_header">{space.name}</div>}
             <IconizedContextMenuOptionList first>
-                <IconizedContextMenuOption
-                    iconClassName="mx_SpacePanel_iconHome"
-                    label={_t("Space home")}
-                    onClick={onHomeClick}
-                />
                 {inviteOption}
+                <hr />
                 {/*<IconizedContextMenuOption*/}
                 {/*    iconClassName="mx_SpacePanel_iconExplore"*/}
                 {/*    label={canAddRooms ? _t("Manage & explore rooms") : _t("Explore rooms")}*/}
@@ -260,10 +271,16 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 {/*    label={_t("Preferences")}*/}
                 {/*    onClick={onPreferencesClick}*/}
                 {/*/>*/}
-                {devtoolsOption}
-                {settingsOption}
-                {leaveOption}
                 {newRoomSection}
+                <IconizedContextMenuOption
+                    iconClassName="mx_SpacePanel_iconAddGroup"
+                    label={_t("Create Group")}
+                    onClick={onAddSpaceTag}
+                />
+                <hr />
+                {/*{devtoolsOption}*/}
+                {settingsOption}
+                {/*{leaveOption}*/}
             </IconizedContextMenuOptionList>
         </IconizedContextMenu>
     );

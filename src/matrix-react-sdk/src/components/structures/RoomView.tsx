@@ -2460,29 +2460,29 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                         <EffectsOverlay roomWidth={this.roomView.current.offsetWidth} />
                     )}
                     <ErrorBoundary>
-                        <RoomHeader
-                            room={this.state.room}
-                            searchInfo={this.state.search}
-                            oobData={this.props.oobData}
-                            inRoom={myMembership === "join"}
-                            onSearchClick={onSearchClick}
-                            onInviteClick={onInviteClick}
-                            onForgetClick={myMembership === "leave" ? onForgetClick : null}
-                            e2eStatus={this.state.e2eStatus}
-                            onAppsClick={this.state.hasPinnedWidgets ? onAppsClick : null}
-                            appsShown={this.state.showApps}
-                            excludedRightPanelPhaseButtons={excludedRightPanelPhaseButtons}
-                            showButtons={!this.viewsLocalRoom}
-                            enableRoomOptionsMenu={!this.viewsLocalRoom}
-                            viewingCall={viewingCall}
-                            activeCall={this.state.activeCall}
-                        />
                         <MainSplit panel={rightPanel} resizeNotifier={this.props.resizeNotifier}>
                             <div
                                 className={mainSplitContentClasses}
                                 ref={this.roomViewBody}
                                 data-layout={this.state.layout}
                             >
+                                <RoomHeader
+                                    room={this.state.room}
+                                    searchInfo={this.state.search}
+                                    oobData={this.props.oobData}
+                                    inRoom={myMembership === "join"}
+                                    onSearchClick={onSearchClick}
+                                    onInviteClick={onInviteClick}
+                                    onForgetClick={myMembership === "leave" ? onForgetClick : null}
+                                    e2eStatus={this.state.e2eStatus}
+                                    onAppsClick={this.state.hasPinnedWidgets ? onAppsClick : null}
+                                    appsShown={this.state.showApps}
+                                    excludedRightPanelPhaseButtons={excludedRightPanelPhaseButtons}
+                                    showButtons={!this.viewsLocalRoom}
+                                    enableRoomOptionsMenu={!this.viewsLocalRoom}
+                                    viewingCall={viewingCall}
+                                    activeCall={this.state.activeCall}
+                                />
                                 {mainSplitBody}
                             </div>
                         </MainSplit>

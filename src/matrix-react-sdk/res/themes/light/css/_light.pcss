@@ -13,11 +13,40 @@
 /* Noto Color Emoji contains digits, in fixed-width, therefore causing
    digits in flowed text to stand out.
    TODO: Consider putting all emoji fonts to the end rather than the front. */
-$font-family: "Inter", "Twemoji", "Apple Color Emoji", "Segoe UI Emoji", "Arial", "Helvetica", sans-serif, "STIXGeneral",
-    "Noto Color Emoji";
+$font-family: "PingFang SC";
 
 $monospace-font-family: "Inconsolata", "Twemoji", "Apple Color Emoji", "Segoe UI Emoji", "Courier", monospace,
     "STIXGeneral", "Noto Color Emoji";
+
+// text color
+$text-primary-color1: #000000;
+$text-primary-color2: #151515;
+$text-primary-color3: #303030;
+$text-secondary-color1: #505050;
+$text-secondary-color2: #a4a4a4;
+$text-secondary-color3: #e2e2e2;
+$text-danger-color: #fe5f56;
+
+
+// background color
+$background-primary-color: #ffffff;
+$background-secondary-color1: #f7f7f7;
+$background-secondary-color2: #eeeeee;
+
+
+// border color
+$border-primary-color: #eeeeee;
+$border-secondary-color: #303030;
+
+// icon color
+$icon-primary-color: #a4a4a4;
+$icon-primary-bg-color: #eeeeee;
+
+
+$icon-secondary-color: #e7e7e7;
+$icon-secondary-bg-color: #303030;
+$icon-secondary-hover-bg-color: #505050;
+
 
 /* Colors from Figma Compound https://www.figma.com/file/X4XTH9iS2KGJ2wFKDqkyed/Compound?node-id=559%3A120 */
 /* ******************** */
@@ -29,7 +58,7 @@ $quinary-content: #e3e8f0;
 
 $system: #f4f6fa;
 $system-transparent: rgba($system, 0); /* XXX: workaround for Safari 15.3 linear-gradient bug */
-$background: #ffffff;
+$background: $background-primary-color;
 $overlay-background: rgba($background, 0.85);
 
 $panels: rgba($system, 0.9);
@@ -88,7 +117,18 @@ $info-plinth-bg-color: #f7f7f7;
 $event-selected-color: #f6f7f8;
 $topleftmenu-color: #212121;
 $roomtopic-color: #9e9e9e;
-$spacePanel-bg-color: rgba(232, 232, 232, 0.77);
+$spacePanel-bg-color: $background-secondary-color1;
+$spacePanel-active-bg-color: $background-secondary-color2;
+$spacePanel-active-border-color: $border-secondary-color;
+// home icon
+$spacePanel-home-content-color: #FFFFFF;
+$spacePanel-home-bg-color: #32B971;
+$spacePanel-home-hover-bg-color: #32B971;
+// 新增社区icon
+$spacePanel-new-content-color: $icon-secondary-color;
+$spacePanel-new-bg-color: $icon-secondary-bg-color;
+$spacePanel-new-hover-bg-color: $icon-secondary-hover-bg-color;
+
 $panel-gradient: rgba(242, 245, 248, 0), rgba(242, 245, 248, 1);
 $h3-color: #3d3b39;
 $event-highlight-bg-color: $yellow-background;
@@ -102,6 +142,8 @@ $blockquote-bar-color: $focus-bg-color;
 
 /* Tooltip */
 /* ******************** */
+$tooltip-text-color: #ffffff;
+$tooltip-bg-color: #000000;
 $tooltip-timeline-bg-color: $inverted-bg-color;
 $tooltip-timeline-fg-color: $background;
 /* ******************** */
@@ -114,10 +156,17 @@ $widget-body-bg-color: $background;
 
 /* Menu */
 /* ******************** */
-$menu-border-color: #e7e7e7;
-$menu-bg-color: $background;
-$menu-box-shadow-color: rgba(118, 131, 156, 0.6);
-$menu-selected-color: #f5f8fa;
+$menu-bg-color: linear-gradient(0deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.01) 100%), linear-gradient(0deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.94) 100%), rgba(255, 255, 255, 0.02);
+$menu-box-shadow-color: rgba(0, 0, 0, 0.10);
+$menu-box-shadow: 0 6px 20px 0 $menu-box-shadow-color;
+$menu-border-radius: 8px;
+$menu-border-color: #aeaeae;
+
+$menu-item-active-bg-color: $background-secondary-color2;
+$menu-item-divider-color: $border-primary-color;
+$menu-text-color: $text-primary-color3;
+$menu-selected-color: $menu-text-color;
+$menu-danger-text-color: $text-danger-color;
 /* ******************** */
 
 /* Settings */
@@ -183,6 +232,7 @@ $imagebody-giflabel-color: $background;
 $roomlist-bg-color: rgba(245, 245, 245, 0.9);
 $roomsublist-skeleton-ui-bg: linear-gradient(180deg, $background 0%, #ffffff00 100%);
 $roomtile-default-badge-bg-color: $muted-fg-color;
+$roomtile-active-bg-color: $background-secondary-color2;
 /* ******************** */
 
 /* e2e */
@@ -309,6 +359,9 @@ $pinned-color: $tertiary-content;
 $avatar-initial-color: $background;
 $primary-hairline-color: transparent;
 $focus-brightness: 105%;
+$avatar-border-radius: 10px;
+$avatar-hover-border-radius: 50%;
+$avatar-active-border-radius: 50%;
 /* ******************** */
 
 /* blur amounts for left left panel (only for element theme) */

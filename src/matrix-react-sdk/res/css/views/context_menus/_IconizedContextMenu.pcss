@@ -16,11 +16,14 @@ limitations under the License.
 
 /* A context menu that largely fits the | [icon]    [label] | format. */
 .mx_IconizedContextMenu {
-    min-width: 146px;
+    position: relative;
+    box-sizing: border-box;
+    min-width: 130px;
     width: max-content;
+    padding: 8px;
 
     .mx_IconizedContextMenu_optionList {
-        & > * {
+        & > .mx_IconizedContextMenu_item {
             padding-left: 20px;
             padding-right: 20px;
         }
@@ -55,50 +58,26 @@ limitations under the License.
             }
         }
 
-        /* round the top corners of the top button for the hover effect to be bounded */
-        &:first-child .mx_IconizedContextMenu_item:first-child {
-            border-radius: 8px 8px 0 0; /* radius matches .mx_ContextualMenu */
-        }
-
-        /* round the bottom corners of the bottom button for the hover effect to be bounded */
-        &:last-child .mx_IconizedContextMenu_item:last-child {
-            border-radius: 0 0 8px 8px; /* radius matches .mx_ContextualMenu */
-        }
-
-        /* round all corners of the only button for the hover effect to be bounded */
-        &:first-child:last-child .mx_IconizedContextMenu_item:first-child:last-child {
-            border-radius: 8px; /* radius matches .mx_ContextualMenu */
-        }
-
         .mx_IconizedContextMenu_item {
             /* pad the inside of the button so that the hover background is padded too */
             padding-top: 12px;
             padding-bottom: 12px;
             text-decoration: none;
-            color: $primary-content;
-            font-size: $font-15px;
-            line-height: $font-24px;
+            line-height: $font-20px;
 
             /* Create a flexbox to more easily define the list items */
             display: flex;
             align-items: center;
+            border-radius: 4px;
 
             &:hover,
             &:focus-visible {
-                background-color: $menu-selected-color;
+                background-color: $menu-item-active-bg-color;
             }
 
             &.mx_AccessibleButton_disabled {
                 opacity: 0.5;
                 cursor: not-allowed;
-            }
-
-            img,
-            .mx_IconizedContextMenu_icon {
-                /* icons */
-                width: 16px;
-                min-width: 16px;
-                max-width: 16px;
             }
 
             span.mx_IconizedContextMenu_label {
@@ -112,20 +91,24 @@ limitations under the License.
                 white-space: nowrap;
             }
 
-            .mx_IconizedContextMenu_icon + .mx_IconizedContextMenu_label {
-                padding-left: 14px;
-            }
-
             .mx_BetaCard_betaPill {
                 margin-left: 16px;
             }
+        }
+
+        hr {
+            margin: 2px 4px;
+            height: 0.5px;
+            background: $menu-item-divider-color;
+            border: none;
         }
     }
 
     .mx_IconizedContextMenu_icon {
         position: relative;
-        width: 16px;
-        height: 16px;
+        width: 20px;
+        height: 20px;
+        margin-right: 4px;
 
         &::before {
             content: "";
@@ -135,7 +118,7 @@ limitations under the License.
             mask-position: center;
             mask-size: contain;
             mask-repeat: no-repeat;
-            background-color: $secondary-content;
+            background-color: $menu-text-color;
         }
     }
 
@@ -169,8 +152,8 @@ limitations under the License.
     }
 
     &.mx_IconizedContextMenu_compact {
-        .mx_IconizedContextMenu_optionList > * {
-            padding: 8px 16px 8px 11px;
+        .mx_IconizedContextMenu_optionList > .mx_IconizedContextMenu_item {
+            padding: 4px 6px;
         }
     }
 
@@ -195,5 +178,5 @@ limitations under the License.
 }
 
 .mx_IconizedContextMenu_item.mx_IconizedContextMenu_itemDestructive {
-    color: $alert !important;
+    color: $menu-danger-text-color !important;
 }

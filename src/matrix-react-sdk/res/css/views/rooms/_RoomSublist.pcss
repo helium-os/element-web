@@ -15,9 +15,7 @@ limitations under the License.
 */
 
 .mx_RoomSublist {
-    margin-left: 8px;
-    margin-bottom: 4px;
-
+    margin-top: 10px;
     &.mx_RoomSublist_hidden {
         display: none;
     }
@@ -32,6 +30,7 @@ limitations under the License.
         /* Create a flexbox to make alignment easy */
         display: flex;
         align-items: center;
+        padding: 0 8px;
 
         /* *************************** */
         /* Sticky Headers Start */
@@ -46,9 +45,7 @@ limitations under the License.
 
         /* The combined height must be set in the LeftPanel component for sticky headers */
         /* to work correctly. */
-        padding-bottom: 8px;
-        height: 24px;
-        color: $tertiary-content;
+        color: $text-primary-color3;
 
         &.mx_RoomSublist_headerContainer_hidden {
             display: none;
@@ -61,6 +58,7 @@ limitations under the License.
         .mx_RoomSublist_stickable {
             flex: 1;
             max-width: 100%;
+            height: 28px;
 
             /* Create a flexbox to make ordering easy */
             display: flex;
@@ -72,8 +70,6 @@ limitations under the License.
             /* when sticky scrolls instead of collapses the list. */
             &.mx_RoomSublist_headerContainer_sticky {
                 position: fixed;
-                height: 32px; /* to match the header container */
-                /* width set by JS because of a compat issue between Firefox and Chrome */
                 width: calc(100% - 15px);
             }
 
@@ -106,40 +102,35 @@ limitations under the License.
 
         .mx_RoomSublist_auxButton,
         .mx_RoomSublist_menuButton {
+            visibility: hidden;
             margin-left: 8px; /* should be the same as the notification badge */
             position: relative;
-            width: 24px;
-            height: 24px;
-            border-radius: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
 
             &::before {
                 content: "";
-                width: 16px;
-                height: 16px;
                 position: absolute;
-                top: 4px;
-                left: 4px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 11px;
+                height: 11px;
                 mask-position: center;
                 mask-size: contain;
                 mask-repeat: no-repeat;
-                background: $muted-fg-color;
+                background: $text-primary-color3;
             }
         }
 
         .mx_RoomSublist_auxButton:hover,
         .mx_RoomSublist_menuButton:hover {
-            background: $panel-actions;
-        }
-
-        /* Hide the menu button by default */
-        .mx_RoomSublist_menuButton {
-            visibility: hidden;
-            width: 0;
-            margin: 0;
+            background: $icon-primary-bg-color;
         }
 
         .mx_RoomSublist_auxButton::before {
-            mask-image: url("$(res)/img/element-icons/roomlist/plus.svg");
+            mask-image: url("$(res)/img/element-icons/plus.svg");
         }
 
         .mx_RoomSublist_menuButton::before {
@@ -150,31 +141,39 @@ limitations under the License.
             flex: 1;
             max-width: calc(100% - 16px); /* 16px is the badge width */
             line-height: $font-16px;
-            font-size: $font-13px;
-            font-weight: 600;
+            font-size: $font-12px;
+            font-weight: $font-normal-bold;
+            color: $text-primary-color3;
 
             /* Ellipsize any text overflow */
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
 
+            span {
+                vertical-align: middle;
+            }
+
             .mx_RoomSublist_collapseBtn {
-                display: inline-block;
                 position: relative;
-                width: 14px;
-                height: 14px;
-                margin-right: 6px;
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                margin-right: 4px;
 
                 &::before {
                     content: "";
-                    width: 18px;
-                    height: 18px;
                     position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
                     mask-position: center;
-                    mask-size: contain;
+                    mask-size: 11px auto;
                     mask-repeat: no-repeat;
-                    background-color: $tertiary-content;
+                    background-color: $text-primary-color3;
                     mask-image: url("$(res)/img/feather-customised/chevron-down.svg");
+                    transition: all 0.2s ease;
                 }
 
                 &.mx_RoomSublist_collapseBtn_collapsed::before {
@@ -301,10 +300,8 @@ limitations under the License.
     &.mx_RoomSublist_hasMenuOpen,
     &:not(.mx_RoomSublist_minimized) > .mx_RoomSublist_headerContainer:focus-within,
     &:not(.mx_RoomSublist_minimized) > .mx_RoomSublist_headerContainer:hover {
-        .mx_RoomSublist_menuButton {
+        .mx_RoomSublist_menuButton, .mx_RoomSublist_auxButton {
             visibility: visible;
-            width: 24px;
-            margin-left: 8px;
         }
     }
 
@@ -333,11 +330,6 @@ limitations under the License.
                 margin-left: 0 !important; /* !important to override hover styles */
                 background-color: $panel-actions;
                 margin-top: 8px;
-
-                &::before {
-                    top: 8px;
-                    left: 8px;
-                }
             }
         }
 

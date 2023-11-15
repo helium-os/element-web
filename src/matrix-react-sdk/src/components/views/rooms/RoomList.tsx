@@ -66,6 +66,9 @@ import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ExtraTile from "./ExtraTile";
 import RoomSublist, { IAuxButtonProps } from "./RoomSublist";
 import { SdkContextClass } from "../../../contexts/SDKContext";
+import SpaceAddChanelContextMenu, {
+    onCreateRoom,
+} from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -204,25 +207,20 @@ const DmAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, dispatcher = default
     return null;
 };
 
-const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
+const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
     const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLDivElement>();
     const activeSpace = useEventEmitterState<Room | null>(SpaceStore.instance, UPDATE_SELECTED_SPACE, () => {
         return SpaceStore.instance.activeSpaceRoom;
     });
 
     const showCreateRoom = shouldShowComponent(UIComponent.CreateRooms);
-    const showExploreRooms = shouldShowComponent(UIComponent.ExploreRooms);
+    const showExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
 
-    const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
-    const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
+    let tags;
+    if (tagId) tags = [{ tagId }];
 
     let contextMenuContent: JSX.Element | undefined;
     if (menuDisplayed && activeSpace) {
-        const canAddRooms = activeSpace.currentState.maySendStateEvent(
-            EventType.SpaceChild,
-            MatrixClientPeg.get().getUserId()!,
-        );
-
         contextMenuContent = (
             <IconizedContextMenuOptionList first>
                 <IconizedContextMenuOption
@@ -240,107 +238,13 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
                         PosthogTrackers.trackInteraction("WebRoomListRoomsSublistPlusMenuExploreRoomsItem", e);
                     }}
                 />
-                {showCreateRoom ? (
-                    <>
-                        <IconizedContextMenuOption
-                            label={_t("New room")}
-                            iconClassName="mx_RoomList_iconNewRoom"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                closeMenu();
-                                showCreateNewRoom(activeSpace);
-                                PosthogTrackers.trackInteraction("WebRoomListRoomsSublistPlusMenuCreateRoomItem", e);
-                            }}
-                            disabled={!canAddRooms}
-                            tooltip={
-                                canAddRooms
-                                    ? undefined
-                                    : _t("You do not have permissions to create new rooms in this space")
-                            }
-                        />
-                        {videoRoomsEnabled && (
-                            <IconizedContextMenuOption
-                                label={_t("New video room")}
-                                iconClassName="mx_RoomList_iconNewVideoRoom"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    closeMenu();
-                                    showCreateNewRoom(
-                                        activeSpace,
-                                        elementCallVideoRoomsEnabled ? RoomType.UnstableCall : RoomType.ElementVideo,
-                                    );
-                                }}
-                                disabled={!canAddRooms}
-                                tooltip={
-                                    canAddRooms
-                                        ? undefined
-                                        : _t("You do not have permissions to create new rooms in this space")
-                                }
-                            >
-                                <BetaPill />
-                            </IconizedContextMenuOption>
-                        )}
-                        {SettingsStore.getValue("Spaces.addExistingRoom") && (
-                            <IconizedContextMenuOption
-                                label={_t("Add existing room")}
-                                iconClassName="mx_RoomList_iconAddExistingRoom"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    closeMenu();
-                                    showAddExistingRooms(activeSpace);
-                                }}
-                                disabled={!canAddRooms}
-                                tooltip={
-                                    canAddRooms
-                                        ? undefined
-                                        : _t("You do not have permissions to add rooms to this space")
-                                }
-                            />
-                        )}
-                    </>
-                ) : null}
+                {showCreateRoom ? <SpaceAddChanelContextMenu tagId={tagId} onFinished={closeMenu} /> : null}
             </IconizedContextMenuOptionList>
         );
     } else if (menuDisplayed) {
         contextMenuContent = (
             <IconizedContextMenuOptionList first>
-                {showCreateRoom && (
-                    <>
-                        <IconizedContextMenuOption
-                            label={_t("New room")}
-                            iconClassName="mx_RoomList_iconNewRoom"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                closeMenu();
-                                defaultDispatcher.dispatch({ action: "view_create_room" });
-                                PosthogTrackers.trackInteraction("WebRoomListRoomsSublistPlusMenuCreateRoomItem", e);
-                            }}
-                        />
-                        {videoRoomsEnabled && (
-                            <IconizedContextMenuOption
-                                label={_t("New video room")}
-                                iconClassName="mx_RoomList_iconNewVideoRoom"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    closeMenu();
-                                    defaultDispatcher.dispatch({
-                                        action: "view_create_room",
-                                        type: elementCallVideoRoomsEnabled
-                                            ? RoomType.UnstableCall
-                                            : RoomType.ElementVideo,
-                                    });
-                                }}
-                            >
-                                <BetaPill />
-                            </IconizedContextMenuOption>
-                        )}
-                    </>
-                )}
+                {showCreateRoom && <SpaceAddChanelContextMenu tagId={tagId} onFinished={closeMenu} />}
                 {showExploreRooms ? (
                     <IconizedContextMenuOption
                         label={_t("Explore public rooms")}
@@ -367,7 +271,7 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
         );
     }
 
-    if (showCreateRoom || showExploreRooms) {
+    if (showCreateRoom && showExploreRooms) {
         return (
             <>
                 <ContextMenuTooltipButton
@@ -383,6 +287,17 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex }) => {
 
                 {contextMenu}
             </>
+        );
+    } else if (showCreateRoom) {
+        return (
+            <AccessibleTooltipButton
+                tabIndex={tabIndex}
+                onClick={() => onCreateRoom(activeSpace, undefined, tags)}
+                className="mx_RoomSublist_auxButton"
+                tooltipClassName="mx_RoomSublist_addRoomTooltip"
+                aria-label={_t("Create room")}
+                title={_t("Create room")}
+            />
         );
     }
 
@@ -527,10 +442,11 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                 sectionLabel: item.tagName,
                 isInvite: false,
                 defaultHidden: false,
+                AuxButtonComponent: UntaggedAuxButton,
             };
         }
 
-        const spaceTagIds = spaceTags.map((item) => item.tagId);
+        const spaceTagIds: TagID[] = spaceTags.map((item) => item.tagId);
 
         this.setState({
             tagAesthetics: {
@@ -721,7 +637,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                 alwaysVisible = false;
             }
 
-            let forceExpanded = false;
+            let forceExpanded = true; // 默认都展开
             if (
                 (this.props.activeSpace === MetaSpace.Favourites && orderedTagId === DefaultTagID.Favourite) ||
                 (this.props.activeSpace === MetaSpace.People && orderedTagId === DefaultTagID.DM)
@@ -810,6 +726,10 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                                         role="tree"
                                         aria-label={_t("Rooms")}
                                         ref={this.treeRef}
+                                        onContextMenu={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
                                     >
                                         {sublists}
                                     </div>

@@ -16,22 +16,59 @@ limitations under the License.
 
 /* Note: the room tile expects to be in a flexbox column container */
 .mx_RoomTile {
-    margin-bottom: 4px;
-    padding: 4px;
+    box-sizing: border-box;
 
     /* The tile is also a flexbox row itself */
     display: flex;
+    align-items: center;
     contain: content; /* Not strict as it will break when resizing a sublist vertically */
-    box-sizing: border-box;
-
-    font-size: $font-13px;
+    padding: 6px 8px;
+    border-radius: 4px;
 
     &.mx_RoomTile_selected,
     &:hover,
     &:focus-within,
     &.mx_RoomTile_hasMenuOpen {
-        background-color: $panel-actions;
-        border-radius: 8px;
+        background-color: $roomtile-active-bg-color;
+    }
+
+    .mx_RoomTile_iconType {
+        position: relative;
+        width: 16px;
+        height: 16px;
+        margin-right: 4px;
+        &:before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: $text-primary-color2;
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+        }
+        &.mx_RoomTile_iconPublic {
+            &:before {
+                width: 11px;
+                height: 11px;
+                mask-image: url("$(res)/img/element-icons/room/public.svg");
+            }
+        }
+        &.mx_RoomTile_iconPrivate{
+            &:before {
+                width: 9px;
+                height: 12px;
+                mask-image: url("$(res)/img/element-icons/room/private.svg");
+            }
+        }
+        &.mx_RoomTile_iconHome{
+            &:before {
+                width: 13px;
+                height: 12px;
+                mask-image: url("$(res)/img/element-icons/home.svg");
+            }
+        }
     }
 
     .mx_DecoratedRoomAvatar,
@@ -44,11 +81,9 @@ limitations under the License.
     }
 
     .mx_RoomTile_titleContainer {
-        height: 32px;
         min-width: 0;
         flex-basis: 0;
         flex-grow: 1;
-        margin-right: 8px; /* spacing to buttons/badges */
 
         /* Create a new column layout flexbox for the title parts */
         display: flex;
@@ -67,10 +102,13 @@ limitations under the License.
 
         .mx_RoomTile_title {
             font-size: $font-14px;
-            line-height: $font-18px;
+            line-height: $font-20px;
+            font-weight: $font-normal-bold;
+            color: $text-primary-color3;
 
             &.mx_RoomTile_titleHasUnreadEvents {
-                font-weight: 600;
+                font-weight: 500;
+                color: $text-primary-color2;
             }
         }
 

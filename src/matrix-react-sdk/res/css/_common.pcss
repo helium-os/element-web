@@ -78,11 +78,17 @@ body {
     color: $primary-content;
     border: 0px;
     margin: 0px;
+    box-sizing: border-box;
 
     /* needed to match the designs correctly on macOS */
     /* see https://github.com/vector-im/element-web/issues/11425 */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+    margin: 0;
+    padding: 0;
 }
 
 pre,

@@ -59,6 +59,11 @@ import NotificationBadge from "./NotificationBadge";
 import RoomTile from "./RoomTile";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { showCreateNewRoom } from "matrix-react-sdk/src/utils/space";
+import IconizedContextMenu, {
+    IconizedContextMenuOption,
+    IconizedContextMenuOptionList,
+} from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
+import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -71,6 +76,7 @@ polyfillTouchEvent();
 
 export interface IAuxButtonProps {
     tabIndex: number;
+    tagId?: TagID;
     dispatcher?: MatrixDispatcher;
 }
 
@@ -99,6 +105,8 @@ interface ResizeDelta {
 type PartialDOMRect = Pick<DOMRect, "left" | "top" | "height">;
 
 interface IState {
+    showAppearanceMenu: boolean;
+    showSortMenu: boolean;
     contextMenuPosition?: PartialDOMRect;
     isResizing: boolean;
     isExpanded: boolean; // used for the for expand of the sublist when the room list is being filtered
@@ -127,6 +135,8 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         this.heightAtStart = 0;
         this.notificationState = RoomNotificationStateStore.instance.getListState(this.props.tagId);
         this.state = {
+            showSortMenu: false, // 是否展示排序相关菜单
+            showAppearanceMenu: false, // 是否展示外观相关菜单
             isResizing: false,
             isExpanded: !this.layout.isCollapsed,
             height: 0, // to be fixed in a moment, we need `rooms` to calculate this.
@@ -465,7 +475,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
     };
 
     private toggleCollapsed = (): void => {
-        if (this.props.forceExpanded) return;
         this.layout.isCollapsed = this.state.isExpanded;
         this.setState({ isExpanded: !this.layout.isCollapsed });
         if (this.props.onListCollapse) {
@@ -515,7 +524,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
     };
 
     private renderVisibleTiles(): React.ReactElement[] {
-        if (!this.state.isExpanded && !this.props.forceExpanded) {
+        if (!this.state.isExpanded) {
             // don't waste time on rendering
             return [];
         }
@@ -576,6 +585,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
     private renderMenu(): ReactNode {
         if (this.props.tagId === DefaultTagID.Suggested || this.props.tagId === DefaultTagID.SavedItems) return null; // not sortable
+        if (SpaceStore.instance.isHomeSpace || OrderedDefaultTagIDs.includes(this.props.tagId)) return null; // 个人主页 & user tag 不展示分组相关操作
 
         let contextMenu: JSX.Element | undefined;
         if (this.state.contextMenuPosition) {
@@ -587,9 +597,52 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 isUnreadFirst = (slidingList?.sort || [])[0] === "by_notification_level";
             }
 
+            // 分组相关
+            const groupSections: JSX.Element | undefined = (
+                <IconizedContextMenuOptionList first>
+                    <IconizedContextMenuOption
+                        label={_t("Edit Group Name")}
+                        onClick={() => this.onChangeTagName(this.props.tagId)}
+                    />
+                    <SpaceAddChanelContextMenu tagId={this.props.tagId} onFinished={this.onCloseMenu} />
+                    <hr />
+                    <IconizedContextMenuOption
+                        isDestructive={true}
+                        label={_t("Delete Group")}
+                        onClick={() => this.onRemoveSpaceTag(this.props.tagId)}
+                    />
+                </IconizedContextMenuOptionList>
+            );
+
+            // 排序相关
+            let sortSections: JSX.Element | undefined;
+            if (this.state.showSortMenu) {
+                sortSections = (
+                    <>
+                        <div className="mx_RoomSublist_contextMenu_title">{_t("Sort by")}</div>
+                        <StyledMenuItemRadio
+                            onClose={this.onCloseMenu}
+                            onChange={() => this.onTagSortChanged(SortAlgorithm.Recent)}
+                            checked={!isAlphabetical}
+                            name={`mx_${this.props.tagId}_sortBy`}
+                        >
+                            {_t("Activity")}
+                        </StyledMenuItemRadio>
+                        <StyledMenuItemRadio
+                            onClose={this.onCloseMenu}
+                            onChange={() => this.onTagSortChanged(SortAlgorithm.Alphabetic)}
+                            checked={isAlphabetical}
+                            name={`mx_${this.props.tagId}_sortBy`}
+                        >
+                            {_t("A-Z")}
+                        </StyledMenuItemRadio>
+                    </>
+                );
+            }
+
             // Invites don't get some nonsense options, so only add them if we have to.
             let otherSections: JSX.Element | undefined;
-            if (this.props.tagId !== DefaultTagID.Invite) {
+            if (this.state.showAppearanceMenu) {
                 otherSections = (
                     <React.Fragment>
                         <hr />
@@ -621,52 +674,20 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     top={this.state.contextMenuPosition.top + this.state.contextMenuPosition.height}
                     onFinished={this.onCloseMenu}
                 >
-                    <div className="mx_RoomSublist_contextMenu">
-                        <div>
-                            {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
-                                <button onClick={() => this.onRemoveSpaceTag(this.props.tagId)}>删除分组</button>
-                            )}
-                            {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
-                                <button onClick={() => this.onChangeTagName(this.props.tagId)}>修改分组名称</button>
-                            )}
-                            {!SpaceStore.instance.isHomeSpace && !OrderedDefaultTagIDs.includes(this.props.tagId) && (
-                                <button onClick={() => this.onCreateRoom()}>新建频道</button>
-                            )}
-                            <div className="mx_RoomSublist_contextMenu_title">{_t("Sort by")}</div>
-                            <StyledMenuItemRadio
-                                onClose={this.onCloseMenu}
-                                onChange={() => this.onTagSortChanged(SortAlgorithm.Recent)}
-                                checked={!isAlphabetical}
-                                name={`mx_${this.props.tagId}_sortBy`}
-                            >
-                                {_t("Activity")}
-                            </StyledMenuItemRadio>
-                            <StyledMenuItemRadio
-                                onClose={this.onCloseMenu}
-                                onChange={() => this.onTagSortChanged(SortAlgorithm.Alphabetic)}
-                                checked={isAlphabetical}
-                                name={`mx_${this.props.tagId}_sortBy`}
-                            >
-                                {_t("A-Z")}
-                            </StyledMenuItemRadio>
-                        </div>
-                        {otherSections}
+                    <div className="mx_IconizedContextMenu mx_IconizedContextMenu_compact">
+                        {groupSections}
+                        {(sortSections || otherSections) && (
+                            <div className="mx_RoomSublist_contextMenu">
+                                {sortSections}
+                                {otherSections}
+                            </div>
+                        )}
                     </div>
                 </ContextMenu>
             );
         }
 
-        return (
-            <React.Fragment>
-                <ContextMenuTooltipButton
-                    className="mx_RoomSublist_menuButton"
-                    onClick={this.onOpenMenuClick}
-                    title={_t("List options")}
-                    isExpanded={!!this.state.contextMenuPosition}
-                />
-                {contextMenu}
-            </React.Fragment>
-        );
+        return <React.Fragment>{contextMenu}</React.Fragment>;
     }
 
     private renderHeader(): React.ReactElement {
@@ -694,12 +715,12 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     let addRoomButton: JSX.Element | undefined;
                     if (this.props.AuxButtonComponent) {
                         const AuxButtonComponent = this.props.AuxButtonComponent;
-                        addRoomButton = <AuxButtonComponent tabIndex={tabIndex} />;
+                        addRoomButton = <AuxButtonComponent tabIndex={tabIndex} tagId={this.props.tagId} />;
                     }
 
                     const collapseClasses = classNames({
                         mx_RoomSublist_collapseBtn: true,
-                        mx_RoomSublist_collapseBtn_collapsed: !this.state.isExpanded && !this.props.forceExpanded,
+                        mx_RoomSublist_collapseBtn_collapsed: !this.state.isExpanded,
                     });
 
                     const classes = classNames({
@@ -791,11 +812,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
             await SpaceStore.instance.sendSpaceTags(tags);
             alert(`成功修改分组名称为 - 测试tag：${num}`);
         }
-    }
-
-    // 在当前分组下创建频道
-    private async onCreateRoom() {
-        showCreateNewRoom(SpaceStore.instance.activeSpaceRoom, undefined, [{ tagId: this.props.tagId }]);
     }
 
     public render(): React.ReactElement {

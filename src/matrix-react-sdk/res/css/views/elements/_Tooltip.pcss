@@ -37,48 +37,34 @@ limitations under the License.
 
 .mx_Tooltip_chevron {
     position: absolute;
-    left: -7px;
-    top: calc(50% - 6px);
-    width: 0;
-    height: 0;
-    border-top: 7px solid transparent;
-    border-right: 7px solid $menu-border-color;
-    border-bottom: 7px solid transparent;
-}
-
-.mx_Tooltip_chevron::after {
-    content: "";
-    width: 0;
-    height: 0;
-    border-top: 6px solid transparent;
-    border-right: 6px solid $menu-bg-color;
-    border-bottom: 6px solid transparent;
-    position: absolute;
-    top: -6px;
-    left: 1px;
+    left: -5px;
+    top: 50%;
+    width: 5px;
+    height: 15px;
+    transform: translate(0, -50%);
+    background: $tooltip-bg-color;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-image: url("$(res)/img/element-icons/tooltip-chevron.svg");
 }
 
 .mx_Tooltip {
     display: none;
     position: fixed;
-    border-radius: 8px;
+    border-radius: 6px;
     z-index: 6000; /* Higher than context menu so tooltips can be used everywhere */
-    padding: 10px;
+    padding: 4px 12px 4px 9px;
     pointer-events: none;
-    line-height: $font-14px;
-    font-size: $font-12px;
+    line-height: $font-20px;
+    font-size: $font-14px;
     font-weight: 500;
     max-width: 300px;
     word-break: break-word;
 
-    background-color: #21262c; /* Same on both themes */
-    color: $accent-fg-color;
+    background-color: $tooltip-bg-color; /* Same on both themes */
+    color: $tooltip-text-color;
     border: 0;
     text-align: center;
-
-    .mx_Tooltip_chevron {
-        display: none;
-    }
 
     &.mx_Tooltip_visible {
         animation: mx_fadein 0.2s forwards;

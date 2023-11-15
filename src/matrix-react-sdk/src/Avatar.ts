@@ -21,7 +21,7 @@ import { ResizeMethod } from "matrix-js-sdk/src/@types/partials";
 import { split } from "lodash";
 
 import DMRoomMap from "./utils/DMRoomMap";
-import {getSourceHttpUrlFromMxc} from "./customisations/Media";
+import { getSourceHttpUrlFromMxc } from "./customisations/Media";
 import { isLocalRoom } from "./utils/localRoom/isLocalRoom";
 
 // Not to be used for BaseAvatar urls as that has similar default avatar fallback already
@@ -80,6 +80,31 @@ function urlForColor(color: string): string {
     return canvas.toDataURL();
 }
 
+// 根据name取background-color
+const userBackgroundColor = [
+    "#7E7CE3",
+    "#E37C7C",
+    "#E3A17C",
+    "#E3C67C",
+    "#7CE38C",
+    "#7CE3BE",
+    "#B07CE3",
+    "#E37CD9",
+    "#E37C88",
+    "#7CD7E3",
+    "#7CB8E3",
+    "#7CABE3",
+];
+export function getColorForCharacter(char) {
+    const charCode = char.trim().charAt(0).codePointAt(0); // 使用codePointAt处理Unicode字符
+
+    // 自定义的映射规则，这只是一个示例，你可以根据自己的需求进行调整
+    const colorCount = 12;
+    const colorIndex = charCode % colorCount;
+
+    return userBackgroundColor[colorIndex];
+}
+
 // XXX: Ideally we'd clear this cache when the theme changes
 // but since this function is at global scope, it's a bit
 // hard to install a listener here, even if there were a clear event to listen to
@@ -87,16 +112,8 @@ const colorToDataURLCache = new Map<string, string>();
 
 export function defaultAvatarUrlForString(s: string): string {
     if (!s) return ""; // XXX: should never happen but empirically does by evidence of a rageshake
-    const defaultColors = ["#0DBD8B", "#368bd6", "#ac3ba8"];
-    let total = 0;
-    for (let i = 0; i < s.length; ++i) {
-        total += s.charCodeAt(i);
-    }
-    const colorIndex = total % defaultColors.length;
-    // overwritten color value in custom themes
-    const cssVariable = `--avatar-background-colors_${colorIndex}`;
-    const cssValue = document.body.style.getPropertyValue(cssVariable);
-    const color = cssValue || defaultColors[colorIndex];
+
+    const color = getColorForCharacter(s);
     let dataUrl = colorToDataURLCache.get(color);
     if (!dataUrl) {
         // validate color as this can come from account_data

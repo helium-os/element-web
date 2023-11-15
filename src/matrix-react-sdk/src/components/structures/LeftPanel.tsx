@@ -15,12 +15,13 @@ limitations under the License.
 */
 
 import * as React from "react";
-import { createRef } from "react";
+import { createRef, ReactNode } from "react";
 import classNames from "classnames";
 
 import dis from "../../dispatcher/dispatcher";
 import { _t } from "../../languageHandler";
 import RoomList from "../views/rooms/RoomList";
+import SpaceHomeEntrance from "../views/spaces/SpaceHomeEntrance";
 import LegacyCallHandler from "../../LegacyCallHandler";
 import { HEADER_HEIGHT } from "../views/rooms/RoomSublist";
 import { Action } from "../../dispatcher/actions";
@@ -47,7 +48,11 @@ import { ButtonEvent } from "../views/elements/AccessibleButton";
 import PosthogTrackers from "../../PosthogTrackers";
 import PageType from "../../PageTypes";
 import { UserOnboardingButton } from "../views/user-onboarding/UserOnboardingButton";
-import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
+import SpaceAddTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddTagContextMenu";
+import IconizedContextMenu, {
+    IconizedContextMenuOptionList,
+} from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 
 interface IProps {
     isMinimized: boolean;
@@ -61,10 +66,13 @@ enum BreadcrumbsMode {
     Labs,
 }
 
+type PartialDOMRect = Pick<DOMRect, "left" | "top" | "height">;
+
 interface IState {
     showBreadcrumbs: BreadcrumbsMode;
     activeSpace: SpaceKey;
     showRoomListHeader: boolean;
+    contextMenuPosition?: PartialDOMRect;
 }
 
 export default class LeftPanel extends React.PureComponent<IProps, IState> {
@@ -373,24 +381,38 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
         );
     }
 
-    // 新增分组
-    private async onAddSpaceTag(): Promise<void> {
-        const cli = MatrixClientPeg.get();
-        const tagId = `${new Date().getTime()}/${cli.getUserId()}/${cli.getDeviceId()}`;
-        const num = Math.round(Math.random() * 100);
+    private onContextMenu = (ev: React.MouseEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (this.state.activeSpace === MetaSpace.Home) return;
+        this.setState({
+            contextMenuPosition: {
+                left: ev.clientX,
+                top: ev.clientY,
+                height: 0,
+            },
+        });
+    };
 
-        // 添加前做去重处理
-        const tags = [...SpaceStore.instance.spaceTags];
-        const index = tags.findIndex((item) => item.tagId === tagId);
-        if (index !== -1) {
-            tags.splice(index, 1, {
-                tagId,
-                tagName: `测试tag：${num}`,
-            });
+    private onFinished = () => {
+        this.setState({
+            contextMenuPosition: null,
+        });
+    };
+
+    private renderContextMenu(): ReactNode {
+        if (this.state.contextMenuPosition) {
+            return (
+                <IconizedContextMenu {...this.state.contextMenuPosition} onFinished={this.onFinished} compact>
+                    <IconizedContextMenuOptionList first>
+                        <SpaceAddTagContextMenu onFinished={this.onFinished} />
+                        <SpaceAddChanelContextMenu onFinished={this.onFinished} />
+                    </IconizedContextMenuOptionList>
+                </IconizedContextMenu>
+            );
         }
 
-        await SpaceStore.instance.sendSpaceTags(tags);
-        alert(`成功添加分组 - 测试tag：${num}`);
+        return null;
     }
 
     public render(): React.ReactNode {
@@ -414,20 +436,23 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
         });
 
         const roomListClasses = classNames("mx_LeftPanel_actualRoomListContainer", "mx_AutoHideScrollbar");
-
         return (
-            <div className={containerClasses}>
+            <div className={containerClasses} onContextMenu={this.onContextMenu}>
                 <div className="mx_LeftPanel_roomListContainer">
                     {/* {shouldShowComponent(UIComponent.FilterContainer) && this.renderSearchDialExplore()} */}
                     {this.renderBreadcrumbs()}
-                    {this.state.showRoomListHeader && !this.props.isMinimized && (
-                        <RoomListHeader onVisibilityChange={this.refreshStickyHeaders} />
-                    )}
-                    <UserOnboardingButton
-                        selected={this.props.pageType === PageType.HomePage}
-                        minimized={this.props.isMinimized}
-                    />
-                    {!SpaceStore.instance.isHomeSpace && <button onClick={() => this.onAddSpaceTag()}>新增分组</button>}
+                    <div className="mx_LeftPanel_spaceInfoWrapper">
+                        {this.state.showRoomListHeader && !this.props.isMinimized && (
+                            <RoomListHeader onVisibilityChange={this.refreshStickyHeaders} />
+                        )}
+                        <UserOnboardingButton
+                            selected={this.props.pageType === PageType.HomePage}
+                            minimized={this.props.isMinimized}
+                        />
+                        <div className="mx_LeftPanel_spaceHomeEntrance">
+                            <SpaceHomeEntrance space={this.state.activeSpace} pageType={this.props.pageType} />
+                        </div>
+                    </div>
                     <div className="mx_LeftPanel_roomListWrapper">
                         <div
                             className={roomListClasses}
@@ -440,6 +465,7 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
                         </div>
                     </div>
                 </div>
+                {this.renderContextMenu()}
             </div>
         );
     }

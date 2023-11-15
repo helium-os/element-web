@@ -115,7 +115,7 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
 
         const parentBox = this.parent.getBoundingClientRect();
         const width = UIStore.instance.windowWidth;
-        const spacing = 6;
+        const spacing = 2;
         const parentWidth = this.props.maxParentWidth
             ? Math.min(parentBox.width, this.props.maxParentWidth)
             : parentBox.width;

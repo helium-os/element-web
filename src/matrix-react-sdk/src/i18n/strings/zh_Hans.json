@@ -1841,7 +1841,7 @@
     "Space options": "社区选项",
     "Leave space": "离开社区",
     "Share your public space": "分享你的公共社区",
-    "Create a space": "创建社区",
+    "Create a space": "创建一个新社区",
     "sends snowfall": "发送雪球",
     "Sends the given message with snowfall": "发送附加雪球的给定信息",
     "sends confetti": "发送五彩纸屑",
@@ -2018,7 +2018,7 @@
     "Channel: <channelLink/>": "频道：<channelLink/>",
     "Workspace: <networkLink/>": "工作空间：<networkLink/>",
     "Invite with email or username": "使用邮箱或者用户名邀请",
-    "Invite people": "邀请人们",
+    "Invite people": "邀请成员",
     "Update %(brand)s": "更新 %(brand)s",
     "Zimbabwe": "津巴布韦",
     "Zambia": "赞比亚",
@@ -3471,5 +3471,9 @@
     "Members": "%(roomType)s成员",
 
     "people": "私聊",
-    "channel": "频道"
+    "channel": "频道",
+
+    "Create Group": "创建分组",
+    "Edit Group Name": "修改分组名称",
+    "Delete Group": "删除分组"
 }

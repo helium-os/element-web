@@ -3778,5 +3778,9 @@
     "Members": "%(roomType)s members",
 
     "people": "people",
-    "channel": "channel"
+    "channel": "channel",
+
+    "Create Group": "Creat group",
+    "Edit Group Name": "Edit group name",
+    "Delete Group": "Delete group"
 }

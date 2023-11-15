@@ -221,12 +221,10 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
         contextMenu = <SpaceCreateMenu onFinished={closeMenu} />;
     }
 
-    const onNewClick = menuDisplayed
-        ? closeMenu
-        : () => {
-              if (!isPanelCollapsed) setPanelCollapsed(true);
-              openMenu();
-          };
+    const onNewClick = () => {
+        if (!isPanelCollapsed) setPanelCollapsed(true);
+        openMenu();
+    };
 
     return (
         <li
@@ -238,10 +236,8 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
         >
             <SpaceButton
                 data-testid="create-space-button"
-                className={classNames("mx_SpaceButton_new", {
-                    mx_SpaceButton_newCancel: menuDisplayed,
-                })}
-                label={menuDisplayed ? _t("Cancel") : _t("Create a space")}
+                className={classNames("mx_SpaceButton_new")}
+                label={_t("Create a space")}
                 onClick={onNewClick}
                 isNarrow={isPanelCollapsed}
                 ref={handle}
@@ -301,6 +297,7 @@ const SpacePanelInner: React.FC<IInnerSpacePanelProps> = ({
             aria-label={_t("Spaces")}
         >
             {metaSpacesSection}
+            <li className="mx_Space_Divider" />
             {invites.map((s) => (
                 <SpaceItem
                     key={s.roomId}

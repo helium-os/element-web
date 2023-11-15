@@ -30,14 +30,28 @@ limitations under the License.
 }
 
 .mx_ContextualMenu {
-    border-radius: 8px;
-    box-shadow: 4px 4px 12px 0 $menu-box-shadow-color;
-    background-color: $menu-bg-color;
-    color: $primary-content;
     position: absolute;
+    background: $menu-bg-color;
+    box-shadow: $menu-box-shadow;
+    backdrop-filter: blur(20px);
+    border-radius: $menu-border-radius;
+    color: $menu-text-color;
     font-size: $font-14px;
+    font-weight: 500;
     z-index: 5001;
     width: max-content;
+    &:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 200%;
+        height: 200%;
+        border: 1px solid $menu-border-color;
+        border-radius: calc(2 * $menu-border-radius);
+        transform-origin: 0  0;
+        transform: scale(0.5);
+    }
 }
 
 .mx_ContextualMenu_right {
