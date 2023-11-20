@@ -1,0 +1,27 @@
+.mx_btn {
+    padding: 0 20px;
+    height: 36px;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    &.mx-btn-primary {
+        background: $button-primary-bg-color;
+        color: $button-text-color;
+    }
+    &.mx-btn-danger {
+        background: $button-danger-bg-color;
+        color: $button-text-color;
+    }
+    &.mx-btn-link {
+        padding: 0 12px;
+        color: $button-link-text-color;
+    }
+    &[disabled] {
+        background: $button-disabled-bg-color!important;
+        cursor: default;
+    }
+}

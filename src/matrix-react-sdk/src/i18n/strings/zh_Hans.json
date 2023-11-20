@@ -533,7 +533,7 @@
     "No backup found!": "找不到备份！",
     "Unable to restore backup": "无法还原备份",
     "Unable to load backup status": "无法获取备份状态",
-    "Next": "下一个",
+    "Next": "下一步",
     "Download": "下载",
     "Retry": "重试",
     "Go to Settings": "打开设置",
@@ -1791,7 +1791,7 @@
     "Search (must be enabled)": "搜索（必须启用）",
     "Your Security Key": "你的安全密钥",
     "%(ssoButtons)s Or %(usernamePassword)s": "%(ssoButtons)s 或 %(usernamePassword)s",
-    "Room name": "频道名称",
+    "Room name": "频道名字",
     "Random": "随机",
     "%(count)s members|one": "%(count)s 位成员",
     "%(count)s members|other": "%(count)s 位成员",
@@ -1975,7 +1975,7 @@
     "This is the start of <roomName/>.": "这里是 <roomName/> 的开始。",
     "Add a photo, so people can easily spot your room.": "添加图片，让人们一眼就能看到你的频道。",
     "You can change these anytime.": "你随时可以更改它们。",
-    "Add some details to help people recognise it.": "添加一些细节，以便人们辨识你的社群。",
+    "Add some details to help people recognise it.": "为您的社区添加一些细节，以便人们辨识您的社区，您之后也对它们进行修改。",
     "Open space for anyone, best for communities": "适合每一个人的开放社区，社群的理想选择",
     "New version of %(brand)s is available": "%(brand)s 有新版本可用",
     "Please view <existingIssuesLink>existing bugs on Github</existingIssuesLink> first. No match? <newIssueLink>Start a new one</newIssueLink>.": "请先查找一下 <existingIssuesLink>Github 上已有的问题</existingIssuesLink>，以免重复。找不到重复问题？<newIssueLink>发起一个吧</newIssueLink>。",
@@ -2280,7 +2280,8 @@
     "Securely cache encrypted messages locally for them to appear in search results, using %(size)s to store messages from %(rooms)s rooms.|one": "使用%(size)s存储%(rooms)s个频道的消息。在本地安全地缓存已加密的消息以使其出现在搜索结果中。",
     "Securely cache encrypted messages locally for them to appear in search results, using %(size)s to store messages from %(rooms)s rooms.|other": "使用%(size)s存储%(rooms)s个频道的消息。在本地安全地缓存已加密的消息以使其出现在搜索结果中。",
     "Manage & explore rooms": "管理并探索频道",
-    "Please enter a name for the space": "请输入社区名称",
+    "Space Name": "社区名称",
+    "Please enter a name for the space": "请为你的社区起一个名字",
     "Play": "播放",
     "Pause": "暂停",
     "%(name)s on hold": "保留 %(name)s",
@@ -3474,6 +3475,8 @@
     "channel": "频道",
 
     "Create Group": "创建分组",
+    "Group Name": "分组名字",
     "Edit Group Name": "修改分组名称",
-    "Delete Group": "删除分组"
+    "Delete Group": "删除分组",
+    "Please enter a name for the group": "请为你的分组起个名字"
 }

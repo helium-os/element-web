@@ -44,12 +44,7 @@ import RoomListStore, { LISTS_UPDATE_EVENT, LISTS_LOADING_EVENT } from "../../..
 import { arrayFastClone, arrayHasOrderChange } from "../../../utils/arrays";
 import { objectExcluding, objectHasDiff } from "../../../utils/objects";
 import ResizeNotifier from "../../../utils/ResizeNotifier";
-import ContextMenu, {
-    ChevronFace,
-    ContextMenuTooltipButton,
-    StyledMenuItemCheckbox,
-    StyledMenuItemRadio,
-} from "../../structures/ContextMenu";
+import ContextMenu, { ChevronFace, StyledMenuItemCheckbox, StyledMenuItemRadio } from "../../structures/ContextMenu";
 import AccessibleButton from "../../views/elements/AccessibleButton";
 import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ExtraTile from "./ExtraTile";
@@ -58,12 +53,14 @@ import { SlidingSyncManager } from "../../../SlidingSyncManager";
 import NotificationBadge from "./NotificationBadge";
 import RoomTile from "./RoomTile";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import { showCreateNewRoom } from "matrix-react-sdk/src/utils/space";
-import IconizedContextMenu, {
+import {
     IconizedContextMenuOption,
     IconizedContextMenuOptionList,
 } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
+import Modal from "matrix-react-sdk/src/Modal";
+import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
+import DeleteGroupConfirmDialog from "matrix-react-sdk/src/components/views/dialogs/group/DeleteGroupConfirmDialog";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -788,30 +785,15 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
     // 删除分组
     private async onRemoveSpaceTag(tagId: TagID): Promise<void> {
-        const tags = [...SpaceStore.instance.spaceTags];
-        const index = tags.findIndex((item) => item.tagId === tagId);
-        if (index !== -1) {
-            tags.splice(index, 1);
-
-            await SpaceStore.instance.sendSpaceTags(tags);
-            alert(`成功删除分组 - ${tagId}`);
-        }
+        Modal.createDialog(DeleteGroupConfirmDialog, { tagId });
     }
 
     // 修改分组名称
     private async onChangeTagName(tagId: TagID): Promise<void> {
-        const tags = [...SpaceStore.instance.spaceTags];
-        const index = tags.findIndex((item) => item.tagId === tagId);
-        const num = Math.round((Math.random() + 1) * 100);
-        if (index !== -1) {
-            tags.splice(index, 1, {
-                ...tags[index],
-                tagName: `测试tag：${num}`,
-            });
-
-            await SpaceStore.instance.sendSpaceTags(tags);
-            alert(`成功修改分组名称为 - 测试tag：${num}`);
-        }
+        Modal.createDialog(GroupNameDialog, {
+            type: DialogType.Edit,
+            tagId,
+        });
     }
 
     public render(): React.ReactElement {

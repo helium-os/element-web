@@ -86,16 +86,21 @@ export const createSpace = async (
     });
 };
 
-const SpaceCreateMenuType: React.FC<{
+export const SpaceCreateMenuType: React.FC<{
     title: string;
     description: string;
     className: string;
     onClick(): void;
 }> = ({ title, description, className, onClick }) => {
     return (
-        <AccessibleButton className={classNames("mx_SpaceCreateMenuType", className)} onClick={onClick}>
-            <h3>{title}</h3>
-            <span>{description}</span>
+        <AccessibleButton className={classNames("mx_SpaceTypeItem", className)} onClick={onClick}>
+            <div className="mx_SpaceTypeItem_wrap">
+                <span className="mx_SpaceTypeItem_icon" />
+                <div className="mx_SpaceTypeItem_introduce">
+                    <p className="mx_SpaceTypeItem_title">{title}</p>
+                    <span className="mx_SpaceTypeItem_description">{description}</span>
+                </div>
+            </div>
         </AccessibleButton>
     );
 };
@@ -155,13 +160,13 @@ export const SpaceFeedbackPrompt: React.FC<{
 type BProps = Omit<ComponentProps<typeof SpaceBasicSettings>, "nameDisabled" | "topicDisabled" | "avatarDisabled">;
 interface ISpaceCreateFormProps extends BProps {
     busy: boolean;
-    alias: string;
+    alias?: string;
     nameFieldRef: RefObject<Field>;
-    aliasFieldRef: RefObject<RoomAliasField>;
+    aliasFieldRef?: RefObject<RoomAliasField>;
     showAliasField?: boolean;
     children?: ReactNode;
-    onSubmit(e: SyntheticEvent): void;
-    setAlias(alias: string): void;
+    onSubmit?(e: SyntheticEvent): void;
+    setAlias?(alias: string): void;
 }
 
 export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
@@ -187,7 +192,7 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
         const action = getKeyBindingsManager().getAccessibilityAction(ev);
         switch (action) {
             case KeyBindingAction.Enter:
-                onSubmit(ev);
+                onSubmit?.(ev);
                 break;
         }
     };
@@ -198,12 +203,14 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
 
             <Field
                 name="spaceName"
-                label={_t("Name")}
-                autoFocus={true}
+                label={_t("Space Name")}
+                placeholder={_t("Please enter a name for the space")}
+                usePlaceholderAsHint={true}
+                autoFocus={false}
                 value={name}
                 onChange={(ev: ChangeEvent<HTMLInputElement>) => {
                     const newName = ev.target.value;
-                    if (!alias || alias === `#${nameToLocalpart(name)}:${domain}`) {
+                    if (showAliasField && (!alias || alias === `#${nameToLocalpart(name)}:${domain}`)) {
                         setAlias(`#${nameToLocalpart(newName)}:${domain}`);
                         aliasFieldRef.current?.validate({ allowEmpty: true });
                     }
@@ -228,16 +235,6 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                     onKeyDown={onKeyDown}
                 />
             ) : null}
-
-            <Field
-                name="spaceTopic"
-                element="textarea"
-                label={_t("Description")}
-                value={topic ?? ""}
-                onChange={(ev) => setTopic(ev.target.value)}
-                rows={3}
-                disabled={busy}
-            />
 
             {children}
         </form>
@@ -305,13 +302,13 @@ const SpaceCreateMenu: React.FC<{
                 <SpaceCreateMenuType
                     title={_t("Public")}
                     description={_t("Open space for anyone, best for communities")}
-                    className="mx_SpaceCreateMenuType_public"
+                    className="mx_SpaceTypeItem_public"
                     onClick={() => setVisibility(Visibility.Public)}
                 />
                 <SpaceCreateMenuType
                     title={_t("Private")}
                     description={_t("Invite only, best for yourself or teams")}
-                    className="mx_SpaceCreateMenuType_private"
+                    className="mx_SpaceTypeItem_private"
                     onClick={() => setVisibility(Visibility.Private)}
                 />
 

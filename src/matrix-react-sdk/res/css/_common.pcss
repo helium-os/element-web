@@ -43,8 +43,8 @@ $timeline-image-border-radius: 8px;
     --transition-short: 0.1s;
     --transition-standard: 0.3s;
     --MessageTimestamp-width: $MessageTimestamp_width;
-    --buttons-dialog-gap-row: $spacing-8;
-    --buttons-dialog-gap-column: $spacing-8;
+    --buttons-dialog-gap-row: $spacing-12;
+    --buttons-dialog-gap-column: $spacing-12;
 }
 
 @media only percy {
@@ -216,6 +216,43 @@ legend {
     border: none;
 }
 
+@define-mixin MaskIcon $iconImage, $iconWidth, $iconHeight, $iconColor {
+    position: relative;
+    &:before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: $iconWidth;
+        height: $iconHeight;
+        transform: translate(-50%, -50%);
+        background: $iconColor;
+        mask: $iconImage no-repeat center;
+        mask-size: 100% auto;
+
+    }
+}
+
+@define-mixin HalfPxBorder $borderColor, $borderRadius {
+    position: relative;
+    width: unset;
+    height: unset;
+    border-radius: $borderRadius;
+    &:before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        box-sizing: border-box;
+        width: 200%;
+        height: 200%;
+        border: 1px solid $borderColor;
+        border-radius: calc(2 * $borderRadius);
+        transform-origin: 0 0;
+        transform: scale(0.5);
+    }
+}
+
 /* .mx_textinput is a container for a text input */
 /* + some other controls like buttons, ... */
 /* it has the appearance of a text box so the controls */
@@ -223,36 +260,36 @@ legend {
 
 .mx_Dialog,
 .mx_MatrixChat_wrapper {
-    .mx_textinput > input[type="text"],
-    .mx_textinput > input[type="search"] {
-        border: none;
-        flex: 1;
-        color: $primary-content;
-    }
+    //.mx_textinput > input[type="text"],
+    //.mx_textinput > input[type="search"] {
+    //    border: none;
+    //    flex: 1;
+    //    color: $primary-content;
+    //}
 
-    :not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="text"],
-    :not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="search"],
-    .mx_textinput {
-        display: block;
-        box-sizing: border-box;
-        background-color: transparent;
-        color: $input-darker-fg-color;
-        border-radius: 4px;
-        border: 1px solid rgba($primary-content, 0.1);
-        /* these things should probably not be defined globally */
-        margin: 9px;
-    }
+    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="text"],
+    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="search"],
+    //.mx_textinput {
+    //    display: block;
+    //    box-sizing: border-box;
+    //    background-color: transparent;
+    //    color: $input-darker-fg-color;
+    //    border-radius: 4px;
+    //    border: 1px solid rgba($primary-content, 0.1);
+    //    /* these things should probably not be defined globally */
+    //    margin: 9px;
+    //}
 
-    .mx_textinput {
-        display: flex;
-        align-items: center;
-    }
-
-    :not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="text"]::placeholder,
-    :not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="search"]::placeholder,
-    .mx_textinput input::placeholder {
-        color: rgba($input-darker-fg-color, 0.75);
-    }
+    //.mx_textinput {
+    //    display: flex;
+    //    align-items: center;
+    //}
+    //
+    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="text"]::placeholder,
+    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="search"]::placeholder,
+    //.mx_textinput input::placeholder {
+    //    color: rgba($input-darker-fg-color, 0.75);
+    //}
 }
 
 /*** panels ***/
@@ -312,6 +349,7 @@ legend {
     top: 0;
     left: 0;
     width: 100%;
+    width: 100%;
     height: 100%;
 
     display: flex;
@@ -320,16 +358,18 @@ legend {
 }
 
 .mx_Dialog {
-    background-color: $background;
-    color: $light-fg-color;
     z-index: 4012;
     font-size: $font-15px;
     position: relative;
-    padding: 24px;
     max-height: 80%;
-    box-shadow: 2px 15px 30px 0 $dialog-shadow-color;
-    border-radius: 8px;
+    background: $dialog-bg;
+    backdrop-filter: blur(20px);
+    box-shadow: $dialog-shadow;
+    border-radius: 20px;
     overflow-y: auto;
+
+
+
 }
 
 /* Styles copied/inspired by GroupLayout, ReplyTile, and EventTile variants. */
@@ -400,8 +440,9 @@ legend {
 }
 
 .mx_Dialog_fixedWidth {
-    width: 60vw;
+    width: 454px;
     max-width: 704px;
+    overflow-x: hidden;
 }
 
 .mx_Dialog_staticWrapper .mx_Dialog {
@@ -415,8 +456,8 @@ legend {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: $dialog-backdrop-color;
-    opacity: 0.8;
+    border-radius: 16px;
+    background: rgba(21, 21, 21, 0.40);
     z-index: 4011;
 }
 
@@ -450,8 +491,7 @@ legend {
 
 .mx_Dialog_header {
     position: relative;
-    padding: 3px 0;
-    margin-bottom: 10px;
+    padding: 18px;
 }
 
 .mx_Dialog_titleImage {
@@ -463,18 +503,32 @@ legend {
     margin-bottom: 2px;
 }
 
+.mx_Dialog_title_box {
+    display: flex;
+    align-items: center;
+}
+
 .mx_Dialog_title {
-    color: $dialog-title-fg-color;
-    display: inline-block;
-    width: 100%;
-    box-sizing: border-box;
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: $font-18px;
+    line-height: $font-26px;
+    font-weight: $font-semi-bold;
+    color: $dialog-title-color;
+}
+
+.mx_Dialog_description {
+    margin-top: 4px;
+    font-size: $font-14px;
+    line-height: $font-20px;
+    font-weight: $font-normal-bold;
+    color: $dialog-description-color;
 }
 
 .mx_Dialog_header.mx_Dialog_headerWithButton > .mx_Dialog_title {
     text-align: center;
-}
-.mx_Dialog_header.mx_Dialog_headerWithCancel {
-    padding-right: 20px; /* leave space for the 'X' cancel button */
 }
 
 .mx_Dialog_header.mx_Dialog_headerWithCancelOnly {
@@ -487,42 +541,59 @@ legend {
 }
 
 @define-mixin customisedCancelButton {
-    mask: url("$(res)/img/cancel.svg");
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-size: cover;
-    background-color: $dialog-close-fg-color;
-    cursor: pointer;
-    position: unset;
+    position: relative;
+    box-sizing: border-box;
     width: unset;
     height: unset;
+    cursor: pointer;
+    &:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        transform: translate(-50%, -50%);
+        mask: url("$(res)/img/cancel.svg");
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: 100% auto;
+        background-color: $dialog-close-fg-color;
+    }
+
+    &:hover {
+        background-color: $dialog-close-external-color;
+        border-radius: 50%;
+        border: 0.5px solid rgba(0, 0, 0, 0.10);
+    }
 }
 
 .mx_Dialog_cancelButton {
     @mixin customisedCancelButton;
-    width: 18px;
-    height: 18px;
-    position: absolute;
-    top: 10px;
-    right: 0;
+    width: 26px;
+    height: 26px;
 }
 
 .mx_Dialog_content {
-    margin: 24px 0 68px;
-    font-size: $font-14px;
-    color: $primary-content;
+    padding: 20px 18px;
     word-wrap: break-word;
+    border-top: 1px solid $border-primary-color;
+}
+
+.mx_Dialog_footer {
+    padding: 18px;
+    border-top: 1px solid $border-primary-color;
 }
 
 .mx_Dialog_buttons {
-    margin-top: $spacing-20;
+    display: flex;
+    align-items: center;
     margin-inline-start: auto;
-    text-align: right;
+}
 
-    .mx_Dialog_buttons_additive {
-        /* The consumer is responsible for positioning their elements. */
-        float: left;
-    }
+.mx_Dialog_buttons_additive {
+    /* The consumer is responsible for positioning their elements. */
+    flex: 1;
 }
 
 .mx_Dialog_buttons_row {
@@ -541,82 +612,9 @@ legend {
     }
 }
 
-/* XXX: Our button style are a mess: buttons that happen to appear in dialogs get special styles applied
- * to them that no button anywhere else in the app gets by default. In practice, buttons in other places
- * in the app look the same by being AccessibleButtons, or possibly by having explict button classes.
- * We should go through and have one consistent set of styles for buttons throughout the app.
- * For now, I am duplicating the selectors here for mx_Dialog and mx_DialogButtons.
- *
- * Elements that should not be styled like a dialog button are mentioned in a :not() pseudo-class.
- * For the widest browser support, we use multiple :not pseudo-classes instead of :not(.a, .b).
- */
-.mx_Dialog button:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]):not(.mx_AccessibleButton),
-.mx_Dialog input[type="submit"],
-.mx_Dialog_buttons button:not(.mx_Dialog_nonDialogButton):not(.mx_AccessibleButton),
-.mx_Dialog_buttons input[type="submit"] {
-    @mixin mx_DialogButton;
-    margin-left: 0px;
-    margin-right: var(--buttons-dialog-gap-column);
-    margin-bottom: 5px;
 
-    /* flip colours for the secondary ones */
-    font-weight: 600;
-    border: 1px solid $accent;
-    color: $accent;
-    background-color: $button-secondary-bg-color;
-    font-family: inherit;
-}
 
-.mx_Dialog button:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]):not(.mx_AccessibleButton):last-child {
-    margin-right: 0px;
-}
 
-.mx_Dialog button:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]):not(.mx_AccessibleButton):hover,
-.mx_Dialog input[type="submit"]:hover,
-.mx_Dialog_buttons button:not(.mx_Dialog_nonDialogButton):not(.mx_AccessibleButton):hover,
-.mx_Dialog_buttons input[type="submit"]:hover {
-    @mixin mx_DialogButton_hover;
-}
-
-.mx_Dialog button:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]):not(.mx_AccessibleButton):focus,
-.mx_Dialog input[type="submit"]:focus,
-.mx_Dialog_buttons button:not(.mx_Dialog_nonDialogButton):not(.mx_AccessibleButton):focus,
-.mx_Dialog_buttons input[type="submit"]:focus {
-    filter: brightness($focus-brightness);
-}
-
-.mx_Dialog button.mx_Dialog_primary:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]),
-.mx_Dialog input[type="submit"].mx_Dialog_primary,
-.mx_Dialog_buttons button.mx_Dialog_primary:not(.mx_Dialog_nonDialogButton):not(.mx_AccessibleButton),
-.mx_Dialog_buttons input[type="submit"].mx_Dialog_primary {
-    color: $accent-fg-color;
-    background-color: $accent;
-    min-width: 156px;
-}
-
-.mx_Dialog button.danger:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]),
-.mx_Dialog input[type="submit"].danger,
-.mx_Dialog_buttons button.danger:not(.mx_Dialog_nonDialogButton):not(.mx_AccessibleButton),
-.mx_Dialog_buttons input[type="submit"].danger {
-    background-color: $alert;
-    border: solid 1px $alert;
-    color: $accent-fg-color;
-}
-
-.mx_Dialog button.warning:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]),
-.mx_Dialog input[type="submit"].warning {
-    border: solid 1px $alert;
-    color: $alert;
-}
-
-.mx_Dialog button:not(.mx_Dialog_nonDialogButton):not([class|="maplibregl"]):not(.mx_AccessibleButton):disabled,
-.mx_Dialog input[type="submit"]:disabled,
-.mx_Dialog_buttons button:not(.mx_Dialog_nonDialogButton):not(.mx_AccessibleButton):disabled,
-.mx_Dialog_buttons input[type="submit"]:disabled {
-    background-color: $light-fg-color;
-    border: solid 1px $light-fg-color;
-    opacity: 0.7;
-}
 
 /* Spinner Dialog overide */
 .mx_Dialog_wrapper.mx_Dialog_spinner .mx_Dialog {

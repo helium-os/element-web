@@ -21,46 +21,31 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import { MatrixCall } from "matrix-js-sdk/src/webrtc/call";
 import { logger } from "matrix-js-sdk/src/logger";
 
-import { Icon as InfoIcon } from "../../../../res/img/element-icons/info.svg";
 import { Icon as EmailPillAvatarIcon } from "../../../../res/img/icon-email-pill-avatar.svg";
 import { _t, _td } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
-import {
-    // getHostnameFromMatrixServerName,
-    // getServerName,
-    makeRoomPermalink,
-    makeUserPermalink,
-} from "../../../utils/permalinks/Permalinks";
 import DMRoomMap from "../../../utils/DMRoomMap";
 import SdkConfig from "../../../SdkConfig";
 import * as Email from "../../../email";
-import { getDefaultIdentityServerUrl, setToDefaultIdentityServer } from "../../../utils/IdentityServerUtils";
 import { buildActivityScores, buildMemberScores, compareMembers } from "../../../utils/SortMembers";
-import { abbreviateUrl } from "../../../utils/UrlUtils";
-// import IdentityAuthClient from "../../../IdentityAuthClient";
 import { humanizeTime } from "../../../utils/humanize";
 import { IInviteResult, inviteMultipleToRoom, showAnyInviteErrors } from "../../../RoomInvite";
-import { Action } from "../../../dispatcher/actions";
 import { DefaultTagID } from "../../../stores/room-list/models";
 import RoomListStore from "../../../stores/room-list/RoomListStore";
 import OrgStore from "../../../stores/OrgStore";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
-import {getHttpUrlFromMxc} from "../../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../../customisations/Media";
 import BaseAvatar from "../avatars/BaseAvatar";
 import { SearchResultAvatar } from "../avatars/SearchResultAvatar";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-// import { selectText } from "../../../utils/strings";
 import Field from "../elements/Field";
 import TabbedView, { Tab, TabLocation } from "../../structures/TabbedView";
 import Dialpad from "../voip/DialPad";
 import QuestionDialog from "./QuestionDialog";
-import Spinner from "../elements/Spinner";
 import BaseDialog from "./BaseDialog";
 import DialPadBackspaceButton from "../elements/DialPadBackspaceButton";
 import LegacyCallHandler from "../../../LegacyCallHandler";
-// import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
-// import CopyableText from "../elements/CopyableText";
 import { ScreenName } from "../../../PosthogTrackers";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
@@ -76,8 +61,10 @@ import Modal from "../../../Modal";
 import dis from "../../../dispatcher/dispatcher";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
 import { NonEmptyArray } from "../../../@types/common";
-import {AddressType, getAddressType} from "../../../UserAddress";
+import { AddressType, getAddressType } from "../../../UserAddress";
 import User from "../../../utils/User";
+import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
+import ContextMenu, { ChevronFace } from "matrix-react-sdk/src/components/structures/ContextMenu";
 
 // we have a number of types defined from the Matrix spec which can't reasonably be altered here.
 /* eslint-disable camelcase */
@@ -113,12 +100,7 @@ class DMUserTile extends React.PureComponent<IDMUserTileProps> {
         if (this.props.onRemove) {
             closeButton = (
                 <AccessibleButton className="mx_InviteDialog_userTile_remove" onClick={this.onRemove}>
-                    <img
-                        src={require("../../../../res/img/icon-pill-remove.svg").default}
-                        alt={_t("Remove")}
-                        width={8}
-                        height={8}
-                    />
+                    <div className="mx_InviteDialog_userTile_remove_icon" />
                 </AccessibleButton>
             );
         }
@@ -128,8 +110,8 @@ class DMUserTile extends React.PureComponent<IDMUserTileProps> {
                 <span className="mx_InviteDialog_userTile_pill">
                     {avatar}
                     <span className="mx_InviteDialog_userTile_name">{this.props.member.name}</span>
+                    {closeButton}
                 </span>
-                {closeButton}
             </span>
         );
     }
@@ -213,7 +195,7 @@ class DMRoomTile extends React.PureComponent<IDMRoomTileProps> {
             timestamp = <span className="mx_InviteDialog_tile--room_time">{humanTs}</span>;
         }
 
-        const avatarSize = 36;
+        const avatarSize = 24;
         const avatar = (this.props.member as ThreepidMember).isEmail ? (
             <EmailPillAvatarIcon width={avatarSize} height={avatarSize} />
         ) : (
@@ -245,23 +227,14 @@ class DMRoomTile extends React.PureComponent<IDMRoomTileProps> {
             </span>
         );
 
-        // const userIdentifier = UserIdentifierCustomisations.getDisplayUserIdentifier(this.props.member.userId, {
-        //     withDisplayName: true,
-        // });
-
-        // const caption = (this.props.member as ThreepidMember).isEmail
-        //     ? _t("Invite by email")
-        //     : this.highlightName(userIdentifier || this.props.member.userId);
-
         return (
             <div className="mx_InviteDialog_tile mx_InviteDialog_tile--room" onClick={this.onClick}>
                 {stackedAvatar}
-                <span className="mx_InviteDialog_tile_nameStack">
+                <div className="mx_InviteDialog_tile_nameStack">
                     <div className="mx_InviteDialog_tile_nameStack_name">
                         {this.highlightName(this.props.member.name)}
                     </div>
-                    {/* <div className="mx_InviteDialog_tile_nameStack_userId">{caption}</div> */}
-                </span>
+                </div>
                 {timestamp}
             </div>
         );
@@ -321,6 +294,7 @@ interface IInviteDialogState {
     // These two flags are used for the 'Go' button to communicate what is going on.
     busy: boolean;
     errorText?: string;
+    showSuggestions: boolean;
 }
 
 interface SearchInfo {
@@ -381,6 +355,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
             // These two flags are used for the 'Go' button to communicate what is going on.
             busy: false,
+            showSuggestions: false,
         };
     }
 
@@ -499,7 +474,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
         let userId,
             userName,
-            userOrgId,  // 所查询的用户所属的组织id
+            userOrgId, // 所查询的用户所属的组织id
             userOrgAlias; // 所查询的用户所属的组织别名
         if (!searchUser.includes("@")) {
             // 查询时不包含@，例如test_dyp，默认从当前服务查询
@@ -508,11 +483,11 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         } else if (getAddressType(searchUser) === AddressType.MatrixUserId) {
             // @userId:matrix.system.service.orgId
             let chatServer;
-            [userId, chatServer] = searchUser.split('@')[1].split(':');
-            userOrgId = chatServer.split('.').pop();
+            [userId, chatServer] = searchUser.split("@")[1].split(":");
+            userOrgId = chatServer.split(".").pop();
         } else {
             // userName@orgAlias
-            [userName, userOrgAlias] = searchUser.split('@');
+            [userName, userOrgAlias] = searchUser.split("@");
         }
 
         // 补齐信息
@@ -521,24 +496,25 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         } else if (userOrgId && !userOrgAlias) {
             userOrgAlias = OrgStore.sharedInstance().getOrgAliasById(userOrgId);
         }
-        console.log('generateSearchUser  result', {
+        console.log("generateSearchUser  result", {
             userId,
             userName,
             userOrgId,
-            userOrgAlias
+            userOrgAlias,
         });
 
         return {
             userId,
             userName,
             userOrgId,
-            userOrgAlias
+            userOrgAlias,
         };
     }
 
     private convertFilter(): Member[] {
         // Check to see if there's anything to convert first
-        if (!this.state.filterText || getAddressType(this.state.filterText) !== AddressType.MatrixUserId) return this.state.targets || [];
+        if (!this.state.filterText || getAddressType(this.state.filterText) !== AddressType.MatrixUserId)
+            return this.state.targets || [];
 
         if (!this.canInviteMore()) {
             // There should only be one third-party invite → do not allow more targets
@@ -684,14 +660,16 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         const results = [];
         const currentOrgId = this.getOrgId();
         const { userId, userName, userOrgId, userOrgAlias } = this.generateSearchUserInfo(term);
-        console.log('userOrgId', userOrgId, 'userOrgAlias', userOrgAlias);
-        if (!!userId) { return; } // 如果有用户id，不走查询接口；只有搜索用户名走查询接口
-        const name = userName + (userOrgId !== currentOrgId ? `@${userOrgId}` : '');
+        console.log("userOrgId", userOrgId, "userOrgAlias", userOrgAlias);
+        if (userId) {
+            return;
+        } // 如果有用户id，不走查询接口；只有搜索用户名走查询接口
+        const name = userName + (userOrgId !== currentOrgId ? `@${userOrgId}` : "");
         fetch(`/heliumos-user-api/user/v1/users?name=${encodeURIComponent(name)}`)
             .then((response) => {
                 if (!response.ok) {
                     this.setState({
-                        serverResultsMixin: []
+                        serverResultsMixin: [],
                     });
                     throw response;
                 }
@@ -715,158 +693,14 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 }
 
                 this.setState({
+                    showSuggestions: true,
                     serverResultsMixin: results.map((u) => ({
                         userId: u.user_id,
                         user: new DirectoryMember(u),
                     })),
                 });
-            }).catch(error => {
-
-            });
-
-        // MatrixClientPeg.get()
-        //     .searchUserDirectory({ term })
-        //     .then(async (r): Promise<void> => {
-        //         if (term !== this.state.filterText) {
-        //             // Discard the results - we were probably too slow on the server-side to make
-        //             // these results useful. This is a race we want to avoid because we could overwrite
-        //             // more accurate results.
-        //             return;
-        //         }
-
-        //         if (!r.results) r.results = [];
-
-        //         const mxUserId = localStorage.getItem("mx_user_id");
-        //         const serverName = mxUserId.split(":").splice(1).join();
-        //         fetch(`/heliumos-user-api/api/v1/users?name=${encodeURIComponent(term)}`)
-        //             .then((response) => response.json())
-        //             .then((res) => {
-        //                 const data = res.data;
-        //                 if (data.length) {
-        //                     for (let i = 0; i < data.length; i++) {
-        //                         const item = data[i];
-        //                         if (item.username) {
-        //                             const userId = `@${item.id}:${serverName}`;
-        //                             r.results.splice(0, 0, {
-        //                                 user_id: userId,
-        //                                 display_name: item.display_name || item.username,
-        //                                 avatar_url: null,
-        //                             });
-        //                         }
-        //                     }
-        //                 }
-
-        //                 this.setState({
-        //                     serverResultsMixin: r.results.map((u) => ({
-        //                         userId: u.user_id,
-        //                         user: new DirectoryMember(u),
-        //                     })),
-        //                 });
-        //             });
-
-        //         // While we're here, try and autocomplete a search result for the mxid itself
-        //         // if there's no matches (and the input looks like a mxid).
-        //         // if (term[0] === "@" && term.indexOf(":") > 1) {
-        //         //     try {
-        //         //         const profile = await MatrixClientPeg.get().getProfileInfo(term);
-        //         //         if (profile) {
-        //         //             // If we have a profile, we have enough information to assume that
-        //         //             // the mxid can be invited - add it to the list. We stick it at the
-        //         //             // top so it is most obviously presented to the user.
-        //         //             r.results.splice(0, 0, {
-        //         //                 user_id: term,
-        //         //                 display_name: profile["displayname"],
-        //         //                 avatar_url: profile["avatar_url"],
-        //         //             });
-        //         //         }
-        //         //     } catch (e) {
-        //         //         logger.warn("Non-fatal error trying to make an invite for a user ID");
-        //         //         logger.warn(e);
-
-        //         //         // Reuse logic from Permalinks as a basic MXID validity check
-        //         //         const serverName = getServerName(term);
-        //         //         const domain = getHostnameFromMatrixServerName(serverName);
-        //         //         if (domain) {
-        //         //             // Add a result anyways, just without a profile. We stick it at the
-        //         //             // top so it is most obviously presented to the user.
-        //         //             r.results.splice(0, 0, {
-        //         //                 user_id: term,
-        //         //                 display_name: term,
-        //         //             });
-        //         //         }
-        //         //     }
-        //         // }
-
-        //         // this.setState({
-        //         //     serverResultsMixin: r.results.map((u) => ({
-        //         //         userId: u.user_id,
-        //         //         user: new DirectoryMember(u),
-        //         //     })),
-        //         // });
-        //     })
-        //     .catch((e) => {
-        //         logger.error("Error searching user directory:");
-        //         logger.error(e);
-        //         this.setState({ serverResultsMixin: [] }); // clear results because it's moderately fatal
-        //     });
-
-        // Whenever we search the directory, also try to search the identity server. It's
-        // all debounced the same anyways.
-        // if (!this.state.canUseIdentityServer) {
-        //     // The user doesn't have an identity server set - warn them of that.
-        //     this.setState({ tryingIdentityServer: true });
-        //     return;
-        // }
-        // if (Email.looksValid(term) && this.canInviteThirdParty() && SettingsStore.getValue(UIFeature.IdentityServer)) {
-        //     // Start off by suggesting the plain email while we try and resolve it
-        //     // to a real account.
-        //     this.setState({
-        //         // per above: the userId is a lie here - it's just a regular identifier
-        //         threepidResultsMixin: [{ user: new ThreepidMember(term), userId: term }],
-        //     });
-        //     try {
-        //         const authClient = new IdentityAuthClient();
-        //         const token = await authClient.getAccessToken();
-        //         // No token → unable to try a lookup
-        //         if (!token) return;
-
-        //         if (term !== this.state.filterText) return; // abandon hope
-
-        //         const lookup = await MatrixClientPeg.get().lookupThreePid("email", term, token);
-        //         if (term !== this.state.filterText) return; // abandon hope
-
-        //         if (!lookup || !lookup.mxid) {
-        //             // We weren't able to find anyone - we're already suggesting the plain email
-        //             // as an alternative, so do nothing.
-        //             return;
-        //         }
-
-        //         // We append the user suggestion to give the user an option to click
-        //         // the email anyways, and so we don't cause things to jump around. In
-        //         // theory, the user would see the user pop up and think "ah yes, that
-        //         // person!"
-        //         const profile = await MatrixClientPeg.get().getProfileInfo(lookup.mxid);
-        //         if (term !== this.state.filterText || !profile) return; // abandon hope
-        //         this.setState({
-        //             threepidResultsMixin: [
-        //                 ...this.state.threepidResultsMixin,
-        //                 {
-        //                     user: new DirectoryMember({
-        //                         user_id: lookup.mxid,
-        //                         display_name: profile.displayname,
-        //                         avatar_url: profile.avatar_url,
-        //                     }),
-        //                     // Use the search term as identifier, so that it shows up in suggestions.
-        //                     userId: term,
-        //                 },
-        //             ],
-        //         });
-        //     } catch (e) {
-        //         logger.error("Error searching identity server:");
-        //         logger.error(e);
-        //         this.setState({ threepidResultsMixin: [] }); // clear results because it's moderately fatal
-        //     }
-        // }
+            })
+            .catch((error) => {});
     };
 
     private updateFilter = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -906,13 +740,15 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 targets.push(member);
                 filterText = ""; // clear the filter when the user accepts a suggestion
             }
-            this.setState({ targets, filterText });
+            this.setState({ targets, filterText, showSuggestions: false });
 
             if (this.editorRef && this.editorRef.current) {
                 this.editorRef.current.focus();
             }
         }
     };
+
+    private onCloseMenu = () => {};
 
     private removeMember = (member: Member): void => {
         const targets = this.state.targets.map((t) => t); // cheap clone for mutation
@@ -1039,31 +875,13 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         }
     };
 
-    private onUseDefaultIdentityServerClick = (e: ButtonEvent): void => {
-        e.preventDefault();
-
-        // Update the IS in account data. Actually using it may trigger terms.
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        setToDefaultIdentityServer();
-        this.setState({ canUseIdentityServer: true, tryingIdentityServer: false });
-    };
-
-    private onManageSettingsClick = (e: ButtonEvent): void => {
-        e.preventDefault();
-        dis.fire(Action.ViewUserSettings);
-        this.props.onFinished(false);
-    };
-
     private renderSection(kind: "recents" | "suggestions"): ReactNode {
+        if (!this.state.showSuggestions) return null;
+
         let sourceMembers = kind === "recents" ? this.state.recents : this.state.suggestions;
         let showNum = kind === "recents" ? this.state.numRecentsShown : this.state.numSuggestionsShown;
         const showMoreFn = kind === "recents" ? this.showMoreRecents.bind(this) : this.showMoreSuggestions.bind(this);
         const lastActive = (m: Result): number | undefined => (kind === "recents" ? m.lastActive : undefined);
-        let sectionName = kind === "recents" ? _t("Recent Conversations") : _t("Suggestions");
-
-        if (this.props.kind === InviteKind.Invite) {
-            sectionName = kind === "recents" ? _t("Recently Direct Messaged") : _t("Suggestions");
-        }
 
         // Mix in the server results if we have any, but only if we're searching. We track the additional
         // members separately because we want to filter sourceMembers but trust the mixin arrays to have
@@ -1099,15 +917,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         if (this.state.filterText) {
             const filterBy = this.state.filterText.toLowerCase();
             sourceMembers = sourceMembers.filter((m) => m.user.name.toLowerCase().includes(filterBy));
-
-            if (sourceMembers.length === 0 && !hasAdditionalMembers) {
-                return (
-                    <div className="mx_InviteDialog_section">
-                        <h3>{sectionName}</h3>
-                        <p>{_t("No results")}</p>
-                    </div>
-                );
-            }
         }
 
         // Now we mix in the additional members. Again, we presume these have already been filtered. We
@@ -1141,110 +950,70 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             );
         }
 
-        const tiles = toRender.map((r) => (
-            <DMRoomTile
-                member={r.user}
-                lastActiveTs={lastActive(r)}
-                key={r.user.userId}
-                onToggle={this.toggleMember}
-                highlightWord={this.state.filterText}
-                isSelected={this.state.targets.some((t) => t.userId === r.userId)}
-            />
-        ));
+        if (!this.editorRef.current) return null;
+
+        const { width, bottom, left } = this.editorRef.current.getBoundingClientRect();
         return (
-            <div className="mx_InviteDialog_section">
-                <h3>{sectionName}</h3>
-                {tiles}
-                {showMore}
-            </div>
+            <ContextMenu
+                hasBackground={false}
+                chevronFace={ChevronFace.None}
+                top={bottom + 4}
+                left={left}
+                menuWidth={width}
+                onFinished={this.onCloseMenu}
+            >
+                <div className="mx_InviteDialog_userSections">
+                    <div className="mx_InviteDialog_section">
+                        {!toRender.length ? (
+                            <p>{_t("No results")}</p>
+                        ) : (
+                            <>
+                                {toRender.map((r) => (
+                                    <DMRoomTile
+                                        member={r.user}
+                                        lastActiveTs={lastActive(r)}
+                                        key={r.user.userId}
+                                        onToggle={this.toggleMember}
+                                        highlightWord={this.state.filterText}
+                                        isSelected={this.state.targets.some((t) => t.userId === r.userId)}
+                                    />
+                                ))}
+                                {showMore}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </ContextMenu>
         );
     }
 
     private renderEditor(): JSX.Element {
-        const hasPlaceholder =
-            this.props.kind == InviteKind.CallTransfer &&
-            this.state.targets.length === 0 &&
-            this.state.filterText.length === 0;
-        const targets = this.state.targets.map((t) => (
-            <DMUserTile member={t} onRemove={this.state.busy ? undefined : this.removeMember} key={t.userId} />
-        ));
-        const input = (
-            <input
-                type="text"
-                onKeyDown={this.onKeyDown}
-                onChange={this.updateFilter}
-                value={this.state.filterText}
-                ref={this.editorRef}
-                onPaste={this.onPaste}
-                autoFocus={true}
-                disabled={
-                    this.state.busy || (this.props.kind == InviteKind.CallTransfer && this.state.targets.length > 0)
-                }
-                autoComplete="off"
-                placeholder={hasPlaceholder ? _t("Search") : undefined}
-                data-testid="invite-dialog-input"
-            />
-        );
+        const targets =
+            this.state.targets.length > 0 &&
+            this.state.targets.map((t) => (
+                <DMUserTile member={t} onRemove={this.state.busy ? undefined : this.removeMember} key={t.userId} />
+            ));
+
         return (
-            <div className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
-                {targets}
-                {input}
+            <div ref={this.editorRef} className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
+                <Field
+                    type="text"
+                    usePlaceholderAsHint={true}
+                    placeholder={_t("Enter username")}
+                    label={_t("Username")}
+                    autoFocus={false}
+                    autoComplete="off"
+                    disabled={
+                        this.state.busy || (this.props.kind == InviteKind.CallTransfer && this.state.targets.length > 0)
+                    }
+                    prefixComponent={targets}
+                    value={this.state.filterText}
+                    onKeyDown={this.onKeyDown}
+                    onChange={this.updateFilter}
+                    onPaste={this.onPaste}
+                />
             </div>
         );
-    }
-
-    private renderIdentityServerWarning(): ReactNode {
-        if (
-            !this.state.tryingIdentityServer ||
-            this.state.canUseIdentityServer ||
-            !SettingsStore.getValue(UIFeature.IdentityServer)
-        ) {
-            return null;
-        }
-
-        const defaultIdentityServerUrl = getDefaultIdentityServerUrl();
-        if (defaultIdentityServerUrl) {
-            return (
-                <div className="mx_InviteDialog_identityServer">
-                    {_t(
-                        "Use an identity server to invite by email. " +
-                            "<default>Use the default (%(defaultIdentityServerName)s)</default> " +
-                            "or manage in <settings>Settings</settings>.",
-                        {
-                            defaultIdentityServerName: abbreviateUrl(defaultIdentityServerUrl),
-                        },
-                        {
-                            default: (sub) => (
-                                <AccessibleButton kind="link_inline" onClick={this.onUseDefaultIdentityServerClick}>
-                                    {sub}
-                                </AccessibleButton>
-                            ),
-                            settings: (sub) => (
-                                <AccessibleButton kind="link_inline" onClick={this.onManageSettingsClick}>
-                                    {sub}
-                                </AccessibleButton>
-                            ),
-                        },
-                    )}
-                </div>
-            );
-        } else {
-            return (
-                <div className="mx_InviteDialog_identityServer">
-                    {_t(
-                        "Use an identity server to invite by email. " + "Manage in <settings>Settings</settings>.",
-                        {},
-                        {
-                            settings: (sub) => (
-                                <AccessibleButton kind="link_inline" onClick={this.onManageSettingsClick}>
-                                    {sub}
-                                </AccessibleButton>
-                            ),
-                        },
-                    )}
-                </div>
-            );
-        }
     }
 
     private onDialFormSubmit = (ev: SyntheticEvent): void => {
@@ -1283,11 +1052,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         this.setState({ currentTabId: tabId });
     };
 
-    // private async onLinkClick(e: React.MouseEvent<HTMLAnchorElement>): Promise<void> {
-    //     e.preventDefault();
-    //     selectText(e.currentTarget);
-    // }
-
     private get screenName(): ScreenName | undefined {
         switch (this.props.kind) {
             case InviteKind.Dm:
@@ -1323,163 +1087,18 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         return this.props.kind !== InviteKind.Dm || targets.length === 0 || !this.encryptionByDefault;
     }
 
-    private hasFilterAtLeastOneEmail(): boolean {
-        if (!this.state.filterText) return false;
-
-        return this.parseFilter(this.state.filterText).some((address: string) => {
-            return Email.looksValid(address);
-        });
-    }
-
     public render(): React.ReactNode {
-        let spinner: JSX.Element | undefined;
-        if (this.state.busy) {
-            spinner = <Spinner w={20} h={20} />;
-        }
-
-        let title;
-        let helpText;
-        let buttonText;
         let goButtonFn;
         let consultConnectSection;
-        let extraSection;
-        let footer;
-        let keySharingWarning = <span />;
-
-        const identityServersEnabled = SettingsStore.getValue(UIFeature.IdentityServer);
 
         const hasSelection =
             this.state.targets.length > 0 || getAddressType(this.state.filterText) === AddressType.MatrixUserId;
 
-        const cli = MatrixClientPeg.get();
-        const userId = cli.getUserId()!;
         if (this.props.kind === InviteKind.Dm) {
-            title = _t("Direct Messages");
-
-            if (identityServersEnabled) {
-                helpText = _t(
-                    "Start a conversation with someone using their name, email address or username.",
-                    {},
-                    {
-                        // userId: () => {
-                        //     return (
-                        //         <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
-                        //             {userId}
-                        //         </a>
-                        //     );
-                        // },
-                    },
-                );
-            } else {
-                helpText = _t(
-                    "Start a conversation with someone using their name or username.",
-                    {},
-                    {
-                        // userId: () => {
-                        //     return (
-                        //         <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
-                        //             {userId}
-                        //         </a>
-                        //     );
-                        // },
-                    },
-                );
-            }
-
-            buttonText = _t("Go");
             goButtonFn = this.startDm;
-            extraSection = (
-                <div className="mx_InviteDialog_section_hidden_suggestions_disclaimer">
-                    <span>{_t("Some suggestions may be hidden for privacy.")}</span>
-                    <p>{_t("If you can't see who you're looking for, send them your invite link below.")}</p>
-                </div>
-            );
-            // const link = makeUserPermalink(MatrixClientPeg.get().getUserId()!);
-            footer = (
-                <></>
-                // <div className="mx_InviteDialog_footer">
-                //     <h3>{_t("Or send invite link")}</h3>
-                //     <CopyableText getTextToCopy={() => makeUserPermalink(MatrixClientPeg.get().getUserId()!)}>
-                //         <a href={link} onClick={this.onLinkClick}>
-                //             {link}
-                //         </a>
-                //     </CopyableText>
-                // </div>
-            );
         } else if (this.props.kind === InviteKind.Invite) {
-            const roomId = this.props.roomId;
-            const room = MatrixClientPeg.get()?.getRoom(roomId);
-            const isSpace = room?.isSpaceRoom();
-            title = isSpace
-                ? _t("Invite to %(spaceName)s", {
-                      spaceName: room?.name || _t("Unnamed Space"),
-                  })
-                : _t("Invite to %(roomName)s", {
-                      roomName: room?.name || _t("Unnamed Room"),
-                  });
-
-            let helpTextUntranslated;
-            if (isSpace) {
-                if (identityServersEnabled) {
-                    helpTextUntranslated = _td(
-                        "Invite someone using their name, email address, username " +
-                            "or <a>share this space</a>.",
-                    );
-                } else {
-                    helpTextUntranslated = _td(
-                        "Invite someone using their name, username " + "or <a>share this space</a>.",
-                    );
-                }
-            } else {
-                if (identityServersEnabled) {
-                    helpTextUntranslated = _td(
-                        "Invite someone using their name, email address, username " +
-                            "or <a>share this room</a>.",
-                    );
-                } else {
-                    helpTextUntranslated = _td(
-                        "Invite someone using their name, username " + "or <a>share this room</a>.",
-                    );
-                }
-            }
-
-            helpText = _t(
-                helpTextUntranslated,
-                {},
-                {
-                    // userId: () => (
-                    //     <a href={makeUserPermalink(userId)} rel="noreferrer noopener" target="_blank">
-                    //         {userId}
-                    //     </a>
-                    // ),
-                    a: (sub) => (
-                        <a href={makeRoomPermalink(roomId)} rel="noreferrer noopener" target="_blank">
-                            {sub}
-                        </a>
-                    ),
-                },
-            );
-
-            buttonText = _t("Invite");
             goButtonFn = this.inviteUsers;
-
-            if (cli.isRoomEncrypted(this.props.roomId)) {
-                const room = cli.getRoom(this.props.roomId)!;
-                const visibilityEvent = room.currentState.getStateEvents("m.room.history_visibility", "");
-                const visibility =
-                    visibilityEvent && visibilityEvent.getContent() && visibilityEvent.getContent().history_visibility;
-                if (visibility === "world_readable" || visibility === "shared") {
-                    keySharingWarning = (
-                        <p className="mx_InviteDialog_helpText">
-                            <InfoIcon height={14} width={14} />
-                            {" " + _t("Invited people will be able to read old messages.")}
-                        </p>
-                    );
-                }
-            }
         } else if (this.props.kind === InviteKind.CallTransfer) {
-            title = _t("Transfer");
-
             consultConnectSection = (
                 <div className="mx_InviteDialog_transferConsultConnect">
                     <label>
@@ -1505,54 +1124,10 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             );
         }
 
-        const goButton =
-            this.props.kind == InviteKind.CallTransfer ? null : (
-                <AccessibleButton
-                    kind="primary"
-                    onClick={goButtonFn}
-                    className="mx_InviteDialog_goButton"
-                    disabled={this.state.busy || !hasSelection}
-                >
-                    {buttonText}
-                </AccessibleButton>
-            );
-
-        let results: React.ReactNode | null = null;
-        let onlyOneThreepidNote: React.ReactNode | null = null;
-
-        if (!this.canInviteMore() || (this.hasFilterAtLeastOneEmail() && !this.canInviteThirdParty())) {
-            // We are in DM case here, because of the checks in canInviteMore() / canInviteThirdParty().
-            onlyOneThreepidNote = (
-                <div className="mx_InviteDialog_oneThreepid">
-                    {_t("Invites by email can only be sent one at a time")}
-                </div>
-            );
-        } else {
-            results = (
-                <div className="mx_InviteDialog_userSections">
-                    {this.renderSection("recents")}
-                    {this.renderSection("suggestions")}
-                    {/*{extraSection}*/}
-                </div>
-            );
-        }
-
         const usersSection = (
             <React.Fragment>
-                {/*<p className="mx_InviteDialog_helpText">{helpText}</p>*/}
-                <div className="mx_InviteDialog_addressBar">
-                    {this.renderEditor()}
-                    <div className="mx_InviteDialog_buttonAndSpinner">
-                        {goButton}
-                        {spinner}
-                    </div>
-                </div>
-                {keySharingWarning}
-                {this.renderIdentityServerWarning()}
-                <div className="error">{this.state.errorText}</div>
-                {onlyOneThreepidNote}
-                {results}
-                {footer}
+                <div className="mx_InviteDialog_addressBar">{this.renderEditor()}</div>
+                {this.renderSection("suggestions")}
             </React.Fragment>
         );
 
@@ -1610,13 +1185,19 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 </React.Fragment>
             );
         } else {
-            dialogContent = (
-                <React.Fragment>
-                    {usersSection}
-                    {consultConnectSection}
-                </React.Fragment>
-            );
+            dialogContent = <React.Fragment>{usersSection}</React.Fragment>;
         }
+
+        const footer = this.props.footer || (
+            <DialogButtons
+                additive={this.props.footerAdditive}
+                primaryDisabled={this.state.busy || !hasSelection}
+                primaryButton={_t("Invite")}
+                onPrimaryButtonClick={goButtonFn}
+                cancelButton={_t("Back")}
+                // onCancel={onBack}
+            />
+        );
 
         return (
             <BaseDialog
@@ -1626,8 +1207,9 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                     mx_InviteDialog_hasFooter: !!footer,
                 })}
                 hasCancel={true}
-                onFinished={this.props.onFinished}
-                title={title}
+                title={_t("Invite people")}
+                description={"邀请自己的同事或者好友加入。"}
+                footer={footer}
                 screenName={this.screenName}
             >
                 <div className="mx_InviteDialog_content">{dialogContent}</div>

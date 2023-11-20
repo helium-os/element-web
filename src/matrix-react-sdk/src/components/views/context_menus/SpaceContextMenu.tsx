@@ -16,15 +16,12 @@ limitations under the License.
 
 import React, { useContext } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 
 import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
 import IconizedContextMenu, { IconizedContextMenuOption, IconizedContextMenuOptionList } from "./IconizedContextMenu";
 import { _t } from "../../../languageHandler";
 import {
     shouldShowSpaceSettings,
-    showCreateNewRoom,
-    showCreateNewSubspace,
     showSpaceInvite,
     showSpacePreferences,
     showSpaceSettings,
@@ -33,15 +30,12 @@ import { leaveSpace } from "../../../utils/leave-behaviour";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { ButtonEvent } from "../elements/AccessibleButton";
 import defaultDispatcher from "../../../dispatcher/dispatcher";
-import { BetaPill } from "../beta/BetaCard";
 import SettingsStore from "../../../settings/SettingsStore";
-import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { Action } from "../../../dispatcher/actions";
-import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
-import { UIComponent } from "../../../settings/UIFeature";
 import PosthogTrackers from "../../../PosthogTrackers";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
-import SpaceStore from "../../../stores/spaces/SpaceStore";
+import SpaceAddTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddTagContextMenu";
+import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 
 interface IProps extends IContextMenuProps {
     space: Room;
@@ -136,78 +130,6 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
         );
     }
 
-    const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
-    const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
-
-    const hasPermissionToAddSpaceChild = space.currentState.maySendStateEvent(EventType.SpaceChild, userId);
-    const canAddRooms = hasPermissionToAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms);
-    const canAddVideoRooms = canAddRooms && videoRoomsEnabled;
-    const canAddSubSpaces =
-        SettingsStore.getValue("Spaces.addSubSpace") &&
-        hasPermissionToAddSpaceChild &&
-        shouldShowComponent(UIComponent.CreateSpaces);
-
-    let newRoomSection: JSX.Element | null = null;
-    if (canAddRooms || canAddSubSpaces) {
-        const onNewRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            PosthogTrackers.trackInteraction("WebSpaceContextMenuNewRoomItem", ev);
-            showCreateNewRoom(space);
-            onFinished();
-        };
-
-        const onNewVideoRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            showCreateNewRoom(space, elementCallVideoRoomsEnabled ? RoomType.UnstableCall : RoomType.ElementVideo);
-            onFinished();
-        };
-
-        const onNewSubspaceClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            showCreateNewSubspace(space);
-            onFinished();
-        };
-
-        newRoomSection = (
-            <>
-                {canAddRooms && (
-                    <IconizedContextMenuOption
-                        data-testid="new-room-option"
-                        iconClassName="mx_SpacePanel_iconAddChannel"
-                        label={_t("Create room")}
-                        onClick={onNewRoomClick}
-                    />
-                )}
-                {canAddVideoRooms && (
-                    <IconizedContextMenuOption
-                        data-testid="new-video-room-option"
-                        iconClassName="mx_SpacePanel_iconAddChannel"
-                        label={_t("Create video room")}
-                        onClick={onNewVideoRoomClick}
-                    >
-                        <BetaPill />
-                    </IconizedContextMenuOption>
-                )}
-                {canAddSubSpaces && (
-                    <IconizedContextMenuOption
-                        data-testid="new-subspace-option"
-                        iconClassName="mx_SpacePanel_iconAddChannel"
-                        label={_t("Space")}
-                        onClick={onNewSubspaceClick}
-                    >
-                        <BetaPill />
-                    </IconizedContextMenuOption>
-                )}
-            </>
-        );
-    }
-
     const onPreferencesClick = (ev: ButtonEvent): void => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -233,28 +155,6 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
         openSpace(ev);
     };
 
-    // 新增分组
-    const onAddSpaceTag = async (): Promise<void> => {
-        const tagId = `${new Date().getTime()}/${cli.getUserId()}/${cli.getDeviceId()}`;
-        const num = Math.round(Math.random() * 100);
-
-        // 添加前做去重处理
-        const tags = [...SpaceStore.instance.spaceTags];
-        const newTag = {
-            tagId,
-            tagName: `测试tag：${num}`,
-        };
-        const index = tags.findIndex((item) => item.tagId === tagId);
-        if (index !== -1) {
-            tags.splice(index, 1, newTag);
-        } else {
-            tags.push(newTag);
-        }
-
-        await SpaceStore.instance.sendSpaceTags(tags);
-        alert(`成功添加分组 - 测试tag：${num}`);
-    };
-
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_SpacePanel_contextMenu" compact>
             {!hideHeader && <div className="mx_SpacePanel_contextMenu_header">{space.name}</div>}
@@ -271,12 +171,8 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 {/*    label={_t("Preferences")}*/}
                 {/*    onClick={onPreferencesClick}*/}
                 {/*/>*/}
-                {newRoomSection}
-                <IconizedContextMenuOption
-                    iconClassName="mx_SpacePanel_iconAddGroup"
-                    label={_t("Create Group")}
-                    onClick={onAddSpaceTag}
-                />
+                <SpaceAddChanelContextMenu showIcon={true} onFinished={onFinished} />
+                <SpaceAddTagContextMenu showIcon={true} onFinished={onFinished} />
                 <hr />
                 {/*{devtoolsOption}*/}
                 {settingsOption}

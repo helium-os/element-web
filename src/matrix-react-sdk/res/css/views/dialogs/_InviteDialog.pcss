@@ -24,26 +24,18 @@ limitations under the License.
 }
 
 .mx_InviteDialog_addressBar {
-    display: flex;
-    flex-direction: row;
-    /* Right margin for the design. We could apply this to the whole dialog, but then the scrollbar */
-    /* for the user section gets weird. */
-    margin: $spacing-8 45px 0 0; /* TODO: Use a spacing variable */
 
     .mx_InviteDialog_editor {
-        flex: 1;
-        width: 100%; /* Needed to make the Field inside grow */
-        background-color: $header-panel-bg-color;
-        border-radius: 4px;
-        min-height: 25px;
-        padding-inline-start: $spacing-8;
-        overflow-x: hidden;
-        overflow-y: auto;
-        display: flex;
-        flex-wrap: wrap;
+        .mx_Field_prefix {
+            position: relative;
+            border: none;
+        }
+        .mx_Field_inner {
+            display: inline-block;
+        }
 
         .mx_InviteDialog_userTile {
-            margin: 6px 6px 0 0; /* TODO: Use a spacing variable */
+            margin: 0 4px 4px 0; /* TODO: Use a spacing variable */
             display: inline-block;
             min-width: max-content; /* prevent manipulation by flexbox */
         }
@@ -64,28 +56,11 @@ limitations under the License.
             color: $primary-content !important;
         }
     }
-
-    .mx_InviteDialog_goButton {
-        min-width: 48px;
-        margin-inline-start: 10px; /* TODO: Use a spacing variable */
-        height: 25px;
-        line-height: $font-25px;
-    }
-
-    .mx_InviteDialog_buttonAndSpinner {
-        .mx_Spinner {
-            /* Width and height are required to trick the layout engine. */
-            width: 20px;
-            height: 20px;
-            margin-inline-start: 5px; /* TODO: Use a spacing variable */
-            display: inline-block;
-            vertical-align: middle;
-        }
-    }
 }
 
 .mx_InviteDialog_section {
-    padding-bottom: $spacing-4;
+    position: relative;
+    padding: 8px;
 
     h3 {
         font-size: $font-12px;
@@ -148,40 +123,58 @@ limitations under the License.
 
 /* Many of these styles are stolen from mx_UserPill, but adjusted for the invite dialog. */
 .mx_InviteDialog_userTile {
-    margin-inline-end: $spacing-8;
 
     .mx_InviteDialog_userTile_pill {
-        background-color: $username-variant1-color;
-        border-radius: 12px;
-        display: inline-block;
+        display: flex;
+        align-items: center;
         height: 24px;
+        border-radius: 12px;
         line-height: $font-24px;
-        padding-inline: $spacing-8;
-        color: #ffffff; /* this is fine without a var because it's for both themes */
+        padding: 0 5px 0 2px;
+        background-color: $background-secondary-color2;
+        color: $text-primary-color3; /* this is fine without a var because it's for both themes */
 
         .mx_SearchResultAvatar {
-            border-radius: 20px;
-            position: relative;
-            left: -5px;
-            top: 2px;
+            display: flex;
+            margin-right: 4px;
         }
-
-        img.mx_SearchResultAvatar {
-            vertical-align: top;
+        .mx_BaseAvatar_image {
+            vertical-align: middle;
         }
 
         .mx_InviteDialog_userTile_name {
-            vertical-align: top;
+            max-width: 100px;
+            padding-right: 7px;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.5;
+            color: $text-primary-color3;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         .mx_SearchResultAvatar_threepidAvatar {
             background-color: #ffffff; /* this is fine without a var because it's for both themes */
         }
-    }
 
-    .mx_InviteDialog_userTile_remove {
-        display: inline-block;
-        margin-inline-start: $spacing-4;
+        .mx_InviteDialog_userTile_remove {
+            display: none;
+            padding: 2px;
+            cursor: pointer;
+        }
+        .mx_InviteDialog_userTile_remove_icon {
+            margin: 0 auto;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: $text-secondary-color1;
+            @mixin MaskIcon url("$(res)/img/cancel.svg"), 6px, 6px, #FFFFFF;
+        }
+
+        &:hover .mx_InviteDialog_userTile_remove{
+            display: block;
+        }
     }
 }
 
@@ -205,13 +198,6 @@ limitations under the License.
             margin-top: $spacing-12;
         }
     }
-}
-
-.mx_InviteDialog_content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    overflow: hidden;
 }
 
 .mx_InviteDialog_transfer {
@@ -238,10 +224,6 @@ limitations under the License.
                 }
             }
         }
-    }
-
-    .mx_InviteDialog_addressBar {
-        margin-top: $spacing-8;
     }
 
     input[type="checkbox"] {
@@ -321,20 +303,17 @@ limitations under the License.
 }
 
 .mx_InviteDialog_tile {
-    cursor: pointer;
-    display: grid;
-    gap: $spacing-8 $spacing-12;
+    display: flex;
     align-items: center;
+    cursor: pointer;
+
+    &:hover {
+        background: $background-secondary-color2;
+    }
 
     &.mx_InviteDialog_tile--room {
-        /* mx_InviteDialog_tile_avatarStack, mx_InviteDialog_tile_nameStack, time */
-        grid-template-columns: min-content auto auto;
-        padding: $spacing-4 $spacing-8;
-
-        &:hover {
-            background-color: $header-panel-bg-color;
-            border-radius: 4px;
-        }
+        padding: 4px 6px;
+        border-radius: 4px;
 
         .mx_InviteDialog_tile--room_selected {
             border-radius: 36px;
@@ -363,9 +342,9 @@ limitations under the License.
             color: $muted-fg-color;
         }
 
-        .mx_InviteDialog_tile--room_highlight {
-            font-weight: 900;
-        }
+        //.mx_InviteDialog_tile--room_highlight {
+        //    font-weight: 900;
+        //}
     }
 
     &.mx_InviteDialog_tile--inviterError {
@@ -385,52 +364,26 @@ limitations under the License.
         }
     }
 
-    * {
-        vertical-align: middle;
-    }
-
-    .mx_InviteDialog_tile_avatarStack,
-    .mx_InviteDialog_tile--room_selected {
-        width: 36px;
-        height: 36px;
-        display: inline-block;
-        position: relative;
-    }
-
     .mx_InviteDialog_tile_avatarStack {
-        grid-row-start: 1;
-        grid-column-start: 1;
-
-        & > * {
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
+        margin-right: 4px;
     }
 
     .mx_InviteDialog_tile_nameStack {
-        grid-row-start: 1;
-        grid-column-start: 2;
-
-        display: flex;
-        flex-flow: column;
-        align-self: center;
-        align-items: baseline;
-        gap: 2px 0;
+        flex: 1;
         overflow: hidden;
 
-        .mx_InviteDialog_tile_nameStack_name,
-        .mx_InviteDialog_tile_nameStack_userId {
+        display: flex;
+        align-items:  center;
+
+        .mx_InviteDialog_tile_nameStack_name {
+            flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 100%;
-        }
-
-        .mx_InviteDialog_tile_nameStack_name {
-            font-size: $font-15px;
-            font-weight: $font-semi-bold;
-            color: $primary-content;
+            font-size: $font-14px;
+            line-height: 20px;
+            font-weight: $font-normal-bold;
+            color: $text-primary-color3;
         }
 
         .mx_InviteDialog_tile_nameStack_userId {

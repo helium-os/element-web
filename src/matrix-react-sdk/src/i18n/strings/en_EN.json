@@ -3781,6 +3781,8 @@
     "channel": "channel",
 
     "Create Group": "Creat group",
+    "Group Name": "Group name",
     "Edit Group Name": "Edit group name",
-    "Delete Group": "Delete group"
+    "Delete Group": "Delete group",
+    "Please enter a name for the group": "Please enter a name for the group"
 }

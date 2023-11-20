@@ -17,12 +17,15 @@ limitations under the License.
 */
 
 import React, { ReactNode } from "react";
+import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 
 import { _t } from "../../../languageHandler";
 
 interface IProps {
     // The primary button which is styled differently and has default focus.
     primaryButton: React.ReactNode;
+
+    primaryButtonType?: ButtonType;
 
     // A node to insert into the cancel button instead of default "Cancel"
     cancelButton?: React.ReactNode;
@@ -36,6 +39,8 @@ interface IProps {
 
     // should there be a cancel button? default: true
     hasCancel?: boolean;
+
+    cancelButtonType?: ButtonType;
 
     // The class of the cancel button, only used if a cancel button is
     // enabled
@@ -64,6 +69,8 @@ interface IProps {
  */
 export default class DialogButtons extends React.Component<IProps> {
     public static defaultProps: Partial<IProps> = {
+        primaryButtonType: ButtonType.Primary,
+        cancelButtonType: ButtonType.Link,
         hasCancel: true,
         disabled: false,
     };
@@ -73,25 +80,12 @@ export default class DialogButtons extends React.Component<IProps> {
     };
 
     public render(): React.ReactNode {
-        let primaryButtonClassName = "mx_Dialog_primary";
-        if (this.props.primaryButtonClass) {
-            primaryButtonClassName += " " + this.props.primaryButtonClass;
-        }
-
         let cancelButton: JSX.Element | undefined;
         if (this.props.hasCancel) {
             cancelButton = (
-                <button
-                    // important: the default type is 'submit' and this button comes before the
-                    // primary in the DOM so will get form submissions unless we make it not a submit.
-                    data-testid="dialog-cancel-button"
-                    type="button"
-                    onClick={this.onCancelClick}
-                    className={this.props.cancelButtonClass}
-                    disabled={this.props.disabled}
-                >
+                <Button type={this.props.cancelButtonType} disabled={this.props.disabled} onClick={this.onCancelClick}>
                     {this.props.cancelButton || _t("Cancel")}
-                </button>
+                </Button>
             );
         }
 
@@ -106,16 +100,13 @@ export default class DialogButtons extends React.Component<IProps> {
                 <span className="mx_Dialog_buttons_row">
                     {cancelButton}
                     {this.props.children}
-                    <button
-                        type={this.props.primaryIsSubmit ? "submit" : "button"}
-                        data-testid="dialog-primary-button"
-                        className={primaryButtonClassName}
-                        onClick={this.props.onPrimaryButtonClick}
-                        autoFocus={this.props.focus}
+                    <Button
+                        type={this.props.primaryButtonType}
                         disabled={this.props.disabled || this.props.primaryDisabled}
+                        onClick={this.props.onPrimaryButtonClick}
                     >
                         {this.props.primaryButton}
-                    </button>
+                    </Button>
                 </span>
             </div>
         );

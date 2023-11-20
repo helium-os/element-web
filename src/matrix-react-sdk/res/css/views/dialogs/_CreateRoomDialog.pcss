@@ -14,6 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+.mx_CreateRoomDialog {
+    .mx_CreateRoomDialog_topic, .mx_SettingsFlag {
+        margin-top: 20px;
+    }
+}
+
+
+
 .mx_CreateRoomDialog_details {
     margin-top: 15px;
 
@@ -69,44 +77,5 @@ limitations under the License.
 
     .mx_RoomAliasField {
         margin: 0;
-    }
-}
-
-.mx_CreateRoomDialog {
-    &.mx_Dialog_fixedWidth {
-        width: 450px;
-    }
-
-    .mx_Dialog_content {
-        margin-bottom: 40px;
-    }
-
-    p,
-    .mx_Field_input label {
-        color: $muted-fg-color;
-    }
-
-    .mx_SettingsFlag {
-        display: flex;
-    }
-
-    .mx_SettingsFlag_label {
-        flex: 1 1 0;
-        min-width: 0;
-        font-weight: 600;
-    }
-
-    .mx_ToggleSwitch {
-        flex: 0 0 auto;
-        margin-left: 30px;
-    }
-
-    .mx_Dialog_content > .mx_SettingsFlag {
-        margin-top: 24px;
-    }
-
-    p {
-        margin: 0 85px 0 0;
-        font-size: $font-12px;
     }
 }

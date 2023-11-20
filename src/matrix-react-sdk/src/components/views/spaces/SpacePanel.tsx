@@ -73,6 +73,8 @@ import { ALTERNATE_KEY_NAME } from "../../../accessibility/KeyboardShortcuts";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../../settings/UIFeature";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import Modal from "matrix-react-sdk/src/Modal";
+import CreateSpaceDialog from "matrix-react-sdk/src/components/views/dialogs/create_space";
 
 const useSpaces = (): [Room[], MetaSpace[], Room[], SpaceKey] => {
     const invites = useEventEmitterState<Room[]>(SpaceStore.instance, UPDATE_INVITED_SPACES, () => {
@@ -208,22 +210,8 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
     isPanelCollapsed,
     setPanelCollapsed,
 }) => {
-    const [menuDisplayed, handle, openMenu, closeMenu] = useContextMenu<HTMLElement>();
-
-    useEffect(() => {
-        if (!isPanelCollapsed && menuDisplayed) {
-            closeMenu();
-        }
-    }, [isPanelCollapsed]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    let contextMenu: JSX.Element | undefined;
-    if (menuDisplayed) {
-        contextMenu = <SpaceCreateMenu onFinished={closeMenu} />;
-    }
-
     const onNewClick = () => {
-        if (!isPanelCollapsed) setPanelCollapsed(true);
-        openMenu();
+        Modal.createDialog(CreateSpaceDialog);
     };
 
     return (
@@ -240,10 +228,7 @@ const CreateSpaceButton: React.FC<Pick<IInnerSpacePanelProps, "isPanelCollapsed"
                 label={_t("Create a space")}
                 onClick={onNewClick}
                 isNarrow={isPanelCollapsed}
-                ref={handle}
             />
-
-            {contextMenu}
         </li>
     );
 };

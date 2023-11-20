@@ -16,45 +16,27 @@ limitations under the License.
 
 .mx_SpaceBasicSettings {
     .mx_Field {
-        margin: 24px 0;
+        margin-top: 20px;
     }
-
     .mx_SpaceBasicSettings_avatarContainer {
         display: flex;
-        margin-top: 24px;
+        justify-content: center;
+        padding: 12px 4px;
 
         .mx_SpaceBasicSettings_avatar {
+            box-sizing: border-box;
             position: relative;
-            height: 80px;
-            width: 80px;
-            background-color: $tertiary-content;
-            border-radius: 16px;
+            height: 100px;
+            width: 100px;
+            border-radius: 50%;
+            border: 1px dashed $border-secondary-color3;
+            @mixin MaskIcon url("$(res)/img/element-icons/camera.svg"), 28px, 22px, $text-secondary-color1;
+            cursor: pointer;
         }
 
         img.mx_SpaceBasicSettings_avatar {
-            width: 80px;
-            height: 80px;
             object-fit: cover;
-            border-radius: 16px;
-        }
-
-        /* only show it when the button is a div and not an img (has avatar) */
-        div.mx_SpaceBasicSettings_avatar {
-            cursor: pointer;
-
-            &::before {
-                content: "";
-                position: absolute;
-                height: 80px;
-                width: 80px;
-                top: 0;
-                left: 0;
-                background-color: #ffffff; /* white icon fill */
-                mask-repeat: no-repeat;
-                mask-position: center;
-                mask-size: 20px;
-                mask-image: url("$(res)/img/element-icons/camera.svg");
-            }
+            border: none;
         }
 
         > input[type="file"] {

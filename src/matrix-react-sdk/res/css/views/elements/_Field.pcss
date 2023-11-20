@@ -16,16 +16,25 @@ limitations under the License.
 
 /* TODO: Consider unifying with general input styles in _light.pcss */
 
+$input-transform-space: 8px;
+$input-height: 24px;
+$textarea-height: calc(3 * $input-height);
+
 .mx_Field {
-    display: flex;
-    flex: 1;
-    min-width: 0;
+    @mixin HalfPxBorder $input-border-color, 8px;
     position: relative;
-    margin: 1em 0;
-    border-radius: 4px;
+    padding: 14px 0;
+    margin: 0 -2px;
+    border: 2px solid transparent;
     transition: border-color 0.25s;
-    border: 1px solid $input-border-color;
+    &.mx_Field_focused {
+        border-color: $border-secondary-color;
+        &:before {
+            display: none;
+        }
+    }
 }
+
 
 .mx_Field_prefix {
     border-right: 1px solid $input-border-color;
@@ -35,24 +44,35 @@ limitations under the License.
     border-left: 1px solid $input-border-color;
 }
 
-.mx_Field input,
-.mx_Field select,
-.mx_Field textarea {
+.mx_Field_wrap {
+    position: relative;
+}
+
+.mx_Field .mx_Field_inner input,
+.mx_Field .mx_Field_inner select,
+.mx_Field .mx_Field_inner textarea {
+    box-sizing: border-box;
+    position: relative;
+    width: 100%;
+    padding: 0 14px;
+    height: $input-height;
     font-family: inherit;
-    font-weight: normal;
-    font-size: $font-14px;
+    font-weight: $font-semi-bold;
+    font-size: $font-16px;
+    line-height: $input-height;
     border: none;
     /* Even without a border here, we still need this avoid overlapping the rounded */
     /* corners on the field above. */
-    border-radius: 4px;
-    padding: 8px 9px;
-    color: $primary-content;
-    background-color: $background;
-    flex: 1;
-    min-width: 0;
+    color: $text-primary-color3;
+    outline: none;
 }
 
-.mx_Field select {
+.mx_Field .mx_Field_inner textarea {
+    height: $textarea-height;
+    resize: none;
+}
+
+.mx_Field .mx_Field_inner select {
     -moz-appearance: none;
     -webkit-appearance: none;
 }
@@ -72,39 +92,36 @@ limitations under the License.
     pointer-events: none;
 }
 
-.mx_Field:focus-within {
-    border-color: $accent-alt;
-}
-
-.mx_Field input:focus,
-.mx_Field select:focus,
-.mx_Field textarea:focus {
-    outline: 0;
+.mx_Field.mx_Field_labelAlwaysShow .mx_Field_inner,
+.mx_Field.mx_Field_focused .mx_Field_inner {
+    transform: translate(0, $input-transform-space);
+    transition: all 0.25s ease-out 0.1s;
 }
 
 .mx_Field input::placeholder,
 .mx_Field textarea::placeholder {
-    transition: color 0.25s ease-in 0s;
+    transition: color 0.25s ease-in 0.1s;
     color: transparent;
 }
 
-.mx_Field input:placeholder-shown:focus::placeholder,
-.mx_Field textarea:placeholder-shown:focus::placeholder,
-.mx_Field.mx_Field_placeholderIsHint input::placeholder {
-    transition: color 0.25s ease-in 0.1s;
-    color: $info-plinth-fg-color;
+
+.mx_Field.mx_Field_placeholderIsHint input::placeholder,
+.mx_Field.mx_Field_placeholderIsHint textarea::placeholder{
+    color: $text-secondary-color3;
 }
 
 .mx_Field label {
-    transition: font-size 0.25s ease-out 0.1s, color 0.25s ease-out 0.1s, transform 0.25s ease-out 0.1s,
-        background-color 0.25s ease-out 0.1s;
-    background-color: transparent;
-    font-size: $font-14px;
-    transform: translateY(0);
+    opacity: 0;
     position: absolute;
-    left: 0px;
-    margin: 7px 8px;
-    padding: 2px;
+    left: 14px;
+    top: 0;
+    line-height: 16px;
+    margin-top: -$input-transform-space;
+    transition: all 0.25s ease-out 0.1s;
+    background-color: transparent;
+    font-size: $font-12px;
+    font-weight: $font-semi-bold;
+    color: $text-secondary-color1;
     pointer-events: none; /* Allow clicks to fall through to the input */
     overflow: hidden;
     white-space: nowrap;
@@ -112,25 +129,8 @@ limitations under the License.
     max-width: calc(100% - 20px); /* 100% of parent minus margin and padding */
 }
 
-.mx_Field_labelAlwaysTopLeft label,
-.mx_Field select + label /* Always show a select's label on top to not collide with the value */,
-.mx_Field input:focus + label,
-.mx_Field input:not(:placeholder-shown) + label,
-.mx_Field textarea:focus + label,
-.mx_Field textarea:not(:placeholder-shown) + label {
-    transition: font-size 0.25s ease-out 0s, color 0.25s ease-out 0s, transform 0.25s ease-out 0s,
-        background-color 0.25s ease-out 0s;
-    font-size: $font-10px;
-    transform: translateY(-13px);
-    padding: 0 2px;
-    background-color: $background;
-    pointer-events: initial;
-}
-
-.mx_Field input:focus + label,
-.mx_Field select:focus + label,
-.mx_Field textarea:focus + label {
-    color: $accent-alt;
+.mx_Field_labelAlwaysShow label {
+    opacity: 1;
 }
 
 .mx_Field select:disabled,
@@ -139,20 +139,7 @@ limitations under the License.
 .mx_Field input:disabled + label,
 .mx_Field textarea:disabled,
 .mx_Field textarea:disabled + label {
-    background-color: $background;
     color: $info-plinth-fg-color;
-}
-
-.mx_Field_valid {
-    &.mx_Field,
-    &.mx_Field:focus-within {
-        border-color: $accent;
-    }
-
-    &.mx_Field label,
-    &.mx_Field:focus-within label {
-        color: $accent;
-    }
 }
 
 .mx_Field_invalid {

@@ -51,7 +51,7 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
     const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
     const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
 
-    const hasPermissionToAddSpaceChild = activeSpaceRoom.currentState.maySendStateEvent(EventType.SpaceChild, userId);
+    const hasPermissionToAddSpaceChild = activeSpaceRoom?.currentState.maySendStateEvent(EventType.SpaceChild, userId);
     const canAddRooms = hasPermissionToAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms);
     const canAddVideoRooms = canAddRooms && videoRoomsEnabled;
     const canAddSubSpaces =

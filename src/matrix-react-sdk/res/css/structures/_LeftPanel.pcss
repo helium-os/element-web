@@ -192,6 +192,9 @@ $roomListCollapsedWidth: 68px;
         .mx_LeftPanel_spaceHomeEntrance {
             margin-top: 12px;
         }
+        .mx_SpaceHomeTile {
+            cursor: pointer;
+        }
 
         .mx_LeftPanel_roomListWrapper {
             /* Make the y-scrollbar more responsive */
@@ -199,11 +202,11 @@ $roomListCollapsedWidth: 68px;
             flex: 1 0 0; /* needed in Safari to properly set flex-basis */
 
             &.mx_LeftPanel_roomListWrapper_stickyBottom {
-                padding-bottom: 32px;
+                padding-bottom: $roomlist-group-header-height;
             }
 
             &.mx_LeftPanel_roomListWrapper_stickyTop {
-                padding-top: 32px;
+                padding-top: $roomlist-group-header-height;
             }
         }
 

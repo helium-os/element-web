@@ -281,10 +281,11 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             // If we have a prefix element, leave the label always at the top left and
             // don't animate it, as it looks a bit clunky and would add complexity to do
             // properly.
-            mx_Field_labelAlwaysTopLeft: prefixComponent || usePlaceholderAsHint,
-            mx_Field_placeholderIsHint: usePlaceholderAsHint,
+            mx_Field_labelAlwaysShow: prefixComponent || this.state.focused || !!this.props.value,
+            mx_Field_placeholderIsHint: !this.state.focused && usePlaceholderAsHint,
             mx_Field_valid: hasValidationFlag ? forceValidity : onValidate && this.state.valid === true,
             mx_Field_invalid: hasValidationFlag ? !forceValidity : onValidate && this.state.valid === false,
+            mx_Field_focused: this.state.focused,
         });
 
         // Handle displaying feedback on validity
@@ -310,10 +311,14 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         return (
             <div className={fieldClasses}>
-                {prefixContainer}
-                {fieldInput}
-                <label htmlFor={this.id}>{this.props.label}</label>
-                {postfixContainer}
+                <div className="mx_Field_wrap">
+                    <label htmlFor={this.id}>{this.props.label}</label>
+                    <div className="mx_Field_inner">
+                        {prefixContainer}
+                        {fieldInput}
+                        {postfixContainer}
+                    </div>
+                </div>
                 {fieldTooltip}
             </div>
         );

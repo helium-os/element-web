@@ -17,47 +17,48 @@ limitations under the License.
 $SpaceRoomViewInnerWidth: 428px;
 
 @define-mixin SpacePillButton {
-    position: relative;
-    padding: 16px 32px 16px 72px;
-    width: 432px;
+    @mixin HalfPxBorder $border-secondary-color2, 8px;
+    margin: 0 -2px;
+    border: 2px solid transparent;
     box-sizing: border-box;
-    border-radius: 8px;
-    border: 1px solid $input-border-color;
-    font-size: $font-15px;
-    margin: 20px 0;
 
-    > h3 {
-        font-weight: $font-semi-bold;
-        margin: 0 0 4px;
-    }
-
-    > span {
-        color: $secondary-content;
-    }
-
-    &::before {
-        position: absolute;
-        content: "";
-        width: 24px;
-        height: 24px;
-        top: 27px;
-        left: 20px;
-        mask-position: center;
-        mask-repeat: no-repeat;
-        mask-size: 24px;
-        background-color: $tertiary-content;
-    }
-
-    &:hover {
-        border-color: $accent;
-
-        &::before {
-            background-color: $accent;
+    &:hover, &.active {
+        border-color: $border-secondary-color;
+        &:before {
+            display: none;
         }
+    }
 
-        > span {
-            color: $primary-content;
-        }
+    .mx_SpaceTypeItem_wrap {
+        display: flex;
+        align-items: center;
+        padding: 12px 6px 12px 12px;
+    }
+
+
+    .mx_SpaceTypeItem_icon {
+        width: 30px;
+        height: 30px;
+        margin-right: 12px;
+    }
+
+    .mx_SpaceTypeItem_introduce {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .mx_SpaceTypeItem_title {
+        color: $text-primary-color3;
+        font-size: $font-16px;
+        font-weight: 500;
+        line-height: 1.5;
+    }
+
+    .mx_SpaceTypeItem_description {
+        color: $text-secondary-color2;
+        font-size: $font-14px;
+        font-weight: $font-normal-bold;
+        line-height: $font-20px;
     }
 }
 

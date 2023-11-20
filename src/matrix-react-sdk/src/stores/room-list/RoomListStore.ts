@@ -192,7 +192,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
     }
 
     protected async onDispatchAsync(payload: ActionPayload): Promise<void> {
-        console.log("onDispatchAsync", payload);
         // Everything here requires a MatrixClient or some sort of logical readiness.
         const logicallyReady = this.matrixClient && this.initialListsGenerated;
         if (!logicallyReady) return;

@@ -37,6 +37,8 @@ $background-secondary-color2: #eeeeee;
 // border color
 $border-primary-color: #eeeeee;
 $border-secondary-color: #303030;
+$border-secondary-color2: #a4a4a4;
+$border-secondary-color3: #505050;
 
 // icon color
 $icon-primary-color: #a4a4a4;
@@ -213,11 +215,14 @@ $input-fg-color: rgba(74, 74, 74, 0.9);
 
 /* Dialog */
 /* ******************** */
+$dialog-bg: linear-gradient(0deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.01) 100%), linear-gradient(0deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.94) 100%), rgba(255, 255, 255, 0.02);
+$dialog-shadow: 0 0 60px 0 rgba(0, 0, 0, 0.20), 0 0 3px 0 rgba(0, 0, 0, 0.06);
 $dialog-title-fg-color: #45474a;
+$dialog-title-color: $text-primary-color2;
+$dialog-description-color: $text-secondary-color2;
 $dialog-backdrop-color: rgba(46, 48, 51, 0.38);
-$dialog-close-fg-color: #c1c1c1;
+$dialog-close-fg-color: #535353;
 $dialog-close-external-color: $background;
-$dialog-shadow-color: rgba(0, 0, 0, 0.48);
 /* ******************** */
 
 /* ImageBody */
@@ -229,6 +234,7 @@ $imagebody-giflabel-color: $background;
 
 /* RoomList */
 /* ******************** */
+$roomlist-group-header-height: 28px;
 $roomlist-bg-color: rgba(245, 245, 245, 0.9);
 $roomsublist-skeleton-ui-bg: linear-gradient(180deg, $background 0%, #ffffff00 100%);
 $roomtile-default-badge-bg-color: $muted-fg-color;
@@ -253,6 +259,13 @@ $tab-label-active-fg-color: $background;
 
 /* Buttons */
 /* ******************** */
+$button-text-color: #FFFFFF;
+$button-primary-bg-color: rgba(21, 21, 21, 1);
+$button-danger-bg-color: #F25353;
+$button-link-text-color: $text-primary-color2;
+$button-disabled-bg-color: rgba(21, 21, 21, 0.3);
+
+
 $button-primary-fg-color: $background;
 $button-secondary-bg-color: $accent-fg-color;
 $button-danger-fg-color: $background;
@@ -262,7 +275,8 @@ $button-danger-disabled-bg-color: #f5b6bb; /* TODO: Verify color */
 
 /* Toggle switch */
 /* ******************** */
-$togglesw-off-color: #c1c9d6;
+$togglesw-off-color: $text-secondary-color2;
+$togglesw-on-color: $text-primary-color3;
 $togglesw-ball-color: $background;
 /* ******************** */
 

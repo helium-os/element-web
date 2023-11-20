@@ -46,7 +46,10 @@ function SpaceHomeEntrance({ pageType, space }: IProps): JSX.Element {
     };
 
     return (
-        <div className={`mx_RoomTile ${isSelected ? "mx_RoomTile_selected" : ""}`} onClick={() => goSpaceHome()}>
+        <div
+            className={`mx_SpaceHomeTile mx_RoomTile ${isSelected ? "mx_RoomTile_selected" : ""}`}
+            onClick={() => goSpaceHome()}
+        >
             <span className="mx_RoomTile_iconType mx_RoomTile_iconHome" />
             <div className="mx_RoomTile_titleContainer">
                 <div className="mx_RoomTile_title">{_t("Home")}</div>

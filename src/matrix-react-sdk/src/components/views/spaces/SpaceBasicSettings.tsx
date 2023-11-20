@@ -30,7 +30,7 @@ interface IProps {
     topicDisabled?: boolean;
     setAvatar(avatar?: File): void;
     setName(name: string): void;
-    setTopic(topic: string): void;
+    setTopic?(topic: string): void;
 }
 
 export const SpaceAvatar: React.FC<Pick<IProps, "avatarUrl" | "avatarDisabled" | "setAvatar">> = ({
@@ -59,31 +59,12 @@ export const SpaceAvatar: React.FC<Pick<IProps, "avatarUrl" | "avatarDisabled" |
                         src={avatar}
                         alt=""
                     />
-                    <AccessibleButton
-                        onClick={() => {
-                            if (avatarUploadRef.current) avatarUploadRef.current.value = "";
-                            setAvatarDataUrl(undefined);
-                            setAvatar(undefined);
-                        }}
-                        kind="link"
-                        className="mx_SpaceBasicSettings_avatar_remove"
-                        aria-label={_t("Delete avatar")}
-                    >
-                        {_t("Delete")}
-                    </AccessibleButton>
                 </React.Fragment>
             );
         } else {
             avatarSection = (
                 <React.Fragment>
                     <div className="mx_SpaceBasicSettings_avatar" onClick={() => avatarUploadRef.current?.click()} />
-                    <AccessibleButton
-                        onClick={() => avatarUploadRef.current?.click()}
-                        kind="link"
-                        aria-label={_t("Upload avatar")}
-                    >
-                        {_t("Upload")}
-                    </AccessibleButton>
                 </React.Fragment>
             );
         }
