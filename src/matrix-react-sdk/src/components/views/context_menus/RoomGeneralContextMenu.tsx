@@ -13,13 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-import { logger } from "matrix-js-sdk/src/logger";
 import { Room } from "matrix-js-sdk/src/models/room";
 import React, { useState, useEffect, useContext } from "react";
 
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
-import RoomListActions from "../../../actions/RoomListActions";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import dis from "../../../dispatcher/dispatcher";
 import { useEventEmitterState } from "../../../hooks/useEventEmitter";
@@ -27,9 +24,8 @@ import { useUnreadNotifications } from "../../../hooks/useUnreadNotifications";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { _t } from "../../../languageHandler";
 import { NotificationColor } from "../../../stores/notifications/NotificationColor";
-import { DefaultTagID, TagID } from "../../../stores/room-list/models";
+import { DefaultTagID } from "../../../stores/room-list/models";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "../../../stores/room-list/RoomListStore";
-import DMRoomMap from "../../../utils/DMRoomMap";
 import { clearRoomNotification } from "../../../utils/notifications";
 import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
 import IconizedContextMenu, {
@@ -38,31 +34,16 @@ import IconizedContextMenu, {
     IconizedContextMenuOptionList,
 } from "../context_menus/IconizedContextMenu";
 import { ButtonEvent } from "../elements/AccessibleButton";
-import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
-import { UIComponent } from "../../../settings/UIFeature";
-import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 export interface RoomGeneralContextMenuProps extends IContextMenuProps {
     room: Room;
-    onPostFavoriteClick?: (event: ButtonEvent) => void;
-    onPostLowPriorityClick?: (event: ButtonEvent) => void;
-    onPostInviteClick?: (event: ButtonEvent) => void;
-    onPostCopyLinkClick?: (event: ButtonEvent) => void;
     onPostSettingsClick?: (event: ButtonEvent) => void;
-    onPostForgetClick?: (event: ButtonEvent) => void;
-    onPostLeaveClick?: (event: ButtonEvent) => void;
 }
 
 export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
     room,
     onFinished,
-    onPostFavoriteClick,
-    onPostLowPriorityClick,
-    onPostInviteClick,
-    onPostCopyLinkClick,
     onPostSettingsClick,
-    onPostLeaveClick,
-    onPostForgetClick,
     ...props
 }) => {
     const cli = useContext(MatrixClientContext);
@@ -76,7 +57,6 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
     );
-    const isDm = DMRoomMap.shared().getUserIdForRoomId(room.roomId);
     const wrapHandler = (
         handler: (ev: ButtonEvent) => void,
         postHandler?: (ev: ButtonEvent) => void,
@@ -96,74 +76,6 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
         };
     };
 
-    const onTagRoom = (ev: ButtonEvent, tagId: TagID): void => {
-        if (tagId === DefaultTagID.Favourite || tagId === DefaultTagID.LowPriority) {
-            const inverseTag = tagId === DefaultTagID.Favourite ? DefaultTagID.LowPriority : DefaultTagID.Favourite;
-            const isApplied = RoomListStore.instance.getTagsForRoom(room).includes(tagId);
-            const removeTag = isApplied ? tagId : inverseTag;
-            const addTag = isApplied ? null : tagId;
-            dis.dispatch(RoomListActions.tagRoom(cli, room, removeTag, addTag, undefined, 0));
-        } else {
-            logger.warn(`Unexpected tag ${tagId} applied to ${room.roomId}`);
-        }
-    };
-
-    const isFavorite = roomTags.includes(DefaultTagID.Favourite);
-    const favoriteOption: JSX.Element = (
-        <IconizedContextMenuCheckbox
-            onClick={wrapHandler((ev) => onTagRoom(ev, DefaultTagID.Favourite), onPostFavoriteClick, true)}
-            active={isFavorite}
-            label={isFavorite ? _t("Favourited") : _t("Favourite")}
-            iconClassName="mx_RoomGeneralContextMenu_iconStar"
-        />
-    );
-
-    const isLowPriority = roomTags.includes(DefaultTagID.LowPriority);
-    const lowPriorityOption: JSX.Element = (
-        <IconizedContextMenuCheckbox
-            onClick={wrapHandler((ev) => onTagRoom(ev, DefaultTagID.LowPriority), onPostLowPriorityClick, true)}
-            active={isLowPriority}
-            label={_t("Low Priority")}
-            iconClassName="mx_RoomGeneralContextMenu_iconArrowDown"
-        />
-    );
-
-    let inviteOption: JSX.Element | null = null;
-    if (room.canInvite(cli.getUserId()!) && !isDm && shouldShowComponent(UIComponent.InviteUsers)) {
-        inviteOption = (
-            <IconizedContextMenuOption
-                onClick={wrapHandler(
-                    () =>
-                        dis.dispatch({
-                            action: "view_invite",
-                            roomId: room.roomId,
-                        }),
-                    onPostInviteClick,
-                )}
-                label={_t("Invite")}
-                iconClassName="mx_RoomGeneralContextMenu_iconInvite"
-            />
-        );
-    }
-
-    let copyLinkOption: JSX.Element | null = null;
-    if (!isDm) {
-        copyLinkOption = (
-            <IconizedContextMenuOption
-                onClick={wrapHandler(
-                    () =>
-                        dis.dispatch({
-                            action: "copy_room",
-                            room_id: room.roomId,
-                        }),
-                    onPostCopyLinkClick,
-                )}
-                label={_t("Copy room link")}
-                iconClassName="mx_RoomGeneralContextMenu_iconCopyLink"
-            />
-        );
-    }
-
     const isPeopleRoom = room.isPeopleRoom();
     const settingsOption: JSX.Element = !isPeopleRoom && (
         <IconizedContextMenuOption
@@ -179,41 +91,6 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
             iconClassName="mx_RoomGeneralContextMenu_iconSettings"
         />
     );
-
-    let leaveOption: JSX.Element;
-    if (roomTags.includes(DefaultTagID.Archived)) {
-        leaveOption = (
-            <IconizedContextMenuOption
-                iconClassName="mx_RoomGeneralContextMenu_iconSignOut"
-                label={_t("Forget Room")}
-                className="mx_IconizedContextMenu_option_red"
-                onClick={wrapHandler(
-                    () =>
-                        dis.dispatch({
-                            action: "forget_room",
-                            room_id: room.roomId,
-                        }),
-                    onPostForgetClick,
-                )}
-            />
-        );
-    } else {
-        leaveOption = (
-            <IconizedContextMenuOption
-                onClick={wrapHandler(
-                    () =>
-                        dis.dispatch({
-                            action: "leave_room",
-                            room_id: room.roomId,
-                        }),
-                    onPostLeaveClick,
-                )}
-                label={_t("Leave")}
-                className="mx_IconizedContextMenu_option_red"
-                iconClassName="mx_RoomGeneralContextMenu_iconSignOut"
-            />
-        );
-    }
 
     const { color } = useUnreadNotifications(room);
     const markAsReadOption: JSX.Element | null =
@@ -233,44 +110,8 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomGeneralContextMenu" compact>
             <IconizedContextMenuOptionList>
                 {markAsReadOption}
-                {!roomTags.includes(DefaultTagID.Archived) && !isAdminLeft && (
-                    <>
-                        {favoriteOption}
-                        {lowPriorityOption}
-                        {inviteOption}
-                        {copyLinkOption}
-                        {settingsOption}
-
-                        <IconizedContextMenuCheckbox
-                            onClick={() => {
-                                const spaceTags = SpaceStore.instance.spaceTags;
-
-                                const randomIndex = Math.round(Math.random() * (spaceTags.length - 1));
-                                const addTag = spaceTags[randomIndex];
-
-                                cli.setRoomOnlyTags(room.roomId, [
-                                    {
-                                        tagId: addTag.tagId,
-                                    },
-                                ]).then((res) => {
-                                    alert(`成功添加到${addTag.tagName}分组`);
-                                });
-                            }}
-                            label={"添加到test tag"}
-                            iconClassName="mx_RoomGeneralContextMenu_iconStar"
-                        />
-
-                        <IconizedContextMenuCheckbox
-                            onClick={() => {
-                                console.log("当前room tag", room.getAllTags());
-                            }}
-                            label={"获取当前room tag"}
-                            iconClassName="mx_RoomGeneralContextMenu_iconStar"
-                        />
-                    </>
-                )}
+                {!roomTags.includes(DefaultTagID.Archived) && !isAdminLeft && <>{settingsOption}</>}
             </IconizedContextMenuOptionList>
-            <IconizedContextMenuOptionList red>{leaveOption}</IconizedContextMenuOptionList>
         </IconizedContextMenu>
     );
 };

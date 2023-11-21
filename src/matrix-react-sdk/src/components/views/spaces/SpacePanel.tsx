@@ -31,8 +31,6 @@ import classNames from "classnames";
 import { Room } from "matrix-js-sdk/src/models/room";
 
 import { _t } from "../../../languageHandler";
-import { useContextMenu } from "../../structures/ContextMenu";
-import SpaceCreateMenu from "./SpaceCreateMenu";
 import { SpaceButton, SpaceItem } from "./SpaceTreeLevel";
 import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import { useEventEmitter, useEventEmitterState } from "../../../hooks/useEventEmitter";

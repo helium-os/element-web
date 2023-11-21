@@ -377,13 +377,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         }
     };
 
-    private onOpenMenuClick = (ev: React.MouseEvent): void => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const target = ev.target as HTMLButtonElement;
-        this.setState({ contextMenuPosition: target.getBoundingClientRect() });
-    };
-
     private onContextMenu = (ev: React.MouseEvent): void => {
         ev.preventDefault();
         ev.stopPropagation();

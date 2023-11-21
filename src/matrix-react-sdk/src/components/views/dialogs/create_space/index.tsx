@@ -47,7 +47,7 @@ const CreateSpaceDialog: React.FC<IProps> = ({ onFinished }) => {
             },
             {
                 Component: InviteToSpaceDialog,
-                props: {},
+                props: { spaceId },
             },
         ],
         [spaceType, onSpaceTypeChange, onSpaceIdChange, spaceId],
@@ -57,13 +57,7 @@ const CreateSpaceDialog: React.FC<IProps> = ({ onFinished }) => {
         <>
             {stepComponents.map(({ Component, props }, index) => (
                 <div key={index} style={{ display: index + 1 === curStep ? "block" : "none" }}>
-                    <Component
-                        totalStep={stepComponents.length}
-                        stepIndex={index + 1}
-                        onStepChange={onStepChange}
-                        onFinished={onFinished}
-                        {...props}
-                    />
+                    <Component stepIndex={index + 1} onStepChange={onStepChange} onFinished={onFinished} {...props} />
                 </div>
             ))}
         </>

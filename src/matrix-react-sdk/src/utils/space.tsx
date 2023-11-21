@@ -22,11 +22,9 @@ import { ICreateRoomStateEvent } from "matrix-js-sdk/src/matrix";
 
 import { calculateRoomVia } from "./permalinks/Permalinks";
 import Modal from "../Modal";
+import CreateChannelDialog from "../components/views/dialogs/CreateChannelDialog";
 import CreateRoomDialog from "../components/views/dialogs/CreateRoomDialog";
 import createRoom from "../createRoom";
-import { _t } from "../languageHandler";
-import SpacePublicShare from "../components/views/spaces/SpacePublicShare";
-import InfoDialog from "../components/views/dialogs/InfoDialog";
 import { showRoomInviteDialog } from "../RoomInvite";
 import CreateSubspaceDialog from "../components/views/dialogs/CreateSubspaceDialog";
 import AddExistingSubspaceDialog from "../components/views/dialogs/AddExistingSubspaceDialog";
@@ -76,12 +74,19 @@ export const showAddExistingRooms = (space: Room): void => {
 };
 
 export const showCreateNewRoom = async (space: Room, type?: RoomType, tags?: Tag[]): Promise<boolean> => {
-    const modal = Modal.createDialog(CreateRoomDialog, {
-        type,
-        defaultPublic: space.getJoinRule() === JoinRule.Public,
-        parentSpace: space,
-        tags,
-    });
+    let modal;
+    if (space) {
+        modal = Modal.createDialog(CreateChannelDialog, {
+            type,
+            defaultPublic: space.getJoinRule() === JoinRule.Public,
+            parentSpace: space,
+            tags,
+        });
+    } else {
+        modal = Modal.createDialog(CreateRoomDialog, {
+            type,
+        });
+    }
     const [shouldCreate, opts] = await modal.finished;
     if (shouldCreate) {
         await createRoom(opts);
@@ -95,23 +100,24 @@ export const shouldShowSpaceInvite = (space: Room): boolean =>
     shouldShowComponent(UIComponent.InviteUsers);
 
 export const showSpaceInvite = (space: Room, initialText = ""): void => {
-    if (space.getJoinRule() === "public") {
-        const modal = Modal.createDialog(InfoDialog, {
-            title: _t("Invite to %(spaceName)s", { spaceName: space.name }),
-            description: (
-                <React.Fragment>
-                    <span>{_t("Share your public space")}</span>
-                    <SpacePublicShare space={space} onFinished={() => modal.close()} />
-                </React.Fragment>
-            ),
-            fixedWidth: false,
-            button: false,
-            className: "mx_SpacePanel_sharePublicSpace",
-            hasCloseButton: true,
-        });
-    } else {
-        showRoomInviteDialog(space.roomId, initialText);
-    }
+    showRoomInviteDialog(space.roomId, initialText);
+    // if (space.getJoinRule() === "public") {
+    //     const modal = Modal.createDialog(InfoDialog, {
+    //         title: _t("Invite to %(spaceName)s", { spaceName: space.name }),
+    //         description: (
+    //             <React.Fragment>
+    //                 <span>{_t("Share your public space")}</span>
+    //                 <SpacePublicShare space={space} onFinished={() => modal.close()} />
+    //             </React.Fragment>
+    //         ),
+    //         fixedWidth: false,
+    //         button: false,
+    //         className: "mx_SpacePanel_sharePublicSpace",
+    //         hasCloseButton: true,
+    //     });
+    // } else {
+    //     showRoomInviteDialog(space.roomId, initialText);
+    // }
 };
 
 export const showAddExistingSubspace = (space: Room): void => {

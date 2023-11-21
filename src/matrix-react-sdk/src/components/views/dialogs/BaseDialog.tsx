@@ -29,7 +29,7 @@ import { PosthogScreenTracker, ScreenName } from "../../../PosthogTrackers";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 
-interface IProps {
+export interface DialogProps {
     // Whether the dialog should have a 'close' button that will
     // cause the dialog to be cancelled. This should only be set
     // to false if there is nothing the app can sensibly do if the
@@ -85,15 +85,15 @@ interface IProps {
  * Includes a div for the title, and a keypress handler which cancels the
  * dialog on escape.
  */
-export default class BaseDialog extends React.Component<IProps> {
+export default class BaseDialog extends React.Component<DialogProps> {
     private matrixClient: MatrixClient;
 
-    public static defaultProps: Partial<IProps> = {
+    public static defaultProps: Partial<DialogProps> = {
         hasCancel: true,
         fixedWidth: true,
     };
 
-    public constructor(props: IProps) {
+    public constructor(props: DialogProps) {
         super(props);
 
         this.matrixClient = MatrixClientPeg.get();

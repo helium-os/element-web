@@ -65,7 +65,15 @@ export function showStartChatInviteDialog(initialText = ""): void {
     // This dialog handles the room creation internally - we don't need to worry about it.
     Modal.createDialog(
         InviteDialog,
-        { kind: InviteKind.Dm, initialText },
+        {
+            kind: InviteKind.Dm,
+            initialText,
+            inviteLimit: 1,
+            dialogProps: { title: "发起一个新聊天", description: "" },
+            dialogButtonsProps: {
+                primaryButton: "发起聊天",
+            },
+        },
         /*className=*/ "mx_InviteDialog_flexWrapper",
         /*isPriority=*/ false,
         /*isStatic=*/ true,

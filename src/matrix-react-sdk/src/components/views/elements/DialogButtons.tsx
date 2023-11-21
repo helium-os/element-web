@@ -21,7 +21,7 @@ import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button
 
 import { _t } from "../../../languageHandler";
 
-interface IProps {
+export interface DialogButtonProps {
     // The primary button which is styled differently and has default focus.
     primaryButton: React.ReactNode;
 
@@ -67,8 +67,8 @@ interface IProps {
 /**
  * Basic container for buttons in modal dialogs.
  */
-export default class DialogButtons extends React.Component<IProps> {
-    public static defaultProps: Partial<IProps> = {
+export default class DialogButtons extends React.Component<DialogButtonProps> {
+    public static defaultProps: Partial<DialogButtonProps> = {
         primaryButtonType: ButtonType.Primary,
         cancelButtonType: ButtonType.Link,
         hasCancel: true,

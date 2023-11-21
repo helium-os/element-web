@@ -1,6 +1,5 @@
-import React, { memo, useState } from "react";
+import React, { memo, useState, useEffect } from "react";
 import BaseDialog from "../BaseDialog";
-import StepTips from "./StepTips";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import Field from "matrix-react-sdk/src/components/views/elements/Field";
@@ -9,18 +8,18 @@ import createRoom from "matrix-react-sdk/src/createRoom";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 interface IProps {
-    totalStep: number;
     stepIndex: number;
     onStepChange: (step: number) => void;
     spaceId: string;
     onFinished: () => void;
+    [key: string]: any;
 }
 
 interface ChannelItem {
     name: string;
     id: number;
 }
-const AddChannelDialog: React.FC<IProps> = ({ totalStep, stepIndex, onStepChange, spaceId, onFinished }) => {
+const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, onFinished }) => {
     const [channelList, setChannelList] = useState<ChannelItem[]>([
         {
             id: new Date().getTime(),
@@ -28,7 +27,13 @@ const AddChannelDialog: React.FC<IProps> = ({ totalStep, stepIndex, onStepChange
         },
     ]);
 
+    const [channelCount, setChannelCount] = useState<number>(0);
+
     const [busy, setBusy] = useState(false);
+
+    useEffect(() => {
+        setChannelCount(channelList.filter((item) => !!item.name).length);
+    }, [channelList]);
 
     const onOk = async () => {
         if (busy) return;
@@ -50,10 +55,6 @@ const AddChannelDialog: React.FC<IProps> = ({ totalStep, stepIndex, onStepChange
 
     const onNext = () => {
         onStepChange(stepIndex + 1);
-    };
-
-    const onBack = () => {
-        onStepChange(stepIndex - 1);
     };
 
     const onRoomNameChange = (id, value) => {
@@ -117,15 +118,12 @@ const AddChannelDialog: React.FC<IProps> = ({ totalStep, stepIndex, onStepChange
         );
     };
 
-    const footerAdditive = <StepTips total={totalStep} step={stepIndex} canSkip={true} onSkip={onNext} />;
-
     const footer = (
         <DialogButtons
-            additive={footerAdditive}
-            primaryButton={_t("Add")}
-            onPrimaryButtonClick={onOk}
-            cancelButton={_t("Back")}
-            onCancel={onBack}
+            primaryButton={channelCount > 0 ? _t("Add") : _t("Next")}
+            onPrimaryButtonClick={channelCount > 0 ? onOk : onNext}
+            cancelButton={_t("Skip")}
+            onCancel={onNext}
         />
     );
 

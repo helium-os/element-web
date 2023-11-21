@@ -132,16 +132,6 @@ a:visited {
     color: $accent-alt;
 }
 
-input[type="text"],
-input[type="search"],
-input[type="password"] {
-    font-family: inherit;
-    padding: 9px;
-    font-size: $font-14px;
-    font-weight: 600;
-    min-width: 0;
-}
-
 input[type="text"].mx_textinput_icon,
 input[type="search"].mx_textinput_icon {
     padding-left: 36px;
@@ -251,45 +241,6 @@ legend {
         transform-origin: 0 0;
         transform: scale(0.5);
     }
-}
-
-/* .mx_textinput is a container for a text input */
-/* + some other controls like buttons, ... */
-/* it has the appearance of a text box so the controls */
-/* appear to be part of the input */
-
-.mx_Dialog,
-.mx_MatrixChat_wrapper {
-    //.mx_textinput > input[type="text"],
-    //.mx_textinput > input[type="search"] {
-    //    border: none;
-    //    flex: 1;
-    //    color: $primary-content;
-    //}
-
-    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="text"],
-    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="search"],
-    //.mx_textinput {
-    //    display: block;
-    //    box-sizing: border-box;
-    //    background-color: transparent;
-    //    color: $input-darker-fg-color;
-    //    border-radius: 4px;
-    //    border: 1px solid rgba($primary-content, 0.1);
-    //    /* these things should probably not be defined globally */
-    //    margin: 9px;
-    //}
-
-    //.mx_textinput {
-    //    display: flex;
-    //    align-items: center;
-    //}
-    //
-    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="text"]::placeholder,
-    //:not(.mx_textinput):not(.mx_Field):not(.mx_no_textinput) > input[type="search"]::placeholder,
-    //.mx_textinput input::placeholder {
-    //    color: rgba($input-darker-fg-color, 0.75);
-    //}
 }
 
 /*** panels ***/

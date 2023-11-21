@@ -99,7 +99,7 @@ export interface IProps extends MenuProps {
     closeOnInteraction?: boolean;
 
     // Function to be called on menu close
-    onFinished(): void;
+    onFinished?(): void;
     // on resize callback
     windowResize?(): void;
 }
@@ -217,7 +217,7 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
         // They are probably using props.focusLock along with this option as well.
         if (!this.props.managed) {
             if (action === KeyBindingAction.Escape) {
-                this.props.onFinished();
+                this.props.onFinished?.();
             }
             return;
         }
@@ -239,7 +239,7 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
                 KeyBindingAction.ArrowRight,
             ].includes(action!)
         ) {
-            this.props.onFinished();
+            this.props.onFinished?.();
         }
     };
 

@@ -1,25 +1,18 @@
 import React, { memo, useState } from "react";
 import BaseDialog from "../BaseDialog";
-import StepTips from "./StepTips";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import { Visibility } from "matrix-js-sdk/src/@types/partials";
 import { SpaceCreateMenuType } from "matrix-react-sdk/src/components/views/spaces/SpaceCreateMenu";
 
 interface IProps {
-    totalStep: number;
     stepIndex: number;
     onStepChange: (step: number) => void;
     onSpaceTypeChange: (spaceType: string) => void;
     onFinished: () => void;
+    [key: string]: any;
 }
-const ChooseSpaceTypeDialog: React.FC<IProps> = ({
-    totalStep,
-    stepIndex,
-    onStepChange,
-    onSpaceTypeChange,
-    onFinished,
-}) => {
+const ChooseSpaceTypeDialog: React.FC<IProps> = ({ stepIndex, onStepChange, onSpaceTypeChange, onFinished }) => {
     const [selectedSpaceType, setSelectedSpaceType] = useState<Visibility>();
 
     const spaceTypeMaps = [
@@ -51,11 +44,8 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
         onStepChange(stepIndex + 1);
     };
 
-    const footerAdditive = <StepTips total={totalStep} step={stepIndex} canSkip={false} />;
-
     const footer = (
         <DialogButtons
-            additive={footerAdditive}
             primaryButton={_t("Next")}
             primaryDisabled={!selectedSpaceType}
             onPrimaryButtonClick={onOk}

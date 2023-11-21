@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 import { Room } from "matrix-js-sdk/src/models/room";
 import React, { ComponentType, createRef, ReactComponentElement, RefObject, SyntheticEvent } from "react";
 
@@ -34,7 +33,6 @@ import { _t } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import PosthogTrackers from "../../../PosthogTrackers";
 import SettingsStore from "../../../settings/SettingsStore";
-import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { UIComponent } from "../../../settings/UIFeature";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ITagMap } from "../../../stores/room-list/algorithms/models";
@@ -54,10 +52,9 @@ import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { arrayFastClone, arrayHasDiff } from "../../../utils/arrays";
 import { objectShallowClone, objectWithOnly } from "../../../utils/objects";
 import ResizeNotifier from "../../../utils/ResizeNotifier";
-import { shouldShowSpaceInvite, showAddExistingRooms, showCreateNewRoom, showSpaceInvite } from "../../../utils/space";
+import { shouldShowSpaceInvite, showSpaceInvite } from "../../../utils/space";
 import { ChevronFace, ContextMenuTooltipButton, MenuProps, useContextMenu } from "../../structures/ContextMenu";
 import RoomAvatar from "../avatars/RoomAvatar";
-import { BetaPill } from "../beta/BetaCard";
 import IconizedContextMenu, {
     IconizedContextMenuOption,
     IconizedContextMenuOptionList,
@@ -216,6 +213,8 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
     const showCreateRoom = shouldShowComponent(UIComponent.CreateRooms);
     const showExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
 
+    const createRoomLabel = _t("Create room", { type: _t(activeSpace ? "channel" : "room") });
+
     let tags;
     if (tagId) tags = [{ tagId }];
 
@@ -295,8 +294,8 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
                 onClick={() => onCreateRoom(activeSpace, undefined, tags)}
                 className="mx_RoomSublist_auxButton"
                 tooltipClassName="mx_RoomSublist_addRoomTooltip"
-                aria-label={_t("Create room")}
-                title={_t("Create room")}
+                aria-label={createRoomLabel}
+                title={createRoomLabel}
             />
         );
     }

@@ -30,16 +30,14 @@ import { shouldShowComponent } from "../../../customisations/helpers/UIComponent
 import { UIComponent } from "../../../settings/UIFeature";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { TagID } from "matrix-react-sdk/src/stores/room-list/models";
-import defaultDispatcher from "matrix-react-sdk/src/dispatcher/dispatcher";
+
 interface IProps extends IContextMenuProps {
     showIcon?: boolean;
     tagId?: TagID;
 }
 
 export const onCreateRoom = (spaceRoom, roomType, tags) => {
-    spaceRoom
-        ? showCreateNewRoom(spaceRoom, roomType, tags)
-        : defaultDispatcher.dispatch({ action: "view_create_room", type: roomType });
+    showCreateNewRoom(spaceRoom, roomType, tags);
 };
 
 const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIcon = false }) => {

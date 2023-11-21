@@ -93,7 +93,7 @@ import SecurityCustomisations from "../../customisations/Security";
 import Spinner from "../views/elements/Spinner";
 import QuestionDialog from "../views/dialogs/QuestionDialog";
 import UserSettingsDialog from "../views/dialogs/UserSettingsDialog";
-import CreateRoomDialog from "../views/dialogs/CreateRoomDialog";
+import CreateChannelDialog from "../views/dialogs/CreateChannelDialog";
 import KeySignatureUploadFailedDialog from "../views/dialogs/KeySignatureUploadFailedDialog";
 import IncomingSasDialog from "../views/dialogs/IncomingSasDialog";
 // import CompleteSecurity from "./auth/CompleteSecurity";
@@ -1083,7 +1083,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private async createRoom(defaultPublic = false, defaultName?: string, type?: RoomType): Promise<void> {
-        const modal = Modal.createDialog(CreateRoomDialog, {
+        const modal = Modal.createDialog(CreateChannelDialog, {
             type,
             defaultPublic,
             defaultName,

@@ -26,7 +26,6 @@ import { _t, _td } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import DMRoomMap from "../../../utils/DMRoomMap";
 import SdkConfig from "../../../SdkConfig";
-import * as Email from "../../../email";
 import { buildActivityScores, buildMemberScores, compareMembers } from "../../../utils/SortMembers";
 import { humanizeTime } from "../../../utils/humanize";
 import { IInviteResult, inviteMultipleToRoom, showAnyInviteErrors } from "../../../RoomInvite";
@@ -39,11 +38,10 @@ import { getHttpUrlFromMxc } from "../../../customisations/Media";
 import BaseAvatar from "../avatars/BaseAvatar";
 import { SearchResultAvatar } from "../avatars/SearchResultAvatar";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-import Field from "../elements/Field";
+import Field, { PropShapes } from "../elements/Field";
 import TabbedView, { Tab, TabLocation } from "../../structures/TabbedView";
 import Dialpad from "../voip/DialPad";
-import QuestionDialog from "./QuestionDialog";
-import BaseDialog from "./BaseDialog";
+import BaseDialog, { DialogProps } from "./BaseDialog";
 import DialPadBackspaceButton from "../elements/DialPadBackspaceButton";
 import LegacyCallHandler from "../../../LegacyCallHandler";
 import { ScreenName } from "../../../PosthogTrackers";
@@ -57,13 +55,11 @@ import {
     ThreepidMember,
 } from "../../../utils/direct-messages";
 import { InviteKind } from "./InviteDialogTypes";
-import Modal from "../../../Modal";
-import dis from "../../../dispatcher/dispatcher";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
 import { NonEmptyArray } from "../../../@types/common";
 import { AddressType, getAddressType } from "../../../UserAddress";
 import User from "../../../utils/User";
-import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
+import DialogButtons, { DialogButtonProps } from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import ContextMenu, { ChevronFace } from "matrix-react-sdk/src/components/structures/ContextMenu";
 
 // we have a number of types defined from the Matrix spec which can't reasonably be altered here.
@@ -247,46 +243,40 @@ interface BaseProps {
     // with no action taken.
     onFinished: (success?: boolean) => void;
 
-    // Initial value to populate the filter with
     initialText?: string;
+    inviteLimit?: number; // 最多邀请几人
+
+    dialogProps?: Partial<DialogProps>;
+    dialogButtonsProps?: Partial<DialogButtonProps>;
 }
 
-interface InviteDMProps extends BaseProps {
+interface InviteDMProps {
     // The kind of invite being performed. Assumed to be InviteKind.Dm if not provided.
     kind?: InviteKind.Dm;
 }
 
-interface InviteRoomProps extends BaseProps {
+interface InviteRoomProps {
     kind: InviteKind.Invite;
 
     // The room ID this dialog is for. Only required for InviteKind.Invite.
     roomId: string;
 }
 
-function isRoomInvite(props: Props): props is InviteRoomProps {
-    return props.kind === InviteKind.Invite;
-}
-
-interface InviteCallProps extends BaseProps {
+interface InviteCallProps {
     kind: InviteKind.CallTransfer;
 
     // The call to transfer. Only required for InviteKind.CallTransfer.
     call: MatrixCall;
 }
 
-type Props = InviteDMProps | InviteRoomProps | InviteCallProps;
+type InviteProps = InviteDMProps | InviteRoomProps | InviteCallProps;
+
+type Props = InviteProps & BaseProps;
 
 interface IInviteDialogState {
     targets: Member[]; // array of Member objects (see interface above)
     filterText: string;
-    recents: Result[];
-    numRecentsShown: number;
-    suggestions: Result[];
-    numSuggestionsShown: number;
-    serverResultsMixin: Result[];
-    threepidResultsMixin: Result[];
-    canUseIdentityServer: boolean;
-    tryingIdentityServer: boolean;
+
     consultFirst: boolean;
     dialPadValue: string;
     currentTabId: TabId;
@@ -294,6 +284,28 @@ interface IInviteDialogState {
     // These two flags are used for the 'Go' button to communicate what is going on.
     busy: boolean;
     errorText?: string;
+}
+
+type InviteInputProps = InviteProps &
+    Pick<BaseProps, "initialText" | "inviteLimit"> & {
+        busy?: boolean;
+        inputFieldProps?: Partial<PropShapes>;
+        onTextChange?: (text: string) => void;
+        onTargetsChange?: (targets: Member[]) => void;
+    };
+
+interface InviteInputState {
+    targets: Member[]; // array of Member objects (see interface above)
+    filterText: string;
+
+    alreadyInvited: Set<string>;
+    recents: Result[];
+    numRecentsShown: number;
+    suggestions: Result[];
+    numSuggestionsShown: number;
+    serverResultsMixin: Result[];
+    threepidResultsMixin: Result[];
+
     showSuggestions: boolean;
 }
 
@@ -304,57 +316,35 @@ interface SearchInfo {
     userOrgAlias: string; // 用户所在组织别名
 }
 
-export default class InviteDialog extends React.PureComponent<Props, IInviteDialogState> {
-    public static defaultProps: Partial<Props> = {
-        kind: InviteKind.Dm,
+function isRoomInvite(props: InviteInputProps): props is InviteRoomProps {
+    return props.kind === InviteKind.Invite;
+}
+
+export class InviteInput extends React.PureComponent<InviteInputProps, InviteInputState> {
+    public static defaultProps: Partial<InviteInputProps> = {
+        kind: InviteKind.Invite,
+        busy: false,
         initialText: "",
     };
 
-    private debounceTimer: number | null = null; // actually number because we're in the browser
-    private editorRef = createRef<HTMLInputElement>();
-    private numberEntryFieldRef: React.RefObject<Field> = createRef();
-    private unmounted = false;
     private encryptionByDefault = false;
+    private editorRef = createRef<HTMLInputElement>();
+    private debounceTimer: number | null = null; // actually number because we're in the browser// 获取当前用户所在组织id
 
-    public constructor(props: Props) {
+    public constructor(props: InviteInputProps) {
         super(props);
-
-        if (props.kind === InviteKind.Invite && !props.roomId) {
-            throw new Error("When using InviteKind.Invite a roomId is required for an InviteDialog");
-        } else if (props.kind === InviteKind.CallTransfer && !props.call) {
-            throw new Error("When using InviteKind.CallTransfer a call is required for an InviteDialog");
-        }
-
-        const alreadyInvited = new Set([MatrixClientPeg.get().getUserId()!]);
-        const welcomeUserId = SdkConfig.get("welcome_user_id");
-        if (welcomeUserId) alreadyInvited.add(welcomeUserId);
-
-        if (isRoomInvite(props)) {
-            const room = MatrixClientPeg.get().getRoom(props.roomId);
-            if (!room) throw new Error("Room ID given to InviteDialog does not look like a room");
-            room.getMembersWithMembership("invite").forEach((m) => alreadyInvited.add(m.userId));
-            room.getMembersWithMembership("join").forEach((m) => alreadyInvited.add(m.userId));
-            // add banned users, so we don't try to invite them
-            room.getMembersWithMembership("ban").forEach((m) => alreadyInvited.add(m.userId));
-        }
 
         this.state = {
             targets: [], // array of Member objects (see interface above)
             filterText: this.props.initialText || "",
-            recents: InviteDialog.buildRecents(alreadyInvited),
+            alreadyInvited: new Set([]),
+            recents: [],
             numRecentsShown: INITIAL_ROOMS_SHOWN,
-            suggestions: this.buildSuggestions(alreadyInvited),
+            suggestions: [],
             numSuggestionsShown: INITIAL_ROOMS_SHOWN,
             serverResultsMixin: [],
             threepidResultsMixin: [],
-            canUseIdentityServer: !!MatrixClientPeg.get().getIdentityServerUrl(),
-            tryingIdentityServer: false,
-            consultFirst: false,
-            dialPadValue: "",
-            currentTabId: TabId.UserDirectory,
 
-            // These two flags are used for the 'Go' button to communicate what is going on.
-            busy: false,
             showSuggestions: false,
         };
     }
@@ -367,15 +357,46 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         }
     }
 
-    public componentWillUnmount(): void {
-        this.unmounted = true;
+    public componentDidUpdate(prevProps: InviteInputProps, prevState: InviteInputState): void {
+        if (this.state.filterText !== prevState.filterText) {
+            this.props.onTextChange?.(this.state.filterText);
+        }
+        if (this.state.targets !== prevState.targets) {
+            this.props.onTargetsChange?.(this.state.targets);
+        }
+
+        if (this.props.kind === InviteKind.Invite && this.props.roomId && this.props.roomId !== prevProps.roomId) {
+            this.generateAlreadyInvited();
+        }
+
+        if (this.state.alreadyInvited !== prevState.alreadyInvited) {
+            this.setState({
+                recents: this.buildRecents(this.state.alreadyInvited),
+                suggestions: this.buildSuggestions(this.state.alreadyInvited),
+            });
+        }
     }
 
-    private onConsultFirstChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
-        this.setState({ consultFirst: ev.target.checked });
-    };
+    private generateAlreadyInvited() {
+        const alreadyInvited = new Set([MatrixClientPeg.get().getUserId()!]);
+        const welcomeUserId = SdkConfig.get("welcome_user_id");
+        if (welcomeUserId) alreadyInvited.add(welcomeUserId);
 
-    public static buildRecents(excludedTargetIds: Set<string>): Result[] {
+        if (isRoomInvite(this.props)) {
+            const room = MatrixClientPeg.get().getRoom(this.props.roomId);
+            if (room) {
+                room.getMembersWithMembership("invite").forEach((m) => alreadyInvited.add(m.userId));
+                room.getMembersWithMembership("join").forEach((m) => alreadyInvited.add(m.userId));
+                // add banned users, so we don't try to invite them
+                room.getMembersWithMembership("ban").forEach((m) => alreadyInvited.add(m.userId));
+            }
+        }
+        this.setState({
+            alreadyInvited,
+        });
+    }
+
+    public buildRecents(excludedTargetIds: Set<string>): Result[] {
         const rooms = DMRoomMap.shared().getUniqueRoomsWithIndividuals(); // map of userId => js-sdk Room
 
         // Also pull in all the rooms tagged as DefaultTagID.DM so we don't miss anything. Sometimes the
@@ -457,205 +478,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             .map((member) => ({ userId: member.userId, user: toMember(member) }));
     }
 
-    private shouldAbortAfterInviteError(result: IInviteResult, room: Room): boolean {
-        this.setState({ busy: false });
-        const userMap = new Map<string, Member>(this.state.targets.map((member) => [member.userId, member]));
-        return !showAnyInviteErrors(result.states, room, result.inviter, userMap);
-    }
-
-    // 获取当前用户所在组织id
-    private getOrgId(): string {
-        return OrgStore.sharedInstance().getCurrentOrgId();
-    }
-
-    // 生成搜索用户信息
-    private generateSearchUserInfo(searchUser: string): SearchInfo {
-        const currentOrgId = this.getOrgId(); // 当前用户所在组织id
-
-        let userId,
-            userName,
-            userOrgId, // 所查询的用户所属的组织id
-            userOrgAlias; // 所查询的用户所属的组织别名
-        if (!searchUser.includes("@")) {
-            // 查询时不包含@，例如test_dyp，默认从当前服务查询
-            userName = searchUser;
-            userOrgId = currentOrgId;
-        } else if (getAddressType(searchUser) === AddressType.MatrixUserId) {
-            // @userId:matrix.system.service.orgId
-            let chatServer;
-            [userId, chatServer] = searchUser.split("@")[1].split(":");
-            userOrgId = chatServer.split(".").pop();
-        } else {
-            // userName@orgAlias
-            [userName, userOrgAlias] = searchUser.split("@");
-        }
-
-        // 补齐信息
-        if (userOrgAlias && !userOrgId) {
-            userOrgId = OrgStore.sharedInstance().getOrgIdByAlias(userOrgAlias);
-        } else if (userOrgId && !userOrgAlias) {
-            userOrgAlias = OrgStore.sharedInstance().getOrgAliasById(userOrgId);
-        }
-        console.log("generateSearchUser  result", {
-            userId,
-            userName,
-            userOrgId,
-            userOrgAlias,
-        });
-
-        return {
-            userId,
-            userName,
-            userOrgId,
-            userOrgAlias,
-        };
-    }
-
-    private convertFilter(): Member[] {
-        // Check to see if there's anything to convert first
-        if (!this.state.filterText || getAddressType(this.state.filterText) !== AddressType.MatrixUserId)
-            return this.state.targets || [];
-
-        if (!this.canInviteMore()) {
-            // There should only be one third-party invite → do not allow more targets
-            return this.state.targets;
-        }
-
-        let newMember: Member | undefined;
-        if (this.state.filterText.startsWith("@")) {
-            // Assume mxid
-            newMember = new DirectoryMember({ user_id: this.state.filterText });
-        } else if (SettingsStore.getValue(UIFeature.IdentityServer)) {
-            // Assume email
-            if (this.canInviteThirdParty()) {
-                newMember = new ThreepidMember(this.state.filterText);
-            }
-        }
-        if (!newMember) return this.state.targets;
-
-        const newTargets = [...(this.state.targets || []), newMember];
-        this.setState({ targets: newTargets, filterText: "" });
-        return newTargets;
-    }
-
-    private startDm = async (): Promise<void> => {
-        this.setState({
-            busy: true,
-        });
-
-        try {
-            const cli = MatrixClientPeg.get();
-            const targets = this.convertFilter();
-            await startDmOnFirstMessage(cli, targets);
-            this.props.onFinished(true);
-        } catch (err) {
-            logger.error(err);
-            this.setState({
-                busy: false,
-                errorText: _t("We couldn't create your DM."),
-            });
-        }
-    };
-
-    private inviteUsers = async (): Promise<void> => {
-        if (this.props.kind !== InviteKind.Invite) return;
-        this.setState({ busy: true });
-        this.convertFilter();
-        const targets = this.convertFilter();
-        const targetIds = targets.map((t) => t.userId);
-
-        const cli = MatrixClientPeg.get();
-        const room = cli.getRoom(this.props.roomId);
-        if (!room) {
-            logger.error("Failed to find the room to invite users to");
-            this.setState({
-                busy: false,
-                errorText: _t("Something went wrong trying to invite the users."),
-            });
-            return;
-        }
-
-        try {
-            const result = await inviteMultipleToRoom(this.props.roomId, targetIds, true);
-            if (!this.shouldAbortAfterInviteError(result, room)) {
-                // handles setting error message too
-                this.props.onFinished(true);
-            }
-        } catch (err) {
-            logger.error(err);
-            this.setState({
-                busy: false,
-                errorText: _t(
-                    "We couldn't invite those users. Please check the users you want to invite and try again.",
-                ),
-            });
-        }
-    };
-
-    private transferCall = async (): Promise<void> => {
-        if (this.props.kind !== InviteKind.CallTransfer) return;
-        if (this.state.currentTabId == TabId.UserDirectory) {
-            this.convertFilter();
-            const targets = this.convertFilter();
-            const targetIds = targets.map((t) => t.userId);
-            if (targetIds.length > 1) {
-                this.setState({
-                    errorText: _t("A call can only be transferred to a single user."),
-                });
-                return;
-            }
-
-            LegacyCallHandler.instance.startTransferToMatrixID(this.props.call, targetIds[0], this.state.consultFirst);
-        } else {
-            LegacyCallHandler.instance.startTransferToPhoneNumber(
-                this.props.call,
-                this.state.dialPadValue,
-                this.state.consultFirst,
-            );
-        }
-        this.props.onFinished(true);
-    };
-
-    private onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-        if (this.state.busy) return;
-
-        let handled = false;
-        const value = e.currentTarget.value.trim();
-        const action = getKeyBindingsManager().getAccessibilityAction(e);
-
-        switch (action) {
-            case KeyBindingAction.Backspace:
-                if (value || this.state.targets.length <= 0) break;
-
-                // when the field is empty and the user hits backspace remove the right-most target
-                this.removeMember(this.state.targets[this.state.targets.length - 1]);
-                handled = true;
-                break;
-            case KeyBindingAction.Space:
-                if (!value || !value.includes("@") || value.includes(" ")) break;
-
-                // when the user hits space and their input looks like an e-mail/MXID then try to convert it
-                this.convertFilter();
-                handled = true;
-                break;
-            case KeyBindingAction.Enter:
-                if (!value) break;
-
-                // when the user hits enter with something in their field try to convert it
-                this.convertFilter();
-                handled = true;
-                break;
-        }
-
-        if (handled) {
-            e.preventDefault();
-        }
-    };
-
-    private onCancel = (): void => {
-        this.props.onFinished(false);
-    };
-
     private updateSuggestions = async (term: string): Promise<void> => {
         const results = [];
         const currentOrgId = this.getOrgId();
@@ -718,6 +540,114 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         }, 500); // 500ms debounce (human reaction time + some)
     };
 
+    private parseFilter(filter: string): string[] {
+        return filter
+            .split(/[\s,]+/)
+            .map((p) => p.trim())
+            .filter((p) => !!p); // filter empty strings
+    }
+
+    private convertFilter(): Member[] {
+        // Check to see if there's anything to convert first
+        if (!this.state.filterText || getAddressType(this.state.filterText) !== AddressType.MatrixUserId)
+            return this.state.targets || [];
+
+        if (!this.canInviteMore()) {
+            // There should only be one third-party invite → do not allow more targets
+            return this.state.targets;
+        }
+
+        let newMember: Member | undefined;
+        if (this.state.filterText.startsWith("@")) {
+            // Assume mxid
+            newMember = new DirectoryMember({ user_id: this.state.filterText });
+        } else if (SettingsStore.getValue(UIFeature.IdentityServer)) {
+            // Assume email
+            if (this.canInviteThirdParty()) {
+                newMember = new ThreepidMember(this.state.filterText);
+            }
+        }
+        if (!newMember) return this.state.targets;
+
+        const newTargets = [...(this.state.targets || []), newMember];
+        this.setState({ targets: newTargets, filterText: "" });
+        return newTargets;
+    }
+
+    /**
+     * If encryption by default is enabled, third-party invites should be encrypted as well.
+     * For encryption to work, the other side requires a device.
+     * To achieve this Element implements a waiting room until all have joined.
+     * Waiting for many users degrades the UX → only one email invite is allowed at a time.
+     *
+     * @param targets - Optional member list to check. Uses targets from state if not provided.
+     */
+    private canInviteMore(targets?: (Member | RoomMember)[]): boolean {
+        targets = targets || this.state.targets;
+        return this.canInviteThirdParty(targets) || !targets.some((t) => t instanceof ThreepidMember);
+    }
+
+    /**
+     * A third-party invite is possible if
+     * - this is a non-DM dialog or
+     * - there are no invites yet or
+     * - encryption by default is not enabled
+     *
+     * Also see {@link InviteDialog#canInviteMore}.
+     *
+     * @param targets - Optional member list to check. Uses targets from state if not provided.
+     */
+    private canInviteThirdParty(targets?: (Member | RoomMember)[]): boolean {
+        targets = targets || this.state.targets;
+        return this.props.kind !== InviteKind.Dm || targets.length === 0 || !this.encryptionByDefault;
+    }
+
+    private getOrgId(): string {
+        return OrgStore.sharedInstance().getCurrentOrgId();
+    }
+
+    // 生成搜索用户信息
+    private generateSearchUserInfo(searchUser: string): SearchInfo {
+        const currentOrgId = this.getOrgId(); // 当前用户所在组织id
+
+        let userId,
+            userName,
+            userOrgId, // 所查询的用户所属的组织id
+            userOrgAlias; // 所查询的用户所属的组织别名
+        if (!searchUser.includes("@")) {
+            // 查询时不包含@，例如test_dyp，默认从当前服务查询
+            userName = searchUser;
+            userOrgId = currentOrgId;
+        } else if (getAddressType(searchUser) === AddressType.MatrixUserId) {
+            // @userId:matrix.system.service.orgId
+            let chatServer;
+            [userId, chatServer] = searchUser.split("@")[1].split(":");
+            userOrgId = chatServer.split(".").pop();
+        } else {
+            // userName@orgAlias
+            [userName, userOrgAlias] = searchUser.split("@");
+        }
+
+        // 补齐信息
+        if (userOrgAlias && !userOrgId) {
+            userOrgId = OrgStore.sharedInstance().getOrgIdByAlias(userOrgAlias);
+        } else if (userOrgId && !userOrgAlias) {
+            userOrgAlias = OrgStore.sharedInstance().getOrgAliasById(userOrgId);
+        }
+        console.log("generateSearchUser  result", {
+            userId,
+            userName,
+            userOrgId,
+            userOrgAlias,
+        });
+
+        return {
+            userId,
+            userName,
+            userOrgId,
+            userOrgAlias,
+        };
+    }
     private showMoreRecents = (): void => {
         this.setState({ numRecentsShown: this.state.numRecentsShown + INCREMENT_ROOMS_SHOWN });
     };
@@ -727,7 +657,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
     };
 
     private toggleMember = (member: Member): void => {
-        if (!this.state.busy) {
+        if (!this.props.busy) {
             let filterText = this.state.filterText;
             let targets = this.state.targets.map((t) => t); // cheap clone for mutation
             const idx = targets.indexOf(member);
@@ -740,6 +670,9 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 targets.push(member);
                 filterText = ""; // clear the filter when the user accepts a suggestion
             }
+            if (this.props.inviteLimit) {
+                targets = targets.slice(-this.props.inviteLimit);
+            }
             this.setState({ targets, filterText, showSuggestions: false });
 
             if (this.editorRef && this.editorRef.current) {
@@ -747,8 +680,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             }
         }
     };
-
-    private onCloseMenu = () => {};
 
     private removeMember = (member: Member): void => {
         const targets = this.state.targets.map((t) => t); // cheap clone for mutation
@@ -763,108 +694,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         }
     };
 
-    private parseFilter(filter: string): string[] {
-        return filter
-            .split(/[\s,]+/)
-            .map((p) => p.trim())
-            .filter((p) => !!p); // filter empty strings
-    }
-
-    private onPaste = async (e: React.ClipboardEvent): Promise<void> => {
-        if (this.state.filterText) {
-            // if the user has already typed something, just let them
-            // paste normally.
-            return;
-        }
-
-        // Prevent the text being pasted into the input
-        e.preventDefault();
-
-        // Process it as a list of addresses to add instead
-        const text = e.clipboardData.getData("text");
-        const possibleMembers = [
-            // If we can avoid hitting the profile endpoint, we should.
-            ...this.state.recents,
-            ...this.state.suggestions,
-            ...this.state.serverResultsMixin,
-            ...this.state.threepidResultsMixin,
-        ];
-        const toAdd: Member[] = [];
-        const failed: string[] = [];
-
-        // Addresses that could not be added.
-        // Will be displayed as filter text to provide feedback.
-        const unableToAddMore: string[] = [];
-
-        const potentialAddresses = this.parseFilter(text);
-
-        for (const address of potentialAddresses) {
-            const member = possibleMembers.find((m) => m.userId === address);
-            if (member) {
-                if (this.canInviteMore([...this.state.targets, ...toAdd])) {
-                    toAdd.push(member.user);
-                } else {
-                    // Invite not possible for current targets and pasted targets.
-                    unableToAddMore.push(address);
-                }
-                continue;
-            }
-
-            if (Email.looksValid(address)) {
-                if (this.canInviteThirdParty([...this.state.targets, ...toAdd])) {
-                    toAdd.push(new ThreepidMember(address));
-                } else {
-                    // Third-party invite not possible for current targets and pasted targets.
-                    unableToAddMore.push(address);
-                }
-                continue;
-            }
-
-            if (address[0] !== "@") {
-                failed.push(address); // not a user ID
-                continue;
-            }
-
-            try {
-                const profile = await MatrixClientPeg.get().getProfileInfo(address);
-                toAdd.push(
-                    new DirectoryMember({
-                        user_id: address,
-                        display_name: profile?.displayname,
-                        avatar_url: profile?.avatar_url,
-                    }),
-                );
-            } catch (e) {
-                logger.error("Error looking up profile for " + address);
-                logger.error(e);
-                failed.push(address);
-            }
-        }
-        if (this.unmounted) return;
-
-        if (failed.length > 0) {
-            Modal.createDialog(QuestionDialog, {
-                title: _t("Failed to find the following users"),
-                description: _t(
-                    "The following users might not exist or are invalid, and cannot be invited: %(csvNames)s",
-                    { csvNames: failed.join(", ") },
-                ),
-                button: _t("OK"),
-            });
-        }
-
-        if (unableToAddMore) {
-            this.setState({
-                filterText: unableToAddMore.join(" "),
-                targets: [...this.state.targets, ...toAdd],
-            });
-        } else {
-            this.setState({
-                targets: [...this.state.targets, ...toAdd],
-            });
-        }
-    };
-
     private onClickInputArea = (e: React.MouseEvent): void => {
         // Stop the browser from highlighting text
         e.preventDefault();
@@ -874,6 +703,63 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             this.editorRef.current.focus();
         }
     };
+
+    private onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+        if (this.props.busy) return;
+
+        let handled = false;
+        const value = e.currentTarget.value.trim();
+        const action = getKeyBindingsManager().getAccessibilityAction(e);
+
+        switch (action) {
+            case KeyBindingAction.Backspace:
+                if (value || this.state.targets.length <= 0) break;
+
+                // when the field is empty and the user hits backspace remove the right-most target
+                this.removeMember(this.state.targets[this.state.targets.length - 1]);
+                handled = true;
+                break;
+        }
+
+        if (handled) {
+            e.preventDefault();
+        }
+    };
+
+    private renderEditor(): JSX.Element {
+        const targets =
+            this.state.targets.length > 0 &&
+            this.state.targets.map((t) => (
+                <DMUserTile member={t} onRemove={this.props.busy ? undefined : this.removeMember} key={t.userId} />
+            ));
+
+        return (
+            <div ref={this.editorRef} className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
+                <Field
+                    type="text"
+                    usePlaceholderAsHint={true}
+                    placeholder={_t("Enter username")}
+                    label={_t("Username")}
+                    className={
+                        !!this.props.inviteLimit && targets.length >= this.props.inviteLimit
+                            ? "mx_InviteDialog_hideInput"
+                            : ""
+                    }
+                    autoFocus={false}
+                    autoComplete="off"
+                    disabled={
+                        this.props.busy || (this.props.kind == InviteKind.CallTransfer && this.state.targets.length > 0)
+                    }
+                    prefixComponent={targets}
+                    hasPrefixContainer={false}
+                    value={this.state.filterText}
+                    onKeyDown={this.onKeyDown}
+                    onChange={this.updateFilter}
+                    {...this.props.inputFieldProps}
+                />
+            </div>
+        );
+    }
 
     private renderSection(kind: "recents" | "suggestions"): ReactNode {
         if (!this.state.showSuggestions) return null;
@@ -903,10 +789,10 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             otherAdditionalMembers = this.state.serverResultsMixin.filter(notAlreadyExists);
             priorityAdditionalMembers = this.state.threepidResultsMixin.filter(notAlreadyExists);
         }
-        const hasAdditionalMembers = priorityAdditionalMembers.length > 0 || otherAdditionalMembers.length > 0;
 
-        // Hide the section if there's nothing to filter by
-        if (sourceMembers.length === 0 && !hasAdditionalMembers) return null;
+        // // Hide the section if there's nothing to filter by
+        // const hasAdditionalMembers = priorityAdditionalMembers.length > 0 || otherAdditionalMembers.length > 0;
+        // if (sourceMembers.length === 0 && !hasAdditionalMembers) return null;
 
         if (!this.canInviteThirdParty()) {
             // It is currently not allowed to add more third-party invites. Filter them out.
@@ -960,7 +846,6 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 top={bottom + 4}
                 left={left}
                 menuWidth={width}
-                onFinished={this.onCloseMenu}
             >
                 <div className="mx_InviteDialog_userSections">
                     <div className="mx_InviteDialog_section">
@@ -987,34 +872,126 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         );
     }
 
-    private renderEditor(): JSX.Element {
-        const targets =
-            this.state.targets.length > 0 &&
-            this.state.targets.map((t) => (
-                <DMUserTile member={t} onRemove={this.state.busy ? undefined : this.removeMember} key={t.userId} />
-            ));
-
+    render() {
         return (
-            <div ref={this.editorRef} className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
-                <Field
-                    type="text"
-                    usePlaceholderAsHint={true}
-                    placeholder={_t("Enter username")}
-                    label={_t("Username")}
-                    autoFocus={false}
-                    autoComplete="off"
-                    disabled={
-                        this.state.busy || (this.props.kind == InviteKind.CallTransfer && this.state.targets.length > 0)
-                    }
-                    prefixComponent={targets}
-                    value={this.state.filterText}
-                    onKeyDown={this.onKeyDown}
-                    onChange={this.updateFilter}
-                    onPaste={this.onPaste}
-                />
-            </div>
+            <React.Fragment>
+                <div className="mx_InviteDialog_addressBar">{this.renderEditor()}</div>
+                {this.renderSection("suggestions")}
+            </React.Fragment>
         );
     }
+}
+
+export default class InviteDialog extends React.PureComponent<Props, IInviteDialogState> {
+    public static defaultProps: Partial<Props> = {
+        kind: InviteKind.Dm,
+        initialText: "",
+    };
+
+    private numberEntryFieldRef: React.RefObject<Field> = createRef();
+
+    public constructor(props: Props) {
+        super(props);
+
+        this.state = {
+            targets: [], // array of Member objects (see interface above)
+            filterText: "",
+
+            consultFirst: false,
+            dialPadValue: "",
+            currentTabId: TabId.UserDirectory,
+
+            // These two flags are used for the 'Go' button to communicate what is going on.
+            busy: false,
+        };
+    }
+
+    private onConsultFirstChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
+        this.setState({ consultFirst: ev.target.checked });
+    };
+
+    private shouldAbortAfterInviteError(result: IInviteResult, room: Room): boolean {
+        this.setState({ busy: false });
+        const userMap = new Map<string, Member>(this.state.targets.map((member) => [member.userId, member]));
+        return !showAnyInviteErrors(result.states, room, result.inviter, userMap);
+    }
+
+    private startDm = async (): Promise<void> => {
+        this.setState({
+            busy: true,
+        });
+
+        try {
+            const cli = MatrixClientPeg.get();
+            await startDmOnFirstMessage(cli, this.state.targets);
+            this.props.onFinished(true);
+        } catch (err) {
+            logger.error(err);
+            this.setState({
+                busy: false,
+                errorText: _t("We couldn't create your DM."),
+            });
+        }
+    };
+
+    private inviteUsers = async (): Promise<void> => {
+        if (this.props.kind !== InviteKind.Invite) return;
+        this.setState({ busy: true });
+        const targetIds = this.state.targets.map((t) => t.userId);
+
+        const cli = MatrixClientPeg.get();
+        const room = cli.getRoom(this.props.roomId);
+        if (!room) {
+            logger.error("Failed to find the room to invite users to");
+            this.setState({
+                busy: false,
+                errorText: _t("Something went wrong trying to invite the users."),
+            });
+            return;
+        }
+
+        try {
+            const result = await inviteMultipleToRoom(this.props.roomId, targetIds, true);
+            if (!this.shouldAbortAfterInviteError(result, room)) {
+                // handles setting error message too
+                this.props.onFinished(true);
+            }
+        } catch (err) {
+            logger.error(err);
+            this.setState({
+                busy: false,
+                errorText: _t(
+                    "We couldn't invite those users. Please check the users you want to invite and try again.",
+                ),
+            });
+        }
+    };
+
+    private transferCall = async (): Promise<void> => {
+        if (this.props.kind !== InviteKind.CallTransfer) return;
+        if (this.state.currentTabId == TabId.UserDirectory) {
+            const targetIds = this.state.targets.map((t) => t.userId);
+            if (targetIds.length > 1) {
+                this.setState({
+                    errorText: _t("A call can only be transferred to a single user."),
+                });
+                return;
+            }
+
+            LegacyCallHandler.instance.startTransferToMatrixID(this.props.call, targetIds[0], this.state.consultFirst);
+        } else {
+            LegacyCallHandler.instance.startTransferToPhoneNumber(
+                this.props.call,
+                this.state.dialPadValue,
+                this.state.consultFirst,
+            );
+        }
+        this.props.onFinished(true);
+    };
+
+    private onCancel = (): void => {
+        this.props.onFinished(false);
+    };
 
     private onDialFormSubmit = (ev: SyntheticEvent): void => {
         ev.preventDefault();
@@ -1059,33 +1036,17 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         }
     }
 
-    /**
-     * If encryption by default is enabled, third-party invites should be encrypted as well.
-     * For encryption to work, the other side requires a device.
-     * To achieve this Element implements a waiting room until all have joined.
-     * Waiting for many users degrades the UX → only one email invite is allowed at a time.
-     *
-     * @param targets - Optional member list to check. Uses targets from state if not provided.
-     */
-    private canInviteMore(targets?: (Member | RoomMember)[]): boolean {
-        targets = targets || this.state.targets;
-        return this.canInviteThirdParty(targets) || !targets.some((t) => t instanceof ThreepidMember);
-    }
+    private onTextChange = (text: string) => {
+        this.setState({
+            filterText: text,
+        });
+    };
 
-    /**
-     * A third-party invite is possible if
-     * - this is a non-DM dialog or
-     * - there are no invites yet or
-     * - encryption by default is not enabled
-     *
-     * Also see {@link InviteDialog#canInviteMore}.
-     *
-     * @param targets - Optional member list to check. Uses targets from state if not provided.
-     */
-    private canInviteThirdParty(targets?: (Member | RoomMember)[]): boolean {
-        targets = targets || this.state.targets;
-        return this.props.kind !== InviteKind.Dm || targets.length === 0 || !this.encryptionByDefault;
-    }
+    private onTargetsChange = (targets: Member[]) => {
+        this.setState({
+            targets,
+        });
+    };
 
     public render(): React.ReactNode {
         let goButtonFn;
@@ -1125,10 +1086,15 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         }
 
         const usersSection = (
-            <React.Fragment>
-                <div className="mx_InviteDialog_addressBar">{this.renderEditor()}</div>
-                {this.renderSection("suggestions")}
-            </React.Fragment>
+            <InviteInput
+                kind={this.props.kind}
+                roomId={this.props.roomId}
+                initialText={this.props.initialText}
+                inviteLimit={this.props.inviteLimit}
+                busy={this.state.busy}
+                onTextChange={this.onTextChange}
+                onTargetsChange={this.onTargetsChange}
+            />
         );
 
         let dialogContent;
@@ -1188,14 +1154,14 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             dialogContent = <React.Fragment>{usersSection}</React.Fragment>;
         }
 
-        const footer = this.props.footer || (
+        const dialogFooter = (
             <DialogButtons
-                additive={this.props.footerAdditive}
                 primaryDisabled={this.state.busy || !hasSelection}
                 primaryButton={_t("Invite")}
                 onPrimaryButtonClick={goButtonFn}
-                cancelButton={_t("Back")}
-                // onCancel={onBack}
+                cancelButton={_t("Cancel")}
+                onCancel={this.onCancel}
+                {...this.props.dialogButtonsProps}
             />
         );
 
@@ -1204,13 +1170,14 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 className={classNames({
                     mx_InviteDialog_transfer: this.props.kind === InviteKind.CallTransfer,
                     mx_InviteDialog_other: this.props.kind !== InviteKind.CallTransfer,
-                    mx_InviteDialog_hasFooter: !!footer,
                 })}
                 hasCancel={true}
                 title={_t("Invite people")}
                 description={"邀请自己的同事或者好友加入。"}
-                footer={footer}
+                onFinished={this.onCancel}
+                footer={dialogFooter}
                 screenName={this.screenName}
+                {...this.props.dialogProps}
             >
                 <div className="mx_InviteDialog_content">{dialogContent}</div>
             </BaseDialog>

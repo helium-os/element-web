@@ -47,8 +47,10 @@ interface IProps {
     usePlaceholderAsHint?: boolean;
     // Optional component to include inside the field before the input.
     prefixComponent?: React.ReactNode;
+    hasPrefixContainer?: boolean; // 是否需要对prefixComponent用container做包裹
     // Optional component to include inside the field after the input.
     postfixComponent?: React.ReactNode;
+    hasPostfixContainer?: boolean; // 是否需要对postfixComponent用container做包裹
     // The callback called whenever the contents of the field
     // changes.  Returns an object with `valid` boolean field
     // and a `feedback` react component field to provide feedback
@@ -107,7 +109,7 @@ export interface INativeOnChangeInputProps extends IProps, InputHTMLAttributes<H
     value: string;
 }
 
-type PropShapes = IInputProps | ISelectProps | ITextareaProps | INativeOnChangeInputProps;
+export type PropShapes = IInputProps | ISelectProps | ITextareaProps | INativeOnChangeInputProps;
 
 interface IState {
     valid?: boolean;
@@ -126,6 +128,8 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
         validateOnFocus: true,
         validateOnBlur: true,
         validateOnChange: true,
+        hasPrefixContainer: true,
+        hasPostfixContainer: true,
     };
 
     /*
@@ -234,7 +238,9 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             element,
             inputRef,
             prefixComponent,
+            hasPrefixContainer,
             postfixComponent,
+            hasPostfixContainer,
             className,
             onValidate,
             children,
@@ -269,11 +275,19 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         let prefixContainer: JSX.Element | undefined;
         if (prefixComponent) {
-            prefixContainer = <span className="mx_Field_prefix">{prefixComponent}</span>;
+            prefixContainer = hasPrefixContainer ? (
+                <span className="mx_Field_prefix">{prefixComponent}</span>
+            ) : (
+                <>{prefixComponent}</>
+            );
         }
         let postfixContainer: JSX.Element | undefined;
         if (postfixComponent) {
-            postfixContainer = <span className="mx_Field_postfix">{postfixComponent}</span>;
+            postfixContainer = hasPostfixContainer ? (
+                <span className="mx_Field_postfix">{postfixComponent}</span>
+            ) : (
+                <>{postfixComponent}</>
+            );
         }
 
         const hasValidationFlag = forceValidity !== null && forceValidity !== undefined;

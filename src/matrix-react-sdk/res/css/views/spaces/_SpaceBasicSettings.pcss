@@ -14,45 +14,47 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
+.mx_SpaceBasicSettings_avatarContainer {
+    display: flex;
+    justify-content: center;
+    padding: 12px 4px;
+
+    .mx_SpaceBasicSettings_avatar {
+        box-sizing: border-box;
+        position: relative;
+        height: 100px;
+        width: 100px;
+        border-radius: 50%;
+        border: 1px dashed $border-secondary-color3;
+        @mixin MaskIcon url("$(res)/img/element-icons/camera.svg"), 28px, 22px, $text-secondary-color1;
+        cursor: pointer;
+    }
+
+    img.mx_SpaceBasicSettings_avatar {
+        object-fit: cover;
+        border: none;
+    }
+
+    > input[type="file"] {
+        display: none;
+    }
+
+    > .mx_AccessibleButton_kind_link {
+        display: inline-block;
+        margin: auto 18px;
+        color: $links;
+        font-size: $font-14px; /* See _SpaceSettingsDialog.pcss */
+    }
+
+    > .mx_SpaceBasicSettings_avatar_remove {
+        color: $alert;
+    }
+}
+
 .mx_SpaceBasicSettings {
     .mx_Field {
         margin-top: 20px;
-    }
-    .mx_SpaceBasicSettings_avatarContainer {
-        display: flex;
-        justify-content: center;
-        padding: 12px 4px;
-
-        .mx_SpaceBasicSettings_avatar {
-            box-sizing: border-box;
-            position: relative;
-            height: 100px;
-            width: 100px;
-            border-radius: 50%;
-            border: 1px dashed $border-secondary-color3;
-            @mixin MaskIcon url("$(res)/img/element-icons/camera.svg"), 28px, 22px, $text-secondary-color1;
-            cursor: pointer;
-        }
-
-        img.mx_SpaceBasicSettings_avatar {
-            object-fit: cover;
-            border: none;
-        }
-
-        > input[type="file"] {
-            display: none;
-        }
-
-        > .mx_AccessibleButton_kind_link {
-            display: inline-block;
-            margin: auto 18px;
-            color: $links;
-            font-size: $font-14px; /* See _SpaceSettingsDialog.pcss */
-        }
-
-        > .mx_SpaceBasicSettings_avatar_remove {
-            color: $alert;
-        }
     }
 
     .mx_AccessibleButton_hasKind {

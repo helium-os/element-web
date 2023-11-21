@@ -1,6 +1,5 @@
-import React, { memo, useState, useMemo, useRef } from "react";
+import React, { memo, useState, useRef } from "react";
 import BaseDialog from "../BaseDialog";
-import StepTips from "./StepTips";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import { Visibility } from "matrix-js-sdk/src/@types/partials";
@@ -9,15 +8,14 @@ import Field from "matrix-react-sdk/src/components/views/elements/Field";
 
 interface IProps {
     spaceType: Visibility;
-    totalStep: number;
     stepIndex: number;
     onStepChange: (step: number) => void;
     onSpaceIdChange: (spaceId: string) => void;
     onFinished: () => void;
+    [key: string]: any;
 }
 const ChooseSpaceTypeDialog: React.FC<IProps> = ({
     spaceType,
-    totalStep,
     stepIndex,
     onStepChange,
     onSpaceIdChange,
@@ -58,11 +56,6 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
         onStepChange(stepIndex - 1);
     };
 
-    const footerAdditive = useMemo(
-        () => <StepTips total={totalStep} step={stepIndex} canSkip={false} />,
-        [totalStep, stepIndex],
-    );
-
     const onCreateSpace = async (): Promise<string | void> => {
         // require & validate the space name field
         if (spaceNameField.current && !(await spaceNameField.current.validate({ allowEmpty: false }))) {
@@ -76,7 +69,6 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
 
     const footer = (
         <DialogButtons
-            additive={footerAdditive}
             primaryButton={_t("Create")}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Back")}

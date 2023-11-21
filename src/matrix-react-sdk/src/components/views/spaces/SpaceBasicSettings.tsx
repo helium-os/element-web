@@ -21,23 +21,21 @@ import AccessibleButton from "../elements/AccessibleButton";
 import Field from "../elements/Field";
 import { chromeFileInputFix } from "../../../utils/BrowserWorkarounds";
 
-interface IProps {
-    avatarUrl?: string;
+interface AvatarProps {
+    avatarUrl: string;
     avatarDisabled?: boolean;
+    setAvatar(avatar?: File): void;
+}
+type IProps = AvatarProps & {
     name: string;
     nameDisabled?: boolean;
-    topic?: string;
+    topic: string;
     topicDisabled?: boolean;
-    setAvatar(avatar?: File): void;
     setName(name: string): void;
-    setTopic?(topic: string): void;
-}
+    setTopic(topic: string): void;
+};
 
-export const SpaceAvatar: React.FC<Pick<IProps, "avatarUrl" | "avatarDisabled" | "setAvatar">> = ({
-    avatarUrl,
-    avatarDisabled = false,
-    setAvatar,
-}) => {
+export const SpaceAvatar: React.FC<AvatarProps> = ({ avatarUrl, avatarDisabled = false, setAvatar }) => {
     const avatarUploadRef = useRef<HTMLInputElement>();
     const [avatar, setAvatarDataUrl] = useState(avatarUrl); // avatar data url cache
 

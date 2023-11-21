@@ -167,17 +167,19 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         if (activeSpace) {
             ContextMenuComponent = SpaceContextMenu;
         } else {
-            ContextMenuComponent = HomeButtonContextMenu;
+            // ContextMenuComponent = HomeButtonContextMenu;
         }
 
-        contextMenu = (
-            <ContextMenuComponent
-                {...contextMenuBelow(mainMenuHandle.current.getBoundingClientRect())}
-                space={activeSpace}
-                onFinished={closeMainMenu}
-                hideHeader={true}
-            />
-        );
+        if (ContextMenuComponent) {
+            contextMenu = (
+                <ContextMenuComponent
+                    {...contextMenuBelow(mainMenuHandle.current.getBoundingClientRect())}
+                    space={activeSpace}
+                    onFinished={closeMainMenu}
+                    hideHeader={true}
+                />
+            );
+        }
     } else if (plusMenuDisplayed && activeSpace) {
         let inviteOption: JSX.Element | undefined;
         if (shouldShowSpaceInvite(activeSpace)) {
@@ -399,9 +401,11 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         contextMenuButton = (
             <ContextMenuTooltipButton
                 inputRef={mainMenuHandle}
-                onClick={openMainMenu}
+                onClick={() => !!activeSpace && openMainMenu()}
                 isExpanded={mainMenuDisplayed}
-                className="mx_RoomListHeader_contextMenuButton"
+                className={`mx_RoomListHeader_contextMenuButton ${
+                    !activeSpace ? "mx_RoomListHeader_contextMenuButton_Home" : ""
+                }`}
             >
                 {title}
             </ContextMenuTooltipButton>
