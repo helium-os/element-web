@@ -20,7 +20,6 @@ import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { User, UserEvent } from "matrix-js-sdk/src/models/user";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { EventType } from "matrix-js-sdk/src/@types/event";
-import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import { UnstableValue } from "matrix-js-sdk/src/NamespacedValue";
 
 import RoomAvatar from "./RoomAvatar";
@@ -97,12 +96,6 @@ export default class DecoratedRoomAvatar extends React.PureComponent<IProps, ISt
         this.dmUser = null; // clear listeners, if any
     }
 
-    private get isPublicRoom(): boolean {
-        const joinRules = this.props.room.currentState.getStateEvents(EventType.RoomJoinRules, "");
-        const joinRule = joinRules && joinRules.getContent().join_rule;
-        return joinRule === JoinRule.Public;
-    }
-
     private get dmUser(): User | null {
         return this._dmUser;
     }
@@ -170,8 +163,7 @@ export default class DecoratedRoomAvatar extends React.PureComponent<IProps, ISt
                 icon = this.getPresenceIcon();
             }
         } else {
-            // Track publicity
-            icon = this.isPublicRoom ? Icon.Globe : Icon.None;
+            icon = Icon.None;
             if (!this.isWatchingTimeline) {
                 this.props.room.on(RoomEvent.Timeline, this.onRoomTimeline);
                 this.isWatchingTimeline = true;

@@ -3,6 +3,8 @@ import DMRoomMap from "../../matrix-react-sdk/src/utils/DMRoomMap";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 import { EventType } from "matrix-js-sdk/src/@types/event";
+import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomVersions";
+import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 
 export enum RoomType {
     people = "people", // 私聊
@@ -83,4 +85,20 @@ Room.prototype.getAllTags = function () {
     } catch (error) {
         return this.getUserTags();
     }
+};
+
+/**
+ * 判断是否为社区内公开频道
+ * tips: 对社区成员可见的频道视为公开频道
+ */
+Room.prototype.isRestrictedRoom = function () {
+    return this.getJoinRule() === JoinRule.Restricted && this.getVersion() === PreferredRoomVersions.RestrictedRooms;
+};
+
+/**
+ * 判断是否为私密频道
+ * tips: 对社区成员可见的频道视为公开频道
+ */
+Room.prototype.isPrivateRoom = function () {
+    return this.getJoinRule() === JoinRule.Invite;
 };

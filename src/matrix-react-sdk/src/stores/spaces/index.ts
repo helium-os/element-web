@@ -40,7 +40,7 @@ export enum MetaSpace {
 export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): string => {
     switch (spaceKey) {
         case MetaSpace.Home:
-            return allRoomsInHome ? _t("All rooms") : _t("Home");
+            return allRoomsInHome ? _t("All rooms") : _t("Messages");
         case MetaSpace.Favourites:
             return _t("Favourites");
         case MetaSpace.People:

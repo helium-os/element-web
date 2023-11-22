@@ -27,6 +27,8 @@ declare module "matrix-js-sdk/src/models/room" {
         getRoomTags(): Tag[];
         getUserTags(): Tag[];
         getAllTags(): Tag[];
+        isRestrictedRoom(): boolean;
+        isPrivateRoom(): boolean;
     }
 }
 

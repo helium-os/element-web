@@ -757,11 +757,11 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                                         <span>{this.props.label}</span>
                                     </Button>
                                     {this.renderMenu()}
-                                    {this.props.isMinimized ? null : badgeContainer}
+                                    {/*{this.props.isMinimized ? null : badgeContainer}*/}
                                     {this.props.isMinimized ? null : addRoomButton}
                                 </div>
                             </div>
-                            {this.props.isMinimized ? badgeContainer : null}
+                            {/*{this.props.isMinimized ? badgeContainer : null}*/}
                             {this.props.isMinimized ? addRoomButton : null}
                         </div>
                     );

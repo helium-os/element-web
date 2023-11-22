@@ -95,7 +95,8 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
         }
 
         let notifBadge;
-        if (notificationState) {
+        // 个人主页展示总的未读消息数；社区不展示
+        if (!space && notificationState) {
             let ariaLabel = _t("Jump to first unread room.");
             if (space?.getMyMembership() === "invite") {
                 ariaLabel = _t("Jump to first invite.");

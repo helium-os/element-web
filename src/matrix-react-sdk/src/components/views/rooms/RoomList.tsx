@@ -66,6 +66,7 @@ import { SdkContextClass } from "../../../contexts/SDKContext";
 import SpaceAddChanelContextMenu, {
     onCreateRoom,
 } from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
+import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -545,17 +546,8 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     private renderSuggestedRooms(): ReactComponentElement<typeof ExtraTile>[] {
         return this.state.suggestedRooms.map((room) => {
             const name = room.name || room.canonical_alias || room.aliases?.[0] || _t("Empty room");
-            const avatar = (
-                <RoomAvatar
-                    oobData={{
-                        name,
-                        avatarUrl: room.avatar_url,
-                    }}
-                    width={32}
-                    height={32}
-                    resizeMethod="crop"
-                />
-            );
+            const isPrivate = MatrixClientPeg.get().getRoom(room.room_id)?.isPrivateRoom();
+            const avatar = <SpaceChannelAvatar isPrivate={isPrivate} />;
             const viewRoom = (ev: SyntheticEvent): void => {
                 defaultDispatcher.dispatch<ViewRoomPayload>({
                     action: Action.ViewRoom,

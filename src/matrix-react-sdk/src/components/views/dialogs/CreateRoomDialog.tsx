@@ -24,10 +24,10 @@ import { IOpts } from "../../../createRoom";
 import Field from "../elements/Field";
 import DialogButtons from "../elements/DialogButtons";
 import BaseDialog from "../dialogs/BaseDialog";
-import { SpaceAvatar } from "matrix-react-sdk/src/components/views/spaces/SpaceBasicSettings";
 import { InviteInput } from "matrix-react-sdk/src/components/views/dialogs/InviteDialog";
 import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/InviteDialogTypes";
 import { Member } from "matrix-react-sdk/src/utils/direct-messages";
+import AvatarSetting from "matrix-react-sdk/src/components/views/settings/AvatarSetting";
 
 interface IProps {
     type?: RoomType;
@@ -43,7 +43,6 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
     const nameField = useRef(null);
     const [name, setName] = useState<string>("");
     const [avatar, setAvatar] = useState<File>();
-    const [avatarUrl, setAvatarUrl] = useState<string>("");
 
     const [targets, setTargets] = useState<Member[]>([]);
     const [invite, setInvite] = useState<string[]>([]);
@@ -85,7 +84,7 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
             footer={footer}
         >
             <form>
-                <SpaceAvatar avatarUrl={avatarUrl} avatarDisabled={false} setAvatar={setAvatar} />
+                <AvatarSetting avatarDisabled={false} setAvatar={setAvatar} />
                 <div style={{ marginTop: "20px" }}>
                     <Field
                         type="text"

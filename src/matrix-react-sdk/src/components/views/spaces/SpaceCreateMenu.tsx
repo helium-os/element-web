@@ -36,7 +36,7 @@ import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ContextMenu, { ChevronFace } from "../../structures/ContextMenu";
 import createRoom, { IOpts as ICreateOpts } from "../../../createRoom";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
-import SpaceBasicSettings, { SpaceAvatar } from "./SpaceBasicSettings";
+import SpaceBasicSettings from "./SpaceBasicSettings";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
 import Field from "../elements/Field";
 import withValidation from "../elements/Validation";
@@ -48,6 +48,7 @@ import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { shouldShowFeedback } from "../../../utils/Feedback";
+import AvatarSetting from "matrix-react-sdk/src/components/views/settings/AvatarSetting";
 
 export const createSpace = async (
     name: string,
@@ -160,13 +161,14 @@ export const SpaceFeedbackPrompt: React.FC<{
 type BProps = Omit<ComponentProps<typeof SpaceBasicSettings>, "nameDisabled" | "topicDisabled" | "avatarDisabled">;
 interface ISpaceCreateFormProps extends BProps {
     busy: boolean;
-    alias?: string;
     nameFieldRef: RefObject<Field>;
-    aliasFieldRef?: RefObject<RoomAliasField>;
     showAliasField?: boolean;
+    aliasFieldRef?: RefObject<RoomAliasField>;
+    alias?: string;
+    setAlias?(alias: string): void;
+    showTopicField: boolean;
     children?: ReactNode;
     onSubmit?(e: SyntheticEvent): void;
-    setAlias?(alias: string): void;
 }
 
 export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
@@ -181,6 +183,7 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
     aliasFieldRef,
     setAlias,
     showAliasField,
+    showTopicField = false,
     topic,
     setTopic,
     children,
@@ -199,7 +202,7 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
 
     return (
         <form className="mx_SpaceBasicSettings" onSubmit={onSubmit}>
-            <SpaceAvatar avatarUrl={avatarUrl} setAvatar={setAvatar} avatarDisabled={busy} />
+            <AvatarSetting avatarUrl={avatarUrl} setAvatar={setAvatar} avatarDisabled={busy} />
 
             <Field
                 name="spaceName"
@@ -235,6 +238,18 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                     onKeyDown={onKeyDown}
                 />
             ) : null}
+
+            {showTopicField && (
+                <Field
+                    name="spaceTopic"
+                    element="textarea"
+                    label={_t("Description")}
+                    value={topic ?? ""}
+                    onChange={(ev) => setTopic(ev.target.value)}
+                    rows={3}
+                    disabled={busy}
+                />
+            )}
 
             {children}
         </form>
@@ -333,17 +348,18 @@ const SpaceCreateMenu: React.FC<{
 
                 <SpaceCreateForm
                     busy={busy}
-                    onSubmit={onSpaceCreateClick}
                     setAvatar={setAvatar}
                     name={name}
-                    setName={setName}
                     nameFieldRef={spaceNameField}
-                    topic={topic}
-                    setTopic={setTopic}
-                    alias={alias}
-                    setAlias={setAlias}
+                    setName={setName}
                     showAliasField={visibility === Visibility.Public}
                     aliasFieldRef={spaceAliasField}
+                    alias={alias}
+                    setAlias={setAlias}
+                    showTopicField={false}
+                    topic={topic}
+                    setTopic={setTopic}
+                    onSubmit={onSpaceCreateClick}
                 />
 
                 <AccessibleButton kind="primary" onClick={onSpaceCreateClick} disabled={busy}>

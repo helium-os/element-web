@@ -32,48 +32,9 @@ limitations under the License.
         background-color: $roomtile-active-bg-color;
     }
 
-    .mx_RoomTile_iconType {
-        position: relative;
-        width: 16px;
-        height: 16px;
-        margin-right: 4px;
-        &:before {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: $text-primary-color2;
-            mask-repeat: no-repeat;
-            mask-position: center;
-            mask-size: contain;
-        }
-        &.mx_RoomTile_iconPublic {
-            &:before {
-                width: 11px;
-                height: 11px;
-                mask-image: url("$(res)/img/element-icons/room/public.svg");
-            }
-        }
-        &.mx_RoomTile_iconPrivate{
-            &:before {
-                width: 9px;
-                height: 12px;
-                mask-image: url("$(res)/img/element-icons/room/private.svg");
-            }
-        }
-        &.mx_RoomTile_iconHome{
-            &:before {
-                width: 13px;
-                height: 12px;
-                mask-image: url("$(res)/img/element-icons/home.svg");
-            }
-        }
-    }
-
     .mx_DecoratedRoomAvatar,
     .mx_RoomTile_avatarContainer {
-        margin-right: 10px;
+        margin-right: 4px;
     }
 
     .mx_RoomTile_details {
@@ -127,23 +88,16 @@ limitations under the License.
     }
 
     .mx_RoomTile_badgeContainer {
-        height: 16px;
-        /* don't set width so that it takes no space when there is no badge to show */
-        margin: auto 0; /* vertically align */
-
-        /* Create a flexbox to make aligning dot badges easier */
-        display: flex;
-        align-items: center;
-
-        .mx_NotificationBadge {
-            margin-right: 2px; /* centering */
-        }
-
+        margin-left: 2px;
         .mx_NotificationBadge_dot {
             /* make the smaller dot occupy the same width for centering */
             margin-left: 5px;
             margin-right: 7px;
         }
+    }
+
+    .mx_RoomTile_mentionsBadgeContainer {
+        margin-left: 2px;
     }
 
     /* The context menu buttons are hidden by default */
@@ -184,13 +138,6 @@ limitations under the License.
         &:hover,
         &:focus-within,
         &.mx_RoomTile_hasMenuOpen {
-            /* Hide the badge container on hover because it'll be a menu button */
-            .mx_RoomTile_badgeContainer {
-                width: 0;
-                height: 0;
-                display: none;
-            }
-
             .mx_RoomTile_notificationsButton,
             .mx_RoomTile_menuButton {
                 display: block;
@@ -206,6 +153,47 @@ limitations under the License.
         .mx_DecoratedRoomAvatar,
         .mx_RoomTile_avatarContainer {
             margin-right: 0;
+        }
+    }
+}
+
+
+
+.mx_RoomTile_iconType {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+    &:before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: $text-primary-color2;
+        mask-repeat: no-repeat;
+        mask-position: center;
+        mask-size: contain;
+    }
+    &.mx_RoomTile_iconPublic {
+        &:before {
+            width: 11px;
+            height: 11px;
+            mask-image: url("$(res)/img/element-icons/room/public.svg");
+        }
+    }
+    &.mx_RoomTile_iconPrivate{
+        &:before {
+            width: 9px;
+            height: 12px;
+            mask-image: url("$(res)/img/element-icons/room/private.svg");
+        }
+    }
+    &.mx_RoomTile_iconHome{
+        &:before {
+            width: 13px;
+            height: 12px;
+            mask-image: url("$(res)/img/element-icons/home.svg");
         }
     }
 }

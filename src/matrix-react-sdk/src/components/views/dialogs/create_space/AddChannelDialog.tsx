@@ -150,7 +150,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
                             <Field
                                 type="text"
                                 value={item.name}
-                                label={_t("Room name")}
+                                label={_t("Room name", { type: _t("Channel") })}
                                 placeholder={"请为你的频道想一个名字"}
                                 usePlaceholderAsHint={true}
                                 autoFocus={false}

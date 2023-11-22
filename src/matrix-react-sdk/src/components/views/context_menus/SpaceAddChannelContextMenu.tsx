@@ -106,7 +106,7 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
                     <IconizedContextMenuOption
                         data-testid="new-room-option"
                         iconClassName={iconClassName}
-                        label={_t("Create room")}
+                        label={_t("Create room", { type: _t("channel") })}
                         onClick={onNewRoomClick}
                     />
                 )}
