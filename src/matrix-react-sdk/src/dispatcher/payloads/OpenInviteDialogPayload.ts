@@ -19,7 +19,7 @@ import { MatrixCall } from "matrix-js-sdk/src/webrtc/call";
 
 import { ActionPayload } from "../payloads";
 import { Action } from "../actions";
-import { InviteKind } from "../../components/views/dialogs/InviteDialogTypes";
+import { InviteKind } from "../../components/views/dialogs/invite/InviteDialogTypes";
 
 export interface OpenInviteDialogPayload extends ActionPayload {
     action: Action.OpenInviteDialog;

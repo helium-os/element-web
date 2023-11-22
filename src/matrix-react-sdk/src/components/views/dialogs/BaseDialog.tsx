@@ -153,9 +153,6 @@ export default class BaseDialog extends React.Component<DialogProps> {
             lockProps["aria-labelledby"] = "mx_BaseDialog_title";
         }
 
-        const isHeaderWithCancelOnly =
-            !!cancelButton && !this.props.title && !this.props.headerButton && !this.props.headerImage;
-
         return (
             <MatrixClientContext.Provider value={this.matrixClient}>
                 {this.props.screenName && <PosthogScreenTracker screenName={this.props.screenName} />}
@@ -170,20 +167,19 @@ export default class BaseDialog extends React.Component<DialogProps> {
                     <div
                         className={classNames("mx_Dialog_header", {
                             mx_Dialog_headerWithButton: !!this.props.headerButton,
-                            mx_Dialog_headerWithCancelOnly: isHeaderWithCancelOnly,
                         })}
                     >
                         <div className="mx_Dialog_title_box">
-                            {!!(this.props.title || headerImage) && (
-                                <div className={classNames("mx_Dialog_title", this.props.titleClass)}>
-                                    {headerImage}
-                                    {this.props.title}
-                                </div>
-                            )}
+                            <div className={classNames("mx_Dialog_title", this.props.titleClass)}>
+                                {headerImage}
+                                {this.props.title}
+                            </div>
                             {this.props.headerButton}
                             {cancelButton}
                         </div>
-                        <div className="mx_Dialog_description">{this.props.description}</div>
+                        {this.props.description && (
+                            <div className="mx_Dialog_description">{this.props.description}</div>
+                        )}
                     </div>
                     <div className="mx_Dialog_content">{this.props.children}</div>
                     {this.props.footer && <div className="mx_Dialog_footer">{this.props.footer}</div>}

@@ -24,8 +24,8 @@ import { IOpts } from "../../../createRoom";
 import Field from "../elements/Field";
 import DialogButtons from "../elements/DialogButtons";
 import BaseDialog from "../dialogs/BaseDialog";
-import { InviteInput } from "matrix-react-sdk/src/components/views/dialogs/InviteDialog";
-import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/InviteDialogTypes";
+import { InviteInput } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialog";
+import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialogTypes";
 import { Member } from "matrix-react-sdk/src/utils/direct-messages";
 import AvatarSetting from "matrix-react-sdk/src/components/views/settings/AvatarSetting";
 

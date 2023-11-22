@@ -1,6 +1,6 @@
 import React, { memo } from "react";
-import InviteDialog from "matrix-react-sdk/src/components/views/dialogs/InviteDialog";
-import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/InviteDialogTypes";
+import InviteDialog from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialog";
+import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialogTypes";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 interface IProps {
     spaceId: string;

@@ -64,7 +64,10 @@ export default class MultiInviter {
      * @param {string} roomId The ID of the room to invite to
      * @param {function} progressCallback optional callback, fired after each invite.
      */
-    public constructor(private roomId: string, private readonly progressCallback?: () => void) {
+    public constructor(
+        private roomId: string,
+        private readonly progressCallback?: () => void,
+    ) {
         this.matrixClient = MatrixClientPeg.get();
     }
 
@@ -154,18 +157,18 @@ export default class MultiInviter {
             const room = this.matrixClient.getRoom(roomId);
             if (!room) throw new Error("Room not found");
 
-            const member = room.getMember(addr);
-            if (member?.membership === "join") {
-                throw new MatrixError({
-                    errcode: USER_ALREADY_JOINED,
-                    error: "Member already joined",
-                });
-            } else if (member?.membership === "invite") {
-                throw new MatrixError({
-                    errcode: USER_ALREADY_INVITED,
-                    error: "Member already invited",
-                });
-            }
+            // const member = room.getMember(addr);
+            // if (member?.membership === "join") {
+            //     throw new MatrixError({
+            //         errcode: USER_ALREADY_JOINED,
+            //         error: "Member already joined",
+            //     });
+            // } else if (member?.membership === "invite") {
+            //     throw new MatrixError({
+            //         errcode: USER_ALREADY_INVITED,
+            //         error: "Member already invited",
+            //     });
+            // }
 
             if (!ignoreProfile && SettingsStore.getValue("promptBeforeInviteUnknownUsers", this.roomId)) {
                 try {

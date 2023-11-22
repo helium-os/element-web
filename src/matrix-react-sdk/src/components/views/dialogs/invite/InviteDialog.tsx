@@ -21,44 +21,44 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import { MatrixCall } from "matrix-js-sdk/src/webrtc/call";
 import { logger } from "matrix-js-sdk/src/logger";
 
-import { Icon as EmailPillAvatarIcon } from "../../../../res/img/icon-email-pill-avatar.svg";
-import { _t, _td } from "../../../languageHandler";
-import { MatrixClientPeg } from "../../../MatrixClientPeg";
-import DMRoomMap from "../../../utils/DMRoomMap";
-import SdkConfig from "../../../SdkConfig";
-import { buildActivityScores, buildMemberScores, compareMembers } from "../../../utils/SortMembers";
-import { humanizeTime } from "../../../utils/humanize";
-import { IInviteResult, inviteMultipleToRoom, showAnyInviteErrors } from "../../../RoomInvite";
-import { DefaultTagID } from "../../../stores/room-list/models";
-import RoomListStore from "../../../stores/room-list/RoomListStore";
-import OrgStore from "../../../stores/OrgStore";
-import SettingsStore from "../../../settings/SettingsStore";
-import { UIFeature } from "../../../settings/UIFeature";
-import { getHttpUrlFromMxc } from "../../../customisations/Media";
-import BaseAvatar from "../avatars/BaseAvatar";
-import { SearchResultAvatar } from "../avatars/SearchResultAvatar";
-import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-import Field, { PropShapes } from "../elements/Field";
-import TabbedView, { Tab, TabLocation } from "../../structures/TabbedView";
-import Dialpad from "../voip/DialPad";
-import BaseDialog, { DialogProps } from "./BaseDialog";
-import DialPadBackspaceButton from "../elements/DialPadBackspaceButton";
-import LegacyCallHandler from "../../../LegacyCallHandler";
-import { ScreenName } from "../../../PosthogTrackers";
-import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
-import { getKeyBindingsManager } from "../../../KeyBindingsManager";
+import { Icon as EmailPillAvatarIcon } from "../../../../../res/img/icon-email-pill-avatar.svg";
+import { _t, _td } from "../../../../languageHandler";
+import { MatrixClientPeg } from "../../../../MatrixClientPeg";
+import DMRoomMap from "../../../../utils/DMRoomMap";
+import SdkConfig from "../../../../SdkConfig";
+import { buildActivityScores, buildMemberScores, compareMembers } from "../../../../utils/SortMembers";
+import { humanizeTime } from "../../../../utils/humanize";
+import { IInviteResult, inviteMultipleToRoom, showInviteResult } from "../../../../RoomInvite";
+import { DefaultTagID } from "../../../../stores/room-list/models";
+import RoomListStore from "../../../../stores/room-list/RoomListStore";
+import OrgStore from "../../../../stores/OrgStore";
+import SettingsStore from "../../../../settings/SettingsStore";
+import { UIFeature } from "../../../../settings/UIFeature";
+import { getHttpUrlFromMxc } from "../../../../customisations/Media";
+import BaseAvatar from "../../avatars/BaseAvatar";
+import { SearchResultAvatar } from "../../avatars/SearchResultAvatar";
+import AccessibleButton, { ButtonEvent } from "../../elements/AccessibleButton";
+import Field, { PropShapes } from "../../elements/Field";
+import TabbedView, { Tab, TabLocation } from "../../../structures/TabbedView";
+import Dialpad from "../../voip/DialPad";
+import BaseDialog, { DialogProps } from "../BaseDialog";
+import DialPadBackspaceButton from "../../elements/DialPadBackspaceButton";
+import LegacyCallHandler from "../../../../LegacyCallHandler";
+import { ScreenName } from "../../../../PosthogTrackers";
+import { KeyBindingAction } from "../../../../accessibility/KeyboardShortcuts";
+import { getKeyBindingsManager } from "../../../../KeyBindingsManager";
 import {
     DirectoryMember,
     IDMUserTileProps,
     Member,
     startDmOnFirstMessage,
     ThreepidMember,
-} from "../../../utils/direct-messages";
+} from "../../../../utils/direct-messages";
 import { InviteKind } from "./InviteDialogTypes";
-import { privateShouldBeEncrypted } from "../../../utils/rooms";
-import { NonEmptyArray } from "../../../@types/common";
-import { AddressType, getAddressType } from "../../../UserAddress";
-import User from "../../../utils/User";
+import { privateShouldBeEncrypted } from "../../../../utils/rooms";
+import { NonEmptyArray } from "../../../../@types/common";
+import { AddressType, getAddressType } from "../../../../UserAddress";
+import User from "../../../../utils/User";
 import DialogButtons, { DialogButtonProps } from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import ContextMenu, { ChevronFace } from "matrix-react-sdk/src/components/structures/ContextMenu";
 
@@ -913,7 +913,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
     private shouldAbortAfterInviteError(result: IInviteResult, room: Room): boolean {
         this.setState({ busy: false });
         const userMap = new Map<string, Member>(this.state.targets.map((member) => [member.userId, member]));
-        return !showAnyInviteErrors(result.states, room, result.inviter, userMap);
+        return !showInviteResult(result.states, room, result.inviter, userMap);
     }
 
     private startDm = async (): Promise<void> => {
@@ -952,10 +952,8 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
         try {
             const result = await inviteMultipleToRoom(this.props.roomId, targetIds, true);
-            if (!this.shouldAbortAfterInviteError(result, room)) {
-                // handles setting error message too
-                this.props.onFinished(true);
-            }
+            this.props.onFinished(true);
+            this.shouldAbortAfterInviteError(result, room);
         } catch (err) {
             logger.error(err);
             this.setState({
