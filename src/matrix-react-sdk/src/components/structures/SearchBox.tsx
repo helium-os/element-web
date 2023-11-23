@@ -19,7 +19,6 @@ import React, { createRef, HTMLProps } from "react";
 import { throttle } from "lodash";
 import classNames from "classnames";
 
-import AccessibleButton from "../../components/views/elements/AccessibleButton";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 
@@ -125,23 +124,13 @@ export default class SearchBox extends React.Component<IProps, IState> {
         if (collapsed) {
             return null;
         }
-        const clearButton =
-            !this.state.blurred || this.state.searchTerm ? (
-                <AccessibleButton
-                    key="button"
-                    tabIndex={-1}
-                    className="mx_SearchBox_closeButton"
-                    onClick={() => {
-                        this.clearSearch("button");
-                    }}
-                />
-            ) : undefined;
 
         // show a shorter placeholder when blurred, if requested
         // this is used for the room filter field that has
         // the explore button next to it when blurred
         return (
-            <div className={classNames("mx_SearchBox", "mx_textinput", { mx_SearchBox_blurred: this.state.blurred })}>
+            <div className={classNames("mx_SearchBox", { mx_SearchBox_blurred: this.state.blurred })}>
+                <span className="mx_SearchBox_searchIcon" />
                 <input
                     {...props}
                     key="searchfield"
@@ -158,7 +147,6 @@ export default class SearchBox extends React.Component<IProps, IState> {
                     autoFocus={this.props.autoFocus}
                     data-testid="searchbox-input"
                 />
-                {clearButton}
             </div>
         );
     }

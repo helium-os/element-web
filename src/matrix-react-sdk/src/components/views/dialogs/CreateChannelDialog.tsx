@@ -206,7 +206,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
 
         return (
             <BaseDialog
-                className="mx_CreateRoomDialog"
+                className="mx_CreateChannelDialog"
                 onFinished={this.props.onFinished}
                 title={title}
                 screenName="CreateRoom"
@@ -233,7 +233,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
                         placeholder={"请输入一些描述"}
                         onChange={this.onTopicChange}
                         value={this.state.topic}
-                        className="mx_CreateRoomDialog_topic"
+                        className="mx_CreateChannelDialog_topic"
                     />
                     <LabelledToggleSwitch
                         label={"建立私密频道，仅邀请可见"}

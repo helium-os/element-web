@@ -67,6 +67,7 @@ import SpaceAddChanelContextMenu, {
     onCreateRoom,
 } from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
+import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -546,7 +547,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     private renderSuggestedRooms(): ReactComponentElement<typeof ExtraTile>[] {
         return this.state.suggestedRooms.map((room) => {
             const name = room.name || room.canonical_alias || room.aliases?.[0] || _t("Empty room");
-            const isPrivate = MatrixClientPeg.get().getRoom(room.room_id)?.isPrivateRoom();
+            const isPrivate = isPrivateRoom(room.join_rule);
             const avatar = <SpaceChannelAvatar isPrivate={isPrivate} />;
             const viewRoom = (ev: SyntheticEvent): void => {
                 defaultDispatcher.dispatch<ViewRoomPayload>({

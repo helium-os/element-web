@@ -18,6 +18,7 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import { IHierarchyRoom } from "matrix-js-sdk/src/@types/spaces";
 
 import { _t } from "../../languageHandler";
+import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 
 // The consts & types are moved out here to prevent cyclical imports
 
@@ -54,6 +55,7 @@ export type SpaceKey = MetaSpace | Room["roomId"];
 
 export interface ISuggestedRoom extends IHierarchyRoom {
     viaServers: string[];
+    join_rule: JoinRule;
 }
 
 export function isMetaSpace(spaceKey?: SpaceKey): boolean {

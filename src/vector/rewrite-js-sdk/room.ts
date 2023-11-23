@@ -19,6 +19,10 @@ export function getRoomType(roomId: string) {
     return RoomType[isPeopleRoom(roomId) ? "people" : "channel"];
 }
 
+export function isPrivateRoom(joinRule: JoinRule) {
+    return joinRule === JoinRule.Invite;
+}
+
 // 判断管理员是否已离开房间
 Room.prototype.isAdminLeft = function (): boolean {
     return this.currentState.isAdminLeft();
@@ -100,5 +104,5 @@ Room.prototype.isRestrictedRoom = function () {
  * tips: 对社区成员可见的频道视为公开频道
  */
 Room.prototype.isPrivateRoom = function () {
-    return this.getJoinRule() === JoinRule.Invite;
+    return isPrivateRoom(this.getJoinRule());
 };

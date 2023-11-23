@@ -15,8 +15,24 @@ limitations under the License.
 */
 
 .mx_SearchBox {
-    flex: 1 1 0;
-    min-width: 0;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 0 7px 0 11px;
+    height: 28px;
+    gap: 4px;
+    border: 1px solid $text-secondary-color3;
+    border-radius: 8px;
+    .mx_SearchBox_searchIcon {
+        width: 20px;
+        height: 20px;
+        @mixin MaskIcon url("$(res)/img/feather-customised/search.svg"), 15px, 15px, $text-secondary-color3;
+    }
+    input {
+        flex: 1;
+        border: none;
+        outline: none;
+    }
 
     &.mx_SearchBox_blurred:not(:hover) {
         background-color: transparent;

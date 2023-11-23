@@ -20,7 +20,7 @@ interface IProps {
     isPrivate: boolean;
 }
 
-const SpaceChannelAvatar: React.FC<IProps> = (isPrivate) => {
+const SpaceChannelAvatar: React.FC<IProps> = ({ isPrivate }) => {
     return (
         <div
             className={`mx_RoomTile_iconType ${isPrivate ? "mx_RoomTile_iconPrivate" : "mx_RoomTile_iconPublic"}`}

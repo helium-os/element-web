@@ -29,14 +29,15 @@ import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
 import { UIComponent } from "../../../settings/UIFeature";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import { TagID } from "matrix-react-sdk/src/stores/room-list/models";
+import { Tag, TagID } from "matrix-react-sdk/src/stores/room-list/models";
+import { Room } from "matrix-js-sdk/src/models/room";
 
 interface IProps extends IContextMenuProps {
     showIcon?: boolean;
     tagId?: TagID;
 }
 
-export const onCreateRoom = (spaceRoom, roomType, tags) => {
+export const onCreateRoom = (spaceRoom: Room, roomType?: RoomType, tags?: Tag[]) => {
     showCreateNewRoom(spaceRoom, roomType, tags);
 };
 

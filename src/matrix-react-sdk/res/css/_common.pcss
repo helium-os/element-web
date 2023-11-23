@@ -132,45 +132,13 @@ a:visited {
     color: $accent-alt;
 }
 
-input[type="text"].mx_textinput_icon,
-input[type="search"].mx_textinput_icon {
-    padding-left: 36px;
-    background-repeat: no-repeat;
-    background-position: 10px center;
-}
-
-/* FIXME THEME - Tint by CSS rather than referencing a duplicate asset */
-input[type="text"].mx_textinput_icon.mx_textinput_search,
-input[type="search"].mx_textinput_icon.mx_textinput_search {
-    background-image: url("$(res)/img/feather-customised/search-input.svg");
-}
-
-/* dont search UI as not all browsers support it, */
-/* we implement it ourselves where needed instead */
-input[type="search"]::-webkit-search-decoration,
-input[type="search"]::-webkit-search-cancel-button,
-input[type="search"]::-webkit-search-results-button,
-input[type="search"]::-webkit-search-results-decoration {
-    display: none;
-}
-
 /* Override Firefox's UA style so we get a consistent look across browsers */
 input::placeholder,
 textarea::placeholder {
     opacity: initial;
 }
 
-input[type="text"],
-input[type="password"],
-textarea {
-    background-color: transparent;
-    color: $primary-content;
-}
 
-/* Required by Firefox */
-textarea {
-    color: $primary-content;
-}
 
 input[type="text"]:focus,
 input[type="password"]:focus,
