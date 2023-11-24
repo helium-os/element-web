@@ -6,8 +6,15 @@ export enum ButtonType {
     Danger = "danger",
     Link = "link",
 }
-interface IProps {
+
+export enum ButtonSize {
+    Small = "small",
+    Default = "default",
+    Large = "large",
+}
+export interface ButtonProps {
     type: ButtonType;
+    size?: ButtonSize;
     disabled?: boolean;
     loading?: boolean;
     className?: string;
@@ -15,11 +22,20 @@ interface IProps {
     onClick?: (event: ButtonEvent) => void;
     children: React.ReactNode;
 }
-const Button: React.FC<IProps> = ({ children, type, className, style, disabled = false, loading = false, onClick }) => {
+const Button: React.FC<ButtonProps> = ({
+    children,
+    type,
+    className,
+    style,
+    size = ButtonSize.Default,
+    disabled = false,
+    loading = false,
+    onClick,
+}) => {
     return (
         <button
             disabled={disabled}
-            className={`mx_btn mx-btn-${type} ${className || ""}`}
+            className={`mx_btn mx-btn-${type} mx-btn-${size} ${className || ""}`}
             style={style}
             onClick={(e) => onClick?.(e)}
         >

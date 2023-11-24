@@ -1,0 +1,108 @@
+/*
+Copyright 2017 Michael Telatynski <7t3chguy@gmail.com>
+Copyright 2020, 2021 The Matrix.org Foundation C.I.C.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+import React, { useState, useEffect, memo } from "react";
+import { RoomType } from "matrix-js-sdk/src/@types/event";
+import { JoinRule } from "matrix-js-sdk/src/@types/partials";
+
+import { _t } from "../../../languageHandler";
+import createRoom, { IOpts } from "../../../createRoom";
+import DialogButtons from "../elements/DialogButtons";
+import BaseDialog from "../dialogs/BaseDialog";
+import { InviteInput } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialog";
+import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialogTypes";
+import { Member } from "matrix-react-sdk/src/utils/direct-messages";
+import { OwnProfileStore } from "matrix-react-sdk/src/stores/OwnProfileStore";
+
+interface IProps {
+    type?: RoomType;
+    onFinished(): void;
+}
+
+/**
+ * 邀请成员并创建群聊弹窗
+ */
+const InviteAndCreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
+    const [targets, setTargets] = useState<Member[]>([]);
+    const [invite, setInvite] = useState<string[]>([]);
+
+    const [busy, setBusy] = useState<boolean>(false);
+
+    useEffect(() => {
+        console.log("targets change", targets);
+    }, [targets]);
+
+    useEffect(() => {
+        setInvite(targets.map((item) => item.userId));
+    }, [targets]);
+    const onOk = async () => {
+        if (busy) return;
+
+        setBusy(true);
+        const name = [
+            OwnProfileStore.instance.displayName,
+            ...targets.map((item) => item.displayName || item.name),
+        ].join("、");
+        try {
+            await createRoom({
+                roomType: type,
+                joinRule: JoinRule.Invite,
+                avatar: "",
+                createOpts: {
+                    name,
+                    invite,
+                },
+            });
+        } catch (error) {
+        } finally {
+            setBusy(false);
+            onFinished();
+        }
+    };
+
+    const onCancel = () => {
+        onFinished();
+    };
+
+    const footer = (
+        <DialogButtons
+            primaryButton={_t("Create")}
+            primaryLoading={busy}
+            primaryDisabled={!invite.length || busy}
+            onPrimaryButtonClick={onOk}
+            onCancel={onCancel}
+        />
+    );
+
+    return (
+        <BaseDialog
+            className="mx_CreateRoomDialog"
+            onFinished={onFinished}
+            title={_t("Create a room", { type: _t("room") })}
+            screenName="CreateRoom"
+            footer={footer}
+        >
+            <InviteInput
+                kind={InviteKind.Invite}
+                onTargetsChange={setTargets}
+                inputFieldProps={{ placeholder: "添加1人或多人" }}
+            />
+        </BaseDialog>
+    );
+};
+
+export default memo(InviteAndCreateRoomDialog);

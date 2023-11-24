@@ -27,7 +27,7 @@ import { Alignment } from "../elements/Tooltip";
 
 interface IProps {
     // Whether this button is highlighted
-    isHighlighted: boolean;
+    isHighlighted?: boolean;
     isUnread?: boolean;
     // click handler
     onClick: (ev: ButtonEvent) => void;

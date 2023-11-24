@@ -59,13 +59,7 @@ export function EmojiButton({ addEmoji, menuPosition, className }: IEmojiButtonP
     // the header buttons and the right panel buttons
     return (
         <>
-            <CollapsibleButton
-                className={computedClassName}
-                iconClassName="mx_EmojiButton_icon"
-                onClick={openMenu}
-                title={_t("Emoji")}
-                inputRef={button}
-            />
+            <CollapsibleButton className={computedClassName} onClick={openMenu} title={_t("Emoji")} inputRef={button} />
 
             {contextMenu}
         </>

@@ -41,7 +41,7 @@ import IconizedContextMenu, { IconizedContextMenuOptionList } from "../context_m
 import { EmojiButton } from "./EmojiButton";
 import { useSettingValue } from "../../../hooks/useSettings";
 import SettingsStore from "../../../settings/SettingsStore";
-import {UIFeature} from "../../../settings/UIFeature";
+import { UIFeature } from "../../../settings/UIFeature";
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -77,6 +77,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
 
     let mainButtons: ReactNode[];
     let moreButtons: ReactNode[];
+
     if (narrow) {
         mainButtons = [
             isWysiwygLabEnabled ? (
@@ -99,6 +100,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
         ];
     } else {
         mainButtons = [
+            uploadButton(), // props passed via UploadButtonContext
             isWysiwygLabEnabled ? (
                 <ComposerModeButton
                     key="composerModeButton"
@@ -108,7 +110,6 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
             ) : (
                 emojiButton(props)
             ),
-            uploadButton(), // props passed via UploadButtonContext
         ];
         moreButtons = [
             showStickersButton(props),
@@ -130,32 +131,34 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
 
     return (
         <UploadButtonContextProvider roomId={roomId} relation={props.relation}>
-            {mainButtons}
-            {
-                SettingsStore.getValue(UIFeature.MessageComposerMoreBtn) && (
-                    <>
-                        {moreButtons.length > 0 && (
-                            <AccessibleTooltipButton
-                                className={moreOptionsClasses}
-                                onClick={props.toggleButtonMenu}
-                                title={_t("More options")}
-                            />
-                        )}
-                        {props.isMenuOpen && (
-                            <IconizedContextMenu
-                                onFinished={props.toggleButtonMenu}
-                                {...props.menuPosition}
-                                wrapperClassName="mx_MessageComposer_Menu"
-                                compact={true}
-                            >
-                                <OverflowMenuContext.Provider value={props.toggleButtonMenu}>
-                                    <IconizedContextMenuOptionList>{moreButtons}</IconizedContextMenuOptionList>
-                                </OverflowMenuContext.Provider>
-                            </IconizedContextMenu>
-                        )}
-                    </>
-                )
-            }
+            {mainButtons.map((item, index) => (
+                <div key={index} className="mx_MessageComposer_buttonItem">
+                    {item}
+                </div>
+            ))}
+            {SettingsStore.getValue(UIFeature.MessageComposerMoreBtn) && (
+                <>
+                    {moreButtons.length > 0 && (
+                        <AccessibleTooltipButton
+                            className={moreOptionsClasses}
+                            onClick={props.toggleButtonMenu}
+                            title={_t("More options")}
+                        />
+                    )}
+                    {props.isMenuOpen && (
+                        <IconizedContextMenu
+                            onFinished={props.toggleButtonMenu}
+                            {...props.menuPosition}
+                            wrapperClassName="mx_MessageComposer_Menu"
+                            compact={true}
+                        >
+                            <OverflowMenuContext.Provider value={props.toggleButtonMenu}>
+                                <IconizedContextMenuOptionList>{moreButtons}</IconizedContextMenuOptionList>
+                            </OverflowMenuContext.Provider>
+                        </IconizedContextMenu>
+                    )}
+                </>
+            )}
         </UploadButtonContextProvider>
     );
 };
@@ -255,7 +258,7 @@ const UploadButton: React.FC = () => {
             className="mx_MessageComposer_button"
             iconClassName="mx_MessageComposer_upload"
             onClick={onClick}
-            title={_t("Attachment")}
+            title={_t("Upload")}
         />
     );
 };

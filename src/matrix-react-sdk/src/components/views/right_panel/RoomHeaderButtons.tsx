@@ -26,13 +26,11 @@ import { ThreadEvent } from "matrix-js-sdk/src/models/thread";
 import { _t } from "../../../languageHandler";
 import HeaderButton from "./HeaderButton";
 import HeaderButtons, { HeaderKind } from "./HeaderButtons";
-import { RightPanelPhases } from "../../../stores/right-panel/RightPanelStorePhases";
+import { HeaderButtonAction, RightPanelPhases } from "../../../stores/right-panel/RightPanelStorePhases";
 import { Action } from "../../../dispatcher/actions";
 import { ActionPayload } from "../../../dispatcher/payloads";
 import RightPanelStore from "../../../stores/right-panel/RightPanelStore";
-import { useReadPinnedEvents, usePinnedEvents } from "./PinnedMessagesCard";
 import { showThreadPanel } from "../../../dispatcher/dispatch-actions/threads";
-import SettingsStore from "../../../settings/SettingsStore";
 import {
     RoomNotificationStateStore,
     UPDATE_STATUS_INDICATOR,
@@ -42,6 +40,10 @@ import { SummarizedNotificationState } from "../../../stores/notifications/Summa
 import PosthogTrackers from "../../../PosthogTrackers";
 import { ButtonEvent } from "../elements/AccessibleButton";
 import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
+import Modal from "matrix-react-sdk/src/Modal";
+import InviteAndCreateRoomDialog from "matrix-react-sdk/src/components/views/dialogs/InviteAndCreateRoomDialog";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -74,51 +76,6 @@ const UnreadIndicator: React.FC<IUnreadIndicatorProps> = ({ color }) => {
             <div className="mx_RightPanel_headerButton_unreadIndicator_bg" />
             <div className={classes} />
         </>
-    );
-};
-
-interface IHeaderButtonProps {
-    room: Room;
-    isHighlighted: boolean;
-    onClick: () => void;
-}
-
-const PinnedMessagesHeaderButton: React.FC<IHeaderButtonProps> = ({ room, isHighlighted, onClick }) => {
-    const pinnedEvents = usePinnedEvents(room);
-    const readPinnedEvents = useReadPinnedEvents(room);
-    if (!pinnedEvents?.length) return null;
-
-    let unreadIndicator;
-    if (pinnedEvents.some((id) => !readPinnedEvents.has(id))) {
-        unreadIndicator = <UnreadIndicator />;
-    }
-
-    return (
-        <HeaderButton
-            name="pinnedMessagesButton"
-            title={_t("Pinned messages")}
-            isHighlighted={isHighlighted}
-            isUnread={!!unreadIndicator}
-            onClick={onClick}
-        >
-            {unreadIndicator}
-        </HeaderButton>
-    );
-};
-
-const TimelineCardHeaderButton: React.FC<IHeaderButtonProps> = ({ room, isHighlighted, onClick }) => {
-    let unreadIndicator;
-    const color = RoomNotificationStateStore.instance.getRoomState(room).color;
-    switch (color) {
-        case NotificationColor.Bold:
-        case NotificationColor.Grey:
-        case NotificationColor.Red:
-            unreadIndicator = <UnreadIndicator color={color} />;
-    }
-    return (
-        <HeaderButton name="timelineCardButton" title={_t("Chat")} isHighlighted={isHighlighted} onClick={onClick}>
-            {unreadIndicator}
-        </HeaderButton>
     );
 };
 
@@ -248,14 +205,6 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.setPhase(RightPanelPhases.NotificationPanel);
     };
 
-    private onPinnedMessagesClicked = (): void => {
-        // This toggles for us, if needed
-        this.setPhase(RightPanelPhases.PinnedMessages);
-    };
-    private onTimelineCardClicked = (): void => {
-        this.setPhase(RightPanelPhases.Timeline);
-    };
-
     private onThreadsPanelClicked = (ev: ButtonEvent): void => {
         if (this.state.phase && RoomHeaderButtons.THREAD_PHASES.includes(this.state.phase)) {
             RightPanelStore.instance.togglePanel(this.props.room?.roomId ?? null);
@@ -265,73 +214,127 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         }
     };
 
+    // 邀请成员并创建群聊
+    private onInviteUsersAndCreateRoom = () => {
+        Modal.createDialog(InviteAndCreateRoomDialog);
+    };
+
+    // 邀请成员
+    private onInviteUsers = () => {
+        showRoomInviteDialog(this.props.room.roomId);
+    };
+
     public renderButtons(): JSX.Element {
         if (!this.props.room) {
             return <></>;
         }
 
-        const rightPanelPhaseButtons: Map<RightPanelPhases, any> = new Map();
+        const rightPanelPhaseButtons: Map<RightPanelPhases | HeaderButtonAction, any> = new Map();
 
-        if (SettingsStore.getValue("feature_pinning")) {
-            rightPanelPhaseButtons.set(
-                RightPanelPhases.PinnedMessages,
-                <PinnedMessagesHeaderButton
-                    key="pinnedMessagesButton"
-                    room={this.props.room}
-                    isHighlighted={this.isPhase(RightPanelPhases.PinnedMessages)}
-                    onClick={this.onPinnedMessagesClicked}
-                />,
-            );
-        }
+        // if (SettingsStore.getValue("feature_pinning")) {
+        //     rightPanelPhaseButtons.set(
+        //         RightPanelPhases.PinnedMessages,
+        //         <PinnedMessagesHeaderButton
+        //             key="pinnedMessagesButton"
+        //             room={this.props.room}
+        //             isHighlighted={this.isPhase(RightPanelPhases.PinnedMessages)}
+        //             onClick={this.onPinnedMessagesClicked}
+        //         />,
+        //     );
+        // }
+        // rightPanelPhaseButtons.set(
+        //     RightPanelPhases.Timeline,
+        //     <TimelineCardHeaderButton
+        //         key="timelineButton"
+        //         room={this.props.room}
+        //         isHighlighted={this.isPhase(RightPanelPhases.Timeline)}
+        //         onClick={this.onTimelineCardClicked}
+        //     />,
+        // );
         rightPanelPhaseButtons.set(
-            RightPanelPhases.Timeline,
-            <TimelineCardHeaderButton
-                key="timelineButton"
-                room={this.props.room}
-                isHighlighted={this.isPhase(RightPanelPhases.Timeline)}
-                onClick={this.onTimelineCardClicked}
-            />,
-        );
-        rightPanelPhaseButtons.set(
-            RightPanelPhases.ThreadPanel,
-            <HeaderButton
-                key={RightPanelPhases.ThreadPanel}
-                name="threadsButton"
-                data-testid="threadsButton"
-                title={_t("Threads")}
-                onClick={this.onThreadsPanelClicked}
-                isHighlighted={this.isPhase(RoomHeaderButtons.THREAD_PHASES)}
-                isUnread={this.state.threadNotificationColor > 0}
-            >
-                <UnreadIndicator color={this.state.threadNotificationColor} />
-            </HeaderButton>,
-        );
-        rightPanelPhaseButtons.set(
-            RightPanelPhases.NotificationPanel,
+            HeaderButtonAction.Notification,
             <HeaderButton
                 key="notifsButton"
                 name="notifsButton"
                 title={_t("Notifications")}
-                isHighlighted={this.isPhase(RightPanelPhases.NotificationPanel)}
                 onClick={this.onNotificationsClicked}
                 isUnread={this.globalNotificationState.color === NotificationColor.Red}
-            >
-                {this.globalNotificationState.color === NotificationColor.Red ? (
-                    <UnreadIndicator color={this.globalNotificationState.color} />
-                ) : null}
-            </HeaderButton>,
-        );
-        rightPanelPhaseButtons.set(
-            RightPanelPhases.RoomSummary,
-            <HeaderButton
-                key="roomSummaryButton"
-                name="roomSummaryButton"
-                title={_t("Room info")}
-                isHighlighted={this.isPhase(ROOM_INFO_PHASES)}
-                onClick={this.onRoomSummaryClicked}
             />,
         );
+        if (this.props.room.isPeopleRoom()) {
+            // 私聊
+            rightPanelPhaseButtons.set(
+                HeaderButtonAction.InviteAndCreateRoom,
+                <HeaderButton
+                    key="inviteUsersButton"
+                    name="inviteUsersButton"
+                    title={"添加成员,并创建群聊"}
+                    onClick={this.onInviteUsersAndCreateRoom}
+                />,
+            );
+            rightPanelPhaseButtons.set(
+                RightPanelPhases.RoomMemberInfo,
+                <HeaderButton
+                    key="memberInfoButton"
+                    name="memberInfoButton"
+                    title={"用户信息"}
+                    isHighlighted={this.isPhase(ROOM_INFO_PHASES)}
+                    onClick={this.onRoomSummaryClicked}
+                />,
+            );
+        } else {
+            const isHomeSpace = SpaceStore.instance.isHomeSpace;
+            // 群聊 || 频道
+            isHomeSpace &&
+                rightPanelPhaseButtons.set(
+                    HeaderButtonAction.Invite,
+                    <HeaderButton
+                        key="inviteUsersButton"
+                        name="inviteUsersButton"
+                        title={_t("Invite users")}
+                        onClick={this.onInviteUsers}
+                    />,
+                );
 
+            rightPanelPhaseButtons.set(
+                RightPanelPhases.RoomMemberList,
+                <HeaderButton
+                    key="roomMembersButton"
+                    name="roomMembersButton"
+                    title={"成员列表"}
+                    isHighlighted={this.isPhase(RightPanelPhases.RoomMemberList)}
+                    onClick={this.onNotificationsClicked}
+                />,
+            );
+
+            !isHomeSpace &&
+                rightPanelPhaseButtons.set(
+                    RightPanelPhases.ThreadPanel,
+                    <HeaderButton
+                        key={RightPanelPhases.ThreadPanel}
+                        name="threadsButton"
+                        data-testid="threadsButton"
+                        title={_t("Threads")}
+                        onClick={this.onThreadsPanelClicked}
+                        isHighlighted={this.isPhase(RoomHeaderButtons.THREAD_PHASES)}
+                        isUnread={this.state.threadNotificationColor > 0}
+                    >
+                        <UnreadIndicator color={this.state.threadNotificationColor} />
+                    </HeaderButton>,
+                );
+
+            isHomeSpace &&
+                rightPanelPhaseButtons.set(
+                    RightPanelPhases.RoomSettings,
+                    <HeaderButton
+                        key="roomSettingsButton"
+                        name="roomSettingsButton"
+                        title={"群设置"}
+                        isHighlighted={this.isPhase(RightPanelPhases.RoomSettings)}
+                        onClick={this.onRoomSummaryClicked}
+                    />,
+                );
+        }
         return (
             <>
                 {Array.from(rightPanelPhaseButtons.keys()).map((phase) =>

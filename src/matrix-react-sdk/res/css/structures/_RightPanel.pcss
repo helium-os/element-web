@@ -52,48 +52,56 @@ limitations under the License.
  * TODO: factor out a common component to avoid this duplication.
  */
 .mx_RightPanel_headerButton {
-    cursor: pointer;
-    flex: 0 0 auto;
-    margin-left: 1px;
-    margin-right: 1px;
-    height: 32px;
-    width: 32px;
     position: relative;
-    border-radius: 100%;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
 
     &::before {
         content: "";
         position: absolute;
-        top: 4px; /* center with parent of 32px */
-        left: 4px; /* center with parent of 32px */
-        height: 24px;
-        width: 24px;
-        background-color: $icon-button-color;
+        width: 100%;
+        height: 100%;
+        background-color: $icon-primary-color;
         mask-repeat: no-repeat;
+        mask-position: center;
         mask-size: contain;
     }
 
-    &:hover {
-        background: rgba($accent, 0.1);
-
-        &::before {
-            background-color: $accent;
-        }
+    &:hover, &.mx_RightPanel_headerButton_highlight {
+        background: $icon-primary-bg-color;
     }
-}
-
-.mx_RightPanel_threadsButton::before {
-    mask-image: url("$(res)/img/element-icons/room/thread.svg");
 }
 
 .mx_RightPanel_notifsButton::before {
     mask-image: url("$(res)/img/element-icons/notifications.svg");
-    mask-position: center;
+    mask-size: 15px 16px;
+}
+.mx_RightPanel_inviteUsersButton::before {
+    mask-image: url("$(res)/img/element-icons/room/invite.svg");
+    mask-size: 21px 20px;
 }
 
-.mx_RightPanel_roomSummaryButton::before {
+
+.mx_RightPanel_threadsButton::before {
+    mask-image: url("$(res)/img/element-icons/room/thread.svg");
+    mask-size: 17px 17px;
+}
+.mx_RightPanel_memberInfoButton::before {
     mask-image: url("$(res)/img/element-icons/room/room-summary.svg");
-    mask-position: center;
+    mask-size: 24px 18px;
+}
+
+.mx_RightPanel_roomMembersButton::before {
+    mask-image: url("$(res)/img/element-icons/room/room-members.svg");
+    mask-size: 23px 16px;
+}
+
+.mx_RightPanel_roomSettingsButton::before {
+    mask-image: url("$(res)/img/element-icons/room/room-settings.svg");
+    mask-size: 15px 3px;
 }
 
 $dot-size: 8px;
@@ -175,19 +183,6 @@ $pulse-color: $alert;
 
     100% {
         opacity: 0;
-    }
-}
-
-.mx_RightPanel_headerButton_unread {
-    &::before {
-        background-color: $room-icon-unread-color !important;
-    }
-}
-
-.mx_RightPanel_headerButton_highlight,
-.mx_RightPanel_headerButton:hover {
-    &::before {
-        background-color: $accent !important;
     }
 }
 

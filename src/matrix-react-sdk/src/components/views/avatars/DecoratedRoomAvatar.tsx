@@ -34,7 +34,7 @@ import DMRoomMap from "../../../utils/DMRoomMap";
 import { IOOBData } from "../../../stores/ThreepidInviteStore";
 import TooltipTarget from "../elements/TooltipTarget";
 
-interface IProps {
+export interface DecoratedRoomAvatarProps {
     room: Room;
     avatarSize: number;
     displayBadge?: boolean;
@@ -76,12 +76,12 @@ function tooltipText(variant: Icon): string | undefined {
     }
 }
 
-export default class DecoratedRoomAvatar extends React.PureComponent<IProps, IState> {
+export default class DecoratedRoomAvatar extends React.PureComponent<DecoratedRoomAvatarProps, IState> {
     private _dmUser: User | null;
     private isUnmounted = false;
     private isWatchingTimeline = false;
 
-    public constructor(props: IProps) {
+    public constructor(props: DecoratedRoomAvatarProps) {
         super(props);
 
         this.state = {

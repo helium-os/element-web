@@ -29,10 +29,8 @@ import dis from "../../../dispatcher/dispatcher";
 import { ActionPayload } from "../../../dispatcher/payloads";
 import Stickerpicker from "./Stickerpicker";
 import { makeRoomPermalink, RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
-import E2EIcon from "./E2EIcon";
 import SettingsStore from "../../../settings/SettingsStore";
 import { aboveLeftOf, MenuProps } from "../../structures/ContextMenu";
-import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ReplyPreview from "./ReplyPreview";
 import { UPDATE_EVENT } from "../../../stores/AsyncStore";
 import VoiceRecordComposerTile from "./VoiceRecordComposerTile";
@@ -54,30 +52,16 @@ import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { isLocalRoom } from "../../../utils/localRoom/isLocalRoom";
 import { Features } from "../../../settings/Settings";
 import { VoiceMessageRecording } from "../../../audio/VoiceMessageRecording";
-import { SendWysiwygComposer, sendMessage, getConversionFunctions } from "./wysiwyg_composer/";
+import { getConversionFunctions, sendMessage, SendWysiwygComposer } from "./wysiwyg_composer/";
 import { MatrixClientProps, withMatrixClientHOC } from "../../../contexts/MatrixClientContext";
 import { setUpVoiceBroadcastPreRecording } from "../../../voice-broadcast/utils/setUpVoiceBroadcastPreRecording";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { VoiceBroadcastInfoState } from "../../../voice-broadcast";
 import { createCantStartVoiceMessageBroadcastDialog } from "../dialogs/CantStartVoiceMessageBroadcastDialog";
+import Button, { ButtonProps, ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import CallButtons from "matrix-react-sdk/src/components/views/rooms/CallButtons";
 
 let instanceCount = 0;
-
-interface ISendButtonProps {
-    onClick: (ev: ButtonEvent) => void;
-    title?: string; // defaults to something generic
-}
-
-function SendButton(props: ISendButtonProps): JSX.Element {
-    return (
-        <AccessibleTooltipButton
-            className="mx_MessageComposer_sendMessage"
-            onClick={props.onClick}
-            title={props.title ?? _t("Send message")}
-            data-testid="sendmessagebtn"
-        />
-    );
-}
 
 interface IProps extends MatrixClientProps {
     room: Room;
@@ -141,7 +125,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
             isWysiwygLabEnabled: SettingsStore.getValue<boolean>("feature_wysiwyg_composer"),
             isRichTextEnabled: true,
             initialComposerContent: "",
-            showE2E: false
+            showE2E: false,
         };
 
         this.instanceId = instanceCount++;
@@ -468,11 +452,6 @@ export class MessageComposer extends React.Component<IProps, IState> {
     };
 
     public render(): React.ReactNode {
-        const hasE2EIcon = Boolean(!this.state.isWysiwygLabEnabled && this.props.e2eStatus);
-        const e2eIcon = this.state.showE2E && hasE2EIcon && (
-            <E2EIcon key="e2eIcon" status={this.props.e2eStatus} className="mx_MessageComposer_e2eIcon" />
-        );
-
         const controls: ReactNode[] = [];
         const menuPosition = this.getMenuPosition();
 
@@ -583,13 +562,10 @@ export class MessageComposer extends React.Component<IProps, IState> {
             />,
         );
 
-        const showSendButton = !this.state.isComposerEmpty || this.state.haveRecording;
-
         const classes = classNames({
-            "mx_MessageComposer": true,
+            mx_MessageComposer: true,
             "mx_MessageComposer--compact": this.props.compact,
-            "mx_MessageComposer_e2eStatus": hasE2EIcon,
-            "mx_MessageComposer_wysiwyg": this.state.isWysiwygLabEnabled,
+            mx_MessageComposer_wysiwyg: this.state.isWysiwygLabEnabled,
         });
 
         return (
@@ -601,46 +577,49 @@ export class MessageComposer extends React.Component<IProps, IState> {
                         permalinkCreator={this.props.permalinkCreator}
                     />
                     <div className="mx_MessageComposer_row">
-                        {e2eIcon}
                         {composer}
-                        <div className="mx_MessageComposer_actions">
+                        <div className="mx_MessageComposer_actionsWrap">
                             {controls}
-                            {canSendMessages && (
-                                <MessageComposerButtons
-                                    addEmoji={this.addEmoji}
-                                    haveRecording={this.state.haveRecording}
-                                    isMenuOpen={this.state.isMenuOpen}
-                                    isStickerPickerOpen={this.state.isStickerPickerOpen}
-                                    menuPosition={menuPosition}
-                                    relation={this.props.relation}
-                                    onRecordStartEndClick={this.onRecordStartEndClick}
-                                    setStickerPickerOpen={this.setStickerPickerOpen}
-                                    showLocationButton={!window.electron}
-                                    showPollsButton={this.state.showPollsButton}
-                                    showStickersButton={this.showStickersButton}
-                                    isRichTextEnabled={this.state.isRichTextEnabled}
-                                    onComposerModeClick={this.onRichTextToggle}
-                                    toggleButtonMenu={this.toggleButtonMenu}
-                                    showVoiceBroadcastButton={this.state.showVoiceBroadcastButton}
-                                    onStartVoiceBroadcastClick={() => {
-                                        setUpVoiceBroadcastPreRecording(
-                                            this.props.room,
-                                            MatrixClientPeg.get(),
-                                            SdkContextClass.instance.voiceBroadcastPlaybacksStore,
-                                            SdkContextClass.instance.voiceBroadcastRecordingsStore,
-                                            SdkContextClass.instance.voiceBroadcastPreRecordingStore,
-                                        );
-                                        this.toggleButtonMenu();
-                                    }}
-                                />
-                            )}
-                            {showSendButton && (
-                                <SendButton
-                                    key="controls_send"
-                                    onClick={this.sendMessage}
-                                    title={this.state.haveRecording ? _t("Send voice message") : undefined}
-                                />
-                            )}
+                            <div className="mx_MessageComposer_actionsList">
+                                {canSendMessages && (
+                                    <MessageComposerButtons
+                                        addEmoji={this.addEmoji}
+                                        haveRecording={this.state.haveRecording}
+                                        isMenuOpen={this.state.isMenuOpen}
+                                        isStickerPickerOpen={this.state.isStickerPickerOpen}
+                                        menuPosition={menuPosition}
+                                        relation={this.props.relation}
+                                        onRecordStartEndClick={this.onRecordStartEndClick}
+                                        setStickerPickerOpen={this.setStickerPickerOpen}
+                                        showLocationButton={!window.electron}
+                                        showPollsButton={this.state.showPollsButton}
+                                        showStickersButton={this.showStickersButton}
+                                        isRichTextEnabled={this.state.isRichTextEnabled}
+                                        onComposerModeClick={this.onRichTextToggle}
+                                        toggleButtonMenu={this.toggleButtonMenu}
+                                        showVoiceBroadcastButton={this.state.showVoiceBroadcastButton}
+                                        onStartVoiceBroadcastClick={() => {
+                                            setUpVoiceBroadcastPreRecording(
+                                                this.props.room,
+                                                MatrixClientPeg.get(),
+                                                SdkContextClass.instance.voiceBroadcastPlaybacksStore,
+                                                SdkContextClass.instance.voiceBroadcastRecordingsStore,
+                                                SdkContextClass.instance.voiceBroadcastPreRecordingStore,
+                                            );
+                                            this.toggleButtonMenu();
+                                        }}
+                                    />
+                                )}
+                                <CallButtons room={this.props.room} className="mx_MessageComposer_button" />
+                            </div>
+                            <Button
+                                type={ButtonType.Primary}
+                                size={ButtonSize.Small}
+                                disabled={this.state.isComposerEmpty && !this.state.haveRecording}
+                                onClick={this.sendMessage}
+                            >
+                                {_t("Send")}
+                            </Button>
                         </div>
                     </div>
                 </div>

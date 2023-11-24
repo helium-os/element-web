@@ -24,7 +24,7 @@ import { IconizedContextMenuOption } from "../context_menus/IconizedContextMenu"
 
 interface ICollapsibleButtonProps extends ComponentProps<typeof MenuItem> {
     title: string;
-    iconClassName: string;
+    iconClassName?: string;
 }
 
 export const CollapsibleButton: React.FC<ICollapsibleButtonProps> = ({

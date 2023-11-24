@@ -28,6 +28,7 @@ export enum RightPanelPhases {
     Widget = "Widget",
     PinnedMessages = "PinnedMessages",
     Timeline = "Timeline",
+    RoomSettings = "RoomSettings",
 
     Room3pidMemberInfo = "Room3pidMemberInfo",
 
@@ -39,6 +40,12 @@ export enum RightPanelPhases {
     // Thread stuff
     ThreadView = "ThreadView",
     ThreadPanel = "ThreadPanel",
+}
+
+export enum HeaderButtonAction {
+    Notification = "Notification", // 消息通知
+    Invite = "Invite", // 邀请用户
+    InviteAndCreateRoom = "InviteAndCreateRoom", // 添加成员，并创建群聊
 }
 
 export function backLabelForPhase(phase: RightPanelPhases | null): string | null {

@@ -174,7 +174,7 @@ legend {
     border: none;
 }
 
-@define-mixin MaskIcon $iconImage, $iconWidth, $iconHeight, $iconColor {
+@define-mixin MaskIcon $iconImage, $iconWidth, $iconHeight, $iconColor: $icon-primary-color {
     position: relative;
     &:before {
         content: "";
@@ -187,7 +187,6 @@ legend {
         background: $iconColor;
         mask: $iconImage no-repeat center;
         mask-size: 100% auto;
-
     }
 }
 

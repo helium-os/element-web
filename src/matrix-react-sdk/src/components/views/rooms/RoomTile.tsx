@@ -28,7 +28,6 @@ import { _t } from "../../../languageHandler";
 import { ChevronFace, MenuProps } from "../../structures/ContextMenu";
 import { DefaultTagID, TagID } from "../../../stores/room-list/models";
 import { MessagePreviewStore } from "../../../stores/room-list/MessagePreviewStore";
-import DecoratedRoomAvatar from "../avatars/DecoratedRoomAvatar";
 import NotificationBadge from "./NotificationBadge";
 import { ActionPayload } from "../../../dispatcher/payloads";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
@@ -47,8 +46,8 @@ import { CallStore, CallStoreEvent } from "../../../stores/CallStore";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { useHasRoomLiveVoiceBroadcast, VoiceBroadcastRoomSubtitle } from "../../../voice-broadcast";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import MentionsNotificationBadge from "matrix-react-sdk/src/components/views/rooms/NotificationBadge/MentionsNotificationBadge";
+import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 
 interface Props {
     room: Room;
@@ -461,16 +460,11 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
                             aria-selected={this.state.selected}
                             aria-describedby={ariaDescribedBy}
                         >
-                            {SpaceStore.instance.isHomeSpace ? (
-                                <DecoratedRoomAvatar
-                                    room={this.props.room}
-                                    avatarSize={32}
-                                    displayBadge={this.props.isMinimized}
-                                    tooltipProps={{ tabIndex: isActive ? 0 : -1 }}
-                                />
-                            ) : (
-                                <SpaceChannelAvatar isPrivate={this.state.isPrivate} />
-                            )}
+                            <RoomAndChannelAvatar
+                                room={this.props.room}
+                                avatarSize={32}
+                                displayBadge={this.props.isMinimized}
+                            />
                             {titleContainer}
                             {mentionsBadge}
                             {badge}
