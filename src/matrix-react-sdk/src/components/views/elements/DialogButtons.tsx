@@ -27,8 +27,12 @@ export interface DialogButtonProps {
 
     primaryButtonType?: ButtonType;
 
-    // A node to insert into the cancel button instead of default "Cancel"
-    cancelButton?: React.ReactNode;
+    primaryButtonClass?: string;
+
+    primaryLoading?: boolean;
+
+    // disables only the primary button
+    primaryDisabled?: boolean;
 
     // If true, make the primary button a form submit button (input type="submit")
     primaryIsSubmit?: boolean;
@@ -39,6 +43,9 @@ export interface DialogButtonProps {
 
     // should there be a cancel button? default: true
     hasCancel?: boolean;
+
+    // A node to insert into the cancel button instead of default "Cancel"
+    cancelButton?: React.ReactNode;
 
     cancelButtonType?: ButtonType;
 
@@ -54,13 +61,9 @@ export interface DialogButtonProps {
     // disables the primary and cancel buttons
     disabled?: boolean;
 
-    // disables only the primary button
-    primaryDisabled?: boolean;
-
     // something to stick next to the buttons, optionally
     additive?: ReactNode;
 
-    primaryButtonClass?: string;
     children?: ReactNode;
 }
 
@@ -83,7 +86,12 @@ export default class DialogButtons extends React.Component<DialogButtonProps> {
         let cancelButton: JSX.Element | undefined;
         if (this.props.hasCancel) {
             cancelButton = (
-                <Button type={this.props.cancelButtonType} disabled={this.props.disabled} onClick={this.onCancelClick}>
+                <Button
+                    type={this.props.cancelButtonType}
+                    className={this.props.cancelButtonClass}
+                    disabled={this.props.disabled}
+                    onClick={this.onCancelClick}
+                >
                     {this.props.cancelButton || _t("Cancel")}
                 </Button>
             );
@@ -102,6 +110,8 @@ export default class DialogButtons extends React.Component<DialogButtonProps> {
                     {this.props.children}
                     <Button
                         type={this.props.primaryButtonType}
+                        className={this.props.primaryButtonClass}
+                        loading={this.props.primaryLoading}
                         disabled={this.props.disabled || this.props.primaryDisabled}
                         onClick={this.props.onPrimaryButtonClick}
                     >

@@ -19,6 +19,8 @@ interface ChannelItem {
     name: string;
     id: number;
 }
+
+const addLimitCount = 3;
 const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, onFinished }) => {
     const [channelList, setChannelList] = useState<ChannelItem[]>([
         {
@@ -29,11 +31,17 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
 
     const [channelCount, setChannelCount] = useState<number>(0);
 
+    const [showAddBtn, setShowAddBtn] = useState<boolean>(true);
+
     const [busy, setBusy] = useState(false);
 
     useEffect(() => {
         setChannelCount(channelList.filter((item) => !!item.name).length);
     }, [channelList]);
+
+    useEffect(() => {
+        setShowAddBtn(channelCount < addLimitCount);
+    }, [channelCount]);
 
     const onOk = async () => {
         if (busy) return;
@@ -121,6 +129,8 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
     const footer = (
         <DialogButtons
             primaryButton={channelCount > 0 ? _t("Add") : _t("Next")}
+            primaryDisabled={busy}
+            primaryLoading={busy}
             onPrimaryButtonClick={channelCount > 0 ? onOk : onNext}
             cancelButton={_t("Skip")}
             onCancel={onNext}
@@ -136,39 +146,44 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
             footer={footer}
         >
             <form>
-                {channelList.map((item, index) => (
-                    <div key={index} className="mx_AddChannel_content mx_AddChannelItem">
-                        <div className="mx_AddChannel_actionBar">
-                            <div className="shortLine" />
-                            <div
-                                className="mx_ChannelAction_icon mx_IconDelete"
-                                onClick={() => onDeleteChannel(item.id)}
-                            />
-                            <div className="longLine" />
+                <div className={!showAddBtn ? "mx_AddChannel_exceedLimit" : ""}>
+                    {channelList.map((item, index) => (
+                        <div key={index} className="mx_AddChannel_content mx_AddChannelItem">
+                            <div className="mx_AddChannel_actionBar">
+                                <div className="shortLine" />
+                                <div
+                                    className="mx_ChannelAction_icon mx_IconDelete"
+                                    onClick={() => onDeleteChannel(item.id)}
+                                />
+                                <div className="longLine" />
+                            </div>
+                            <div className="mx_AddChannel_right mx_AddChannelItem_name">
+                                <Field
+                                    type="text"
+                                    value={item.name}
+                                    wordLimit={80}
+                                    label={_t("Room name", { type: _t("Channel") })}
+                                    placeholder={"请为你的频道想一个名字"}
+                                    usePlaceholderAsHint={true}
+                                    autoFocus={false}
+                                    onChange={(ev: React.ChangeEvent<HTMLInputElement>) =>
+                                        onRoomNameChange(item.id, ev.target.value)
+                                    }
+                                    disabled={busy}
+                                    autoComplete="off"
+                                />
+                            </div>
                         </div>
-                        <div className="mx_AddChannel_right mx_AddChannelItem_name">
-                            <Field
-                                type="text"
-                                value={item.name}
-                                label={_t("Room name", { type: _t("Channel") })}
-                                placeholder={"请为你的频道想一个名字"}
-                                usePlaceholderAsHint={true}
-                                autoFocus={false}
-                                onChange={(ev: React.ChangeEvent<HTMLInputElement>) =>
-                                    onRoomNameChange(item.id, ev.target.value)
-                                }
-                                disabled={busy}
-                                autoComplete="off"
-                            />
-                        </div>
-                    </div>
-                ))}
-                <div className="mx_AddChannel_content  mx_AddChannel_addBox" onClick={onAddChannel}>
-                    <div className="mx_AddChannel_actionBar">
-                        <div className="mx_ChannelAction_icon mx_IconAdd" />
-                    </div>
-                    <p className="mx_AddChannel_right mx_AddChannel_addText">添加</p>
+                    ))}
                 </div>
+                {showAddBtn && (
+                    <div className="mx_AddChannel_content  mx_AddChannel_addBox" onClick={onAddChannel}>
+                        <div className="mx_AddChannel_actionBar">
+                            <div className="mx_ChannelAction_icon mx_IconAdd" />
+                        </div>
+                        <p className="mx_AddChannel_right mx_AddChannel_addText">添加</p>
+                    </div>
+                )}
             </form>
         </BaseDialog>
     );

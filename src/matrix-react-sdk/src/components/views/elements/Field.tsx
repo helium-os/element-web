@@ -51,6 +51,7 @@ interface IProps {
     // Optional component to include inside the field after the input.
     postfixComponent?: React.ReactNode;
     hasPostfixContainer?: boolean; // 是否需要对postfixComponent用container做包裹
+    wordLimit: false | number; // 字数限制
     // The callback called whenever the contents of the field
     // changes.  Returns an object with `valid` boolean field
     // and a `feedback` react component field to provide feedback
@@ -130,6 +131,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
         validateOnChange: true,
         hasPrefixContainer: true,
         hasPostfixContainer: true,
+        wordLimit: false,
     };
 
     /*
@@ -241,6 +243,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             hasPrefixContainer,
             postfixComponent,
             hasPostfixContainer,
+            wordLimit,
             className,
             onValidate,
             children,
@@ -259,6 +262,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         inputProps.placeholder = inputProps.placeholder ?? inputProps.label;
         inputProps.id = this.id; // this overwrites the id from props
+        inputProps.value = wordLimit ? this.props.value.substring(0, wordLimit) : this.props.value;
 
         inputProps.onFocus = this.onFocus;
         inputProps.onChange = this.onChange;
@@ -295,7 +299,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             // If we have a prefix element, leave the label always at the top left and
             // don't animate it, as it looks a bit clunky and would add complexity to do
             // properly.
-            mx_Field_labelAlwaysShow: prefixComponent || this.state.focused || !!this.props.value,
+            mx_Field_labelShow: prefixComponent || this.state.focused || !!this.props.value,
             mx_Field_placeholderIsHint: !this.state.focused && usePlaceholderAsHint,
             mx_Field_valid: hasValidationFlag ? forceValidity : onValidate && this.state.valid === true,
             mx_Field_invalid: hasValidationFlag ? !forceValidity : onValidate && this.state.valid === false,
@@ -304,37 +308,47 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         // Handle displaying feedback on validity
         let fieldTooltip: JSX.Element | undefined;
-        if (tooltipContent || this.state.feedback) {
-            let role: React.AriaRole;
-            if (tooltipContent) {
-                role = "tooltip";
-            } else {
-                role = this.state.valid ? "status" : "alert";
-            }
-
+        if (tooltipContent) {
             fieldTooltip = (
                 <Tooltip
                     tooltipClassName={classNames("mx_Field_tooltip", "mx_Tooltip_noMargin", tooltipClassName)}
                     visible={(this.state.focused && forceTooltipVisible) || this.state.feedbackVisible}
-                    label={tooltipContent || this.state.feedback}
+                    label={tooltipContent}
                     alignment={Tooltip.Alignment.Right}
-                    role={role}
+                    role="tooltip"
                 />
             );
         }
 
         return (
-            <div className={fieldClasses}>
-                <div className="mx_Field_wrap">
-                    <label htmlFor={this.id}>{this.props.label}</label>
-                    <div className="mx_Field_inner">
-                        {prefixContainer}
-                        {fieldInput}
-                        {postfixContainer}
+            <>
+                <div className={fieldClasses}>
+                    <div className="mx_Field_wrap">
+                        <div className="mx_Field_labelBox">
+                            <label className="mx_Field_label" htmlFor={this.id}>
+                                {this.props.label}
+                            </label>
+                            {wordLimit && (
+                                <label className="mx_Field_wordLimit">
+                                    {inputProps.value.length}/{wordLimit}
+                                </label>
+                            )}
+                        </div>
+                        <div className="mx_Field_inner">
+                            {prefixContainer}
+                            {fieldInput}
+                            {postfixContainer}
+                        </div>
                     </div>
                 </div>
+
+                {/*校验不通过文案*/}
+                {this.state.feedback && !this.state.valid && (
+                    <div className="mx_Field_invalidTipsBox">{this.state.feedback}</div>
+                )}
+
                 {fieldTooltip}
-            </div>
+            </>
         );
     }
 }

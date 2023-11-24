@@ -39,7 +39,7 @@ import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import SpaceBasicSettings from "./SpaceBasicSettings";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
 import Field from "../elements/Field";
-import withValidation from "../elements/Validation";
+import withValidation, { IFieldState, IValidationResult } from "../elements/Validation";
 import RoomAliasField from "../elements/RoomAliasField";
 import Modal from "../../../Modal";
 import GenericFeatureFeedbackDialog from "../dialogs/GenericFeatureFeedbackDialog";
@@ -106,7 +106,7 @@ export const SpaceCreateMenuType: React.FC<{
     );
 };
 
-const spaceNameValidator = withValidation({
+export const spaceNameValidator = withValidation({
     rules: [
         {
             key: "required",
@@ -160,25 +160,27 @@ export const SpaceFeedbackPrompt: React.FC<{
 
 type BProps = Omit<ComponentProps<typeof SpaceBasicSettings>, "nameDisabled" | "topicDisabled" | "avatarDisabled">;
 interface ISpaceCreateFormProps extends BProps {
-    busy: boolean;
+    busy?: boolean;
     nameFieldRef: RefObject<Field>;
+    onNameValidate?: (input: IFieldState) => Promise<IValidationResult>;
     showAliasField?: boolean;
     aliasFieldRef?: RefObject<RoomAliasField>;
     alias?: string;
     setAlias?(alias: string): void;
-    showTopicField: boolean;
+    showTopicField?: boolean;
     children?: ReactNode;
     onSubmit?(e: SyntheticEvent): void;
 }
 
 export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
-    busy,
+    busy = false,
     onSubmit,
     avatarUrl,
     setAvatar,
     name,
-    setName,
     nameFieldRef,
+    setName,
+    onNameValidate,
     alias,
     aliasFieldRef,
     setAlias,
@@ -210,6 +212,7 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                 placeholder={_t("Please enter a name for the space")}
                 usePlaceholderAsHint={true}
                 autoFocus={false}
+                wordLimit={80}
                 value={name}
                 onChange={(ev: ChangeEvent<HTMLInputElement>) => {
                     const newName = ev.target.value;
@@ -221,9 +224,10 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                 }}
                 onKeyDown={onKeyDown}
                 ref={nameFieldRef}
-                onValidate={spaceNameValidator}
                 disabled={busy}
                 autoComplete="off"
+                validateOnFocus={false}
+                onValidate={onNameValidate}
             />
 
             {showAliasField ? (

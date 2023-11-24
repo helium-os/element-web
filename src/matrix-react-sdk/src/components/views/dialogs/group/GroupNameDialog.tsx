@@ -5,6 +5,10 @@ import DialogButtons from "matrix-react-sdk/src/components/views/elements/Dialog
 import Field from "matrix-react-sdk/src/components/views/elements/Field";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import withValidation, {
+    IFieldState,
+    IValidationResult,
+} from "matrix-react-sdk/src/components/views/elements/Validation";
 
 export enum DialogType {
     Create,
@@ -15,11 +19,22 @@ interface IProps {
     tagId?: string; // 分组id
     onFinished: () => void;
 }
+
+const validateGroupRoomName = withValidation({
+    rules: [
+        {
+            key: "required",
+            test: async ({ value }) => !!value,
+            invalid: () => _t("Please enter a name for the group"),
+        },
+    ],
+});
 const GroupNameDialog: React.FC<IProps> = ({ type, tagId, onFinished }) => {
     const cli = MatrixClientPeg.get();
     const [busy, setBusy] = useState<boolean>(false);
 
     const [name, setName] = useState<string>("");
+    const [groupNameValidate, setGroupNameValidate] = useState(false);
 
     // 初始化分组名称
     useEffect(() => {
@@ -93,10 +108,20 @@ const GroupNameDialog: React.FC<IProps> = ({ type, tagId, onFinished }) => {
         setName(ev.target.value);
     };
 
+    const onGroupNameValidate = async (fieldState: IFieldState): Promise<IValidationResult> => {
+        const result = await validateGroupRoomName({
+            ...fieldState,
+            allowEmpty: false,
+        });
+        setGroupNameValidate(result.valid);
+        return result;
+    };
+
     const footer = (
         <DialogButtons
             primaryButton={type === DialogType.Create ? _t("Create") : _t("Save")}
-            primaryDisabled={busy}
+            primaryDisabled={!groupNameValidate || busy}
+            primaryLoading={busy}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Cancel")}
             onCancel={onClose}
@@ -116,9 +141,12 @@ const GroupNameDialog: React.FC<IProps> = ({ type, tagId, onFinished }) => {
                 usePlaceholderAsHint={true}
                 autoFocus={false}
                 value={name}
+                wordLimit={80}
                 onChange={onChange}
                 disabled={busy}
                 autoComplete="off"
+                validateOnFocus={false}
+                onValidate={onGroupNameValidate}
             />
         </BaseDialog>
     );

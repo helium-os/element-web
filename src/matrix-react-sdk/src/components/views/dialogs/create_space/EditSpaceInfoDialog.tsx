@@ -3,8 +3,13 @@ import BaseDialog from "../BaseDialog";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import { Visibility } from "matrix-js-sdk/src/@types/partials";
-import { createSpace, SpaceCreateForm } from "matrix-react-sdk/src/components/views/spaces/SpaceCreateMenu";
+import {
+    createSpace,
+    SpaceCreateForm,
+    spaceNameValidator,
+} from "matrix-react-sdk/src/components/views/spaces/SpaceCreateMenu";
 import Field from "matrix-react-sdk/src/components/views/elements/Field";
+import { IFieldState, IValidationResult } from "matrix-react-sdk/src/components/views/elements/Validation";
 
 interface IProps {
     spaceType: Visibility;
@@ -27,6 +32,7 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
 
     const spaceNameField = useRef<Field>();
     const [name, setName] = useState("");
+    const [nameValidate, setNameValidate] = useState<boolean>(false);
 
     const onOk = async () => {
         if (busy) return;
@@ -67,9 +73,20 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
         return createSpace(name, spaceType === Visibility.Public, "", "", avatar);
     };
 
+    const onNameValidate = async (fieldState: IFieldState): Promise<IValidationResult> => {
+        const result = await spaceNameValidator({
+            ...fieldState,
+            allowEmpty: false,
+        });
+        setNameValidate(result.valid);
+        return result;
+    };
+
     const footer = (
         <DialogButtons
             primaryButton={_t("Create")}
+            primaryDisabled={!nameValidate || busy}
+            primaryLoading={busy}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Back")}
             onCancel={onBack}
@@ -90,6 +107,7 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
                 name={name}
                 nameFieldRef={spaceNameField}
                 setName={setName}
+                onNameValidate={onNameValidate}
                 showAliasField={false}
             />
         </BaseDialog>

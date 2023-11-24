@@ -53,6 +53,7 @@ const DeleteGroupConfirmDialog: React.FC<IProps> = ({ tagId, onFinished }) => {
         <DialogButtons
             primaryButton={_t("Delete")}
             primaryButtonType={ButtonType.Danger}
+            primaryLoading={busy}
             primaryDisabled={busy}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Cancel")}

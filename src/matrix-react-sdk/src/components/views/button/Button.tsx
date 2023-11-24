@@ -9,12 +9,13 @@ export enum ButtonType {
 interface IProps {
     type: ButtonType;
     disabled?: boolean;
+    loading?: boolean;
     className?: string;
     style?: any;
     onClick?: (event: ButtonEvent) => void;
     children: React.ReactNode;
 }
-const Button: React.FC<IProps> = ({ children, type, className, style, disabled, onClick }) => {
+const Button: React.FC<IProps> = ({ children, type, className, style, disabled = false, loading = false, onClick }) => {
     return (
         <button
             disabled={disabled}
@@ -22,6 +23,7 @@ const Button: React.FC<IProps> = ({ children, type, className, style, disabled, 
             style={style}
             onClick={(e) => onClick?.(e)}
         >
+            {loading && <div className="mx_btn_loading" />}
             {children}
         </button>
     );

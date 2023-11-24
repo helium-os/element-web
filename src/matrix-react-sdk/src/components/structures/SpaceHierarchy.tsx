@@ -861,7 +861,7 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
                                     className="mx_SpaceHierarchy_search mx_textinput_icon mx_textinput_search"
                                     placeholder={_t("Search names and descriptions")}
                                     onSearch={setQuery}
-                                    autoFocus={true}
+                                    autoFocus={false}
                                     initialValue={initialText}
                                     onKeyDown={onKeyDownHandler}
                                 />

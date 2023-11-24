@@ -120,7 +120,7 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
     };
 
     private get showContextMenu(): boolean {
-        return this.props.tag !== DefaultTagID.Invite;
+        return !SpaceStore.instance.isHomeSpace && this.props.tag !== DefaultTagID.Invite; // 私聊和群聊不展示频道右键菜单；社区内频道展示
     }
 
     private get showMessagePreview(): boolean {

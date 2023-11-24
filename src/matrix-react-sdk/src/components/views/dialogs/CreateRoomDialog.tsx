@@ -28,6 +28,10 @@ import { InviteInput } from "matrix-react-sdk/src/components/views/dialogs/invit
 import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialogTypes";
 import { Member } from "matrix-react-sdk/src/utils/direct-messages";
 import AvatarSetting from "matrix-react-sdk/src/components/views/settings/AvatarSetting";
+import withValidation, {
+    IFieldState,
+    IValidationResult,
+} from "matrix-react-sdk/src/components/views/elements/Validation";
 
 interface IProps {
     type?: RoomType;
@@ -36,12 +40,23 @@ interface IProps {
     onFinished(proceed: true, opts: IOpts): void;
 }
 
+const validateRoomName = withValidation({
+    rules: [
+        {
+            key: "required",
+            test: async ({ value }) => !!value,
+            invalid: () => _t("Please enter a name for the room", { type: _t("room") }),
+        },
+    ],
+});
+
 /**
  * 创建群聊弹窗
  */
 const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
     const nameField = useRef(null);
     const [name, setName] = useState<string>("");
+    const [nameIsValid, setNameIsValid] = useState<boolean>(false); // 群聊名称是否校验通过
     const [avatar, setAvatar] = useState<File>();
 
     const [targets, setTargets] = useState<Member[]>([]);
@@ -54,8 +69,6 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
     const onNameChange = (ev: ChangeEvent<HTMLInputElement>) => {
         setName(ev.target.value);
     };
-
-    const onNameValidate = () => {};
 
     const onOk = () => {
         onFinished(true, {
@@ -73,7 +86,23 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
         onFinished?.(false);
     };
 
-    const footer = <DialogButtons primaryButton={_t("Create")} onPrimaryButtonClick={onOk} onCancel={onCancel} />;
+    const onNameValidate = async (fieldState: IFieldState): Promise<IValidationResult> => {
+        const result = await validateRoomName({
+            ...fieldState,
+            allowEmpty: false,
+        });
+        setNameIsValid(result.valid);
+        return result;
+    };
+
+    const footer = (
+        <DialogButtons
+            primaryButton={_t("Create")}
+            primaryDisabled={!nameIsValid}
+            onPrimaryButtonClick={onOk}
+            onCancel={onCancel}
+        />
+    );
 
     return (
         <BaseDialog
@@ -92,11 +121,13 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
                         label={_t("Room name", { type: _t("Room") })}
                         usePlaceholderAsHint={true}
                         placeholder={_t("Please enter a name for the room", { type: _t("room") })}
-                        autoFocus={false}
+                        autoFocus={true}
                         onChange={onNameChange}
-                        onValidate={onNameValidate}
                         value={name}
+                        wordLimit={80}
                         className="mx_CreateRoomDialog_name"
+                        validateOnFocus={false}
+                        onValidate={onNameValidate}
                     />
                 </div>
                 <div style={{ marginTop: "20px" }}>

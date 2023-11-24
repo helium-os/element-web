@@ -292,6 +292,8 @@ type InviteInputProps = InviteProps &
         inputFieldProps?: Partial<PropShapes>;
         onTextChange?: (text: string) => void;
         onTargetsChange?: (targets: Member[]) => void;
+        roomId?: string;
+        call?: MatrixCall;
     };
 
 interface InviteInputState {
@@ -408,7 +410,6 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
             for (const member of otherMembers) {
                 if (rooms[member.userId]) continue; // already have a room
 
-                logger.warn(`Adding DM room for ${member.userId} as ${dmRoom.roomId} from tag, not DM map`);
                 rooms[member.userId] = dmRoom;
             }
         }
@@ -422,7 +423,6 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
         for (const userId in rooms) {
             // Filter out user IDs that are already in the room / should be excluded
             if (excludedTargetIds.has(userId)) {
-                logger.warn(`[Invite:Recents] Excluding ${userId} from recents`);
                 continue;
             }
 
@@ -430,7 +430,6 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
             const roomMember = room.getMember(userId);
             if (!roomMember) {
                 // just skip people who don't have memberships for some reason
-                logger.warn(`[Invite:Recents] ${userId} is missing a member object in their own DM (${room.roomId})`);
                 continue;
             }
 
@@ -450,13 +449,11 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
             }
             if (!lastEventTs) {
                 // something weird is going on with this room
-                logger.warn(`[Invite:Recents] ${userId} (${room.roomId}) has a weird last timestamp: ${lastEventTs}`);
                 continue;
             }
 
             recents.push({ userId, user: toMember(roomMember), lastActive: lastEventTs });
         }
-        if (!recents) logger.warn("[Invite:Recents] No recents to suggest!");
 
         // Sort the recents by last active to save us time later
         recents.sort((a, b) => b.lastActive - a.lastActive);
@@ -850,7 +847,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
                 <div className="mx_InviteDialog_userSections">
                     <div className="mx_InviteDialog_section">
                         {!toRender.length ? (
-                            <p>{_t("No results")}</p>
+                            <p className="mx_InviteDialog_noResults">{_t("No results")}</p>
                         ) : (
                             <>
                                 {toRender.map((r) => (
@@ -1154,8 +1151,9 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
 
         const dialogFooter = (
             <DialogButtons
-                primaryDisabled={this.state.busy || !hasSelection}
                 primaryButton={_t("Invite")}
+                primaryLoading={this.state.busy}
+                primaryDisabled={this.state.busy || !hasSelection}
                 onPrimaryButtonClick={goButtonFn}
                 cancelButton={_t("Cancel")}
                 onCancel={this.onCancel}

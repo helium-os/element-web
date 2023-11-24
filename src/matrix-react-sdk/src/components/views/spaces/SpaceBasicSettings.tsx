@@ -23,10 +23,10 @@ import AvatarSetting, { AvatarProps } from "matrix-react-sdk/src/components/view
 type IProps = AvatarProps & {
     name: string;
     nameDisabled?: boolean;
-    topic: string;
+    topic?: string;
     topicDisabled?: boolean;
     setName(name: string): void;
-    setTopic(topic: string): void;
+    setTopic?(topic: string): void;
 };
 
 const SpaceBasicSettings: React.FC<IProps> = ({

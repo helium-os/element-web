@@ -145,12 +145,6 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
     }
 
     private onOk = async (): Promise<void> => {
-        if (!this.nameField.current) return;
-        const activeElement = document.activeElement as HTMLElement;
-        activeElement?.blur();
-        await this.nameField.current.validate({ allowEmpty: false });
-
-        await new Promise<void>((resolve) => this.setState({}, resolve));
         if (this.state.nameIsValid) {
             this.props.onFinished(true, this.roomCreateOptions());
         }
@@ -173,7 +167,10 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
     };
 
     private onNameValidate = async (fieldState: IFieldState): Promise<IValidationResult> => {
-        const result = await CreateChannelDialog.validateRoomName(fieldState);
+        const result = await CreateChannelDialog.validateRoomName({
+            ...fieldState,
+            allowEmpty: false,
+        });
         this.setState({ nameIsValid: !!result.valid });
         return result;
     };
@@ -183,7 +180,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
             {
                 key: "required",
                 test: async ({ value }) => !!value,
-                invalid: () => _t("Please enter a name for the room"),
+                invalid: () => _t("Please enter a name for the room", { type: _t("channel") }),
             },
         ],
     });
@@ -201,7 +198,12 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
         }
 
         const footer = (
-            <DialogButtons primaryButton={_t("Create")} onPrimaryButtonClick={this.onOk} onCancel={this.onCancel} />
+            <DialogButtons
+                primaryButton={_t("Create")}
+                primaryDisabled={!this.state.nameIsValid}
+                onPrimaryButtonClick={this.onOk}
+                onCancel={this.onCancel}
+            />
         );
 
         return (
@@ -221,9 +223,11 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
                         placeholder={_t("Please enter a name for the room", { type: _t("channel") })}
                         autoFocus={false}
                         onChange={this.onNameChange}
-                        onValidate={this.onNameValidate}
                         value={this.state.name}
+                        wordLimit={80}
                         className="mx_CreateRoomDialog_name"
+                        validateOnFocus={false}
+                        onValidate={this.onNameValidate}
                     />
                     <Field
                         type="text"
@@ -233,6 +237,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
                         placeholder={"请输入一些描述"}
                         onChange={this.onTopicChange}
                         value={this.state.topic}
+                        wordLimit={1000}
                         className="mx_CreateChannelDialog_topic"
                     />
                     <LabelledToggleSwitch

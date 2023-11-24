@@ -19,7 +19,6 @@ limitations under the License.
 }
 
 .mx_Validation_details {
-    padding-left: 20px;
     margin: 0;
 }
 
@@ -28,42 +27,21 @@ limitations under the License.
 }
 
 .mx_Validation_detail {
-    position: relative;
-    font-weight: normal;
-    list-style: none;
     margin-bottom: 0.5em;
+    list-style: none;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
 
     &:last-child {
         margin-bottom: 0;
     }
 
-    &::before {
-        content: "";
-        position: absolute;
-        width: 14px;
-        height: 14px;
-        top: 0;
-        left: -18px;
-        mask-repeat: no-repeat;
-        mask-position: center;
-        mask-size: contain;
-    }
-
     &.mx_Validation_valid {
         color: $accent;
-
-        &::before {
-            mask-image: url("$(res)/img/feather-customised/check.svg");
-            background-color: $accent;
-        }
     }
 
     &.mx_Validation_invalid {
-        color: $alert;
-
-        &::before {
-            mask-image: url("$(res)/img/feather-customised/x.svg");
-            background-color: $alert;
-        }
+        color: $text-danger-color;
     }
 }
