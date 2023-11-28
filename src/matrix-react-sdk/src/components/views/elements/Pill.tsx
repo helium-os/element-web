@@ -84,7 +84,7 @@ const PillMemberAvatar: React.FC<{
  * @param senderId 发送消息的用户id
  */
 export function beMentioned(roomId: string, userId: string, resourceId: string, senderId: string): boolean {
-    return [userId, AllMember.instance().getAllMemberId(roomId)].includes(resourceId) && senderId !== userId
+    return [userId, AllMember.instance().getAllMemberId(roomId)].includes(resourceId) && senderId !== userId;
 }
 
 export interface PillProps {
@@ -98,11 +98,19 @@ export interface PillProps {
     room?: Room;
     // Whether to include an avatar in the pill
     shouldShowPillAvatar?: boolean;
-    senderId: string // 消息发送者id
+    senderId: string; // 消息发送者id
 }
 
-export const Pill: React.FC<PillProps> = ({ senderId, type: propType, url, inMessage, room, shouldShowPillAvatar = true }) => {
+export const Pill: React.FC<PillProps> = ({
+    senderId,
+    type: propType,
+    url,
+    inMessage,
+    room,
+    shouldShowPillAvatar = true,
+}) => {
     const [hover, setHover] = useState(false);
+    const showAvatar = false;
     const showTip = false;
     const { event, member, onClick, resourceId, targetRoom, text, type } = usePermalink({
         room,
@@ -113,7 +121,6 @@ export const Pill: React.FC<PillProps> = ({ senderId, type: propType, url, inMes
     if (!type || !text) {
         return null;
     }
-
 
     const currentUserId = MatrixClientPeg.get().getUserId();
 
@@ -178,19 +185,19 @@ export const Pill: React.FC<PillProps> = ({ senderId, type: propType, url, inMes
                 {inMessage && url && !AllMember.instance().isAllMember(resourceId, room.roomId) ? (
                     <a
                         className={classes}
-                        href={url}
-                        onClick={onClick}
+                        // href={url}
+                        // onClick={onClick}
                         onMouseOver={onMouseOver}
                         onMouseLeave={onMouseLeave}
                     >
-                        {avatar}
-                        <span className="mx_Pill_text">{pillText}</span>
+                        {showAvatar && avatar}
+                        <span className="mx_Pill_text">@{pillText}</span>
                         {showTip && tip}
                     </a>
                 ) : (
                     <span className={classes} onMouseOver={onMouseOver} onMouseLeave={onMouseLeave}>
-                        {avatar}
-                        <span className="mx_Pill_text">{pillText}</span>
+                        {showAvatar && avatar}
+                        <span className="mx_Pill_text">@{pillText}</span>
                         {showTip && tip}
                     </span>
                 )}

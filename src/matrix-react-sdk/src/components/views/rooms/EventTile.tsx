@@ -32,7 +32,6 @@ import ReplyChain from "../elements/ReplyChain";
 import { _t } from "../../../languageHandler";
 import dis from "../../../dispatcher/dispatcher";
 import { Layout } from "../../../settings/enums/Layout";
-import { formatTime } from "../../../DateUtils";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { DecryptionFailureBody } from "../messages/DecryptionFailureBody";
@@ -60,7 +59,7 @@ import { MessagePreviewStore } from "../../../stores/room-list/MessagePreviewSto
 import RoomContext, { TimelineRenderingType } from "../../../contexts/RoomContext";
 import { MediaEventHelper } from "../../../utils/MediaEventHelper";
 import { ButtonEvent } from "../elements/AccessibleButton";
-import { copyPlaintext, getSelectedText } from "../../../utils/strings";
+import { copyPlaintext } from "../../../utils/strings";
 import { DecryptionFailureTracker } from "../../../DecryptionFailureTracker";
 import RedactedBody from "../messages/RedactedBody";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
@@ -185,6 +184,8 @@ export interface EventTileProps {
 
     // whether or not to show read receipts
     showReadReceipts?: boolean;
+
+    replyState?: any;
 
     // Used while editing, to pass the event, and to preserve editor state
     // from one editor instance to another when remounting the editor
@@ -466,7 +467,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         return (
             <div className="mx_ThreadPanel_replies">
                 <span className="mx_ThreadPanel_replies_amount">{this.state.thread.length}</span>
-                <ThreadMessagePreview thread={this.state.thread} />
+                <ThreadMessagePreview thread={this.state.thread} showTwelveHour={this.props.isTwelveHour} />
             </div>
         );
     }
@@ -927,12 +928,14 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const isRenderingNotification = this.context.timelineRenderingType === TimelineRenderingType.Notification;
 
         const isEditing = !!this.props.editState;
+        const isReplying = !!this.props.replyState;
         const classes = classNames({
             mx_EventTile_bubbleContainer: isBubbleMessage,
             mx_EventTile_leftAlignedBubble: isLeftAlignedBubbleMessage,
             mx_EventTile: true,
+            mx_EventTile_isReplying: isReplying,
             mx_EventTile_isEditing: isEditing,
-            mx_EventTile_info: isInfoMessage,
+            mx_EventTile_info: isInfoMessage || isRedacted,
             mx_EventTile_12hr: this.props.isTwelveHour,
             // Note: we keep the `sending` state class for tests, not for our styles
             mx_EventTile_sending: !isEditing && isSending,
@@ -1001,7 +1004,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             avatarSize = 0;
             needsSenderProfile = false;
         } else {
-            avatarSize = 30;
+            avatarSize = 36;
             needsSenderProfile = true;
         }
 
@@ -1111,16 +1114,18 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             );
         }
 
-        const linkedTimestamp = (
-            <a
-                href={permalink}
-                onClick={this.onPermalinkClicked}
-                aria-label={formatTime(new Date(this.props.mxEvent.getTs()), this.props.isTwelveHour)}
-                onContextMenu={this.onTimestampContextMenu}
-            >
-                {timestamp}
-            </a>
-        );
+        // const linkedTimestamp = (
+        //     <a
+        //         href={permalink}
+        //         onClick={this.onPermalinkClicked}
+        //         aria-label={formatTime(new Date(this.props.mxEvent.getTs()), this.props.isTwelveHour)}
+        //         onContextMenu={this.onTimestampContextMenu}
+        //     >
+        //         {timestamp}
+        //     </a>
+        // );
+
+        const linkedTimestamp = timestamp;
 
         const useIRCLayout = this.props.layout === Layout.IRC;
         const groupTimestamp = !useIRCLayout ? linkedTimestamp : null;

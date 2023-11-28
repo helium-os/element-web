@@ -70,15 +70,27 @@ const messageComposerBindings = (): KeyBinding[] => {
                 shiftKey: true,
             },
         });
-        if (IS_MAC) {
-            bindings.push({
-                action: KeyBindingAction.NewLine,
-                keyCombo: {
-                    key: Key.ENTER,
-                    altKey: true,
-                },
-            });
-        }
+        bindings.push({
+            action: KeyBindingAction.NewLine,
+            keyCombo: {
+                key: Key.ENTER,
+                ctrlKey: true,
+            },
+        });
+        bindings.push({
+            action: KeyBindingAction.NewLine,
+            keyCombo: {
+                key: Key.ENTER,
+                metaKey: true,
+            },
+        });
+        bindings.push({
+            action: KeyBindingAction.NewLine,
+            keyCombo: {
+                key: Key.ENTER,
+                altKey: true,
+            },
+        });
     }
 
     return bindings;

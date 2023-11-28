@@ -722,7 +722,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const wantsDateSeparator = this.wantsDateSeparator(prevEvent, eventDate);
         if (wantsDateSeparator && !isGrouped && this.props.room) {
             const dateSeparator = (
-                <li key={ts1}>
+                <li className="mx_DateSeparatorItem" key={ts1}>
                     <DateSeparator key={ts1} roomId={this.props.room.roomId} ts={ts1} />
                 </li>
             );
@@ -1175,7 +1175,7 @@ class CreationGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, createEvent.event.getDate())) {
             const ts = createEvent.event.getTs();
             ret.push(
-                <li key={ts + "~"}>
+                <li className="mx_DateSeparatorItem" key={ts + "~"}>
                     <DateSeparator roomId={createEvent.event.getRoomId()} ts={ts} />
                 </li>,
             );
@@ -1327,7 +1327,7 @@ class MainGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, this.events[0].getDate())) {
             const ts = this.events[0].getTs();
             ret.push(
-                <li key={ts + "~"}>
+                <li className="mx_DateSeparatorItem" key={ts + "~"}>
                     <DateSeparator roomId={this.events[0].getRoomId()} ts={ts} />
                 </li>,
             );

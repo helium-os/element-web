@@ -188,7 +188,7 @@ export function createMessageContent(
 
     const content: IContent = {
         msgtype: isEmote ? "m.emote" : "m.text",
-        body: body.replace(/^\n+|\n+$/g, ''), // 去掉首尾换行符
+        body: body.replace(/^\n+|\n+$/g, ""), // 去掉首尾换行符
     };
     const formattedBody = htmlSerializeIfNeeded(model, {
         forceHTML: !!replyToEvent,
@@ -238,6 +238,7 @@ interface ISendMessageComposerProps extends MatrixClientProps {
     replyToEvent?: MatrixEvent;
     disabled?: boolean;
     onChange?(model: EditorModel): void;
+    onFocusChange?(focused: boolean): void;
     includeReplyLegacyFallback?: boolean;
     toggleStickerPickerOpen: () => void;
 }
@@ -699,6 +700,7 @@ export class SendMessageComposer extends React.Component<ISendMessageComposerPro
         return (
             <div className="mx_SendMessageComposer" onClick={this.focusComposer} onKeyDown={this.onKeyDown}>
                 <BasicMessageComposer
+                    onFocusChange={this.props.onFocusChange}
                     onChange={this.onChange}
                     ref={this.editorRef}
                     model={this.model}

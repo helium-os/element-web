@@ -52,6 +52,8 @@ export interface IPosition {
     bottom?: number;
     left?: number;
     right?: number;
+    horizontalCenter?: boolean; // 水平方向居中
+    verticalCenter?: boolean; // 垂直方向居中
     rightAligned?: boolean;
     bottomAligned?: boolean;
 }
@@ -252,6 +254,8 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
             right,
             bottomAligned,
             rightAligned,
+            horizontalCenter,
+            verticalCenter,
             menuClassName,
             menuHeight,
             menuWidth,
@@ -385,6 +389,14 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
             menuStyle["paddingRight"] = menuPaddingRight;
         }
 
+        if (horizontalCenter) {
+            menuStyle.transform = `translate(${position.left ? "-" : ""}50%, 0)`;
+        }
+
+        if (verticalCenter) {
+            menuStyle.transform = `translate(${position.top ? "-" : ""}50%, 0)`;
+        }
+
         const wrapperStyle: CSSProperties = {};
         if (!isNaN(Number(zIndex))) {
             menuStyle["zIndex"] = zIndex! + 1;
@@ -504,9 +516,10 @@ export const toLeftOrRightOf = (elementRect: DOMRect, chevronOffset = 12): ToRig
 // Placement method for <ContextMenu /> to position context menu right-aligned and flowing to the left of elementRect,
 // and either above or below: wherever there is more space (maybe this should be aboveOrBelowLeftOf?)
 export const aboveLeftOf = (
-    elementRect: Pick<DOMRect, "right" | "top" | "bottom">,
+    elementRect: Pick<DOMRect, "width" | "right" | "top" | "bottom">,
     chevronFace = ChevronFace.None,
     vPadding = 0,
+    horizontalCenter = false,
 ): MenuProps => {
     const menuOptions: IPosition & { chevronFace: ChevronFace } = { chevronFace };
 
@@ -514,7 +527,7 @@ export const aboveLeftOf = (
     const buttonBottom = elementRect.bottom + window.scrollY;
     const buttonTop = elementRect.top + window.scrollY;
     // Align the right edge of the menu to the right edge of the button
-    menuOptions.right = UIStore.instance.windowWidth - buttonRight;
+    menuOptions.right = UIStore.instance.windowWidth - buttonRight + (horizontalCenter ? elementRect.width / 2 : 0);
     // Align the menu vertically on whichever side of the button has more space available.
     if (buttonBottom < UIStore.instance.windowHeight / 2) {
         menuOptions.top = buttonBottom + vPadding;
@@ -528,9 +541,10 @@ export const aboveLeftOf = (
 // Placement method for <ContextMenu /> to position context menu right-aligned and flowing to the right of elementRect,
 // and either above or below: wherever there is more space (maybe this should be aboveOrBelowRightOf?)
 export const aboveRightOf = (
-    elementRect: Pick<DOMRect, "left" | "top" | "bottom">,
+    elementRect: Pick<DOMRect, "width" | "left" | "top" | "bottom">,
     chevronFace = ChevronFace.None,
     vPadding = 0,
+    horizontalCenter = false,
 ): MenuProps => {
     const menuOptions: IPosition & { chevronFace: ChevronFace } = { chevronFace };
 
@@ -538,7 +552,7 @@ export const aboveRightOf = (
     const buttonBottom = elementRect.bottom + window.scrollY;
     const buttonTop = elementRect.top + window.scrollY;
     // Align the left edge of the menu to the left edge of the button
-    menuOptions.left = buttonLeft;
+    menuOptions.left = buttonLeft + (horizontalCenter ? elementRect.width / 2 : 0);
     // Align the menu vertically on whichever side of the button has more space available.
     if (buttonBottom < UIStore.instance.windowHeight / 2) {
         menuOptions.top = buttonBottom + vPadding;

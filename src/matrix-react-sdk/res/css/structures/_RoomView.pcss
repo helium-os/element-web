@@ -118,7 +118,6 @@ limitations under the License.
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-right: calc($container-gap-width / 2);
 }
 
 .mx_RoomView_statusArea {
@@ -149,6 +148,7 @@ limitations under the License.
 }
 
 .mx_RoomView_messageListWrapper {
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -179,12 +179,12 @@ limitations under the License.
 }
 
 .mx_RoomView_MessageList {
+    box-sizing: border-box;
     list-style-type: none;
-    padding: var(--RoomView_MessageList-padding); /* mx_ProfileResizer depends on this value */
     margin: 0;
+    padding-top: 40px;
     /* needed as min-height is set to clientHeight in ScrollPanel
     to prevent shrinking when WhoIsTypingTile is hidden */
-    box-sizing: border-box;
 }
 
 .mx_RoomView--local .mx_ScrollPanel .mx_RoomView_MessageList {
@@ -196,10 +196,11 @@ limitations under the License.
 }
 
 li.mx_RoomView_myReadMarker_container {
-    height: 0px;
-    margin: 0px;
-    padding: 0px;
-    border: 0px;
+    display: none;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
 hr.mx_RoomView_myReadMarker {
@@ -253,7 +254,6 @@ hr.mx_RoomView_myReadMarker {
 }
 
 .mx_RoomView .mx_MessageComposer {
-    width: 100%;
     flex: 0 0 auto;
 }
 
@@ -273,7 +273,6 @@ hr.mx_RoomView_myReadMarker {
 
 .mx_MatrixChat_useCompactLayout {
     .mx_RoomView_MessageList {
-        margin-bottom: 4px;
 
         h2 {
             margin-top: 6px; /* TODO: Use a spacing variable */

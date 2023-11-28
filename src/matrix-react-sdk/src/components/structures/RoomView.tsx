@@ -190,6 +190,7 @@ export interface IRoomState {
     // this is true if we are fully scrolled-down, and are looking at
     // the end of the live timeline. It has the effect of hiding the
     // 'scroll to bottom' knob, among a couple of other things.
+    showJupToBottomBtn: boolean;
     atEndOfLiveTimeline?: boolean;
     showTopUnreadMessagesBar: boolean;
     statusBarVisible: boolean;
@@ -433,6 +434,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             visibleDecryptionFailures: [],
             msc3946ProcessDynamicPredecessor: SettingsStore.getValue("feature_dynamic_room_predecessors"),
             isAdminLeft: false,
+            showJupToBottomBtn: false,
         };
 
         this.dispatcherRef = dis.register(this.onAction);
@@ -2298,7 +2300,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 timelineSet={this.state.room.getUnfilteredTimelineSet()}
                 overlayTimelineSet={this.state.virtualRoom?.getUnfilteredTimelineSet()}
                 overlayTimelineSetFilter={isCallEvent}
-                showReadReceipts={this.state.showReadReceipts}
+                showReadReceipts={false && this.state.showReadReceipts} // 不展示发送 & 已读icon
                 manageReadReceipts={!this.state.isPeeking}
                 sendReadReceiptOnLoad={!this.state.wasContextSwitch}
                 manageReadMarkers={!this.state.isPeeking}
@@ -2330,7 +2332,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         }
         let jumpToBottom;
         // Do not show JumpToBottomButton if we have search results showing, it makes no sense
-        if (this.state.atEndOfLiveTimeline === false && !this.state.search) {
+        if (this.state.showJupToBottomBtn && this.state.atEndOfLiveTimeline === false && !this.state.search) {
             jumpToBottom = (
                 <JumpToBottomButton
                     highlight={this.state.room.getUnreadNotificationCount(NotificationCountType.Highlight) > 0}

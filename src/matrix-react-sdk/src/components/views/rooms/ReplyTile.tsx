@@ -43,12 +43,14 @@ interface IProps {
     onHeightChanged?(): void;
     toggleExpandedQuote?: () => void;
     getRelationsForEvent?: GetRelationsForEvent;
+    showReplyTile: boolean;
 }
 
 export default class ReplyTile extends React.PureComponent<IProps> {
     private anchorElement = createRef<HTMLAnchorElement>();
 
     public static defaultProps = {
+        showReplyTile: false,
         onHeightChanged: () => {},
     };
 
@@ -142,7 +144,7 @@ export default class ReplyTile extends React.PureComponent<IProps> {
         if (!hasOwnSender) {
             sender = (
                 <div className="mx_ReplyTile_sender">
-                    <MemberAvatar member={mxEvent.sender} fallbackUserId={mxEvent.getSender()} width={16} height={16} />
+                    {/*<MemberAvatar member={mxEvent.sender} fallbackUserId={mxEvent.getSender()} width={16} height={16} />*/}
                     <SenderProfile mxEvent={mxEvent} />
                 </div>
             );
@@ -161,9 +163,10 @@ export default class ReplyTile extends React.PureComponent<IProps> {
 
         return (
             <div className={classes}>
-                <a href={permalink} onClick={this.onClick} ref={this.anchorElement}>
-                    {sender}
-                    {renderReplyTile(
+                {/*<a href={permalink} onClick={this.onClick} ref={this.anchorElement}>*/}
+                {sender}
+                {this.props.showReplyTile &&
+                    renderReplyTile(
                         {
                             ...this.props,
 
@@ -183,7 +186,7 @@ export default class ReplyTile extends React.PureComponent<IProps> {
                         },
                         false /* showHiddenEvents shouldn't be relevant */,
                     )}
-                </a>
+                {/*</a>*/}
             </div>
         );
     }

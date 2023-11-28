@@ -17,14 +17,29 @@ limitations under the License.
 
 .mx_MessageComposer {
     box-sizing: border-box;
-    padding: 20px;
+    margin: 20px;
 }
 
 .mx_MessageComposer_wrapper {
-    padding: 11px 0 9px;
-    border-radius: 16px;
-    border: 1px solid $border-primary-color;
+    .mx_MessageComposer_row {
+        padding-bottom: 9px;
+        border-radius: 16px;
+        border: 1px solid $border-primary-color;
+    }
+
+    &.mx_MessageComposer_highlight .mx_MessageComposer_row, .mx_ReplyPreview +  .mx_MessageComposer_row{
+        border-color: $border-secondary-color3;
+    }
+
+    .mx_ReplyPreview +  .mx_MessageComposer_row {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
 }
+
+
+
+
 
 .mx_MessageComposer_replaced_wrapper {
     margin-left: auto;
@@ -52,9 +67,6 @@ limitations under the License.
 .mx_MessageComposer_autocomplete_wrapper {
     position: relative;
     height: 0;
-}
-
-.mx_MessageComposer_row {
 }
 
 .mx_MessageComposer_actionsWrap {

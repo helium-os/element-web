@@ -95,6 +95,8 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
             return;
         }
 
+        if (this.props.room.isPeopleRoom()) return; // 私聊没有@功能
+
         this.complete(this.props.query, this.props.selection);
     }
 
@@ -295,9 +297,9 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
                     };
 
                     return React.cloneElement(completion.component, {
-                        "key": j,
-                        "ref": `completion${componentPosition}`,
-                        "id": generateCompletionDomId(componentPosition - 1), // 0 index the completion IDs
+                        key: j,
+                        ref: `completion${componentPosition}`,
+                        id: generateCompletionDomId(componentPosition - 1), // 0 index the completion IDs
                         className,
                         onClick,
                         "aria-selected": selected,
@@ -306,7 +308,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
 
                 return completions.length > 0 ? (
                     <div key={i} className="mx_Autocomplete_ProviderSection" role="presentation">
-                        <div className="mx_Autocomplete_provider_name">{completionResult.provider.getName()}</div>
+                        {/*<div className="mx_Autocomplete_provider_name">{completionResult.provider.getName()}</div>*/}
                         {completionResult.provider.renderCompletions(completions)}
                     </div>
                 ) : null;

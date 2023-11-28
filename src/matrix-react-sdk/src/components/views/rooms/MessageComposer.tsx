@@ -30,7 +30,7 @@ import { ActionPayload } from "../../../dispatcher/payloads";
 import Stickerpicker from "./Stickerpicker";
 import { makeRoomPermalink, RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
 import SettingsStore from "../../../settings/SettingsStore";
-import { aboveLeftOf, MenuProps } from "../../structures/ContextMenu";
+import { aboveRightOf, MenuProps } from "../../structures/ContextMenu";
 import ReplyPreview from "./ReplyPreview";
 import { UPDATE_EVENT } from "../../../stores/AsyncStore";
 import VoiceRecordComposerTile from "./VoiceRecordComposerTile";
@@ -58,7 +58,7 @@ import { setUpVoiceBroadcastPreRecording } from "../../../voice-broadcast/utils/
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { VoiceBroadcastInfoState } from "../../../voice-broadcast";
 import { createCantStartVoiceMessageBroadcastDialog } from "../dialogs/CantStartVoiceMessageBroadcastDialog";
-import Button, { ButtonProps, ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import CallButtons from "matrix-react-sdk/src/components/views/rooms/CallButtons";
 
 let instanceCount = 0;
@@ -88,6 +88,7 @@ interface IState {
     isRichTextEnabled: boolean;
     initialComposerContent: string;
     showE2E: boolean;
+    focused: boolean;
 }
 
 export class MessageComposer extends React.Component<IProps, IState> {
@@ -126,6 +127,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
             isRichTextEnabled: true,
             initialComposerContent: "",
             showE2E: false,
+            focused: false,
         };
 
         this.instanceId = instanceCount++;
@@ -341,6 +343,11 @@ export class MessageComposer extends React.Component<IProps, IState> {
             isComposerEmpty: model.isEmpty,
         });
     };
+    private onFocusChange = (focused: boolean): void => {
+        this.setState({
+            focused,
+        });
+    };
 
     private onWysiwygChange = (content: string): void => {
         this.setState({
@@ -420,20 +427,8 @@ export class MessageComposer extends React.Component<IProps, IState> {
 
     private getMenuPosition(): MenuProps | undefined {
         if (this.ref.current) {
-            const hasFormattingButtons = this.state.isWysiwygLabEnabled && this.state.isRichTextEnabled;
             const contentRect = this.ref.current.getBoundingClientRect();
-            // Here we need to remove the all the extra space above the editor
-            // Instead of doing a querySelector or pass a ref to find the compute the height formatting buttons
-            // We are using an arbitrary value, the formatting buttons height doesn't change during the lifecycle of the component
-            // It's easier to just use a constant here instead of an over-engineering way to find the height
-            const heightToRemove = hasFormattingButtons ? 36 : 0;
-            const fixedRect = new DOMRect(
-                contentRect.x,
-                contentRect.y + heightToRemove,
-                contentRect.width,
-                contentRect.height - heightToRemove,
-            );
-            return aboveLeftOf(fixedRect);
+            return aboveRightOf(contentRect);
         }
     }
 
@@ -484,6 +479,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
                         relation={this.props.relation}
                         replyToEvent={this.props.replyToEvent}
                         onChange={this.onChange}
+                        onFocusChange={this.onFocusChange}
                         disabled={this.state.haveRecording}
                         toggleStickerPickerOpen={this.toggleStickerPickerOpen}
                     />
@@ -571,7 +567,10 @@ export class MessageComposer extends React.Component<IProps, IState> {
         return (
             <div className={classes} ref={this.ref}>
                 {recordingTooltip}
-                <div className="mx_MessageComposer_wrapper">
+                <div
+                    className={`
+            mx_MessageComposer_wrapper ${this.state.focused ? "mx_MessageComposer_highlight" : ""}`}
+                >
                     <ReplyPreview
                         replyToEvent={this.props.replyToEvent}
                         permalinkCreator={this.props.permalinkCreator}

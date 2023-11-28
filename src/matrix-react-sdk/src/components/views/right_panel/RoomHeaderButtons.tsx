@@ -43,7 +43,7 @@ import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
 import Modal from "matrix-react-sdk/src/Modal";
-import InviteAndCreateRoomDialog from "matrix-react-sdk/src/components/views/dialogs/InviteAndCreateRoomDialog";
+import CreateRoomBaseChatDialog from "matrix-react-sdk/src/components/views/dialogs/CreateRoomBaseChatDialog";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -216,7 +216,9 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
 
     // 邀请成员并创建群聊
     private onInviteUsersAndCreateRoom = () => {
-        Modal.createDialog(InviteAndCreateRoomDialog);
+        Modal.createDialog(CreateRoomBaseChatDialog, {
+            room: this.props.room,
+        });
     };
 
     // 邀请成员

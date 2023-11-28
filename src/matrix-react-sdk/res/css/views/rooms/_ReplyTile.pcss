@@ -16,7 +16,6 @@ limitations under the License.
 
 .mx_ReplyTile {
     position: relative;
-    padding: 2px 0;
     font-size: $font-14px;
 
     &.mx_ReplyTile_audio .mx_MFileBody_info_icon::before {
@@ -25,23 +24,6 @@ limitations under the License.
 
     &.mx_ReplyTile_video .mx_MFileBody_info_icon::before {
         mask-image: url("$(res)/img/element-icons/call/video-call.svg");
-    }
-
-    > a {
-        display: grid;
-        grid-template:
-            "sender" auto
-            "message" auto
-            / 100%;
-        text-decoration: none;
-        color: $secondary-content;
-        transition: color ease 0.15s;
-        gap: 2px;
-        max-width: 100%; // avoid overflow with wide content
-
-        &:hover {
-            color: $primary-content;
-        }
     }
 
     .mx_RedactedBody {
@@ -123,15 +105,6 @@ limitations under the License.
 
         .mx_DisambiguatedProfile {
             font-size: $font-14px;
-
-            display: inline-block; // anti-zalgo, with overflow hidden
-            padding: 0;
-            margin: 0;
-
-            // truncate long display names
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
         }
 
         .mx_BaseAvatar {

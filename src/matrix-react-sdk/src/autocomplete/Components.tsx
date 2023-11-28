@@ -71,8 +71,16 @@ export const PillCompletion = forwardRef<IPillCompletionProps, any>((props, ref)
         >
             {children}
             <span className="mx_Autocomplete_Completion_title">{title}</span>
-            <span className="mx_Autocomplete_Completion_subtitle">{subtitle}</span>
-            {/* <span className="mx_Autocomplete_Completion_description">{description}</span> */}
+            {subtitle && <span className="mx_Autocomplete_Completion_subtitle">{subtitle}</span>}
+            {description && <span className="mx_Autocomplete_Completion_description">{description}</span>}
         </div>
     );
 });
+
+export const AllMemberCompletion = ({ title, ...restProps }: IPillCompletionProps) => {
+    return (
+        <PillCompletion title={`@${title}`} subtitle="此频道中的所有人" {...restProps}>
+            <span className="mx_Autocomplete_Completion_mentionAllIcon" />
+        </PillCompletion>
+    );
+};

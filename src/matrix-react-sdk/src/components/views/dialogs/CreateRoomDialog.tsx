@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, useEffect, useRef, memo, ChangeEvent } from "react";
+import React, { useState, useRef, memo, ChangeEvent } from "react";
 import { RoomType } from "matrix-js-sdk/src/@types/event";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 
@@ -33,9 +33,18 @@ import withValidation, {
     IValidationResult,
 } from "matrix-react-sdk/src/components/views/elements/Validation";
 
+interface CreateOpts {
+    avatar: File;
+    name: string;
+    invite: Member[];
+}
+
 interface IProps {
     type?: RoomType;
+    nameRequired?: boolean; // 群聊名字是否是必须的
+    inviteRequired?: boolean; // 邀请用户是否是必须的
     defaultName?: string;
+    onCreate?: (opts: CreateOpts) => Promise<void> | void;
     onFinished(proceed?: false): void;
     onFinished(proceed: true, opts: IOpts): void;
 }
@@ -52,32 +61,46 @@ const validateRoomName = withValidation({
 
 /**
  * 创建群聊弹窗
+ *
+ * 场景一：点击群聊+创建新的群聊  该场景群聊名称必填，但是邀请的用户不是必填项
+ * 场景二：从私聊里点击邀请用户发起群聊 该场景群聊名称不是必填项，但是邀请的用户是必填项
  */
-const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
+const CreateRoomDialog: React.FC<IProps> = ({
+    type,
+    defaultName = "",
+    nameRequired = true,
+    inviteRequired = false,
+    onCreate,
+    onFinished,
+}) => {
     const nameField = useRef(null);
-    const [name, setName] = useState<string>("");
+    const [name, setName] = useState<string>(defaultName);
     const [nameIsValid, setNameIsValid] = useState<boolean>(false); // 群聊名称是否校验通过
     const [avatar, setAvatar] = useState<File>();
 
-    const [targets, setTargets] = useState<Member[]>([]);
-    const [invite, setInvite] = useState<string[]>([]);
-
-    useEffect(() => {
-        setInvite(targets.map((item) => item.userId));
-    }, [targets]);
+    const [invite, setInvite] = useState<Member[]>([]);
 
     const onNameChange = (ev: ChangeEvent<HTMLInputElement>) => {
         setName(ev.target.value);
     };
 
     const onOk = () => {
+        if (onCreate) {
+            onCreate({
+                avatar,
+                name,
+                invite,
+            });
+            return;
+        }
+
         onFinished(true, {
             roomType: type,
             joinRule: JoinRule.Invite,
             avatar,
             createOpts: {
                 name,
-                invite,
+                invite: invite.map((item) => item.userId),
             },
         });
     };
@@ -97,8 +120,8 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
 
     const footer = (
         <DialogButtons
-            primaryButton={_t("Create")}
-            primaryDisabled={!nameIsValid}
+            primaryButton={_t("Create room", { type: _t("room") })}
+            primaryDisabled={(nameRequired && !nameIsValid) || (inviteRequired && !invite.length)}
             onPrimaryButtonClick={onOk}
             onCancel={onCancel}
         />
@@ -121,19 +144,19 @@ const CreateRoomDialog: React.FC<IProps> = ({ type, onFinished }) => {
                         label={_t("Room name", { type: _t("Room") })}
                         usePlaceholderAsHint={true}
                         placeholder={_t("Please enter a name for the room", { type: _t("room") })}
-                        autoFocus={true}
+                        autoFocus={false}
                         onChange={onNameChange}
                         value={name}
                         wordLimit={80}
                         className="mx_CreateRoomDialog_name"
                         validateOnFocus={false}
-                        onValidate={onNameValidate}
+                        {...(nameRequired ? { onValidate: onNameValidate } : {})}
                     />
                 </div>
                 <div style={{ marginTop: "20px" }}>
                     <InviteInput
                         kind={InviteKind.Invite}
-                        onTargetsChange={setTargets}
+                        onTargetsChange={setInvite}
                         inputFieldProps={{ placeholder: "添加1人或多人" }}
                     />
                 </div>

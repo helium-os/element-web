@@ -15,27 +15,19 @@ limitations under the License.
 */
 
 .mx_SendMessageComposer {
-    font-size: $font-14px;
-    line-height: $font-20px;
-    font-weight: 400;
-    color: $text-secondary-color1;
-
     .mx_BasicMessageComposer {
         flex: 1;
         display: flex;
         flex-direction: column;
-        min-height: 50px;
 
         .mx_BasicMessageComposer_input {
-            padding: 0 9px;
+            padding: 0 17px;
             /* this will center the contenteditable */
             /* in it's parent vertically */
             /* while keeping the autocomplete at the top */
             /* of the composer. The parent needs to be a flex container for this to work. */
-            margin: auto 0;
             /* max-height at this level so autocomplete doesn't get scrolled too */
             height: 50px;
-            overflow-y: auto;
         }
     }
 }

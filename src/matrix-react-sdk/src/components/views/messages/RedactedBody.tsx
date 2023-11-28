@@ -32,10 +32,12 @@ const RedactedBody = React.forwardRef<any, IProps | IBodyProps>(({ mxEvent }, re
     let text = _t("Message deleted");
     const unsigned = mxEvent.getUnsigned();
     const redactedBecauseUserId = unsigned && unsigned.redacted_because && unsigned.redacted_because.sender;
-    if (redactedBecauseUserId && redactedBecauseUserId !== mxEvent.getSender()) {
+    if (redactedBecauseUserId) {
         const room = cli.getRoom(mxEvent.getRoomId());
         const sender = room && room.getMember(redactedBecauseUserId);
-        text = _t("Message deleted by %(name)s", { name: sender ? sender.name : redactedBecauseUserId });
+        text = _t("Message deleted by %(name)s", {
+            name: () => <label>{sender ? sender.name : redactedBecauseUserId}</label>,
+        });
     }
 
     const showTwelveHour = SettingsStore.getValue("showTwelveHourTimestamps");
@@ -45,7 +47,7 @@ const RedactedBody = React.forwardRef<any, IProps | IBodyProps>(({ mxEvent }, re
     const titleText = fullDate ? _t("Message deleted on %(date)s", { date: fullDate }) : undefined;
 
     return (
-        <span className="mx_RedactedBody" ref={ref} title={titleText}>
+        <span className="mx_RedactedBody mx_TextualEvent" ref={ref} title={titleText}>
             {text}
         </span>
     );

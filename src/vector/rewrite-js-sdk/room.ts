@@ -5,10 +5,12 @@ import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomVersions";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 export enum RoomType {
-    people = "people", // 私聊
-    channel = "channel", // 频道
+    People = "people", // 私聊
+    Room = "room", // 群聊
+    Channel = "channel", // 频道
 }
 
 export function isPeopleRoom(roomId: string) {
@@ -16,7 +18,7 @@ export function isPeopleRoom(roomId: string) {
 }
 
 export function getRoomType(roomId: string) {
-    return RoomType[isPeopleRoom(roomId) ? "people" : "channel"];
+    return !SpaceStore.instance.isHomeSpace ? RoomType.Channel : isPeopleRoom(roomId) ? RoomType.People : RoomType.Room;
 }
 
 export function isPrivateRoom(joinRule: JoinRule) {

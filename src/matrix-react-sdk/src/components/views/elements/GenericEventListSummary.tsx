@@ -28,21 +28,22 @@ import { Layout } from "../../../settings/enums/Layout";
 
 interface IProps {
     // An array of member events to summarise
-    "events": MatrixEvent[];
+    events: MatrixEvent[];
     // The minimum number of events needed to trigger summarisation
-    "threshold"?: number;
+    threshold?: number;
+    showExpandedToggleBtn?: boolean; // 是否展示展开/收起按钮
     // Whether or not to begin with state.expanded=true
-    "startExpanded"?: boolean;
+    startExpanded?: boolean;
     // The list of room members for which to show avatars next to the summary
-    "summaryMembers"?: RoomMember[];
+    summaryMembers?: RoomMember[];
     // The text to show as the summary of this event list
-    "summaryText"?: ReactNode;
+    summaryText?: ReactNode;
     // An array of EventTiles to render when expanded
-    "children": ReactNode[];
+    children: ReactNode[];
     // Called when the event list expansion is toggled
     onToggle?(): void;
     // The layout currently used
-    "layout"?: Layout;
+    layout?: Layout;
     "data-testid"?: string;
 }
 
@@ -50,14 +51,15 @@ const GenericEventListSummary: React.FC<IProps> = ({
     events,
     children,
     threshold = 3,
+    showExpandedToggleBtn = false,
+    startExpanded,
     onToggle,
-    startExpanded = false,
     summaryMembers = [],
     summaryText,
     layout = Layout.Group,
     "data-testid": testId,
 }) => {
-    const [expanded, toggleExpanded] = useStateToggle(startExpanded);
+    const [expanded, toggleExpanded] = useStateToggle(showExpandedToggleBtn ? startExpanded : true);
 
     // Whenever expanded changes call onToggle
     useEffect(() => {
@@ -86,7 +88,7 @@ const GenericEventListSummary: React.FC<IProps> = ({
     if (expanded) {
         body = (
             <React.Fragment>
-                <div className="mx_GenericEventListSummary_spacer">&nbsp;</div>
+                {showExpandedToggleBtn && <div className="mx_GenericEventListSummary_spacer">&nbsp;</div>}
                 <ol className="mx_GenericEventListSummary_unstyledList">{children}</ol>
             </React.Fragment>
         );
@@ -125,14 +127,16 @@ const GenericEventListSummary: React.FC<IProps> = ({
             data-layout={layout}
             data-testid={testId}
         >
-            <AccessibleButton
-                kind="link_inline"
-                className="mx_GenericEventListSummary_toggle"
-                onClick={toggleExpanded}
-                aria-expanded={expanded}
-            >
-                {expanded ? _t("collapse") : _t("expand")}
-            </AccessibleButton>
+            {showExpandedToggleBtn && (
+                <AccessibleButton
+                    kind="link_inline"
+                    className="mx_GenericEventListSummary_toggle"
+                    onClick={toggleExpanded}
+                    aria-expanded={expanded}
+                >
+                    {expanded ? _t("collapse") : _t("expand")}
+                </AccessibleButton>
+            )}
             {body}
         </li>
     );

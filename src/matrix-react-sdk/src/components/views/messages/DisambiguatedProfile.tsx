@@ -35,14 +35,9 @@ interface IProps {
 
 export default class DisambiguatedProfile extends React.Component<IProps> {
     public render(): React.ReactNode {
-        const { fallbackName, member, colored, emphasizeDisplayName, withTooltip, onClick } = this.props;
+        const { fallbackName, member, emphasizeDisplayName, withTooltip, onClick } = this.props;
         const rawDisplayName = member?.rawDisplayName || fallbackName;
         const mxid = member?.userId;
-
-        let colorClass: string | undefined;
-        if (colored) {
-            colorClass = getUserNameColorClass(fallbackName);
-        }
 
         let mxidElement;
         let title: string | undefined;
@@ -59,7 +54,7 @@ export default class DisambiguatedProfile extends React.Component<IProps> {
             });
         }
 
-        const displayNameClasses = classNames(colorClass, {
+        const displayNameClasses = classNames({
             mx_DisambiguatedProfile_displayName: emphasizeDisplayName,
         });
 
