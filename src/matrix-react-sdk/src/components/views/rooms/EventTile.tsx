@@ -1183,43 +1183,45 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         onMouseEnter: () => this.setState({ hover: true }),
                         onMouseLeave: () => this.setState({ hover: false }),
                     },
-                    [
-                        <div className="mx_EventTile_senderDetails" key="mx_EventTile_senderDetails">
+                    <>
+                        <div className="mx_EventTile_mainTile">
+                            <div className="mx_EventTile_msgDetails" key="mx_EventTile_senderDetails">
+                                {sender}
+                                <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
+                                    {timestamp}
+                                </div>
+                            </div>
                             {avatar}
-                            {sender}
-                        </div>,
-                        <div
-                            className={lineClasses}
-                            key="mx_EventTile_line"
-                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
-                        >
-                            {this.renderContextMenu()}
-                            {replyChain}
-                            {renderTile(
-                                TimelineRenderingType.Thread,
-                                {
-                                    ...this.props,
+                            <div
+                                className={lineClasses}
+                                key="mx_EventTile_line"
+                                onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
+                            >
+                                {this.renderContextMenu()}
+                                {replyChain}
+                                {renderTile(
+                                    TimelineRenderingType.Thread,
+                                    {
+                                        ...this.props,
 
-                                    // overrides
-                                    ref: this.tile,
-                                    isSeeingThroughMessageHiddenForModeration,
+                                        // overrides
+                                        ref: this.tile,
+                                        isSeeingThroughMessageHiddenForModeration,
 
-                                    // appease TS
-                                    highlights: this.props.highlights,
-                                    highlightLink: this.props.highlightLink,
-                                    onHeightChanged: () => this.props.onHeightChanged,
-                                    permalinkCreator: this.props.permalinkCreator!,
-                                },
-                                this.context.showHiddenEvents,
-                            )}
-                            {actionBar}
-                            <a href={permalink} onClick={this.onPermalinkClicked}>
-                                {timestamp}
-                            </a>
+                                        // appease TS
+                                        highlights: this.props.highlights,
+                                        highlightLink: this.props.highlightLink,
+                                        onHeightChanged: () => this.props.onHeightChanged,
+                                        permalinkCreator: this.props.permalinkCreator!,
+                                    },
+                                    this.context.showHiddenEvents,
+                                )}
+                            </div>
+                            {reactionsRow}
                             {msgOption}
-                        </div>,
-                        reactionsRow,
-                    ],
+                        </div>
+                        {actionBar}
+                    </>,
                 );
             }
             case TimelineRenderingType.Notification:

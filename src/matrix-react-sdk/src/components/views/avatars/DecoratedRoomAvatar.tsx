@@ -196,7 +196,7 @@ export default class DecoratedRoomAvatar extends React.PureComponent<DecoratedRo
         }
 
         const classes = classNames("mx_DecoratedRoomAvatar", {
-            mx_DecoratedRoomAvatar_cutout: icon,
+            // mx_DecoratedRoomAvatar_cutout: icon,
         });
 
         return (
