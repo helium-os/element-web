@@ -96,16 +96,10 @@ limitations under the License.
 
     .mx_RoomView_messagePanel {
         /* To avoid the rule from being applied to .mx_ThreadPanel_empty */
-        .mx_RoomView_messageListWrapper {
-            width: calc(100% + 6px); /* 8px - 2px */
-        }
+
     }
 
-    .mx_RoomView_MessageList {
-        padding-inline-start: $spacing-8;
-        padding-inline-end: $spacing-8;
-        content-visibility: visible;
-    }
+
 
     .mx_EventTile,
     .mx_GenericEventListSummary {
@@ -146,6 +140,21 @@ limitations under the License.
         .mx_AccessibleButton_kind_link_inline {
             color: $secondary-content;
         }
+    }
+}
+
+.mx_ThreadPanel_content_box {
+    padding: 20px 0;
+    margin: 0 -20px;
+    .mx_RoomView_messageListWrapper {
+        margin-top: 20px;
+        justify-content: flex-start;
+        min-height: unset;
+    }
+
+    .mx_RoomView_MessageList {
+        padding: 0;
+        content-visibility: visible;
     }
 }
 

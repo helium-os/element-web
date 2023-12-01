@@ -44,6 +44,7 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
 import Modal from "matrix-react-sdk/src/Modal";
 import CreateRoomBaseChatDialog from "matrix-react-sdk/src/components/views/dialogs/CreateRoomBaseChatDialog";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -205,6 +206,17 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.setPhase(RightPanelPhases.NotificationPanel);
     };
 
+    private onUserInfoClicked = (): void => {
+        // This toggles for us, if needed
+        if (!this.props.room) return;
+        const [people] = this.props.room
+            .getMembers()
+            .filter((item) => item.userId !== MatrixClientPeg.get().getUserId());
+        this.setPhase(RightPanelPhases.RoomMemberInfo, {
+            member: people,
+        });
+    };
+
     private onThreadsPanelClicked = (ev: ButtonEvent): void => {
         if (this.state.phase && RoomHeaderButtons.THREAD_PHASES.includes(this.state.phase)) {
             RightPanelStore.instance.togglePanel(this.props.room?.roomId ?? null);
@@ -260,7 +272,6 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                 name="notifsButton"
                 title={_t("Notifications")}
                 onClick={this.onNotificationsClicked}
-                isUnread={this.globalNotificationState.color === NotificationColor.Red}
             />,
         );
         if (this.props.room.isPeopleRoom()) {
@@ -280,8 +291,8 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                     key="memberInfoButton"
                     name="memberInfoButton"
                     title={"用户信息"}
-                    isHighlighted={this.isPhase(ROOM_INFO_PHASES)}
-                    onClick={this.onRoomSummaryClicked}
+                    isHighlighted={this.isPhase(RightPanelPhases.RoomMemberInfo)}
+                    onClick={this.onUserInfoClicked}
                 />,
             );
         } else {

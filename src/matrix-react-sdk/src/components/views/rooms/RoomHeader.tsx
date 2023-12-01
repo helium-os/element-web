@@ -15,11 +15,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { FC, useState, useMemo, useCallback } from "react";
+import React, { FC, useCallback } from "react";
 import classNames from "classnames";
 import { throttle } from "lodash";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
-import { CallType } from "matrix-js-sdk/src/webrtc/call";
 import { ISearchResults } from "matrix-js-sdk/src/@types/search";
 
 import type { MatrixEvent } from "matrix-js-sdk/src/models/event";

@@ -21,47 +21,26 @@ limitations under the License.
     overflow-y: auto;
     font-size: $font-12px;
 
-    .mx_UserInfo_cancel {
-        cursor: pointer;
-        position: absolute;
-        top: 0;
-        border-radius: 4px;
-        background-color: $dark-panel-bg-color;
-        margin: 9px; /* TODO: Use a variable */
-        z-index: 1; /* render on top of the right panel */
-
-        div {
-            height: 16px;
-            width: 16px;
-            padding: 4px;
-            mask-image: url("$(res)/img/minimise.svg");
-            mask-repeat: no-repeat;
-            mask-position: 7px center;
-            background-color: $header-panel-text-primary-color;
-        }
+    .mx_UserInfo_content_box {
+        padding: 16px 0;
     }
 
-    h2 {
-        font-size: $font-18px;
-        font-weight: 600;
-        margin: 18px 0 0 0; /* TODO: Use a variable */
+    .mx_UserInfo_avatarBox {
+        text-align: center;
+        .mx_BaseAvatar_initial {
+            font-size: 45px;
+        }
+        .mx_DecoratedRoomAvatar_icon {
+            bottom: 2px;
+            right: 2px;
+            width: 15px;
+            height: 15px;
+            border-color: #FFFFFF;
+        }
     }
 
     .mx_UserInfo_container {
-        padding: $spacing-8 $spacing-16;
-
-        &:not(.mx_UserInfo_separator) {
-            padding-top: $spacing-16;
-            padding-bottom: 0;
-
-            > :not(h3) {
-                margin-inline-start: $spacing-8;
-                display: flex;
-                flex-flow: column;
-                align-items: flex-start;
-                row-gap: $spacing-8;
-            }
-        }
+        padding-top: 10px;
 
         .mx_UserInfo_container_verifyButton {
             margin-top: $spacing-8;
@@ -159,10 +138,14 @@ limitations under the License.
 
         h2 {
             display: flex;
-            font-size: $font-18px;
-            line-height: $font-25px;
             flex: 1;
             justify-content: center;
+            margin: 0;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 24px; /* 133.333% */
+            color: $text-primary-color2;
 
             span {
                 /* limit to 2 lines, show an ellipsis if it overflows */

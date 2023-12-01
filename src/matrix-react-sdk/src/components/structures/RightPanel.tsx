@@ -278,7 +278,7 @@ export default class RightPanel extends React.Component<IProps, IState> {
         }
 
         return (
-            <aside className="mx_RightPanel dark-panel" id="mx_RightPanel">
+            <aside className="mx_RightPanel" id="mx_RightPanel">
                 {card}
             </aside>
         );

@@ -16,20 +16,15 @@ limitations under the License.
 */
 
 .mx_RightPanel {
+    box-sizing: border-box;
     overflow-x: hidden;
     flex: 0 0 auto;
     position: relative;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
-    padding: $container-border-width 0;
-    box-sizing: border-box;
     height: 100%;
+    border-left: 1px solid $border-primary-color;
     contain: strict;
-
-    .mx_RoomView_MessageList {
-        padding: 14px 18px; /* top and bottom is 4px smaller to balance with the padding set above */
-    }
 }
 
 .mx_RightPanel_header {

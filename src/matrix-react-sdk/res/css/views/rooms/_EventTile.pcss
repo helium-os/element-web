@@ -1069,20 +1069,6 @@ $group_line-padding-horizontal: 20px;
                 margin-inline-end: var(--ThreadView_group_spacing-end);
             }
 
-            .mx_EventTile_line {
-                padding-block: var(--BaseCard_EventTile_line-padding-block);
-
-                /* Add padding to align message text with summary text */
-                /* See: .mx_EventTile[data-layout="group"] .mx_EventTile_line */
-                padding-inline-start: var(--ThreadView_group_spacing-start);
-
-                .mx_EventTile_content {
-                    &.mx_EditMessageComposer {
-                        padding-inline-start: 0; /* align start of first letter with that of the event body */
-                    }
-                }
-            }
-
             .mx_ReactionsRow {
                 /* Align with message text and summary text */
                 margin-inline-start: var(--ThreadView_group_spacing-start);

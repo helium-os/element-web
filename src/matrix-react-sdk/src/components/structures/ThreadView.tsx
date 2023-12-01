@@ -446,24 +446,28 @@ export default class ThreadView extends React.Component<IProps, IState> {
                         PosthogTrackers.trackInteraction("WebThreadViewBackButton", ev);
                     }}
                 >
-                    {this.card.current && <Measured sensor={this.card.current} onMeasurement={this.onMeasurement} />}
-                    <div className="mx_ThreadView_timelinePanelWrapper">{timeline}</div>
+                    <div className="mx_ThreadPanel_content_box">
+                        {this.card.current && (
+                            <Measured sensor={this.card.current} onMeasurement={this.onMeasurement} />
+                        )}
+                        <div className="mx_ThreadView_timelinePanelWrapper">{timeline}</div>
 
-                    {ContentMessages.sharedInstance().getCurrentUploads(threadRelation).length > 0 && (
-                        <UploadBar room={this.props.room} relation={threadRelation} />
-                    )}
+                        {ContentMessages.sharedInstance().getCurrentUploads(threadRelation).length > 0 && (
+                            <UploadBar room={this.props.room} relation={threadRelation} />
+                        )}
 
-                    {this.state.thread?.timelineSet && (
-                        <MessageComposer
-                            room={this.props.room}
-                            resizeNotifier={this.props.resizeNotifier}
-                            relation={threadRelation}
-                            replyToEvent={this.state.replyToEvent}
-                            permalinkCreator={this.props.permalinkCreator}
-                            e2eStatus={this.props.e2eStatus}
-                            compact={true}
-                        />
-                    )}
+                        {this.state.thread?.timelineSet && (
+                            <MessageComposer
+                                room={this.props.room}
+                                resizeNotifier={this.props.resizeNotifier}
+                                relation={threadRelation}
+                                replyToEvent={this.state.replyToEvent}
+                                permalinkCreator={this.props.permalinkCreator}
+                                e2eStatus={this.props.e2eStatus}
+                                compact={true}
+                            />
+                        )}
+                    </div>
                 </BaseCard>
             </RoomContext.Provider>
         );

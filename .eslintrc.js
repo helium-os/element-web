@@ -13,6 +13,11 @@ module.exports = {
             jsx: true,
         },
     },
+    settings: {
+        react: {
+            version: "detect",
+        },
+    },
     plugins: ["@typescript-eslint"],
     extends: [
         "eslint:recommended",
