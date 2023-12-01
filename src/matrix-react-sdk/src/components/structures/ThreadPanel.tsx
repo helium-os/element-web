@@ -44,8 +44,8 @@ interface IProps {
 }
 
 export enum ThreadFilterType {
-    "My",
-    "All",
+    My,
+    All,
 }
 
 type ThreadPanelHeaderOption = {
@@ -210,7 +210,8 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
 
     useEffect(() => {
         const room = mxClient.getRoom(roomId);
-        room?.createThreadsTimelineSets()
+        room
+            ?.createThreadsTimelineSets()
             .then(() => room.fetchRoomThreads())
             .then(() => {
                 setFilterOption(ThreadFilterType.All);
@@ -234,51 +235,55 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
             }}
         >
             <BaseCard
-                header={
-                    <ThreadPanelHeader
-                        filterOption={filterOption}
-                        setFilterOption={setFilterOption}
-                        empty={!hasThreads}
-                    />
-                }
+                // header={
+                //     <ThreadPanelHeader
+                //         filterOption={filterOption}
+                //         setFilterOption={setFilterOption}
+                //         empty={!hasThreads}
+                //     />
+                // }
+                title={_t("Threads")}
                 className="mx_ThreadPanel"
                 onClose={onClose}
                 withoutScrollContainer={true}
                 ref={card}
             >
-                {card.current && <Measured sensor={card.current} onMeasurement={setNarrow} />}
-                {timelineSet ? (
-                    <TimelinePanel
-                        key={filterOption + ":" + (timelineSet.getFilter()?.filterId ?? roomId)}
-                        ref={timelinePanel}
-                        showReadReceipts={false} // No RR support in thread's list
-                        manageReadReceipts={false} // No RR support in thread's list
-                        manageReadMarkers={false} // No RM support in thread's list
-                        sendReadReceiptOnLoad={false} // No RR support in thread's list
-                        timelineSet={timelineSet}
-                        showUrlPreview={false} // No URL previews at the threads list level
-                        empty={
-                            <EmptyThread
-                                hasThreads={hasThreads}
-                                filterOption={filterOption}
-                                showAllThreadsCallback={() => setFilterOption(ThreadFilterType.All)}
-                            />
-                        }
-                        alwaysShowTimestamps={true}
-                        layout={Layout.Group}
-                        hideThreadedMessages={false}
-                        hidden={false}
-                        showReactions={false}
-                        className="mx_RoomView_messagePanel"
-                        membersLoaded={true}
-                        permalinkCreator={permalinkCreator}
-                        disableGrouping={true}
-                    />
-                ) : (
-                    <div className="mx_AutoHideScrollbar">
-                        <Spinner />
-                    </div>
-                )}
+                <div className="mx_ThreadPanel_content_box">
+                    {card.current && <Measured sensor={card.current} onMeasurement={setNarrow} />}
+                    <div className="search">搜索框</div>
+                    {timelineSet ? (
+                        <TimelinePanel
+                            key={filterOption + ":" + (timelineSet.getFilter()?.filterId ?? roomId)}
+                            ref={timelinePanel}
+                            showReadReceipts={false} // No RR support in thread's list
+                            manageReadReceipts={false} // No RR support in thread's list
+                            manageReadMarkers={false} // No RM support in thread's list
+                            sendReadReceiptOnLoad={false} // No RR support in thread's list
+                            timelineSet={timelineSet}
+                            showUrlPreview={false} // No URL previews at the threads list level
+                            empty={
+                                <EmptyThread
+                                    hasThreads={hasThreads}
+                                    filterOption={filterOption}
+                                    showAllThreadsCallback={() => setFilterOption(ThreadFilterType.All)}
+                                />
+                            }
+                            alwaysShowTimestamps={true}
+                            layout={Layout.Group}
+                            hideThreadedMessages={false}
+                            hidden={false}
+                            showReactions={false}
+                            className="mx_RoomView_messagePanel"
+                            membersLoaded={true}
+                            permalinkCreator={permalinkCreator}
+                            disableGrouping={true}
+                        />
+                    ) : (
+                        <div className="mx_AutoHideScrollbar">
+                            <Spinner />
+                        </div>
+                    )}
+                </div>
             </BaseCard>
         </RoomContext.Provider>
     );
