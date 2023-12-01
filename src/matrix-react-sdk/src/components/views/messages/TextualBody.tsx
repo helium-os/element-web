@@ -20,7 +20,6 @@ import highlight from "highlight.js";
 import { MsgType } from "matrix-js-sdk/src/@types/event";
 
 import * as HtmlUtils from "../../../HtmlUtils";
-import { formatDate } from "../../../DateUtils";
 import Modal from "../../../Modal";
 import dis from "../../../dispatcher/dispatcher";
 import { _t } from "../../../languageHandler";
@@ -32,7 +31,6 @@ import { tooltipifyLinks, unmountTooltips } from "../../../utils/tooltipify";
 import { IntegrationManagers } from "../../../integrations/IntegrationManagers";
 import { isPermalinkHost, tryTransformPermalinkToLocalHref } from "../../../utils/permalinks/Permalinks";
 import { copyPlaintext } from "../../../utils/strings";
-import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import UIStore from "../../../stores/UIStore";
 import { Action } from "../../../dispatcher/actions";
 import GenericTextContextMenu from "../context_menus/GenericTextContextMenu";
@@ -519,25 +517,13 @@ export default class TextualBody extends React.Component<IBodyProps, IState> {
     };
 
     private renderEditedMarker(): JSX.Element {
-        const date = this.props.mxEvent.replacingEventDate();
-        const dateString = date && formatDate(date);
-
-        const tooltip = (
-            <div>
-                <div className="mx_Tooltip_title">{_t("Edited at %(date)s", { date: dateString })}</div>
-                <div className="mx_Tooltip_sub">{_t("Click to view edits")}</div>
-            </div>
-        );
-
         return (
-            <AccessibleTooltipButton
+            <div
                 className="mx_EventTile_edited"
-                onClick={this.openHistoryDialog}
-                title={_t("Edited at %(date)s. Click to view edits.", { date: dateString })}
-                tooltip={tooltip}
+                // onClick={this.openHistoryDialog}
             >
                 <span>{`(${_t("edited")})`}</span>
-            </AccessibleTooltipButton>
+            </div>
         );
     }
 

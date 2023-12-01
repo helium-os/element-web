@@ -18,18 +18,14 @@ import React, { useContext } from "react";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { User } from "matrix-js-sdk/src/models/user";
 
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import RoomContext from "../../../contexts/RoomContext";
 import DMRoomMap from "../../../utils/DMRoomMap";
 import { _t, _td } from "../../../languageHandler";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-import MiniAvatarUploader, { AVATAR_SIZE } from "../elements/MiniAvatarUploader";
 import RoomAvatar from "../avatars/RoomAvatar";
 import defaultDispatcher from "../../../dispatcher/dispatcher";
-import { ViewUserPayload } from "../../../dispatcher/payloads/ViewUserPayload";
-import { Action } from "../../../dispatcher/actions";
 import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { showSpaceInvite } from "../../../utils/space";
 import EventTileBubble from "../messages/EventTileBubble";
@@ -40,6 +36,7 @@ import { UIComponent } from "../../../settings/UIFeature";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
 import { LocalRoom } from "../../../models/LocalRoom";
 import { shouldEncryptRoomWithSingle3rdPartyInvite } from "../../../utils/room/shouldEncryptRoomWithSingle3rdPartyInvite";
+import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 
 function hasExpectedEncryptionSettings(matrixClient: MatrixClient, room: Room): boolean {
     const isEncrypted: boolean = matrixClient.isRoomEncrypted(room.roomId);
@@ -58,6 +55,8 @@ const determineIntroMessage = (room: Room, encryptedSingle3rdPartyInvite: boolea
 
     return _td("This is the beginning of your direct message history with <displayName/>.");
 };
+
+const AVATAR_SIZE = 70;
 
 const NewRoomIntro: React.FC = () => {
     const cli = useContext(MatrixClientContext);
@@ -88,22 +87,13 @@ const NewRoomIntro: React.FC = () => {
         const displayName = room?.name || member?.rawDisplayName || dmPartner;
         body = (
             <React.Fragment>
-                <RoomAvatar
-                    room={room}
-                    width={AVATAR_SIZE}
-                    height={AVATAR_SIZE}
-                    onClick={() => {
-                        defaultDispatcher.dispatch<ViewUserPayload>({
-                            action: Action.ViewUser,
-                            // XXX: We should be using a real member object and not assuming what the receiver wants.
-                            member: member || ({ userId: dmPartner } as User),
-                        });
-                    }}
-                />
+                <div className="mx_NewRoomIntro_roomMainInfo">
+                    <RoomAvatar room={room} width={AVATAR_SIZE} height={AVATAR_SIZE} />
 
-                <h2>{room.name}</h2>
+                    <h2>{room.name}</h2>
+                </div>
 
-                <p>
+                <p className="mx_NewRoomIntro_tips">
                     {_t(
                         introMessage,
                         {},
@@ -111,8 +101,8 @@ const NewRoomIntro: React.FC = () => {
                             displayName: () => <b>{displayName}</b>,
                         },
                     )}
+                    {caption}
                 </p>
-                {caption && <p>{caption}</p>}
             </React.Fragment>
         );
     } else {
@@ -221,36 +211,22 @@ const NewRoomIntro: React.FC = () => {
                             defaultDispatcher.dispatch({ action: "view_invite", roomId });
                         }}
                     >
-                        {_t("Invite to this room")}
+                        {_t("Invite people")}
                     </AccessibleButton>
                 </div>
             );
         }
 
-        const avatarUrl = room.currentState.getStateEvents(EventType.RoomAvatar, "")?.getContent()?.url;
-        let avatar = (
-            <RoomAvatar room={room} width={AVATAR_SIZE} height={AVATAR_SIZE} viewAvatarOnClick={!!avatarUrl} />
-        );
-
-        if (!avatarUrl) {
-            avatar = (
-                <MiniAvatarUploader
-                    hasAvatar={false}
-                    noAvatarLabel={_t("Add a photo, so people can easily spot your room.")}
-                    setAvatarUrl={(url) => cli.sendStateEvent(roomId, EventType.RoomAvatar, { url }, "")}
-                >
-                    {avatar}
-                </MiniAvatarUploader>
-            );
-        }
+        const avatar = <RoomAndChannelAvatar room={room} avatarSize={AVATAR_SIZE} />;
 
         body = (
             <React.Fragment>
-                {avatar}
+                <div className="mx_NewRoomIntro_roomMainInfo">
+                    {avatar}
+                    <p className="mx_NewRoomIntro_roomName">{room.name}</p>
+                </div>
 
-                <h2>{room.name}</h2>
-
-                <p>
+                <p className="mx_NewRoomIntro_tips">
                     {createdText}{" "}
                     {_t(
                         "This is the start of <roomName/>.",
@@ -260,7 +236,7 @@ const NewRoomIntro: React.FC = () => {
                         },
                     )}
                 </p>
-                <p>{topicText}</p>
+                {/*<p>{topicText}</p>*/}
                 {buttons}
             </React.Fragment>
         );

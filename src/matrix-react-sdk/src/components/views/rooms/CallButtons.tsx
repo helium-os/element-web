@@ -69,7 +69,7 @@ const VoiceCallButton: FC<VoiceCallButtonProps> = ({ room, busy, setBusy, behavi
             onClick={onClick}
             title={_t("Voice call")}
             tooltip={tooltip ?? _t("Voice call")}
-            alignment={Alignment.Bottom}
+            alignment={Alignment.Top}
             disabled={disabled || busy}
         />
     );
@@ -186,7 +186,7 @@ const VideoCallButton: FC<VideoCallButtonProps> = ({ room, busy, setBusy, behavi
                 onClick={onClick}
                 title={_t("Video call")}
                 tooltip={tooltip ?? _t("Video call")}
-                alignment={Alignment.Bottom}
+                alignment={Alignment.Top}
                 disabled={disabled || busy}
             />
             {menu}

@@ -17,19 +17,11 @@ limitations under the License.
 
 .mx_MessageContextMenu {
     .mx_IconizedContextMenu_icon {
-        width: 16px;
-        height: 16px;
         display: block;
 
         &::before {
-            content: "";
             width: 16px;
             height: 16px;
-            display: block;
-            mask-position: center;
-            mask-size: contain;
-            mask-repeat: no-repeat;
-            background: $primary-content;
         }
     }
 
@@ -63,10 +55,14 @@ limitations under the License.
 
     .mx_MessageContextMenu_iconForward::before {
         mask-image: url("$(res)/img/element-icons/message/fwd.svg");
+        width: 14px;
+        height: 13px;
     }
 
     .mx_MessageContextMenu_iconRedact::before {
         mask-image: url("$(res)/img/element-icons/trashcan.svg");
+        width: 14px;
+        height: 13px;
     }
 
     .mx_MessageContextMenu_iconResend::before {
@@ -90,12 +86,9 @@ limitations under the License.
     }
 
     .mx_MessageContextMenu_iconCopy::before {
-        height: 12px;
-        left: 2px;
         mask-image: url($copy-button-url);
-        position: relative;
-        width: 12px;
-        top: 3px;
+        width: 14px;
+        height: 17px;
     }
 
     .mx_MessageContextMenu_iconEdit::before {
@@ -104,14 +97,20 @@ limitations under the License.
 
     .mx_MessageContextMenu_iconReply::before {
         mask-image: url("$(res)/img/element-icons/room/message-bar/reply.svg");
+        width: 16px;
+        height: 14px;
     }
 
     .mx_MessageContextMenu_iconReplyInThread::before {
         mask-image: url("$(res)/img/element-icons/message/thread.svg");
+        width: 18px;
+        height: 18px;
     }
 
     .mx_MessageContextMenu_iconReact::before {
         mask-image: url("$(res)/img/element-icons/room/message-bar/emoji.svg");
+        width: 18px;
+        height: 16px;
     }
 
     .mx_MessageContextMenu_iconViewInRoom::before {

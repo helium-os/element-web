@@ -164,40 +164,16 @@ limitations under the License.
 
 
 .mx_RoomTile_iconType {
-    position: relative;
     width: 16px;
     height: 16px;
-    &:before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: $text-primary-color2;
-        mask-repeat: no-repeat;
-        mask-position: center;
-        mask-size: contain;
-    }
     &.mx_RoomTile_iconPublic {
-        &:before {
-            width: 11px;
-            height: 11px;
-            mask-image: url("$(res)/img/element-icons/room/public.svg");
-        }
+        @mixin MaskIcon url("$(res)/img/element-icons/room/public.svg"), 11px, 11px, $text-primary-color2;
     }
     &.mx_RoomTile_iconPrivate{
-        &:before {
-            width: 9px;
-            height: 12px;
-            mask-image: url("$(res)/img/element-icons/room/private.svg");
-        }
+        @mixin MaskIcon url("$(res)/img/element-icons/room/private.svg"), 9px, 12px, $text-primary-color2;
     }
     &.mx_RoomTile_iconHome{
-        &:before {
-            width: 13px;
-            height: 12px;
-            mask-image: url("$(res)/img/element-icons/home.svg");
-        }
+        @mixin MaskIcon url("$(res)/img/element-icons/home.svg"), 13px, 12px, $text-primary-color2;
     }
 }
 

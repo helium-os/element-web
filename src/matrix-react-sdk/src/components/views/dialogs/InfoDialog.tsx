@@ -46,6 +46,13 @@ export default class InfoDialog extends React.Component<IProps> {
     };
 
     public render(): React.ReactNode {
+        const footer = this.props.button !== false && (
+            <DialogButtons
+                primaryButton={this.props.button || _t("OK")}
+                onPrimaryButtonClick={this.onFinished}
+                hasCancel={false}
+            />
+        );
         return (
             <BaseDialog
                 className="mx_InfoDialog"
@@ -56,17 +63,9 @@ export default class InfoDialog extends React.Component<IProps> {
                 hasCancel={this.props.hasCloseButton}
                 onKeyDown={this.props.onKeyDown}
                 fixedWidth={this.props.fixedWidth}
+                footer={footer}
             >
-                <div className={classNames("mx_Dialog_content", this.props.className)} id="mx_Dialog_content">
-                    {this.props.description}
-                </div>
-                {this.props.button !== false && (
-                    <DialogButtons
-                        primaryButton={this.props.button || _t("OK")}
-                        onPrimaryButtonClick={this.onFinished}
-                        hasCancel={false}
-                    />
-                )}
+                <div className={classNames(this.props.className)}>{this.props.description}</div>
             </BaseDialog>
         );
     }

@@ -19,15 +19,9 @@ $left-gutter: 46px;
 $group_line-padding-vertical: 10px;
 $group_line-padding-horizontal: 20px;
 
-.mx_RoomView_MessageList > li:not([data-layout="bubble"]) {
-    padding: $group_line-padding-vertical $group_line-padding-horizontal;
-    &.mx_DateSeparatorItem {
-        padding-top: 0;
-        padding-bottom: 0;
-    }
-    &:not(.mx_GenericEventListSummary):not(.mx_DateSeparatorItem):hover {
-        background-color: $event-selected-color;
-    }
+
+.mx_DateSeparatorItem {
+    padding: 0 $group_line-padding-horizontal;
 }
 
 .mx_EventTile {
@@ -116,6 +110,8 @@ $group_line-padding-horizontal: 20px;
         align-items: center;
     }
     .mx_Event_timestamp {
+        display: flex;
+        align-items: center;
         margin-left: 8px;
         flex: 1;
         overflow: hidden;
@@ -238,9 +234,13 @@ $group_line-padding-horizontal: 20px;
             }
         }
 
-        &.mx_EventTile_continuation .mx_EventTile_line {
-            clear: both;
-            padding-top: 0;
+        &.mx_EventTile_continuation {
+            padding-top: 4px!important;
+            padding-bottom: 4px!important;
+            .mx_EventTile_line {
+                padding-top: 0!important;
+                padding-bottom: 0!important;
+            }
         }
 
         &:hover {
@@ -266,10 +266,6 @@ $group_line-padding-horizontal: 20px;
     &[data-layout="group"] {
         .mx_EventTileBubble {
             margin-inline: auto;
-        }
-
-        .mx_ReplyChain {
-            margin-bottom: $spacing-8;
         }
     }
 
@@ -299,10 +295,6 @@ $group_line-padding-horizontal: 20px;
             }
         }
 
-        .mx_ReplyChain {
-            margin: 0;
-        }
-
         .mx_ReplyTile .mx_EventTileBubble {
             left: unset; /* Cancel the value specified above for the tile inside ReplyTile */
         }
@@ -329,10 +321,26 @@ $group_line-padding-horizontal: 20px;
     }
 
     &[data-layout="group"] {
+        padding: $group_line-padding-vertical $group_line-padding-horizontal;
+        &:not(.mx_EventTile_info):hover {
+            background-color: $event-selected-color;
+        }
+        .mx_EventTile_replyChain_wrap {
+            padding: 2px 0 6px $left-gutter;
+            .mx_DisambiguatedProfile_displayName {
+                font-size: 12px;
+                font-weight: 400;
+                line-height: 16px;
+                color: $text-primary-color2;
+            }
+        }
+        .mx_EventTile_mainTile {
+            position: relative;
+        }
         .mx_EventTile_avatar {
             position: absolute;
-            top: $group_line-padding-vertical;
-            left: $group_line-padding-horizontal;
+            top: 0;
+            left: 0;
             z-index: 10;
         }
 
@@ -363,13 +371,10 @@ $group_line-padding-horizontal: 20px;
         }
 
         .mx_ThreadSummary,
-        .mx_ThreadSummary_icon {
+        .mx_ThreadSummary_icon,
+        .mx_ReactionsRow {
             margin-top: 8px;
             margin-left: $left-gutter;
-        }
-
-        .mx_ReactionsRow {
-            margin: $spacing-4 64px;
         }
 
         > .mx_DisambiguatedProfile {
@@ -394,13 +399,17 @@ $group_line-padding-horizontal: 20px;
         &.mx_EventTile_info {
             display: flex;
             align-items: center;
+            .mx_EventTile_mainTile {
+                display: flex;
+                align-items: center;
+            }
 
             .mx_DisambiguatedProfile, .mx_EventTile_avatar, .mx_EventTile_e2eIcon {
                 display: none;
             }
             .mx_EventTile_line {
                 order: 1;
-                padding-bottom:  var(--EventTile_group_line-spacing-block-start);
+                padding-bottom: var(--EventTile_group_line-spacing-block-start);
                 .mx_TextualEvent {
                     span {
                         display: flex;
@@ -415,14 +424,6 @@ $group_line-padding-horizontal: 20px;
                 padding-left: 0;
                 order: 2;
             }
-        }
-
-
-
-        &.mx_EventTile_continuation {
-            padding-top: 4px!important;
-            padding-bottom: 4px!important;
-
         }
     }
 
@@ -501,10 +502,6 @@ $group_line-padding-horizontal: 20px;
         display: inline-block;
         color: $text-secondary-color2;
         user-select: none;
-    }
-
-    .mx_EventTile_edited {
-        cursor: pointer;
     }
 
     .markdown-body {
@@ -1187,10 +1184,6 @@ $group_line-padding-horizontal: 20px;
             .mx_EventTile_line,
             .mx_EventTile_reply {
                 padding-block: var(--MatrixChat_useCompactLayout_line-spacing-block);
-            }
-
-            .mx_ReplyChain {
-                margin-bottom: $spacing-4;
             }
 
             &.mx_EventTile_info {

@@ -15,32 +15,29 @@ limitations under the License.
 */
 
 .mx_ReactionsRowButton {
+    box-sizing: border-box;
     display: inline-flex;
+    height: 20px;
     line-height: $font-20px;
-    padding: 1px 6px;
+    padding: 0 8px;
     border: 1px solid $message-action-bar-border-color;
     border-radius: 10px;
-    background-color: $header-panel-bg-color;
+    background-color: $message-action-bar-bg-color;
+    font-size: 12px;
     user-select: none;
-
-    &:hover {
-        border-color: $reaction-row-button-hover-border-color;
-    }
-
-    &.mx_ReactionsRowButton_selected {
-        background-color: $reaction-row-button-selected-bg-color;
-        border-color: $accent;
-    }
 
     &.mx_AccessibleButton_disabled {
         cursor: not-allowed;
     }
 
     .mx_ReactionsRowButton_content {
-        max-width: 100px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        padding-right: 4px;
+    }
+    .mx_ReactionsRowButton_count {
+        margin-left: 4px;
+        color: $text-secondary-color1;
+        font-weight: 400;
     }
 }

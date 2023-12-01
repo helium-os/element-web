@@ -54,6 +54,10 @@ const ThreadSummary: React.FC<IProps> = ({ mxEvent, thread, ...props }) => {
                 PosthogTrackers.trackInteraction("WebRoomTimelineThreadSummaryButton", ev);
             }}
             aria-label={_t("Open thread")}
+            onContextMenu={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }}
         >
             <ThreadMessagePreview thread={thread} />
         </AccessibleButton>

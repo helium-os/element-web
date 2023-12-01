@@ -24,6 +24,7 @@ import { RovingAccessibleTooltipButton } from "../../../accessibility/RovingTabI
 import Spinner from "../elements/Spinner";
 import { _t, _td } from "../../../languageHandler";
 import { FileDownloader } from "../../../utils/FileDownloader";
+import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -97,6 +98,7 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
                 title={spinner ? _t(this.state.tooltip) : _t("Download")}
                 onClick={this.onDownloadClick}
                 disabled={!!spinner}
+                alignment={Alignment.Top}
             >
                 <DownloadIcon />
                 {spinner}

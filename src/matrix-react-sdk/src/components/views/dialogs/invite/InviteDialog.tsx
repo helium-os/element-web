@@ -38,7 +38,7 @@ import { getHttpUrlFromMxc } from "../../../../customisations/Media";
 import BaseAvatar from "../../avatars/BaseAvatar";
 import { SearchResultAvatar } from "../../avatars/SearchResultAvatar";
 import AccessibleButton, { ButtonEvent } from "../../elements/AccessibleButton";
-import Field, { PropShapes } from "../../elements/Field";
+import Field, { PropShapes, SelectedUserOrRoomTile } from "../../elements/Field";
 import TabbedView, { Tab, TabLocation } from "../../../structures/TabbedView";
 import Dialpad from "../../voip/DialPad";
 import BaseDialog, { DialogProps } from "../BaseDialog";
@@ -77,40 +77,6 @@ const INCREMENT_ROOMS_SHOWN = 5; // Number of rooms to add when 'show more' is c
 enum TabId {
     UserDirectory = "users",
     DialPad = "dialpad",
-}
-
-class DMUserTile extends React.PureComponent<IDMUserTileProps> {
-    private onRemove = (e: ButtonEvent): void => {
-        // Stop the browser from highlighting text
-        e.preventDefault();
-        e.stopPropagation();
-
-        this.props.onRemove!(this.props.member);
-    };
-
-    public render(): React.ReactNode {
-        const avatarSize = 20;
-        const avatar = <SearchResultAvatar user={this.props.member} size={avatarSize} />;
-
-        let closeButton;
-        if (this.props.onRemove) {
-            closeButton = (
-                <AccessibleButton className="mx_InviteDialog_userTile_remove" onClick={this.onRemove}>
-                    <div className="mx_InviteDialog_userTile_remove_icon" />
-                </AccessibleButton>
-            );
-        }
-
-        return (
-            <span className="mx_InviteDialog_userTile">
-                <span className="mx_InviteDialog_userTile_pill">
-                    {avatar}
-                    <span className="mx_InviteDialog_userTile_name">{this.props.member.name}</span>
-                    {closeButton}
-                </span>
-            </span>
-        );
-    }
 }
 
 /**
@@ -188,7 +154,9 @@ class DMRoomTile extends React.PureComponent<IDMRoomTileProps> {
         let timestamp: JSX.Element | undefined;
         if (this.props.lastActiveTs) {
             const humanTs = humanizeTime(this.props.lastActiveTs);
-            timestamp = <span className="mx_InviteDialog_tile--room_time">{humanTs}</span>;
+            timestamp = (
+                <span className="mx_Field_DropdownMenuItem_description mx_InviteDialog_tile--room_time">{humanTs}</span>
+            );
         }
 
         const avatarSize = 24;
@@ -224,13 +192,9 @@ class DMRoomTile extends React.PureComponent<IDMRoomTileProps> {
         );
 
         return (
-            <div className="mx_InviteDialog_tile mx_InviteDialog_tile--room" onClick={this.onClick}>
+            <div className="mx_Field_DropdownMenuItem mx_InviteDialog_tile--room" onClick={this.onClick}>
                 {stackedAvatar}
-                <div className="mx_InviteDialog_tile_nameStack">
-                    <div className="mx_InviteDialog_tile_nameStack_name">
-                        {this.highlightName(this.props.member.name)}
-                    </div>
-                </div>
+                <div className="mx_Field_DropdownMenuItem_title">{this.highlightName(this.props.member.name)}</div>
                 {timestamp}
             </div>
         );
@@ -727,7 +691,12 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
         const targets =
             this.state.targets.length > 0 &&
             this.state.targets.map((t) => (
-                <DMUserTile member={t} onRemove={this.props.busy ? undefined : this.removeMember} key={t.userId} />
+                <SelectedUserOrRoomTile
+                    key={t.userId}
+                    avatar={<SearchResultAvatar user={t} size={20} />}
+                    name={t.name}
+                    onRemove={() => !this.props.busy && this.removeMember(t)}
+                />
             ));
 
         return (
@@ -738,9 +707,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
                     placeholder={_t("Enter username")}
                     label={_t("Username")}
                     className={
-                        !!this.props.inviteLimit && targets.length >= this.props.inviteLimit
-                            ? "mx_InviteDialog_hideInput"
-                            : ""
+                        !!this.props.inviteLimit && targets.length >= this.props.inviteLimit ? "mx_Field_hideInput" : ""
                     }
                     autoFocus={false}
                     autoComplete="off"
@@ -844,12 +811,12 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
                 left={left}
                 menuWidth={width}
             >
-                <div className="mx_InviteDialog_userSections">
-                    <div className="mx_InviteDialog_section">
+                <div className="mx_Field_DropdownMenuWrap">
+                    <div className="mx_Field_DropdownMenuInner">
                         {!toRender.length ? (
-                            <p className="mx_InviteDialog_noResults">{_t("No results")}</p>
+                            <p className="mx_Field_DropdownMenu_noResults">{_t("No results")}</p>
                         ) : (
-                            <>
+                            <div className="mx_Field_DropdownMenuList">
                                 {toRender.map((r) => (
                                     <DMRoomTile
                                         member={r.user}
@@ -861,7 +828,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
                                     />
                                 ))}
                                 {showMore}
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>

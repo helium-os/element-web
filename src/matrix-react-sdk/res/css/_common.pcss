@@ -276,15 +276,13 @@ legend {
 }
 
 .mx_Dialog {
-    z-index: 4012;
-    font-size: $font-15px;
     position: relative;
-    max-height: 80%;
+    z-index: 4012;
     background: $dialog-bg;
     backdrop-filter: blur(20px);
     box-shadow: $dialog-shadow;
     border-radius: 20px;
-    overflow-y: auto;
+    font-size: $font-15px;
 
 
 
@@ -494,8 +492,10 @@ legend {
 }
 
 .mx_Dialog_content {
+    box-sizing: border-box;
+    max-height: 400px;
+    overflow-y: auto;
     padding: 20px 18px;
-    word-wrap: break-word;
 }
 
 .mx_Dialog_footer {

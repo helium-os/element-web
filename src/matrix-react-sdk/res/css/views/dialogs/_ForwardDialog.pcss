@@ -15,27 +15,41 @@ limitations under the License.
 */
 
 .mx_ForwardDialog {
-    width: 520px;
+    width: 596px;
     color: $primary-content;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
     min-height: 0;
-    height: 80vh;
 
-    > h3 {
-        margin: 0 0 6px;
-        color: $secondary-content;
-        font-size: $font-12px;
-        font-weight: $font-semi-bold;
-        line-height: $font-15px;
+    .mx_ForwardMsg_preview_wrap {
+        margin-top: 20px;
+        padding: 6px 0;
+        @mixin HalfPxBorder $border-secondary-color2, 8px;
+    }
+    .mx_ForwardMsg_preview_inner {
+        position: relative;
+    }
+    .mx_ForwardMsg_preview_title, .mx_ForwardDialog_preview_box {
+        padding: 0 12px;
+    }
+    .mx_ForwardMsg_preview_title {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 500;
+        color: $text-primary-color3;
     }
 
-    > .mx_ForwardDialog_preview {
-        max-height: 30%;
-        flex-shrink: 0;
+    .mx_ForwardDialog_preview_box {
+        max-height: 200px;
         overflow-y: auto;
-
+        overflow-x: hidden;
+        .mx_ForwardDialog_preview {
+            margin: 0 -20px;
+        }
         .mx_EventTile[data-layout="bubble"] {
             margin-top: 20px;
         }
@@ -55,119 +69,19 @@ limitations under the License.
         }
     }
 
-    > hr {
-        width: 100%;
-        border: none;
-        border-top: 1px solid $input-border-color;
-        margin: 12px 0;
+    .mx_Field_inner {
+        display: flex;
+        flex-wrap: wrap;
+        input {
+            flex: 1;
+            max-width: 40%;
+        }
     }
+}
 
-    > .mx_ForwardList {
-        display: contents;
-
-        .mx_SearchBox {
-            /* To match the space around the title */
-            margin: 0 0 15px 0;
-            flex-grow: 0;
-        }
-
-        .mx_ForwardList_content {
-            flex-grow: 1;
-        }
-
-        .mx_ForwardList_noResults {
-            display: block;
-            margin-top: 24px;
-        }
-
-        .mx_ForwardList_results {
-            &:not(:first-child) {
-                margin-top: 24px;
-            }
-
-            .mx_ForwardList_resultsList {
-                padding-right: 8px;
-            }
-
-            .mx_ForwardList_entry {
-                display: flex;
-                justify-content: space-between;
-                height: 32px;
-                padding: 6px;
-                border-radius: 8px;
-
-                &:hover {
-                    background-color: $spacePanel-bg-color;
-                }
-
-                .mx_ForwardList_roomButton {
-                    display: flex;
-                    margin-right: 12px;
-                    min-width: 0;
-
-                    .mx_DecoratedRoomAvatar {
-                        margin-right: 12px;
-                    }
-
-                    .mx_ForwardList_entry_name,
-                    .mx_ForwardList_entry_detail {
-                        line-height: 30px;
-                        overflow: hidden;
-                        white-space: nowrap;
-                        text-overflow: ellipsis;
-                    }
-
-                    .mx_ForwardList_entry_name {
-                        font-size: $font-15px;
-                    }
-
-                    .mx_ForwardList_entry_detail {
-                        font-size: $font-12px;
-                        margin-left: 8px;
-                        color: $tertiary-content;
-                    }
-                }
-
-                .mx_ForwardList_sendButton {
-                    position: relative;
-                    margin-left: 12px;
-
-                    &:not(.mx_ForwardList_canSend) .mx_ForwardList_sendLabel {
-                        /* Hide the "Send" label while preserving button size */
-                        visibility: hidden;
-                    }
-
-                    .mx_ForwardList_sendIcon,
-                    .mx_NotificationBadge {
-                        position: absolute;
-                    }
-
-                    .mx_NotificationBadge {
-                        /* Match the failed to send indicator's color with the disabled button */
-                        background-color: $button-danger-disabled-fg-color;
-                    }
-
-                    &.mx_ForwardList_sending .mx_ForwardList_sendIcon {
-                        background-color: $accent;
-                        mask-image: url("$(res)/img/element-icons/circle-sending.svg");
-                        mask-position: center;
-                        mask-repeat: no-repeat;
-                        mask-size: 14px;
-                        width: 14px;
-                        height: 14px;
-                    }
-
-                    &.mx_ForwardList_sent .mx_ForwardList_sendIcon {
-                        background-color: $accent;
-                        mask-image: url("$(res)/img/element-icons/circle-sent.svg");
-                        mask-position: center;
-                        mask-repeat: no-repeat;
-                        mask-size: 14px;
-                        width: 14px;
-                        height: 14px;
-                    }
-                }
-            }
-        }
+.mx_ForwardList_entry {
+    .mx_RoomTile_iconType {
+        width: 24px;
+        height: 24px;
     }
 }

@@ -148,20 +148,23 @@ limitations under the License.
 }
 
 .mx_RoomHeader_topic {
-    $lineHeight: $font-16px;
-    $lines: 2;
+    margin-left: 8px;
+    $lineHeight: $font-20px;
+    $lines: 1;
 
     flex: 1;
-    color: $roomtopic-color;
-    font-weight: 400;
-    font-size: $font-13px;
     line-height: $lineHeight;
+    font-weight: 400;
     max-height: calc($lineHeight * $lines);
+    font-size: 14px;
+    color: $text-primary-color2;
 
     overflow: hidden;
     -webkit-line-clamp: $lines; /* See: https://drafts.csswg.org/css-overflow-3/#webkit-line-clamp */
     -webkit-box-orient: vertical;
     display: -webkit-box;
+
+
 }
 
 .mx_RoomHeader_topic .mx_Emoji {

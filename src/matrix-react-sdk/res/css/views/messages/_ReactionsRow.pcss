@@ -15,40 +15,18 @@ limitations under the License.
 */
 
 .mx_ReactionsRow {
-    margin: 6px 0;
     color: $primary-content;
 
     .mx_ReactionsRow_addReactionButton {
-        position: relative;
-        display: inline-block;
         visibility: hidden; /* show on hover of the .mx_EventTile */
-        width: 24px;
-        height: 24px;
+        display: inline-block;
         vertical-align: middle;
-        margin-left: 4px;
-        margin-right: 4px;
-
-        &::before {
-            content: "";
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            mask-size: 16px;
-            mask-repeat: no-repeat;
-            mask-position: center;
-            background-color: $tertiary-content;
-            mask-image: url("$(res)/img/element-icons/room/message-bar/emoji.svg");
-        }
+        width: 20px;
+        height: 20px;
+        @mixin MaskIcon url("$(res)/img/element-icons/room/message-bar/emoji.svg"), 16px, 16px, $icon-primary-color;
 
         &.mx_ReactionsRow_addReactionButton_active {
             visibility: visible; /* keep showing whilst the context menu is shown */
-        }
-
-        &:hover,
-        &.mx_ReactionsRow_addReactionButton_active {
-            &::before {
-                background-color: $primary-content;
-            }
         }
     }
 }

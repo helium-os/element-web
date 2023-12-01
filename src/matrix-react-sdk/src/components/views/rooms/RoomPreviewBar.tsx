@@ -31,11 +31,12 @@ import IdentityAuthClient from "../../../IdentityAuthClient";
 import InviteReason from "../elements/InviteReason";
 import { IOOBData } from "../../../stores/ThreepidInviteStore";
 import Spinner from "../elements/Spinner";
-import AccessibleButton from "../elements/AccessibleButton";
-import RoomAvatar from "../avatars/RoomAvatar";
+import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar.tsx";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
 import { ModuleRunner } from "../../../modules/ModuleRunner";
+
+import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 
 const MemberEventHtmlReasonField = "io.element.html_reason";
 
@@ -116,7 +117,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
 
         this.state = {
             busy: false,
-            showRejectAndIgnore: false
+            showRejectAndIgnore: false,
         };
     }
 
@@ -476,7 +477,9 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
                 break;
             }
             case MessageCase.Invite: {
-                const avatar = <RoomAvatar room={this.props.room} oobData={this.props.oobData} />;
+                const avatar = (
+                    <RoomAndChannelAvatar room={this.props.room} oobData={this.props.oobData} avatarSize={80} />
+                );
 
                 const inviteMember = this.getInviteMember();
                 let inviterElement: JSX.Element;
@@ -521,9 +524,14 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
 
                 if (this.state.showRejectAndIgnore && this.props.onRejectAndIgnoreClick) {
                     extraComponents.push(
-                        <AccessibleButton kind="secondary" onClick={this.props.onRejectAndIgnoreClick} key="ignore">
+                        <Button
+                            type={ButtonType.Link}
+                            size={ButtonSize.Small}
+                            onClick={this.props.onRejectAndIgnoreClick}
+                            key="ignore"
+                        >
                             {_t("Reject & Ignore user")}
-                        </AccessibleButton>,
+                        </Button>,
                     );
                 }
                 break;
@@ -596,30 +604,30 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
                 </h3>
             );
         } else {
-            titleElement = <h3>{title}</h3>;
+            titleElement = <h3 className="mx_RoomPreviewBar_title">{title}</h3>;
         }
 
         let primaryButton;
         if (primaryActionHandler) {
             primaryButton = (
-                <AccessibleButton kind="primary" onClick={primaryActionHandler}>
+                <Button size={ButtonSize.Small} type={ButtonType.Primary} onClick={primaryActionHandler}>
                     {primaryActionLabel}
-                </AccessibleButton>
+                </Button>
             );
         }
 
         let secondaryButton;
         if (secondaryActionHandler) {
             secondaryButton = (
-                <AccessibleButton kind="secondary" onClick={secondaryActionHandler}>
+                <Button size={ButtonSize.Small} type={ButtonType.Link} onClick={secondaryActionHandler}>
                     {secondaryActionLabel}
-                </AccessibleButton>
+                </Button>
             );
         }
 
         const isPanel = this.props.canPreview;
 
-        const classes = classNames("mx_RoomPreviewBar", "dark-panel", `mx_RoomPreviewBar_${messageCase}`, {
+        const classes = classNames("mx_RoomPreviewBar", `mx_RoomPreviewBar_${messageCase}`, {
             mx_RoomPreviewBar_panel: isPanel,
             mx_RoomPreviewBar_dialog: !isPanel,
         });
@@ -643,7 +651,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
             <div className={classes}>
                 <div className="mx_RoomPreviewBar_message">
                     {titleElement}
-                    {subTitleElements}
+                    {subTitleElements && <div className="mx_RoomPreviewBar_subTitle_box">{subTitleElements}</div>}
                 </div>
                 {reasonElement}
                 <div className="mx_RoomPreviewBar_actions">{actions}</div>

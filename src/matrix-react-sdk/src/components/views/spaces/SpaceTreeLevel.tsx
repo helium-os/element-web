@@ -147,6 +147,7 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
                     mx_SpaceButton_narrow: isNarrow,
                 })}
                 title={label}
+                tooltipSpacing={-3}
                 onClick={onClick}
                 onContextMenu={openMenu}
                 forceHide={!isNarrow || menuDisplayed}

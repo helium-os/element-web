@@ -185,7 +185,7 @@ export interface EventTileProps {
     // whether or not to show read receipts
     showReadReceipts?: boolean;
 
-    replyState?: any;
+    isReplying?: boolean;
 
     // Used while editing, to pass the event, and to preserve editor state
     // from one editor instance to another when remounting the editor
@@ -777,7 +777,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         ev.preventDefault();
         ev.stopPropagation();
 
-        if (isInfoMessage) {
+        if (isInfoMessage || this.props.mxEvent.isRedacted()) {
             return;
         }
         this.showContextMenu(ev);
@@ -928,12 +928,11 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const isRenderingNotification = this.context.timelineRenderingType === TimelineRenderingType.Notification;
 
         const isEditing = !!this.props.editState;
-        const isReplying = !!this.props.replyState;
         const classes = classNames({
             mx_EventTile_bubbleContainer: isBubbleMessage,
             mx_EventTile_leftAlignedBubble: isLeftAlignedBubbleMessage,
             mx_EventTile: true,
-            mx_EventTile_isReplying: isReplying,
+            mx_EventTile_isReplying: this.props.isReplying,
             mx_EventTile_isEditing: isEditing,
             mx_EventTile_info: isInfoMessage || isRedacted,
             mx_EventTile_12hr: this.props.isTwelveHour,
@@ -1055,13 +1054,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             !this.props.forExport &&
             !this.props.mxEvent.isRedacted() && // 撤回的消息不展示操作按钮
             !isInfoMessage; // 提示消息不展示操作按钮
-        const { width = 10, height = 0 } = this.mxEventTileContentRef.current?.getBoundingClientRect() || {};
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
-                wrapStyle={{
-                    ...(isInfoMessage ? { right: 20 } : { [isOwnEvent ? "right" : "left"]: width + 10 }),
-                    top: height / 2,
-                }}
                 mxEvent={this.props.mxEvent}
                 reactions={this.state.reactions}
                 permalinkCreator={this.props.permalinkCreator}
@@ -1381,59 +1375,57 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "data-has-reply": !!replyChain,
                         onMouseEnter: () => this.setState({ hover: true }),
                         onMouseLeave: () => this.setState({ hover: false }),
+                        onContextMenu: (e: React.MouseEvent) => this.onContextMenu(isInfoMessage, e),
                     },
                     <>
-                        {ircTimestamp}
-                        <div className="mx_EventTile_msgDetails">
-                            {sender}
-                            <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
-                                {groupTimestamp}
+                        {replyChain && <div className="mx_EventTile_replyChain_wrap">{replyChain}</div>}
+                        <div className="mx_EventTile_mainTile">
+                            {ircTimestamp}
+                            <div className="mx_EventTile_msgDetails">
+                                {sender}
+                                <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
+                                    {groupTimestamp}
+                                </div>
                             </div>
-                        </div>
-                        {ircPadlock}
-                        {avatar}
-                        <div
-                            className={lineClasses}
-                            key="mx_EventTile_line"
-                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
-                            ref={this.mxEventTileContentRef}
-                        >
-                            {this.renderContextMenu()}
-                            {/*{groupPadlock}*/}
-                            {replyChain}
-                            {renderTile(
-                                this.context.timelineRenderingType,
-                                {
-                                    ...this.props,
+                            {ircPadlock}
+                            {avatar}
+                            <div className={lineClasses} key="mx_EventTile_line" ref={this.mxEventTileContentRef}>
+                                {this.renderContextMenu()}
+                                {/*{groupPadlock}*/}
+                                {renderTile(
+                                    this.context.timelineRenderingType,
+                                    {
+                                        ...this.props,
 
-                                    // overrides
-                                    ref: this.tile,
-                                    isSeeingThroughMessageHiddenForModeration,
-                                    timestamp: bubbleTimestamp,
+                                        // overrides
+                                        ref: this.tile,
+                                        isSeeingThroughMessageHiddenForModeration,
+                                        timestamp: bubbleTimestamp,
 
-                                    // appease TS
-                                    highlights: this.props.highlights,
-                                    highlightLink: this.props.highlightLink,
-                                    onHeightChanged: this.props.onHeightChanged,
-                                    permalinkCreator: this.props.permalinkCreator,
-                                },
-                                this.context.showHiddenEvents,
-                            )}
-                            {actionBar}
-                            {this.props.layout === Layout.IRC && (
+                                        // appease TS
+                                        highlights: this.props.highlights,
+                                        highlightLink: this.props.highlightLink,
+                                        onHeightChanged: this.props.onHeightChanged,
+                                        permalinkCreator: this.props.permalinkCreator,
+                                    },
+                                    this.context.showHiddenEvents,
+                                )}
+                                {this.props.layout === Layout.IRC && (
+                                    <>
+                                        {reactionsRow}
+                                        {this.renderThreadInfo()}
+                                    </>
+                                )}
+                            </div>
+                            {this.props.layout !== Layout.IRC && (
                                 <>
                                     {reactionsRow}
                                     {this.renderThreadInfo()}
                                 </>
                             )}
+                            {msgOption}
                         </div>
-                        {this.props.layout !== Layout.IRC && (
-                            <>
-                                {reactionsRow}
-                                {this.renderThreadInfo()}
-                            </>
-                        )}
-                        {msgOption}
+                        {actionBar}
                     </>,
                 );
             }

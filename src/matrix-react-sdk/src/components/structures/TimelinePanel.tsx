@@ -134,6 +134,7 @@ interface IProps {
 
     resizeNotifier?: ResizeNotifier;
     editState?: EditorStateTransfer;
+    replyToEvent?: MatrixEvent;
     permalinkCreator?: RoomPermalinkCreator;
     membersLoaded?: boolean;
 
@@ -1958,6 +1959,7 @@ class TimelinePanel extends React.Component<IProps, IState> {
                 resizeNotifier={this.props.resizeNotifier}
                 getRelationsForEvent={this.getRelationsForEvent}
                 editState={this.props.editState}
+                replyToEvent={this.props.replyToEvent}
                 showReactions={this.props.showReactions}
                 layout={this.props.layout}
                 hideThreadedMessages={this.props.hideThreadedMessages}

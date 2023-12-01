@@ -43,14 +43,16 @@ interface IProps {
     onHeightChanged?(): void;
     toggleExpandedQuote?: () => void;
     getRelationsForEvent?: GetRelationsForEvent;
-    showReplyTile: boolean;
+    showSenderAvatar?: boolean;
+    showReplyTile?: boolean;
 }
 
 export default class ReplyTile extends React.PureComponent<IProps> {
     private anchorElement = createRef<HTMLAnchorElement>();
 
     public static defaultProps = {
-        showReplyTile: false,
+        showSenderAvatar: true,
+        showReplyTile: true,
         onHeightChanged: () => {},
     };
 
@@ -144,7 +146,14 @@ export default class ReplyTile extends React.PureComponent<IProps> {
         if (!hasOwnSender) {
             sender = (
                 <div className="mx_ReplyTile_sender">
-                    {/*<MemberAvatar member={mxEvent.sender} fallbackUserId={mxEvent.getSender()} width={16} height={16} />*/}
+                    {this.props.showSenderAvatar && (
+                        <MemberAvatar
+                            member={mxEvent.sender}
+                            fallbackUserId={mxEvent.getSender()}
+                            width={20}
+                            height={20}
+                        />
+                    )}
                     <SenderProfile mxEvent={mxEvent} />
                 </div>
             );

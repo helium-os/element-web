@@ -127,6 +127,8 @@ interface IState {
     reactionPickerDisplayed: boolean;
     showViewSource: boolean;
     showPermalink: boolean;
+    showQuote: boolean;
+    showReport: boolean;
 }
 
 export default class MessageContextMenu extends React.Component<IProps, IState> {
@@ -144,6 +146,8 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             reactionPickerDisplayed: false,
             showViewSource: false, // 是否展示查看源代码按钮
             showPermalink: false, // 是否展示共享按钮
+            showQuote: false, // 是否展示引述按钮
+            showReport: false, // 是否展示举报按钮
         };
     }
 
@@ -518,7 +522,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let quoteButton: JSX.Element | undefined;
-        if (eventTileOps && canSendMessages) {
+        if (this.state.showQuote && eventTileOps && canSendMessages) {
             // this event is rendered using TextualBody
             quoteButton = (
                 <IconizedContextMenuOption
@@ -577,7 +581,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let reportEventButton: JSX.Element | undefined;
-        if (mxEvent.getSender() !== me && !isAdminLeft) {
+        if (this.state.showReport && mxEvent.getSender() !== me && !isAdminLeft) {
             reportEventButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconReport"
@@ -594,7 +598,6 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
                     iconClassName="mx_MessageContextMenu_iconCopy"
                     onClick={this.onCopyLinkClick}
                     label={_t("Copy link")}
-                    element="a"
                     {
                         // XXX: Typescript signature for AccessibleButton doesn't work properly for non-inputs like `a`
                         ...{
@@ -621,7 +624,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let editButton: JSX.Element | undefined;
-        if (rightClick && canEditContent(mxEvent) && !isAdminLeft) {
+        if (canEditContent(mxEvent) && !isAdminLeft) {
             editButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconEdit"
@@ -632,7 +635,7 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let replyButton: JSX.Element | undefined;
-        if (rightClick && contentActionable && canSendMessages) {
+        if (contentActionable && canSendMessages) {
             replyButton = (
                 <IconizedContextMenuOption
                     iconClassName="mx_MessageContextMenu_iconReply"
@@ -678,11 +681,12 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         }
 
         let nativeItemsList: JSX.Element | undefined;
-        if (copyButton || copyLinkButton) {
+        if (copyButton || copyLinkButton || forwardButton) {
             nativeItemsList = (
                 <IconizedContextMenuOptionList>
                     {copyButton}
                     {copyLinkButton}
+                    {forwardButton}
                 </IconizedContextMenuOptionList>
             );
         }
@@ -699,28 +703,44 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
             );
         }
 
-        const commonItemsList = (
-            <IconizedContextMenuOptionList>
-                {viewInRoomButton}
-                {openInMapSiteButton}
-                {endPollButton}
-                {quoteButton}
-                {forwardButton}
-                {pinButton}
-                {permalinkButton}
-                {reportEventButton}
-                {externalURLButton}
-                {jumpToRelatedEventButton}
-                {unhidePreviewButton}
-                {viewSourceButton}
-                {resendReactionsButton}
-                {collapseReplyChainButton}
-            </IconizedContextMenuOptionList>
-        );
+        let commonItemsList: JSX.Element | undefined;
+        if (
+            viewInRoomButton ||
+            openInMapSiteButton ||
+            endPollButton ||
+            quoteButton ||
+            pinButton ||
+            permalinkButton ||
+            reportEventButton ||
+            externalURLButton ||
+            jumpToRelatedEventButton ||
+            unhidePreviewButton ||
+            viewSourceButton ||
+            resendReactionsButton ||
+            collapseReplyChainButton
+        ) {
+            commonItemsList = (
+                <IconizedContextMenuOptionList>
+                    {viewInRoomButton}
+                    {openInMapSiteButton}
+                    {endPollButton}
+                    {quoteButton}
+                    {pinButton}
+                    {permalinkButton}
+                    {reportEventButton}
+                    {externalURLButton}
+                    {jumpToRelatedEventButton}
+                    {unhidePreviewButton}
+                    {viewSourceButton}
+                    {resendReactionsButton}
+                    {collapseReplyChainButton}
+                </IconizedContextMenuOptionList>
+            );
+        }
 
         let redactItemList: JSX.Element | undefined;
         if (redactButton) {
-            redactItemList = <IconizedContextMenuOptionList red>{redactButton}</IconizedContextMenuOptionList>;
+            redactItemList = <IconizedContextMenuOptionList>{redactButton}</IconizedContextMenuOptionList>;
         }
 
         let reactionPicker: JSX.Element | undefined;

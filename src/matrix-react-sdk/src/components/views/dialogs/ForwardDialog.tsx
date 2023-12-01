@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef, ReactNode } from "react";
 import classnames from "classnames";
 import { IContent, MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { Room } from "matrix-js-sdk/src/models/room";
@@ -32,13 +32,6 @@ import { Layout } from "../../../settings/enums/Layout";
 import BaseDialog from "./BaseDialog";
 import { avatarUrlForUser } from "../../../Avatar";
 import EventTile from "../rooms/EventTile";
-import SearchBox from "../../structures/SearchBox";
-import DecoratedRoomAvatar from "../avatars/DecoratedRoomAvatar";
-import { Alignment } from "../elements/Tooltip";
-import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
-import AutoHideScrollbar from "../../structures/AutoHideScrollbar";
-import { StaticNotificationState } from "../../../stores/notifications/StaticNotificationState";
-import NotificationBadge from "../rooms/NotificationBadge";
 import { RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
 import { sortRooms } from "../../../stores/room-list/algorithms/tag-sorting/RecentAlgorithm";
 import QueryMatcher from "../../../autocomplete/QueryMatcher";
@@ -52,6 +45,10 @@ import { isLocationEvent } from "../../../utils/EventUtils";
 import { isSelfLocation, locationEventGeoUri } from "../../../utils/location";
 import { RoomContextDetails } from "../rooms/RoomContextDetails";
 import { filterBoolean } from "../../../utils/arrays";
+import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
+import Field, { SelectedUserOrRoomTile } from "matrix-react-sdk/src/components/views/elements/Field";
+import ContextMenu, { ChevronFace } from "matrix-react-sdk/src/components/structures/ContextMenu";
+import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 
 const AVATAR_SIZE = 30;
 
@@ -67,22 +64,12 @@ interface IProps {
 
 interface IEntryProps {
     room: Room;
-    type: EventType | string;
-    content: IContent;
-    matrixClient: MatrixClient;
-    onFinished(success: boolean): void;
+    className?: string;
+    onToggle(room: Room): void;
+    onFinished?(success: boolean): void;
 }
 
-enum SendState {
-    CanSend,
-    Sending,
-    Sent,
-    Failed,
-}
-
-const Entry: React.FC<IEntryProps> = ({ room, type, content, matrixClient: cli, onFinished }) => {
-    const [sendState, setSendState] = useState<SendState>(SendState.CanSend);
-
+const Entry: React.FC<IEntryProps> = ({ className, room, onToggle, onFinished }) => {
     const jumpToRoom = (ev: ButtonEvent): void => {
         dis.dispatch<ViewRoomPayload>({
             action: Action.ViewRoom,
@@ -92,66 +79,12 @@ const Entry: React.FC<IEntryProps> = ({ room, type, content, matrixClient: cli, 
         });
         onFinished(true);
     };
-    const send = async (): Promise<void> => {
-        setSendState(SendState.Sending);
-        try {
-            await cli.sendEvent(room.roomId, type, content);
-            setSendState(SendState.Sent);
-        } catch (e) {
-            setSendState(SendState.Failed);
-        }
-    };
-
-    let className;
-    let disabled = false;
-    let title;
-    let icon;
-    if (sendState === SendState.CanSend) {
-        className = "mx_ForwardList_canSend";
-        if (!room.maySendMessage()) {
-            disabled = true;
-            title = _t("You don't have permission to do this");
-        }
-    } else if (sendState === SendState.Sending) {
-        className = "mx_ForwardList_sending";
-        disabled = true;
-        title = _t("Sending");
-        icon = <div className="mx_ForwardList_sendIcon" aria-label={title} />;
-    } else if (sendState === SendState.Sent) {
-        className = "mx_ForwardList_sent";
-        disabled = true;
-        title = _t("Sent");
-        icon = <div className="mx_ForwardList_sendIcon" aria-label={title} />;
-    } else {
-        className = "mx_ForwardList_sendFailed";
-        disabled = true;
-        title = _t("Failed to send");
-        icon = <NotificationBadge notification={StaticNotificationState.RED_EXCLAMATION} />;
-    }
 
     return (
-        <div className="mx_ForwardList_entry">
-            <AccessibleTooltipButton
-                className="mx_ForwardList_roomButton"
-                onClick={jumpToRoom}
-                title={_t("Open room")}
-                alignment={Alignment.Top}
-            >
-                <DecoratedRoomAvatar room={room} avatarSize={32} />
-                <span className="mx_ForwardList_entry_name">{room.name}</span>
-                <RoomContextDetails component="span" className="mx_ForwardList_entry_detail" room={room} />
-            </AccessibleTooltipButton>
-            <AccessibleTooltipButton
-                kind={sendState === SendState.Failed ? "danger_outline" : "primary_outline"}
-                className={`mx_ForwardList_sendButton ${className}`}
-                onClick={send}
-                disabled={disabled}
-                title={title}
-                alignment={Alignment.Top}
-            >
-                <div className="mx_ForwardList_sendLabel">{_t("Send")}</div>
-                {icon}
-            </AccessibleTooltipButton>
+        <div className={`mx_ForwardList_entry ${className}`} onClick={() => onToggle(room)}>
+            <RoomAndChannelAvatar room={room} avatarSize={24} />
+            <span className="mx_Field_DropdownMenuItem_title">{room.name}</span>
+            <RoomContextDetails component="span" className="mx_Field_DropdownMenuItem_description" room={room} />
         </div>
     );
 };
@@ -195,6 +128,7 @@ const transformEvent = (event: MatrixEvent): { type: string; content: IContent }
 };
 
 const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCreator, onFinished }) => {
+    console.log("ForwardDialog", event);
     const userId = cli.getSafeUserId();
     const [profileInfo, setProfileInfo] = useState<any>({});
     useEffect(() => {
@@ -229,6 +163,12 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
 
     const previewLayout = useSettingValue<Layout>("layout");
     const msc3946DynamicRoomPredecessors = useSettingValue<boolean>("feature_dynamic_room_predecessors");
+
+    const searchRef = useRef(null);
+    const limitForward = 3;
+    const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
+    const [selectedRooms, setSelectedRooms] = useState<Room[]>([]);
+    const [busy, setBusy] = useState<boolean>(false);
 
     let rooms = useMemo(
         () =>
@@ -270,58 +210,139 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
         );
     }
 
+    const onQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = e.target;
+        setQuery(value);
+        setShowContextMenu(!!value.trim());
+    };
+
+    const onToggle = (room: Room) => {
+        const newSelectedRooms = [...selectedRooms];
+        const index = newSelectedRooms.findIndex((item) => item.roomId === room.roomId);
+        if (index !== -1) {
+            newSelectedRooms.splice(index, 1);
+        } else {
+            newSelectedRooms.push(room);
+        }
+        setQuery("");
+        setSelectedRooms(newSelectedRooms);
+        setShowContextMenu(false);
+    };
+
+    const onSend = async (): Promise<void> => {
+        if (busy) return;
+
+        setBusy(true);
+        try {
+            await Promise.all(selectedRooms.map((room) => cli.sendEvent(room.roomId, type, content)));
+            onFinished();
+        } catch (e) {
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const renderMenu = (): ReactNode => {
+        if (!searchRef.current || !showContextMenu) return null;
+
+        const { width, bottom, left } = searchRef.current.getBoundingClientRect();
+
+        return (
+            <ContextMenu
+                hasBackground={false}
+                chevronFace={ChevronFace.None}
+                top={bottom + 4}
+                left={left}
+                menuWidth={width}
+            >
+                <div className="mx_Field_DropdownMenuWrap">
+                    <div className="mx_Field_DropdownMenuInner">
+                        {rooms.length > 0 ? (
+                            <TruncatedList
+                                className="mx_Field_DropdownMenuList"
+                                truncateAt={truncateAt}
+                                createOverflowElement={overflowTile}
+                                getChildren={(start, end) =>
+                                    rooms.slice(start, end).map(
+                                        (
+                                            room, // TODO room.maySendMessage()
+                                        ) => (
+                                            <Entry
+                                                key={room.roomId}
+                                                room={room}
+                                                className="mx_Field_DropdownMenuItem"
+                                                onToggle={onToggle}
+                                                onFinished={onFinished}
+                                            />
+                                        ),
+                                    )
+                                }
+                                getChildCount={() => rooms.length}
+                            />
+                        ) : (
+                            <span className="mx_Field_DropdownMenu_noResults">{_t("No results")}</span>
+                        )}
+                    </div>
+                </div>
+            </ContextMenu>
+        );
+    };
+
+    const prefixComponent = selectedRooms.map((room) => (
+        <SelectedUserOrRoomTile
+            key={room.roomId}
+            avatar={<RoomAndChannelAvatar room={room} avatarSize={20} />}
+            name={room.name}
+            onRemove={() => onToggle(room)}
+        />
+    ));
+
+    const footer = <DialogButtons primaryButton={_t("Send")} onPrimaryButtonClick={onSend} onCancel={onFinished} />;
+
     return (
         <BaseDialog
             title={_t("Forward message")}
             className="mx_ForwardDialog"
-            contentId="mx_ForwardList"
             onFinished={onFinished}
             fixedWidth={false}
+            footer={footer}
         >
-            <h3>{_t("Message preview")}</h3>
-            <div
-                className={classnames("mx_ForwardDialog_preview", {
-                    mx_IRCLayout: previewLayout == Layout.IRC,
-                })}
-            >
-                <EventTile mxEvent={mockEvent} layout={previewLayout} permalinkCreator={permalinkCreator} as="div" />
-            </div>
-            <hr />
-            <div className="mx_ForwardList" id="mx_ForwardList">
-                <SearchBox
-                    className="mx_textinput_icon mx_textinput_search"
-                    placeholder={_t("Search for rooms or people")}
-                    onSearch={setQuery}
-                    autoFocus={true}
+            <div ref={searchRef}>
+                <Field
+                    type="text"
+                    usePlaceholderAsHint={true}
+                    placeholder={"请输入频道或用户名"}
+                    label={"频道或用户名"}
+                    className={limitForward && selectedRooms.length >= limitForward ? "mx_Field_hideInput" : ""}
+                    autoFocus={false}
+                    autoComplete="off"
+                    prefixComponent={prefixComponent}
+                    hasPrefixContainer={false}
+                    value={query}
+                    onChange={onQueryChange}
                 />
-                <AutoHideScrollbar className="mx_ForwardList_content">
-                    {rooms.length > 0 ? (
-                        <div className="mx_ForwardList_results">
-                            <TruncatedList
-                                className="mx_ForwardList_resultsList"
-                                truncateAt={truncateAt}
-                                createOverflowElement={overflowTile}
-                                getChildren={(start, end) =>
-                                    rooms
-                                        .slice(start, end)
-                                        .map((room) => (
-                                            <Entry
-                                                key={room.roomId}
-                                                room={room}
-                                                type={type}
-                                                content={content}
-                                                matrixClient={cli}
-                                                onFinished={onFinished}
-                                            />
-                                        ))
-                                }
-                                getChildCount={() => rooms.length}
+            </div>
+            {renderMenu()}
+
+            <div className="mx_ForwardMsg_preview_wrap">
+                <div className="mx_ForwardMsg_preview_inner">
+                    <p className="mx_ForwardMsg_preview_title">{_t("Message preview")}</p>
+                    <div
+                        className={classnames("mx_ForwardDialog_preview_box", {
+                            mx_IRCLayout: previewLayout == Layout.IRC,
+                        })}
+                    >
+                        <div className="mx_ForwardDialog_preview">
+                            <EventTile
+                                mxEvent={mockEvent}
+                                layout={previewLayout}
+                                alwaysShowTimestamps={true}
+                                permalinkCreator={permalinkCreator}
+                                as="div"
                             />
                         </div>
-                    ) : (
-                        <span className="mx_ForwardList_noResults">{_t("No results")}</span>
-                    )}
-                </AutoHideScrollbar>
+                    </div>
+                </div>
             </div>
         </BaseDialog>
     );

@@ -253,15 +253,15 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         }
 
         if (!this.props.viewingCall && this.props.onForgetClick) {
-            startButtons.push(
-                <AccessibleTooltipButton
-                    className="mx_RoomHeader_button mx_RoomHeader_forgetButton"
-                    onClick={this.props.onForgetClick}
-                    title={_t("Forget room")}
-                    alignment={Alignment.Bottom}
-                    key="forget"
-                />,
-            );
+            // startButtons.push(
+            //     <AccessibleTooltipButton
+            //         className="mx_RoomHeader_button mx_RoomHeader_forgetButton"
+            //         onClick={this.props.onForgetClick}
+            //         title={_t("Forget room")}
+            //         alignment={Alignment.Bottom}
+            //         key="forget"
+            //     />,
+            // );
         }
 
         if (!this.props.viewingCall && this.props.onAppsClick) {

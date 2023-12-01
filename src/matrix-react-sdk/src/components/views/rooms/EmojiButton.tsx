@@ -22,6 +22,7 @@ import ContextMenu, { aboveLeftOf, MenuProps, useContextMenu, ChevronFace } from
 import EmojiPicker from "../emojipicker/EmojiPicker";
 import { CollapsibleButton } from "./CollapsibleButton";
 import { OverflowMenuContext } from "./MessageComposerButtons";
+import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 
 interface IEmojiButtonProps {
     addEmoji: (unicode: string) => boolean;
@@ -62,7 +63,13 @@ export function EmojiButton({ addEmoji, menuPosition, className }: IEmojiButtonP
     // the header buttons and the right panel buttons
     return (
         <>
-            <CollapsibleButton className={computedClassName} onClick={openMenu} title={_t("Emoji")} inputRef={button} />
+            <CollapsibleButton
+                className={computedClassName}
+                onClick={openMenu}
+                title={_t("Emoji")}
+                inputRef={button}
+                alignment={Alignment.Top}
+            />
 
             {contextMenu}
         </>

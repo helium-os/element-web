@@ -394,7 +394,7 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
         }
 
         if (verticalCenter) {
-            menuStyle.transform = `translate(${position.top ? "-" : ""}50%, 0)`;
+            menuStyle.transform = `translate(0, ${position.top ? "-" : ""}50%)`;
         }
 
         const wrapperStyle: CSSProperties = {};

@@ -35,18 +35,7 @@ limitations under the License.
     }
 }
 
-.mx_Tooltip_chevron {
-    position: absolute;
-    left: -5px;
-    top: 50%;
-    width: 5px;
-    height: 15px;
-    transform: translate(0, -50%);
-    background: $tooltip-bg-color;
-    mask-repeat: no-repeat;
-    mask-position: center;
-    mask-image: url("$(res)/img/element-icons/tooltip-chevron.svg");
-}
+
 
 .mx_Tooltip {
     display: none;
@@ -94,4 +83,40 @@ limitations under the License.
 .mx_Tooltip_sub {
     opacity: 0.7;
     margin-top: 4px;
+}
+
+.mx_Tooltip_chevron {
+    position: absolute;
+    width: 5px;
+    height: 15px;
+    background: $tooltip-bg-color;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-image: url("$(res)/img/element-icons/tooltip-chevron.svg");
+}
+
+.mx_Tooltip_natural .mx_Tooltip_chevron, .mx_Tooltip_right .mx_Tooltip_chevron {
+    left: -5px;
+    top: 50%;
+    transform: translate(0, -50%);
+}
+
+.mx_Tooltip_left .mx_Tooltip_chevron {
+    right: 0;
+    top: 50%;
+    transform: translate(0, -50%) rotate(180deg);
+    transform-origin: right center;
+}
+
+.mx_Tooltip_bottom .mx_Tooltip_chevron {
+    top: 0;
+    left: 50%;
+    transform: translate(50%, 0) rotate(90deg);
+    transform-origin: right top;
+}
+.mx_Tooltip_top .mx_Tooltip_chevron {
+    bottom: 0;
+    left: 50%;
+    transform: translate(50%, 0) rotate(-90deg);
+    transform-origin: right bottom;
 }

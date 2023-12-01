@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import DecoratedRoomAvatar, {
     DecoratedRoomAvatarProps,
@@ -24,6 +24,7 @@ import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/Sp
 interface IProps extends DecoratedRoomAvatarProps {}
 
 const RoomAndChannelAvatar: React.FC<IProps> = ({ room, ...DecoratedRoomAvatarProps }) => {
+    const parents = [...SpaceStore.instance.getKnownParents(room.roomId)];
     const [isPrivate, setIsPrivate] = useState<boolean>(true);
 
     useEffect(() => {
@@ -32,13 +33,13 @@ const RoomAndChannelAvatar: React.FC<IProps> = ({ room, ...DecoratedRoomAvatarPr
 
     return (
         <>
-            {SpaceStore.instance.isHomeSpace ? (
-                <DecoratedRoomAvatar room={room} {...DecoratedRoomAvatarProps} />
-            ) : (
+            {parents.length > 0 ? (
                 <SpaceChannelAvatar isPrivate={isPrivate} />
+            ) : (
+                <DecoratedRoomAvatar room={room} {...DecoratedRoomAvatarProps} />
             )}
         </>
     );
 };
 
-export default RoomAndChannelAvatar;
+export default memo(RoomAndChannelAvatar);

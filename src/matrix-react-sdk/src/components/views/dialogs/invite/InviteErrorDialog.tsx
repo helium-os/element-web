@@ -46,7 +46,7 @@ const InviteErrorDialog: React.FC<IProps> = ({ room, failedUsers, inviter, userM
                     const orgId = orgInstance.getUserOrgId(user?.userId);
                     const orgName = orgInstance.getOrgNameById(orgId);
                     return (
-                        <div key={addr} className="mx_InviteDialog_tile mx_InviteDialog_tile--inviterError">
+                        <div key={addr} className="mx_Field_DropdownMenuItem mx_InviteDialog_tile--inviterError">
                             <div className="mx_InviteDialog_tile_avatarStack">
                                 <BaseAvatar
                                     url={getHttpUrlFromMxc(avatarUrl, 36)}

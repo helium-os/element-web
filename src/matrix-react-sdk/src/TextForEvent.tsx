@@ -282,25 +282,25 @@ function textForJoinRulesEvent(ev: MatrixEvent, allowJSX: boolean): () => Render
                     roomType: roomTypeLabel,
                 });
         case JoinRule.Restricted:
-            if (allowJSX) {
-                return () => (
-                    <span>
-                        {_t(
-                            "%(senderDisplayName)s changed who can join this room. <a>View settings</a>.",
-                            {
-                                senderDisplayName,
-                            },
-                            {
-                                a: (sub) => (
-                                    <AccessibleButton kind="link_inline" onClick={onViewJoinRuleSettingsClick}>
-                                        {sub}
-                                    </AccessibleButton>
-                                ),
-                            },
-                        )}
-                    </span>
-                );
-            }
+            // if (allowJSX) {
+            //     return () => (
+            //         <span>
+            //             {_t(
+            //                 "%(senderDisplayName)s changed who can join this room. <a>View settings</a>.",
+            //                 {
+            //                     senderDisplayName: () => <label>{senderDisplayName}</label>,
+            //                 },
+            //                 {
+            //                     a: (sub) => (
+            //                         <AccessibleButton kind="link_inline" onClick={onViewJoinRuleSettingsClick}>
+            //                             {sub}
+            //                         </AccessibleButton>
+            //                     ),
+            //                 },
+            //             )}
+            //         </span>
+            //     );
+            // }
 
             return () =>
                 _t("%(senderDisplayName)s changed who can join this room.", {

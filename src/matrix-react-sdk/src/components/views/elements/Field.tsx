@@ -20,6 +20,7 @@ import { debounce } from "lodash";
 
 import { IFieldState, IValidationResult } from "./Validation";
 import Tooltip from "./Tooltip";
+import AccessibleButton, { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
 
 // Invoke validation from user input (when typing, etc.) at most once every N ms.
 const VALIDATION_THROTTLE_MS = 200;
@@ -349,6 +350,43 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
                 {fieldTooltip}
             </>
+        );
+    }
+}
+
+interface SelectedUserOrRoomTileProps {
+    avatar?: React.ReactNode;
+    name: string;
+    onRemove?(): void;
+}
+export class SelectedUserOrRoomTile extends React.PureComponent<SelectedUserOrRoomTileProps> {
+    private onRemove = (e: ButtonEvent): void => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.props.onRemove?.();
+    };
+
+    public render(): React.ReactNode {
+        let closeButton;
+        if (this.props.onRemove) {
+            closeButton = (
+                <AccessibleButton className="mx_SelectedUserOrRoomTile_remove" onClick={this.onRemove}>
+                    <div className="mx_SelectedUserOrRoomTile_remove_icon" />
+                </AccessibleButton>
+            );
+        }
+
+        return (
+            <span className="mx_SelectedUserOrRoomTile_box">
+                <span className="mx_SelectedUserOrRoomTile_pill">
+                    {this.props.avatar && (
+                        <div className="mx_SelectedUserOrRoomTile_avatarBox">{this.props.avatar}</div>
+                    )}
+                    <span className="mx_SelectedUserOrRoomTile_name">{this.props.name}</span>
+                    {closeButton}
+                </span>
+            </span>
         );
     }
 }

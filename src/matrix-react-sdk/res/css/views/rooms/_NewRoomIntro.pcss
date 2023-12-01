@@ -15,52 +15,70 @@ limitations under the License.
 */
 
 .mx_NewRoomIntro {
-    margin: 40px 0 48px 64px;
+    margin: 20px;
+}
 
-    .mx_MiniAvatarUploader_hasAvatar:not(.mx_MiniAvatarUploader_busy):not(:hover) {
-        .mx_MiniAvatarUploader_indicator {
-            display: none;
+.mx_NewRoomIntro_roomMainInfo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .mx_BaseAvatar_initial {
+        font-size: $font-40px;
+    }
+    .mx_RoomTile_iconType {
+        width: 32px;
+        height: 32px;
+        &.mx_RoomTile_iconPublic:before {
+            width: 20px;
+            height: 20px;
+        }
+        &.mx_RoomTile_iconPrivate:before {
+            width: 18px;
+            height: 24px;
         }
     }
+}
+.mx_NewRoomIntro_roomName {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 32px;
+    color: $text-primary-color2;
+}
+.mx_NewRoomIntro_tips {
+    margin-top: 8px;
+    font-size: 18px;
+    line-height: 26px;
+    font-weight: 400;
+    color: $text-secondary-color1;
+    b {
+        font-weight: 500;
+        color: $text-primary-color3;
+    }
+}
 
-    .mx_NewRoomIntro_buttons {
-        margin-top: 28px;
-        display: flex;
-        flex-flow: wrap;
-        gap: 14px 12px;
+.mx_NewRoomIntro_buttons {
+    margin-top: 20px;
 
-        .mx_AccessibleButton {
-            line-height: $font-24px;
-            display: inline-block;
-
-            &:not(.mx_AccessibleButton_kind_primary_outline)::before {
-                content: "";
-                display: inline-block;
-                background-color: $button-fg-color;
-                mask-position: center;
-                mask-repeat: no-repeat;
-                mask-size: 20px;
-                width: 20px;
-                height: 20px;
-                margin-right: 5px;
-                vertical-align: text-bottom;
-            }
-        }
-
-        .mx_NewRoomIntro_inviteButton::before {
+    .mx_NewRoomIntro_inviteButton {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 15px;
+        background: transparent;
+        border-radius: 8px;
+        border: 1px solid $border-secondary-color2;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 16px;
+        color: $text-secondary-color1;
+        &:before {
+            content: "";
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
             mask-image: url("$(res)/img/element-icons/room/invite.svg");
+            mask-repeat: no-repeat;
+            mask-size: 100% auto;
+            background: $text-secondary-color1;
         }
-    }
-
-    > h2 {
-        margin-top: 24px;
-        font-size: $font-24px;
-        font-weight: 600;
-    }
-
-    > p {
-        margin: 0;
-        font-size: $font-15px;
-        color: $secondary-content;
     }
 }

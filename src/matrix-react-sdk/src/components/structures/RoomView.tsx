@@ -2320,15 +2320,16 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 showReactions={true}
                 layout={this.state.layout}
                 editState={this.state.editState}
+                replyToEvent={this.state.replyToEvent}
             />
         );
 
         let topUnreadMessagesBar: JSX.Element | undefined;
         // Do not show TopUnreadMessagesBar if we have search results showing, it makes no sense
         if (this.state.showTopUnreadMessagesBar && !this.state.search) {
-            topUnreadMessagesBar = (
-                <TopUnreadMessagesBar onScrollUpClick={this.jumpToReadMarker} onCloseClick={this.forgetReadMarker} />
-            );
+            // topUnreadMessagesBar = (
+            //     <TopUnreadMessagesBar onScrollUpClick={this.jumpToReadMarker} onCloseClick={this.forgetReadMarker} />
+            // );
         }
         let jumpToBottom;
         // Do not show JumpToBottomButton if we have search results showing, it makes no sense

@@ -569,7 +569,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
                 {recordingTooltip}
                 <div
                     className={`
-            mx_MessageComposer_wrapper ${this.state.focused ? "mx_MessageComposer_highlight" : ""}`}
+            mx_MessageComposer_wrapper ${this.state.focused ? "mx_MessageComposer_focused" : ""}`}
                 >
                     <ReplyPreview
                         replyToEvent={this.props.replyToEvent}

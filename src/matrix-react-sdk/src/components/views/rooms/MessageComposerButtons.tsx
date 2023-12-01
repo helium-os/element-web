@@ -42,6 +42,7 @@ import { EmojiButton } from "./EmojiButton";
 import { useSettingValue } from "../../../hooks/useSettings";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
+import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -259,6 +260,7 @@ const UploadButton: React.FC = () => {
             iconClassName="mx_MessageComposer_upload"
             onClick={onClick}
             title={_t("Upload")}
+            alignment={Alignment.Top}
         />
     );
 };

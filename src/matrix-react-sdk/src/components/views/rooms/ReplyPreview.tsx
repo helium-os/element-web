@@ -51,6 +51,8 @@ export default class ReplyPreview extends React.Component<IProps> {
                             <span>{_t("Reply")}</span>
                             <ReplyTile
                                 mxEvent={this.props.replyToEvent}
+                                showReplyTile={false}
+                                showSenderAvatar={false}
                                 permalinkCreator={this.props.permalinkCreator}
                             />
                         </div>

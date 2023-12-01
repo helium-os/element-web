@@ -179,6 +179,8 @@ interface IProps {
     permalinkCreator?: RoomPermalinkCreator;
     editState?: EditorStateTransfer;
 
+    replyToEvent?: MatrixEvent;
+
     // callback which is called when the panel is scrolled.
     onScroll?(event: Event): void;
 
@@ -710,6 +712,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const ret: ReactNode[] = [];
 
         const isEditing = this.props.editState?.getEvent().getId() === mxEv.getId();
+        const isReplying = this.props.replyToEvent?.getId() === mxEv.getId();
         // local echoes have a fake date, which could even be yesterday. Treat them as 'today' for the date separators.
         let ts1 = mxEv.getTs();
         let eventDate = mxEv.getDate();
@@ -788,6 +791,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
                     isRedacted={mxEv.isRedacted()}
                     replacingEventId={mxEv.replacingEventId()}
                     editState={isEditing ? this.props.editState : undefined}
+                    isReplying={isReplying}
                     onHeightChanged={this.onHeightChanged}
                     readReceipts={readReceipts}
                     readReceiptMap={this.readReceiptMap}

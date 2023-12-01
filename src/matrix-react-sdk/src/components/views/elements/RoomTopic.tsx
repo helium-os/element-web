@@ -81,7 +81,7 @@ export default function RoomTopic({ room, ...props }: IProps): JSX.Element {
                         >
                             {body}
                         </Linkify>
-                        {canSetTopic && (
+                        {false && canSetTopic && (
                             <AccessibleButton
                                 kind="primary_outline"
                                 onClick={() => {
@@ -104,9 +104,9 @@ export default function RoomTopic({ room, ...props }: IProps): JSX.Element {
 
     return (
         <div {...props} ref={ref} onClick={onClick} dir="auto" className={className}>
-            <TooltipTarget label={_t("Click to read topic")} alignment={Alignment.Bottom} ignoreHover={ignoreHover}>
-                <Linkify>{body}</Linkify>
-            </TooltipTarget>
+            {/*<TooltipTarget label={_t("Click to read topic")} alignment={Alignment.Bottom} ignoreHover={ignoreHover}>*/}
+            <Linkify>{body}</Linkify>
+            {/*</TooltipTarget>*/}
         </div>
     );
 }

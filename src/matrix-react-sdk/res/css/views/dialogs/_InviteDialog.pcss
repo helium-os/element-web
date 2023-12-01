@@ -23,29 +23,9 @@ limitations under the License.
     padding-bottom: $spacing-16;
 }
 
-.mx_InviteDialog_section {
-    position: relative;
-    padding: 8px;
-
-    h3 {
-        font-size: $font-12px;
-        color: $muted-fg-color;
-        font-weight: bold;
-        text-transform: uppercase;
-    }
-
-    > p {
-        margin: 0;
-    }
-
-    > span {
-        color: $primary-content;
-    }
-
-    .mx_InviteDialog_section_showMore {
-        margin: 7px 18px; /* TODO: Use a spacing variable */
-        display: block;
-    }
+.mx_InviteDialog_section_showMore {
+    margin: 7px 18px; /* TODO: Use a spacing variable */
+    display: block;
 }
 
 
@@ -57,9 +37,6 @@ limitations under the License.
             flex: 1;
             min-width: 40%;
         }
-    }
-    .mx_InviteDialog_hideInput input {
-        display: none;
     }
 }
 
@@ -102,64 +79,6 @@ limitations under the License.
     }
 }
 
-/* Many of these styles are stolen from mx_UserPill, but adjusted for the invite dialog. */
-.mx_InviteDialog_userTile {
-    margin: 0 4px 4px 0;
-    min-width: max-content; /* prevent manipulation by flexbox */
-
-    .mx_InviteDialog_userTile_pill {
-        display: flex;
-        align-items: center;
-        height: 24px;
-        border-radius: 12px;
-        line-height: $font-24px;
-        padding: 0 5px 0 2px;
-        background-color: $background-secondary-color2;
-        color: $text-primary-color3; /* this is fine without a var because it's for both themes */
-
-        .mx_SearchResultAvatar {
-            display: flex;
-            margin-right: 4px;
-        }
-        .mx_BaseAvatar_image {
-            vertical-align: middle;
-        }
-
-        .mx_InviteDialog_userTile_name {
-            max-width: 100px;
-            padding-right: 7px;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: 1.5;
-            color: $text-primary-color3;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
-
-        .mx_SearchResultAvatar_threepidAvatar {
-            background-color: #ffffff; /* this is fine without a var because it's for both themes */
-        }
-
-        .mx_InviteDialog_userTile_remove {
-            display: none;
-            padding: 2px;
-            cursor: pointer;
-        }
-        .mx_InviteDialog_userTile_remove_icon {
-            margin: 0 auto;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: $text-secondary-color1;
-            @mixin MaskIcon url("$(res)/img/cancel.svg"), 6px, 6px, #FFFFFF;
-        }
-
-        &:hover .mx_InviteDialog_userTile_remove{
-            display: block;
-        }
-    }
-}
 
 .mx_InviteDialog_other {
     /* Prevent the dialog from jumping around randomly when elements change. */
@@ -169,16 +88,6 @@ limitations under the License.
 
     .mx_InviteDialog_addressBar {
         margin-inline-end: 0;
-    }
-
-    .mx_InviteDialog_userSections {
-        flex-grow: 1;
-        padding-inline-end: 0;
-
-        .mx_InviteDialog_section {
-            padding-bottom: 0;
-            margin-top: $spacing-12;
-        }
     }
 }
 
@@ -211,10 +120,6 @@ limitations under the License.
     input[type="checkbox"] {
         margin-inline-end: $spacing-8;
     }
-}
-
-.mx_InviteDialog_userSections {
-    overflow-y: auto;
 }
 
 .mx_InviteDialog_helpText {
@@ -282,83 +187,29 @@ limitations under the License.
     mask-image: url("$(res)/img/voip/tab-dialpad.svg");
 }
 
-.mx_InviteDialog_noResults {
-    font-size: $font-14px;
-    line-height: 20px;
-    font-weight: $font-normal-bold;
-    color: $text-primary-color3;
-}
 
-.mx_InviteDialog_tile {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
 
-    &:hover {
-        background: $background-secondary-color2;
-    }
 
-    &.mx_InviteDialog_tile--room {
-        padding: 4px 6px;
-        border-radius: 4px;
 
-        .mx_InviteDialog_tile--room_selected {
-            border-radius: 36px;
-            background-color: $username-variant1-color;
+.mx_InviteDialog_tile--room {
 
-            &::before {
-                content: "";
-                width: 24px;
-                height: 24px;
-                grid-column: 1;
-                grid-row: 1;
-                mask-image: url("$(res)/img/feather-customised/check.svg");
-                mask-size: 100%;
-                mask-repeat: no-repeat;
-                position: absolute;
-                top: 6px; /* 50% */
-                left: 6px; /* 50% */
-                background-color: #ffffff; /* this is fine without a var because it's for both themes */
-            }
-        }
+    .mx_InviteDialog_tile--room_selected {
+        border-radius: 36px;
+        background-color: $username-variant1-color;
 
-        .mx_InviteDialog_tile--room_time {
-            margin-inline-start: auto;
-            width: max-content;
-            font-size: $font-12px;
-            color: $muted-fg-color;
-        }
-
-        //.mx_InviteDialog_tile--room_highlight {
-        //    font-weight: 900;
-        //}
-    }
-
-    .mx_InviteDialog_tile_avatarStack {
-        margin-right: 4px;
-    }
-
-    .mx_InviteDialog_tile_nameStack {
-        flex: 1;
-        overflow: hidden;
-
-        display: flex;
-        align-items:  center;
-
-        .mx_InviteDialog_tile_nameStack_name {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: $font-14px;
-            line-height: 20px;
-            font-weight: $font-normal-bold;
-            color: $text-primary-color3;
-        }
-
-        .mx_InviteDialog_tile_nameStack_userId {
-            font-size: $font-12px;
-            color: $muted-fg-color;
+        &::before {
+            content: "";
+            width: 24px;
+            height: 24px;
+            grid-column: 1;
+            grid-row: 1;
+            mask-image: url("$(res)/img/feather-customised/check.svg");
+            mask-size: 100%;
+            mask-repeat: no-repeat;
+            position: absolute;
+            top: 6px; /* 50% */
+            left: 6px; /* 50% */
+            background-color: #ffffff; /* this is fine without a var because it's for both themes */
         }
     }
 }

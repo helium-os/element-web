@@ -30,7 +30,7 @@ export function roomContextDetails(room: Room): RoomContextDetails | null {
     // if we’ve got more than 2 users, don’t treat it like a regular DM
     const isGroupDm = room.getMembers().length > 2;
     if (!room.isSpaceRoom() && dmPartner && !isGroupDm) {
-        return { details: dmPartner };
+        // return { details: dmPartner };
     }
 
     const [parent, secondParent, ...otherParents] = SpaceStore.instance.getKnownParents(room.roomId);
