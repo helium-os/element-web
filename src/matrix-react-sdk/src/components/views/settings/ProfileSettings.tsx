@@ -23,7 +23,7 @@ import Field from "../elements/Field";
 import { OwnProfileStore } from "../../../stores/OwnProfileStore";
 import Modal from "../../../Modal";
 import ErrorDialog from "../dialogs/ErrorDialog";
-import {getHttpUrlFromMxc} from "../../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../../customisations/Media";
 import AccessibleButton from "../elements/AccessibleButton";
 import AvatarSetting from "./AvatarSetting";
 import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
@@ -196,13 +196,7 @@ export default class ProfileSettings extends React.Component<{}, IState> {
                             )}
                         </p>
                     </div>
-                    <AvatarSetting
-                        avatarUrl={avatarUrl}
-                        avatarName={this.state.displayName || this.state.userId}
-                        avatarAltText={_t("Profile picture")}
-                        uploadAvatar={this.uploadAvatar}
-                        removeAvatar={this.removeAvatar}
-                    />
+                    <AvatarSetting avatarUrl={avatarUrl} setAvatar={this.uploadAvatar} />
                 </div>
                 <div className="mx_ProfileSettings_buttons">
                     <AccessibleButton

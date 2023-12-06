@@ -21,10 +21,12 @@ import classNames from "classnames";
 import { logger } from "matrix-js-sdk/src/logger";
 
 import { _t } from "../../languageHandler";
+import BaseCard from "matrix-react-sdk/src/components/views/right_panel/BaseCard";
 import AutoHideScrollbar from "./AutoHideScrollbar";
 import AccessibleButton from "../views/elements/AccessibleButton";
 import { PosthogScreenTracker, ScreenName } from "../../PosthogTrackers";
 import { NonEmptyArray } from "../../@types/common";
+import { leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
 
 /**
  * Represents a tab for the TabbedView.
@@ -53,6 +55,7 @@ export enum TabLocation {
 }
 
 interface IProps {
+    title?: string;
     tabs: NonEmptyArray<Tab>;
     initialTabId?: string;
     tabLocation: TabLocation;
@@ -89,7 +92,7 @@ export default class TabbedView extends React.Component<IProps, IState> {
      */
     private setActiveTab(tab: Tab): void {
         // make sure this tab is still in available tabs
-        if (!!this.getTabById(tab.id)) {
+        if (this.getTabById(tab.id)) {
             if (this.props.onChange) this.props.onChange(tab.id);
             this.setState({ activeTabId: tab.id });
         } else {
@@ -109,7 +112,6 @@ export default class TabbedView extends React.Component<IProps, IState> {
 
         const onClickHandler = (): void => this.setActiveTab(tab);
 
-        const label = _t(tab.label);
         return (
             <AccessibleButton
                 className={classes}
@@ -118,16 +120,16 @@ export default class TabbedView extends React.Component<IProps, IState> {
                 data-testid={`settings-tab-${tab.id}`}
             >
                 {tabIcon}
-                <span className="mx_TabbedView_tabLabel_text">{label}</span>
+                <span className="mx_TabbedView_tabLabel_text">{tab.label}</span>
             </AccessibleButton>
         );
     }
 
     private renderTabPanel(tab: Tab): React.ReactNode {
         return (
-            <div className="mx_TabbedView_tabPanel" key={"mx_tabpanel_" + tab.label}>
-                <AutoHideScrollbar className="mx_TabbedView_tabPanelContent">{tab.body}</AutoHideScrollbar>
-            </div>
+            <BaseCard className="mx_TabbedView_tabPanel" title={tab.label}>
+                {tab.body}
+            </BaseCard>
         );
     }
 
@@ -138,8 +140,6 @@ export default class TabbedView extends React.Component<IProps, IState> {
 
         const tabbedViewClasses = classNames({
             mx_TabbedView: true,
-            mx_TabbedView_tabsOnLeft: this.props.tabLocation == TabLocation.LEFT,
-            mx_TabbedView_tabsOnTop: this.props.tabLocation == TabLocation.TOP,
         });
 
         const screenName = tab?.screenName ?? this.props.screenName;
@@ -147,7 +147,18 @@ export default class TabbedView extends React.Component<IProps, IState> {
         return (
             <div className={tabbedViewClasses}>
                 {screenName && <PosthogScreenTracker screenName={screenName} />}
-                <div className="mx_TabbedView_tabLabels">{labels}</div>
+                <div className="mx_TabbedView_leftPanel">
+                    {this.props.title && <div className="mx_TabbedView_title">{this.props.title}</div>}
+                    <div className="mx_TabbedView_tabLabels">{labels}</div>
+                    <AccessibleButton
+                        kind="danger"
+                        onClick={() => {
+                            leaveSpace(space);
+                        }}
+                    >
+                        {_t("Leave Space")}
+                    </AccessibleButton>
+                </div>
                 {panel}
             </div>
         );

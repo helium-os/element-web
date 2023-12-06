@@ -75,6 +75,7 @@ interface IProps {
     presenceCurrentlyActive?: boolean;
     showInviteButton: boolean;
     onClick(): void;
+    onMouseOver(e: MouseEvent): void;
     suppressOnHover: boolean;
     showPresence: boolean;
     subtextLabel?: string;
@@ -186,26 +187,25 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
         }
 
         const av = this.props.avatarJsx || (
-            <BaseAvatar name={this.props.name} width={36} height={36} aria-hidden="true" />
+            <BaseAvatar name={this.props.name} width={32} height={32} aria-hidden="true" />
         );
 
         // The wrapping div is required to make the magic mouse listener work, for some reason.
         return (
-            <div>
-                <AccessibleButton
-                    className={classNames(mainClassNames)}
-                    // title={this.props.title}
-                    onClick={this.props.onClick}
-                >
-                    <div className="mx_EntityTile_avatar">
-                        {av}
-                        {showE2eIcon && e2eIcon}
-                    </div>
-                    {nameEl}
-                    {powerLabel}
-                    {inviteButton}
-                </AccessibleButton>
-            </div>
+            <AccessibleButton
+                className={classNames(mainClassNames)}
+                onClick={this.props.onClick}
+                onMouseOver={this.props.onMouseOver}
+                // onMouseLeave={this.props.onMouseLeave}
+            >
+                <div className="mx_EntityTile_avatar">
+                    {av}
+                    {showE2eIcon && e2eIcon}
+                </div>
+                {nameEl}
+                {powerLabel}
+                {inviteButton}
+            </AccessibleButton>
         );
     }
 }

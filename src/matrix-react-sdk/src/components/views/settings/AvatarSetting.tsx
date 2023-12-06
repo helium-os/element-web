@@ -14,71 +14,93 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, memo } from "react";
 
 import AccessibleButton from "../elements/AccessibleButton";
 import { chromeFileInputFix } from "matrix-react-sdk/src/utils/BrowserWorkarounds";
 
-export interface AvatarProps {
-    avatarUrl?: string; // 初始头像
-    avatarDisabled?: boolean;
-    setAvatar(avatar?: File): void;
+export enum OperateType {
+    Create,
+    Edit,
 }
 
-const AvatarSetting: React.FC<AvatarProps> = ({ avatarUrl = "", avatarDisabled = false, setAvatar }) => {
+export interface AvatarProps {
+    type?: OperateType;
+    size?: number;
+    avatarUrl?: string | null;
+    avatarDisabled?: boolean;
+    setAvatar?(avatar?: File): void;
+}
+
+const AvatarSetting: React.FC<AvatarProps> = ({
+    type = OperateType.Create,
+    avatarUrl = "",
+    size = 100,
+    avatarDisabled = false,
+    setAvatar,
+}) => {
     const avatarUploadRef = useRef<HTMLInputElement>();
-    const [avatar, setAvatarDataUrl] = useState(avatarUrl); // avatar data url cache
+    const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        setAvatarDataUrl(avatarUrl);
+    }, [avatarUrl]);
 
     let avatarSection;
     if (avatarDisabled) {
-        if (avatar) {
-            avatarSection = <img className="mx_SpaceBasicSettings_avatar" src={avatar} alt="" />;
-        } else {
-            avatarSection = <div className="mx_SpaceBasicSettings_avatar" />;
-        }
+        avatarSection = avatarDataUrl ? (
+            <img className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" src={avatarDataUrl} alt="" />
+        ) : (
+            <div className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" />
+        );
     } else {
-        if (avatar) {
-            avatarSection = (
-                <React.Fragment>
+        avatarSection = (
+            <>
+                {avatarDataUrl ? (
                     <AccessibleButton
-                        className="mx_SpaceBasicSettings_avatar"
+                        className="mx_AvatarSetting_avatar"
                         onClick={() => avatarUploadRef.current?.click()}
                         element="img"
-                        src={avatar}
+                        src={avatarDataUrl}
                         alt=""
                     />
-                </React.Fragment>
-            );
-        } else {
-            avatarSection = (
-                <React.Fragment>
-                    <div className="mx_SpaceBasicSettings_avatar" onClick={() => avatarUploadRef.current?.click()} />
-                </React.Fragment>
-            );
-        }
+                ) : (
+                    <div className="mx_AvatarSetting_avatar" onClick={() => avatarUploadRef.current?.click()} />
+                )}
+                {type === OperateType.Edit && (
+                    <div className="mx_AvatarSetting_mask" onClick={() => avatarUploadRef.current?.click()}>
+                        <label>编辑</label>
+                    </div>
+                )}
+            </>
+        );
     }
 
+    const onFileChange = (e) => {
+        if (!e.target.files?.length) return;
+        const file = e.target.files[0];
+        setAvatar(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setAvatarDataUrl(ev.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
     return (
-        <div className="mx_SpaceBasicSettings_avatarContainer">
+        <div className="mx_AvatarSetting_container" style={{ width: size, height: size }}>
             {avatarSection}
-            <input
-                type="file"
-                ref={avatarUploadRef}
-                onClick={chromeFileInputFix}
-                onChange={(e) => {
-                    if (!e.target.files?.length) return;
-                    const file = e.target.files[0];
-                    setAvatar(file);
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        setAvatarDataUrl(ev.target?.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                }}
-                accept="image/*"
-            />
+            {!avatarDisabled && (
+                <input
+                    type="file"
+                    ref={avatarUploadRef}
+                    onClick={chromeFileInputFix}
+                    onChange={onFileChange}
+                    accept="image/*"
+                />
+            )}
         </div>
     );
 };
 
-export default AvatarSetting;
+export default memo(AvatarSetting);

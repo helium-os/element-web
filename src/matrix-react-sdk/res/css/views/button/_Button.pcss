@@ -1,4 +1,5 @@
 .mx_btn {
+    box-sizing: border-box;
     background: none;
     border: none;
     border-radius: 8px;
@@ -6,25 +7,40 @@
     line-height: 20px;
     font-weight: 500;
     cursor: pointer;
-    &, &.mx-btn-default {
+    &, &.mx-btn-size-default {
         padding: 0 20px;
         height: 36px;
     }
-    &.mx-btn-small {
+    &.mx-btn-size-small {
         padding: 0 16px;
         height: 32px;
+    }
+    &.mx-btn-size-large {
+    }
+    &.mx-btn-block {
+        display: block;
+        width: 100%;
+    }
+    &.mx-btn-default {
+        border: 1px solid $border-primary-color;
+        color: $button-text-text-color;
+        &.mx-btn-danger {
+            color: $button-danger-color;
+        }
     }
     &.mx-btn-primary {
         background: $button-primary-bg-color;
         color: $button-text-color;
+        &.mx-btn-danger {
+            background: $button-danger-color;
+            color: $button-text-color;
+        }
     }
-    &.mx-btn-danger {
-        background: $button-danger-bg-color;
-        color: $button-text-color;
-    }
-    &.mx-btn-link {
-        padding: 0 12px;
-        color: $button-link-text-color;
+    &.mx-btn-text {
+        color: $button-text-text-color;
+        &.mx-btn-danger {
+            color: $button-danger-color;
+        }
     }
     &[disabled] {
         background: $button-disabled-bg-color!important;

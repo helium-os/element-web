@@ -19,7 +19,6 @@ limitations under the License.
     position: relative;
     box-sizing: border-box;
     min-width: 130px;
-    width: max-content;
     padding: 8px;
 
     .mx_IconizedContextMenu_optionList {
@@ -138,14 +137,6 @@ limitations under the License.
     }
 
     .mx_IconizedContextMenu_active {
-        &.mx_IconizedContextMenu_item,
-        .mx_IconizedContextMenu_item {
-            color: $accent !important;
-        }
-
-        .mx_IconizedContextMenu_icon::before {
-            background-color: $accent;
-        }
     }
 
     &.mx_IconizedContextMenu_compact {
@@ -156,8 +147,7 @@ limitations under the License.
 
     .mx_IconizedContextMenu_checked,
     .mx_IconizedContextMenu_unchecked {
-        margin-left: 16px;
-        margin-right: -5px;
+        margin-right: 0;
     }
 
     .mx_IconizedContextMenu_checked::before {

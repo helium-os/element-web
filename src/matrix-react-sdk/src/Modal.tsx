@@ -50,6 +50,7 @@ export type ComponentProps<C extends ComponentType> = Defaultize<
 export interface IModal<C extends ComponentType> {
     elem: React.ReactNode;
     className?: string;
+    fullScreen?: boolean;
     beforeClosePromise?: Promise<boolean>;
     closeReason?: string;
     onBeforeClose?(reason?: string): Promise<boolean>;
@@ -65,6 +66,7 @@ export interface IHandle<C extends ComponentType> {
 
 interface IOptions<C extends ComponentType> {
     onBeforeClose?: IModal<C>["onBeforeClose"];
+    fullScreen?: boolean;
 }
 
 export enum ModalManagerEvent {
@@ -178,6 +180,7 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
             onBeforeClose: options?.onBeforeClose,
             className,
 
+            fullScreen: options?.fullScreen,
             // these will be set below but we need an object reference to pass to getCloseFn before we can do that
             elem: null,
         } as IModal<C>;
@@ -379,7 +382,9 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
 
             const staticDialog = (
                 <div className={classes}>
-                    <div className="mx_Dialog">{this.staticModal.elem}</div>
+                    <div className={`mx_Dialog ${this.staticModal.fullScreen ? "mx_Dialog_fullScreen" : ""}`}>
+                        {this.staticModal.elem}
+                    </div>
                     <div
                         data-testid="dialog-background"
                         className="mx_Dialog_background mx_Dialog_staticBackground"
@@ -402,7 +407,7 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
 
             const dialog = (
                 <div className={classes}>
-                    <div className="mx_Dialog">{modal.elem}</div>
+                    <div className={`mx_Dialog ${modal.fullScreen ? "mx_Dialog_fullScreen" : ""}`}>{modal.elem}</div>
                     <div
                         data-testid="dialog-background"
                         className="mx_Dialog_background"

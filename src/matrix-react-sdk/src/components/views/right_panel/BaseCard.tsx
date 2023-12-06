@@ -27,6 +27,7 @@ import { CardContext } from "./context";
 interface IProps {
     header?: ReactNode;
     title?: string;
+    headerButton?: ReactNode;
     footer?: ReactNode;
     className?: string;
     withoutScrollContainer?: boolean;
@@ -56,7 +57,19 @@ export const Group: React.FC<IGroupProps> = ({ className, title, children }) => 
 
 const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
     (
-        { closeLabel, onClose, onBack, className, header, title, footer, withoutScrollContainer, children, onKeyDown },
+        {
+            closeLabel,
+            onClose,
+            onBack,
+            className,
+            header,
+            title,
+            headerButton,
+            footer,
+            withoutScrollContainer,
+            children,
+            onKeyDown,
+        },
         ref,
     ) => {
         let backButton;
@@ -84,15 +97,16 @@ const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
             <CardContext.Provider value={{ isCard: true }}>
                 <div className={classNames("mx_BaseCard", className)} ref={ref} onKeyDown={onKeyDown}>
                     {header || (
-                        <div className="mx_BaseCard_header">
-                            <span className="mx_BaseCard_header_title">{title}</span>
+                        <div className="mx_BaseCard_header_wrap">
+                            <div className="mx_BaseCard_header_box">
+                                <span className="mx_BaseCard_header_title">{title}</span>
+                                {headerButton && <div className="mx_BaseCard_header_button">{headerButton}</div>}
+                            </div>
                             {closeButton}
                         </div>
                     )}
-                    <div className="mx_BaseCard_content">
-                        {backButton && <div className="mx_BaseCard_backBtn">{backButton}</div>}
-                        {children}
-                    </div>
+                    {backButton && <div className="mx_BaseCard_backBtn">{backButton}</div>}
+                    <div className="mx_BaseCard_content">{children}</div>
                     {footer && <div className="mx_BaseCard_footer">{footer}</div>}
                 </div>
             </CardContext.Provider>

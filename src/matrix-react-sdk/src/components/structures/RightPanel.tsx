@@ -38,6 +38,7 @@ import ThreadPanel from "./ThreadPanel";
 import NotificationPanel from "./NotificationPanel";
 import ResizeNotifier from "../../utils/ResizeNotifier";
 import PinnedMessagesCard from "../views/right_panel/PinnedMessagesCard";
+import RoomSettingsPanel from "matrix-react-sdk/src/components/views/right_panel/RoomSettingsPanel";
 import { RoomPermalinkCreator } from "../../utils/permalinks/Permalinks";
 import { E2EStatus } from "../../utils/ShieldUtils";
 import TimelineCard from "../views/right_panel/TimelineCard";
@@ -264,6 +265,17 @@ export default class RightPanel extends React.Component<IProps, IState> {
             case RightPanelPhases.RoomSummary:
                 card = (
                     <RoomSummaryCard
+                        room={this.props.room}
+                        onClose={this.onClose}
+                        // whenever RightPanel is passed a room it is passed a permalinkcreator
+                        permalinkCreator={this.props.permalinkCreator!}
+                    />
+                );
+                break;
+
+            case RightPanelPhases.RoomSettings:
+                card = (
+                    <RoomSettingsPanel
                         room={this.props.room}
                         onClose={this.onClose}
                         // whenever RightPanel is passed a room it is passed a permalinkcreator

@@ -43,6 +43,7 @@ import { useSettingValue } from "../../../hooks/useSettings";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
 import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
+import CallButtons from "matrix-react-sdk/src/components/views/rooms/CallButtons";
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -61,6 +62,7 @@ interface IProps {
     onStartVoiceBroadcastClick: () => void;
     isRichTextEnabled: boolean;
     onComposerModeClick: () => void;
+    showCallButtons?: boolean;
 }
 
 type OverflowMenuCloser = () => void;
@@ -137,6 +139,11 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
                     {item}
                 </div>
             ))}
+            {props.showCallButtons && (
+                <div className="mx_MessageComposer_callButtons">
+                    <CallButtons room={room} className="mx_MessageComposer_button" />
+                </div>
+            )}
             {SettingsStore.getValue(UIFeature.MessageComposerMoreBtn) && (
                 <>
                     {moreButtons.length > 0 && (

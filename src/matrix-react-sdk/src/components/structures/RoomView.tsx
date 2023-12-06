@@ -421,7 +421,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             readMarkerInViewThresholdMs: SettingsStore.getValue("readMarkerInViewThresholdMs"),
             readMarkerOutOfViewThresholdMs: SettingsStore.getValue("readMarkerOutOfViewThresholdMs"),
             showHiddenEvents: SettingsStore.getValue("showHiddenEventsInTimeline"),
-            showReadReceipts: true,
+            showReadReceipts: false,
             showRedactions: true,
             showJoinLeaves: true,
             showAvatarChanges: true,
@@ -623,7 +623,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             replyToEvent: this.context.roomViewStore.getQuotingEvent() ?? undefined,
             // we should only peek once we have a ready client
             shouldPeek: this.state.matrixClientIsReady && this.context.roomViewStore.shouldPeek(),
-            showReadReceipts: SettingsStore.getValue("showReadReceipts", roomId),
+            showReadReceipts: false && SettingsStore.getValue("showReadReceipts", roomId),
             showRedactions: SettingsStore.getValue("showRedactions", roomId),
             showJoinLeaves: SettingsStore.getValue("showJoinLeaves", roomId),
             showAvatarChanges: SettingsStore.getValue("showAvatarChanges", roomId),
@@ -2300,7 +2300,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 timelineSet={this.state.room.getUnfilteredTimelineSet()}
                 overlayTimelineSet={this.state.virtualRoom?.getUnfilteredTimelineSet()}
                 overlayTimelineSetFilter={isCallEvent}
-                showReadReceipts={false && this.state.showReadReceipts} // 不展示发送 & 已读icon
+                showReadReceipts={this.state.showReadReceipts} // 不展示发送 & 已读icon
                 manageReadReceipts={!this.state.isPeeking}
                 sendReadReceiptOnLoad={!this.state.wasContextSwitch}
                 manageReadMarkers={!this.state.isPeeking}

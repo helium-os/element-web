@@ -525,7 +525,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
                 if (this.state.showRejectAndIgnore && this.props.onRejectAndIgnoreClick) {
                     extraComponents.push(
                         <Button
-                            type={ButtonType.Link}
+                            type={ButtonType.Text}
                             size={ButtonSize.Small}
                             onClick={this.props.onRejectAndIgnoreClick}
                             key="ignore"
@@ -619,7 +619,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
         let secondaryButton;
         if (secondaryActionHandler) {
             secondaryButton = (
-                <Button size={ButtonSize.Small} type={ButtonType.Link} onClick={secondaryActionHandler}>
+                <Button size={ButtonSize.Small} type={ButtonType.Text} onClick={secondaryActionHandler}>
                     {secondaryActionLabel}
                 </Button>
             );

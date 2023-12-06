@@ -1119,8 +1119,10 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
         const dialogFooter = (
             <DialogButtons
                 primaryButton={_t("Invite")}
-                primaryLoading={this.state.busy}
-                primaryDisabled={this.state.busy || !hasSelection}
+                primaryButtonProps={{
+                    loading: this.state.busy,
+                    disabled: this.state.busy || !hasSelection,
+                }}
                 onPrimaryButtonClick={goButtonFn}
                 cancelButton={_t("Cancel")}
                 onCancel={this.onCancel}

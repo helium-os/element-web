@@ -116,7 +116,7 @@ export function getEventDisplayInfo(
 
     return {
         hasRenderer: !!factory,
-        isInfoMessage,
+        isInfoMessage: isInfoMessage || mxEvent.isRedacted(), // 消息被撤回后视为info message
         isBubbleMessage,
         isLeftAlignedBubbleMessage,
         noBubbleEvent,

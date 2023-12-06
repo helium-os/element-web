@@ -1,0 +1,35 @@
+.mx_TextSettingsItem {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    .mx_TextSettingsItem_title {
+        color: $text-secondary-color1;
+        & ~ .mx_TextSettingsItem_info {
+            padding: 6px 0;
+        }
+    }
+    .mx_TextSettingsItem_info {
+        color: $text-primary-color2;
+        cursor: pointer;
+    }
+    .mx_Settings_icon {
+        opacity: 0;
+        display: inline-block;
+        vertical-align: top;
+        width: 20px;
+        height: 20px;
+        margin-left: 4px;
+        @mixin MaskIcon url("$(res)/img/feather-customised/edit.svg"), 16px, 13px, $text-primary-color3;
+    }
+    &:hover {
+        .mx_Settings_icon {
+            opacity: 1;
+        }
+    }
+    &.mx_Settings_disabled {
+        cursor: not-allowed;
+        .mx_Settings_icon {
+            display: none;
+        }
+    }
+}

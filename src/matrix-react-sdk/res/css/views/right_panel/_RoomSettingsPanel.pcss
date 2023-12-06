@@ -1,0 +1,51 @@
+.mx_RoomSettingsPanel {
+    .mx_BaseCard_content {
+        padding: 20px;
+    }
+    .mx_RoomSettings_overview {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px;
+        border-radius: 10px;
+        border: 1px solid $border-primary-color;
+        .mx_RoomName_Settings {
+            flex: 1;
+            overflow: hidden;
+            .mx_TextSettingsItem_info {
+                display: inline-block;
+                box-sizing: border-box;
+                max-width: 100%;
+                position: relative;
+                padding-right: 24px;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+            .mx_Settings_icon {
+                position: absolute;
+                top: 50%;
+                right: 0;
+                transform: translate(0, -50%);
+            }
+            &.mx_Settings_disabled {
+                .mx_TextSettingsItem_info{
+                    padding-right: 0;
+                }
+            }
+        }
+        .mx_AvatarSetting_avatar {
+            &:before {
+                width: 15px;
+                height: 12px;
+            }
+        }
+        .mx_AvatarSetting_mask label {
+            margin-bottom: 4px;
+        }
+    }
+
+    .mx_RoomSettings_buttons {
+        margin-top: 16px;
+    }
+}

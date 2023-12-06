@@ -129,8 +129,10 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
     const footer = (
         <DialogButtons
             primaryButton={channelCount > 0 ? _t("Add") : _t("Next")}
-            primaryDisabled={busy}
-            primaryLoading={busy}
+            primaryButtonProps={{
+                disabled: busy,
+                loading: busy,
+            }}
             onPrimaryButtonClick={channelCount > 0 ? onOk : onNext}
             cancelButton={_t("Skip")}
             onCancel={onNext}
@@ -162,7 +164,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
                                     type="text"
                                     value={item.name}
                                     wordLimit={80}
-                                    label={_t("Room name", { type: _t("Channel") })}
+                                    label={_t("Room name", { roomType: _t("Channel") })}
                                     placeholder={"请为你的频道想一个名字"}
                                     usePlaceholderAsHint={true}
                                     autoFocus={false}

@@ -37,6 +37,7 @@ import { E2EState } from "./E2EIcon";
 interface IProps {
     member: RoomMember;
     showPresence?: boolean;
+    onMouseOver(e: MouseEvent): void;
 }
 
 interface IState {
@@ -218,7 +219,7 @@ export default class MemberTile extends React.Component<IProps, IState> {
                 powerStatus={powerStatus}
                 showPresence={this.props.showPresence}
                 e2eStatus={e2eStatus}
-                onClick={this.onClick}
+                // onClick={this.onClick}
             />
         );
     }

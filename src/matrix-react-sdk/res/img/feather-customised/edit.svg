@@ -1,4 +1,6 @@
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path fill-rule="evenodd" clip-rule="evenodd" d="M14 2L18 6L7 17H3V13L14 2V2Z" stroke="#2E2F32" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M3 22H21" stroke="#2E2F32" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="16" height="13" viewBox="0 0 16 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Group">
+<path id="Vector" d="M13.7631 11.0418C13.7631 11.3211 13.5345 11.5496 13.2553 11.5496H4.10254L5.12845 10.5276H13.2553C13.5345 10.5276 13.7631 10.7625 13.7631 11.0418Z" fill="#303030"/>
+<path id="Vector_2" d="M3.46065 10.9656L10.3923 4.04665L9.2751 2.92946L2.34981 9.84841L1.74043 11.264C1.6833 11.4163 1.842 11.594 1.99434 11.5306L3.46065 10.9656ZM10.9445 3.50075L11.5856 2.87233C11.9157 2.5486 11.9347 2.19948 11.6364 1.90749L11.4269 1.69167C11.1349 1.40603 10.7858 1.43142 10.4685 1.7488L9.821 2.38356L10.9445 3.50075Z" fill="#151515"/>
+</g>
 </svg>

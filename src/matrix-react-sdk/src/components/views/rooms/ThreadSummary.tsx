@@ -44,7 +44,6 @@ const ThreadSummary: React.FC<IProps> = ({ mxEvent, thread, ...props }) => {
     return (
         <AccessibleButton
             {...props}
-            className="mx_ThreadSummary"
             onClick={(ev: ButtonEvent) => {
                 defaultDispatcher.dispatch<ShowThreadPayload>({
                     action: Action.ShowThread,
@@ -67,13 +66,18 @@ const ThreadSummary: React.FC<IProps> = ({ mxEvent, thread, ...props }) => {
 interface IPreviewProps {
     thread: Thread;
     showTwelveHour?: boolean;
+    showDisplayname?: boolean;
+    previewContent?: React.ReactNode;
 }
 
-export const ThreadMessagePreview: React.FC<IPreviewProps> = ({ thread, showTwelveHour = false }) => {
+export const ThreadMessagePreview: React.FC<IPreviewProps> = ({
+    thread,
+    showTwelveHour = false,
+    showDisplayname = true,
+    previewContent,
+}) => {
     const cli = useContext(MatrixClientContext);
     const roomContext = useContext(RoomContext);
-
-    const showDisplayname = !roomContext.narrow;
 
     // 消息数
     const count = useTypedEventEmitterState(thread, ThreadEvent.Update, () => thread.length);
@@ -96,18 +100,19 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({ thread, showTwel
         setContent(lastReply!.getContent());
     });
 
-    const preview = useAsyncMemo(async (): Promise<string | undefined> => {
+    const preview = useAsyncMemo(async (): Promise<React.ReactNode | string | undefined> => {
+        if (previewContent) return previewContent;
         if (!lastReply) return;
         await cli.decryptEventIfNeeded(lastReply);
         return MessagePreviewStore.instance.generatePreviewForEvent(lastReply);
-    }, [lastReply, content]);
+    }, [lastReply, previewContent]);
 
     if (!count || !preview || !lastReply) {
         return null;
     }
 
     return (
-        <>
+        <div className="mx_ThreadSummary">
             <div className="mx_ThreadSummary_mainInfo">
                 {lastReply.isDecryptionFailure() ? (
                     <div
@@ -138,10 +143,10 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({ thread, showTwel
                 )}
                 <div className="mx_ThreadSummary_lastReplyTime">
                     最后一条消息的时间为{" "}
-                    <MessageTimestamp showRelative={true} showTwelveHour={false} ts={lastReplyTime} />
+                    <MessageTimestamp showRelative={true} showTwelveHour={showTwelveHour} ts={lastReplyTime} />
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

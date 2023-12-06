@@ -81,7 +81,7 @@ export interface MenuProps extends IPosition {
     zIndex?: number;
 }
 
-export interface IProps extends MenuProps {
+export interface ContextMenuProps extends MenuProps {
     // If true, insert an invisible screen-sized element behind the menu that when clicked will close it.
     hasBackground?: boolean;
     // whether this context menu should be focus managed. If false it must handle itself
@@ -113,7 +113,7 @@ interface IState {
 // Generic ContextMenu Portal wrapper
 // all options inside the menu should be of role=menuitem/menuitemcheckbox/menuitemradiobutton and have tabIndex={-1}
 // this will allow the ContextMenu to manage its own focus using arrow keys as per the ARIA guidelines.
-export default class ContextMenu extends React.PureComponent<React.PropsWithChildren<IProps>, IState> {
+export default class ContextMenu extends React.PureComponent<React.PropsWithChildren<ContextMenuProps>, IState> {
     private readonly initialFocus: HTMLElement;
 
     public static defaultProps = {
@@ -121,7 +121,7 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
         managed: true,
     };
 
-    public constructor(props: IProps) {
+    public constructor(props: ContextMenuProps) {
         super(props);
 
         this.state = {};
@@ -542,9 +542,9 @@ export const aboveLeftOf = (
 // and either above or below: wherever there is more space (maybe this should be aboveOrBelowRightOf?)
 export const aboveRightOf = (
     elementRect: Pick<DOMRect, "width" | "left" | "top" | "bottom">,
-    chevronFace = ChevronFace.None,
-    vPadding = 0,
-    horizontalCenter = false,
+    chevronFace: ChevronFace = ChevronFace.None,
+    vPadding: number = 0,
+    horizontalCenter: boolean = false,
 ): MenuProps => {
     const menuOptions: IPosition & { chevronFace: ChevronFace } = { chevronFace };
 

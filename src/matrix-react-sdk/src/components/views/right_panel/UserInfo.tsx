@@ -1511,7 +1511,8 @@ export const UserInfoHeader: React.FC<{
     e2eStatus?: E2EStatus;
     room: Room;
     roomId?: string;
-}> = ({ member, e2eStatus, room, roomId }) => {
+    avatarSize?: number;
+}> = ({ member, e2eStatus, room, roomId, avatarSize = 36 }) => {
     const cli = useContext(MatrixClientContext);
 
     let presenceState;
@@ -1547,12 +1548,12 @@ export const UserInfoHeader: React.FC<{
     const showE2eIcon = false;
     const showPresenceLabel = false;
     return (
-        <React.Fragment>
+        <>
             <div className="mx_UserInfo_avatarBox">
-                <DecoratedRoomAvatar room={room} avatarSize={80} />
+                <DecoratedRoomAvatar room={room} avatarSize={avatarSize} />
             </div>
 
-            <div className="mx_UserInfo_container">
+            <div className="mx_UserInfo_mainInfo">
                 <div className="mx_UserInfo_profile">
                     <div>
                         <h2>
@@ -1573,7 +1574,7 @@ export const UserInfoHeader: React.FC<{
                     {showPresenceLabel && <div className="mx_UserInfo_profileStatus">{presenceLabel}</div>}
                 </div>
             </div>
-        </React.Fragment>
+        </>
     );
 };
 
@@ -1600,7 +1601,7 @@ const UserInfo: React.FC<IProps> = ({ user, room, onClose, phase = RightPanelPha
         e2eStatus = getE2EStatus(cli, user.userId, devices);
     }
 
-    const classes = ["mx_UserInfo"];
+    const classes = ["mx_UserInfoPanel"];
 
     let cardState: IRightPanelCardState = {};
     // We have no previousPhase for when viewing a UserInfo without a Room at this time
@@ -1627,7 +1628,7 @@ const UserInfo: React.FC<IProps> = ({ user, room, onClose, phase = RightPanelPha
     const userInfo = (
         <>
             {scopeHeader}
-            <UserInfoHeader member={member} e2eStatus={e2eStatus} room={room} roomId={room?.roomId} />
+            <UserInfoHeader member={member} e2eStatus={e2eStatus} room={room} roomId={room?.roomId} avatarSize={80} />
         </>
     );
 
@@ -1684,7 +1685,7 @@ const UserInfo: React.FC<IProps> = ({ user, room, onClose, phase = RightPanelPha
                 }
             }}
         >
-            <div className="mx_UserInfo_content_box">{content}</div>
+            {content}
         </BaseCard>
     );
 };

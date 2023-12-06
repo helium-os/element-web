@@ -217,6 +217,11 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         });
     };
 
+    private onRoomMemberListClicked = (): void => {
+        if (!this.props.room) return;
+        this.setPhase(RightPanelPhases.RoomMemberList);
+    };
+
     private onThreadsPanelClicked = (ev: ButtonEvent): void => {
         if (this.state.phase && RoomHeaderButtons.THREAD_PHASES.includes(this.state.phase)) {
             RightPanelStore.instance.togglePanel(this.props.room?.roomId ?? null);
@@ -224,6 +229,10 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
             showThreadPanel();
             PosthogTrackers.trackInteraction("WebRoomHeaderButtonsThreadsButton", ev);
         }
+    };
+
+    private onRoomSettingsClicked = () => {
+        this.setPhase(RightPanelPhases.RoomSettings);
     };
 
     // 邀请成员并创建群聊
@@ -316,7 +325,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                     name="roomMembersButton"
                     title={"成员列表"}
                     isHighlighted={this.isPhase(RightPanelPhases.RoomMemberList)}
-                    onClick={this.onNotificationsClicked}
+                    onClick={this.onRoomMemberListClicked}
                 />,
             );
 
@@ -344,7 +353,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                         name="roomSettingsButton"
                         title={"群设置"}
                         isHighlighted={this.isPhase(RightPanelPhases.RoomSettings)}
-                        onClick={this.onRoomSummaryClicked}
+                        onClick={this.onRoomSettingsClicked}
                     />,
                 );
         }

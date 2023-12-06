@@ -180,7 +180,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
             {
                 key: "required",
                 test: async ({ value }) => !!value,
-                invalid: () => _t("Please enter a name for the room", { type: _t("channel") }),
+                invalid: () => _t("Please enter a name for the room", { roomType: _t("channel") }),
             },
         ],
     });
@@ -192,7 +192,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
         if (isVideoRoom) {
             title = _t("Create a video room");
         } else if (this.props.parentSpace) {
-            title = _t("Create a room", { type: _t("channel") });
+            title = _t("Create a room", { roomType: _t("channel") });
         } else {
             title = this.state.joinRule === JoinRule.Public ? _t("Create a public room") : _t("Create a private room");
         }
@@ -218,9 +218,9 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
                     <Field
                         type="text"
                         ref={this.nameField}
-                        label={_t("Room name", { type: _t("Channel") })}
+                        label={_t("Room name", { roomType: _t("Channel") })}
                         usePlaceholderAsHint={true}
-                        placeholder={_t("Please enter a name for the room", { type: _t("channel") })}
+                        placeholder={_t("Please enter a name for the room", { roomType: _t("channel") })}
                         autoFocus={false}
                         onChange={this.onNameChange}
                         value={this.state.name}

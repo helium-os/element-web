@@ -85,8 +85,10 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
     const footer = (
         <DialogButtons
             primaryButton={_t("Create")}
-            primaryDisabled={!nameValidate || busy}
-            primaryLoading={busy}
+            primaryButtonProps={{
+                disabled: !nameValidate || busy,
+                loading: busy,
+            }}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Back")}
             onCancel={onBack}

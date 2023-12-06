@@ -164,23 +164,25 @@ export default class BaseDialog extends React.Component<DialogProps> {
                     })}
                 >
                     {this.props.top}
-                    <div
-                        className={classNames("mx_Dialog_header", {
-                            mx_Dialog_headerWithButton: !!this.props.headerButton,
-                        })}
-                    >
-                        <div className="mx_Dialog_title_box">
-                            <div className={classNames("mx_Dialog_title", this.props.titleClass)}>
-                                {headerImage}
-                                {this.props.title}
+                    {(this.props.title || this.props.headerButton || cancelButton || this.props.description) && (
+                        <div
+                            className={classNames("mx_Dialog_header", {
+                                mx_Dialog_headerWithButton: !!this.props.headerButton,
+                            })}
+                        >
+                            <div className="mx_Dialog_title_box">
+                                <div className={classNames("mx_Dialog_title", this.props.titleClass)}>
+                                    {headerImage}
+                                    {this.props.title}
+                                </div>
+                                {this.props.headerButton}
+                                {cancelButton}
                             </div>
-                            {this.props.headerButton}
-                            {cancelButton}
+                            {this.props.description && (
+                                <div className="mx_Dialog_description">{this.props.description}</div>
+                            )}
                         </div>
-                        {this.props.description && (
-                            <div className="mx_Dialog_description">{this.props.description}</div>
-                        )}
-                    </div>
+                    )}
                     <div className="mx_Dialog_content">{this.props.children}</div>
                     {this.props.footer && <div className="mx_Dialog_footer">{this.props.footer}</div>}
                 </FocusLock>

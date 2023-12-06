@@ -56,27 +56,27 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
         return [
             new Tab(
                 SpaceSettingsTab.General,
-                _td("General"),
-                "mx_SpaceSettingsDialog_generalIcon",
+                _t("General"),
+                null,
                 <SpaceSettingsGeneralTab matrixClient={cli} space={space} />,
             ),
             new Tab(
                 SpaceSettingsTab.Visibility,
-                _td("Visibility"),
-                "mx_SpaceSettingsDialog_visibilityIcon",
+                _t("Visibility"),
+                null,
                 <SpaceSettingsVisibilityTab matrixClient={cli} space={space} closeSettingsFn={onFinished} />,
             ),
             new Tab(
                 SpaceSettingsTab.Roles,
-                _td("Roles & Permissions"),
-                "mx_RoomSettingsDialog_rolesIcon",
+                _t("Roles & Permissions"),
+                null,
                 <RolesRoomSettingsTab roomId={space.roomId} />,
             ),
             SettingsStore.getValue(UIFeature.SpaceAdvancedSettings)
                 ? new Tab(
                       SpaceSettingsTab.Advanced,
-                      _td("Advanced"),
-                      "mx_RoomSettingsDialog_warningIcon",
+                      _t("Advanced"),
+                      null,
                       <AdvancedRoomSettingsTab roomId={space.roomId} closeSettingsFn={onFinished} />,
                   )
                 : null,
@@ -84,15 +84,9 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
     }, [cli, space, onFinished]);
 
     return (
-        <BaseDialog
-            title={_t("Settings - %(spaceName)s", { spaceName: space.name || _t("Unnamed Space") })}
-            className="mx_SpaceSettingsDialog"
-            contentId="mx_SpaceSettingsDialog"
-            onFinished={onFinished}
-            fixedWidth={false}
-        >
+        <BaseDialog className="mx_SpaceSettingsDialog" hasCancel={false} fixedWidth={false} onFinished={onFinished}>
             <div className="mx_SpaceSettingsDialog_content" id="mx_SpaceSettingsDialog">
-                <TabbedView tabs={tabs} />
+                <TabbedView title={space.name || _t("Unnamed Space")} tabs={tabs} />
             </div>
         </BaseDialog>
     );

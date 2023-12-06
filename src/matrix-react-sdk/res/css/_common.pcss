@@ -361,6 +361,15 @@ legend {
     overflow-x: hidden;
 }
 
+.mx_Dialog_fullScreen {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    .mx_Dialog_content {
+        max-height: unset;
+    }
+}
+
 .mx_Dialog_staticWrapper .mx_Dialog {
     z-index: 4010;
     contain: content;
@@ -507,6 +516,11 @@ legend {
     display: flex;
     align-items: center;
     margin-inline-start: auto;
+    .mx-btn-text {
+        &.mx-btn-size-default {
+            padding: 0 12px;
+        }
+    }
 }
 
 .mx_Dialog_buttons_additive {

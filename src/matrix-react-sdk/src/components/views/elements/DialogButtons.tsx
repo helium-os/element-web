@@ -17,42 +17,23 @@ limitations under the License.
 */
 
 import React, { ReactNode } from "react";
-import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import Button, { ButtonProps, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 
 import { _t } from "../../../languageHandler";
 
 export interface DialogButtonProps {
-    // The primary button which is styled differently and has default focus.
     primaryButton: React.ReactNode;
-
-    primaryButtonType?: ButtonType;
-
-    primaryButtonClass?: string;
-
-    primaryLoading?: boolean;
-
-    // disables only the primary button
-    primaryDisabled?: boolean;
+    primaryButtonProps?: Omit<ButtonProps, "children" | "onClick">;
+    onPrimaryButtonClick?: (ev: React.MouseEvent) => void | Promise<void>;
 
     // If true, make the primary button a form submit button (input type="submit")
     primaryIsSubmit?: boolean;
 
-    // onClick handler for the primary button. Note that the returned promise, if
-    // returning a promise, is not used.
-    onPrimaryButtonClick?: (ev: React.MouseEvent) => void | Promise<void>;
-
     // should there be a cancel button? default: true
     hasCancel?: boolean;
-
     // A node to insert into the cancel button instead of default "Cancel"
     cancelButton?: React.ReactNode;
-
-    cancelButtonType?: ButtonType;
-
-    // The class of the cancel button, only used if a cancel button is
-    // enabled
-    cancelButtonClass?: string;
-
+    cancelButtonProps?: Omit<ButtonProps, "children" | "onClick">;
     // onClick handler for the cancel button.
     onCancel?: (...args: any[]) => void;
 
@@ -72,8 +53,6 @@ export interface DialogButtonProps {
  */
 export default class DialogButtons extends React.Component<DialogButtonProps> {
     public static defaultProps: Partial<DialogButtonProps> = {
-        primaryButtonType: ButtonType.Primary,
-        cancelButtonType: ButtonType.Link,
         hasCancel: true,
         disabled: false,
     };
@@ -87,10 +66,10 @@ export default class DialogButtons extends React.Component<DialogButtonProps> {
         if (this.props.hasCancel) {
             cancelButton = (
                 <Button
-                    type={this.props.cancelButtonType}
-                    className={this.props.cancelButtonClass}
-                    disabled={this.props.disabled}
+                    type={ButtonType.Text}
+                    disabled={this.props.disabled || this.props.cancelButtonProps?.disabled}
                     onClick={this.onCancelClick}
+                    {...this.props.cancelButtonProps}
                 >
                     {this.props.cancelButton || _t("Cancel")}
                 </Button>
@@ -109,11 +88,10 @@ export default class DialogButtons extends React.Component<DialogButtonProps> {
                     {cancelButton}
                     {this.props.children}
                     <Button
-                        type={this.props.primaryButtonType}
-                        className={this.props.primaryButtonClass}
-                        loading={this.props.primaryLoading}
-                        disabled={this.props.disabled || this.props.primaryDisabled}
+                        type={ButtonType.Primary}
+                        disabled={this.props.disabled || this.props.primaryButtonProps?.disabled}
                         onClick={this.props.onPrimaryButtonClick}
+                        {...this.props.primaryButtonProps}
                     >
                         {this.props.primaryButton}
                     </Button>

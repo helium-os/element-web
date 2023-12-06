@@ -71,6 +71,7 @@ interface IProps extends MatrixClientProps {
     relation?: IEventRelation;
     e2eStatus?: E2EStatus;
     compact?: boolean;
+    showCallButtons?: boolean;
 }
 
 interface IState {
@@ -106,6 +107,7 @@ export class MessageComposer extends React.Component<IProps, IState> {
     public static defaultProps = {
         compact: false,
         showVoiceBroadcastButton: false,
+        showCallButtons: true,
         isRichTextEnabled: true,
     };
 
@@ -607,9 +609,9 @@ export class MessageComposer extends React.Component<IProps, IState> {
                                             );
                                             this.toggleButtonMenu();
                                         }}
+                                        showCallButtons={this.props.showCallButtons}
                                     />
                                 )}
-                                <CallButtons room={this.props.room} className="mx_MessageComposer_button" />
                             </div>
                             <Button
                                 type={ButtonType.Primary}

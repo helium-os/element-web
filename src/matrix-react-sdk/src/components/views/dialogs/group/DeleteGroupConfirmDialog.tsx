@@ -3,7 +3,6 @@ import BaseDialog from "../BaseDialog";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 interface IProps {
     tagId: string; // 分组id
     onFinished: () => void;
@@ -52,9 +51,10 @@ const DeleteGroupConfirmDialog: React.FC<IProps> = ({ tagId, onFinished }) => {
     const footer = (
         <DialogButtons
             primaryButton={_t("Delete")}
-            primaryButtonType={ButtonType.Danger}
-            primaryLoading={busy}
-            primaryDisabled={busy}
+            primaryButtonProps={{
+                disabled: busy,
+                loading: busy,
+            }}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Cancel")}
             onCancel={onClose}

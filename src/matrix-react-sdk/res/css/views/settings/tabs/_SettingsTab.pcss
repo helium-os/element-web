@@ -15,16 +15,6 @@ limitations under the License.
 */
 
 .mx_SettingsTab {
-    --SettingsTab_section-margin-bottom-preferences-labs: 30px;
-    --SettingsTab_heading_nth_child-margin-top: 30px; /* TODO: Use a spacing variable */
-    --SettingsTab_fullWidthField-margin-inline-end: 100px;
-    --SettingsTab_tooltip-max-width: 120px; /* So it fits in the space provided by the page */
-
-    color: $primary-content;
-
-    a {
-        color: $links;
-    }
 }
 
 .mx_SettingsTab_warningText {
@@ -65,9 +55,19 @@ limitations under the License.
 }
 
 .mx_SettingsTab_section {
+    margin-bottom: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid $border-primary-color;
+
     $end-gutter: 80px;
 
-    margin-bottom: $spacing-24;
+    hr {
+        margin: 16px 0;
+        height: 0.5px;
+        background: $background-secondary-color2;
+        border: none;
+    }
 
     .mx_SettingsFlag {
         margin-inline-end: $end-gutter;
@@ -85,10 +85,6 @@ limitations under the License.
         }
     }
 
-    > p {
-        margin-inline-end: $end-gutter;
-    }
-
     &.mx_SettingsTab_subsectionText .mx_SettingsFlag {
         margin-inline-end: 0 !important;
     }
@@ -104,4 +100,16 @@ limitations under the License.
     grid-gap: $spacing-32;
 
     padding: $spacing-16 0;
+}
+
+.mx_SettingsTab_tips {
+    font-size: 12px;
+    line-height: 16px; /* 133.333% */
+    font-weight: 400;
+    color: $text-secondary-color2;
+}
+.mx_SettingsTab_avatarBox {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }

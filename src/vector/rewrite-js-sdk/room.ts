@@ -21,6 +21,10 @@ export function getRoomType(roomId: string) {
     return !SpaceStore.instance.isHomeSpace ? RoomType.Channel : isPeopleRoom(roomId) ? RoomType.People : RoomType.Room;
 }
 
+export function getRoomTypeLabel(roomId: string) {
+    return _t(getRoomType(roomId));
+}
+
 export function isPrivateRoom(joinRule: JoinRule) {
     return joinRule === JoinRule.Invite;
 }

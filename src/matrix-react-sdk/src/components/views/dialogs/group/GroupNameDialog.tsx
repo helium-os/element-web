@@ -120,8 +120,10 @@ const GroupNameDialog: React.FC<IProps> = ({ type, tagId, onFinished }) => {
     const footer = (
         <DialogButtons
             primaryButton={type === DialogType.Create ? _t("Create") : _t("Save")}
-            primaryDisabled={!groupNameValidate || busy}
-            primaryLoading={busy}
+            primaryButtonProps={{
+                disabled: !groupNameValidate || busy,
+                loading: busy,
+            }}
             onPrimaryButtonClick={onOk}
             cancelButton={_t("Cancel")}
             onCancel={onClose}

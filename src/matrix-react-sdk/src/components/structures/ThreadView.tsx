@@ -50,7 +50,6 @@ import PosthogTrackers from "../../PosthogTrackers";
 import { ButtonEvent } from "../views/elements/AccessibleButton";
 import Spinner from "../views/elements/Spinner";
 import { ComposerInsertPayload, ComposerType } from "../../dispatcher/payloads/ComposerInsertPayload";
-import Heading from "../views/typography/Heading";
 import { SdkContextClass } from "../../contexts/SDKContext";
 import { ThreadPayload } from "../../dispatcher/payloads/ThreadPayload";
 
@@ -360,15 +359,8 @@ export default class ThreadView extends React.Component<IProps, IState> {
         return relation;
     }
 
-    private renderThreadViewHeader = (): JSX.Element => {
-        return (
-            <div className="mx_BaseCard_header_title">
-                <Heading size="h4" className="mx_BaseCard_header_title_heading">
-                    {_t("Thread")}
-                </Heading>
-                <ThreadListContextMenu mxEvent={this.props.mxEvent} permalinkCreator={this.props.permalinkCreator} />
-            </div>
-        );
+    private renderThreadViewHeaderButton = (): JSX.Element => {
+        return <ThreadListContextMenu mxEvent={this.props.mxEvent} permalinkCreator={this.props.permalinkCreator} />;
     };
 
     public render(): React.ReactNode {
@@ -439,35 +431,32 @@ export default class ThreadView extends React.Component<IProps, IState> {
                     })}
                     onClose={this.props.onClose}
                     withoutScrollContainer={true}
-                    header={this.renderThreadViewHeader()}
+                    title={_t("Thread")}
                     ref={this.card}
                     onKeyDown={this.onKeyDown}
                     onBack={(ev: ButtonEvent) => {
                         PosthogTrackers.trackInteraction("WebThreadViewBackButton", ev);
                     }}
                 >
-                    <div className="mx_ThreadPanel_content_box">
-                        {this.card.current && (
-                            <Measured sensor={this.card.current} onMeasurement={this.onMeasurement} />
-                        )}
-                        <div className="mx_ThreadView_timelinePanelWrapper">{timeline}</div>
+                    {this.card.current && <Measured sensor={this.card.current} onMeasurement={this.onMeasurement} />}
+                    <div className="mx_ThreadView_timelinePanelWrapper">{timeline}</div>
 
-                        {ContentMessages.sharedInstance().getCurrentUploads(threadRelation).length > 0 && (
-                            <UploadBar room={this.props.room} relation={threadRelation} />
-                        )}
+                    {ContentMessages.sharedInstance().getCurrentUploads(threadRelation).length > 0 && (
+                        <UploadBar room={this.props.room} relation={threadRelation} />
+                    )}
 
-                        {this.state.thread?.timelineSet && (
-                            <MessageComposer
-                                room={this.props.room}
-                                resizeNotifier={this.props.resizeNotifier}
-                                relation={threadRelation}
-                                replyToEvent={this.state.replyToEvent}
-                                permalinkCreator={this.props.permalinkCreator}
-                                e2eStatus={this.props.e2eStatus}
-                                compact={true}
-                            />
-                        )}
-                    </div>
+                    {this.state.thread?.timelineSet && (
+                        <MessageComposer
+                            room={this.props.room}
+                            resizeNotifier={this.props.resizeNotifier}
+                            relation={threadRelation}
+                            replyToEvent={this.state.replyToEvent}
+                            permalinkCreator={this.props.permalinkCreator}
+                            e2eStatus={this.props.e2eStatus}
+                            compact={true}
+                            showCallButtons={false}
+                        />
+                    )}
                 </BaseCard>
             </RoomContext.Provider>
         );

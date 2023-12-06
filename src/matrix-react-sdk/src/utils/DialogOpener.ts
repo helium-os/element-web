@@ -106,6 +106,9 @@ export class DialogOpener {
                     /*className=*/ undefined,
                     /*isPriority=*/ false,
                     /*isStatic=*/ true,
+                    {
+                        fullScreen: true,
+                    },
                 );
                 break;
             case Action.OpenInviteDialog:

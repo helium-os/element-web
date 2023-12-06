@@ -23,7 +23,7 @@ import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { _t } from "../../../languageHandler";
 import Modal from "../../../Modal";
 import AccessibleButton from "../elements/AccessibleButton";
-import {getHttpUrlFromMxc} from "../../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../../customisations/Media";
 import RoomAvatar from "../avatars/RoomAvatar";
 import ImageView from "../elements/ImageView";
 interface IProps {
@@ -60,8 +60,8 @@ export default class RoomAvatarEvent extends React.Component<IProps> {
             return (
                 <div className="mx_TextualEvent">
                     {_t("%(senderDisplayName)s removed the room avatar.", {
-                        senderDisplayName,
-                        roomType: roomTypeLabel
+                        senderDisplayName: () => <label>{senderDisplayName}</label>,
+                        roomType: roomTypeLabel,
                     })}
                 </div>
             );
@@ -80,7 +80,7 @@ export default class RoomAvatarEvent extends React.Component<IProps> {
                     "%(senderDisplayName)s changed the room avatar to <img/>",
                     {
                         senderDisplayName: senderDisplayName,
-                        roomType: roomTypeLabel
+                        roomType: roomTypeLabel,
                     },
                     {
                         img: () => (

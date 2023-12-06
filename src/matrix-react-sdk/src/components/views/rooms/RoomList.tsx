@@ -215,7 +215,7 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
     const showCreateRoom = shouldShowComponent(UIComponent.CreateRooms);
     const showExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
 
-    const createRoomLabel = _t("Create room", { type: _t(activeSpace ? "channel" : "room") });
+    const createRoomLabel = _t("Create room", { roomType: _t(activeSpace ? "channel" : "room") });
 
     let tags;
     if (tagId) tags = [{ tagId }];

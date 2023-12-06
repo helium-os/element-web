@@ -15,88 +15,46 @@ limitations under the License.
 */
 
 .mx_ThreadPanel {
-    height: 100px;
+    height: 100%;
     overflow: visible;
 
-    .mx_BaseCard_header {
-        .mx_BaseCard_header_title {
-            .mx_AccessibleButton {
-                font-size: 12px;
-                color: $secondary-content;
-            }
-
-            .mx_ThreadPanel_dropdown {
-                padding: 3px $spacing-4 3px $spacing-8; /* TODO: Use a spacing variable */
-                border-radius: 4px;
-                line-height: 1.5;
-                user-select: none;
-
-                &:hover,
-                &[aria-expanded="true"] {
-                    background: $quinary-content;
-                }
-
-                &::before {
-                    content: "";
-                    width: 18px;
-                    height: 18px;
-                    background: currentColor;
-                    mask-image: url("$(res)/img/feather-customised/chevron-down.svg");
-                    mask-size: 100%;
-                    mask-repeat: no-repeat;
-                    float: right;
-                }
-            }
-        }
+    .mx_BaseCard_content {
+        padding-top: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
 
-    .mx_AutoHideScrollbar,
-    .mx_RoomView_messagePanelSpinner {
-        background-color: $background;
-        border-radius: 8px;
-        padding-inline-end: 0;
-        overflow-y: scroll; /* set gap between the thread tile and the right border */
-        height: 100%;
+    .mx_ThreadPanel_search_box {
+        padding: 0 20px;
+        margin-bottom: 20px;
     }
 
-    .mx_EventTile[data-layout="group"] {
-        .mx_MessageActionBar {
-            right: 0;
-            top: -36px; /* 2px above EventTile */
-            z-index: 10; /* See _EventTile.pcss */
-        }
-    }
-
-    /* For style rules of EventTile in a thread, see _EventTile.pcss */
-    &.mx_ThreadView {
-        max-height: 100%;
-
-        .mx_ThreadView_timelinePanelWrapper {
-            position: relative;
-            min-height: 0; /* don't displace the composer */
-            flex-grow: 1;
-
-            .mx_FileDropTarget {
-                border-radius: 8px;
-            }
-        }
-
-        .mx_MessageComposer_sendMessage {
-            margin-right: 0;
-        }
-
-        // Make use of the space above the composer buttons too
-        .mx_Autocomplete {
-            width: calc(100% + 140px);
-        }
-        &.mx_ThreadView_narrow .mx_Autocomplete {
-            width: calc(100% + 108px);
+    .mx_ThreadView_timelinePanelWrapper {
+        flex: 1;
+        overflow: hidden;
+        .mx_FileDropTarget {
+            border-radius: 8px;
         }
     }
 
     .mx_RoomView_messagePanel {
-        /* To avoid the rule from being applied to .mx_ThreadPanel_empty */
+        padding: 0 20px 20px;
+    }
 
+    .mx_RoomView_messageListWrapper {
+        justify-content: flex-start;
+    }
+
+    .mx_RoomView_MessageList {
+        padding: 0;
+        content-visibility: visible;
+    }
+
+    .mx_AutoHideScrollbar,
+    .mx_RoomView_messagePanelSpinner {
+        height: 100%;
+        overflow-y: scroll; /* set gap between the thread tile and the right border */
     }
 
 
@@ -115,18 +73,6 @@ limitations under the License.
         }
     }
 
-    .mx_MessageComposer {
-        background-color: $background;
-        border-radius: 8px;
-        margin-top: 8px;
-        padding: 0 8px;
-        box-sizing: border-box;
-    }
-
-    .mx_MessageTimestamp {
-        color: var(--MessageTimestamp-color); /* TODO: check whether needed or not */
-    }
-
     .mx_BaseCard_footer {
         text-align: left;
         font-size: $font-12px;
@@ -141,22 +87,29 @@ limitations under the License.
             color: $secondary-content;
         }
     }
+
+    /* For style rules of EventTile in a thread, see _EventTile.pcss */
+    &.mx_ThreadView {
+
+        .mx_BaseCard_content {
+            padding-top: 0;
+        }
+
+        .mx_RoomView_messagePanel {
+            padding: 22px 0 0;
+        }
+
+    // Make use of the space above the composer buttons too
+        .mx_Autocomplete {
+            width: calc(100% + 140px);
+        }
+        &.mx_ThreadView_narrow .mx_Autocomplete {
+            width: calc(100% + 108px);
+        }
+    }
 }
 
-.mx_ThreadPanel_content_box {
-    padding: 20px 0;
-    margin: 0 -20px;
-    .mx_RoomView_messageListWrapper {
-        margin-top: 20px;
-        justify-content: flex-start;
-        min-height: unset;
-    }
 
-    .mx_RoomView_MessageList {
-        padding: 0;
-        content-visibility: visible;
-    }
-}
 
 .mx_ThreadPanel_viewInRoom::before {
     mask-image: url("$(res)/img/element-icons/view-in-room.svg");
@@ -230,6 +183,20 @@ limitations under the License.
         width: inherit;
         height: inherit;
     }
+}
+
+.mx_ThreadPanel_header_dropdownBox {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 20px; /* 166.667% */
+    font-weight: 400;
+    color: $text-secondary-color2;
+}
+.mx_ThreadPanel_header_dropdownIcon {
+    width: 16px;
+    height: 16px;
+    @mixin MaskIcon url("$(res)/img/feather-customised/dropdown-arrow.svg"), 10px, 5px, $text-secondary-color2;
 }
 
 .mx_ContextualMenu_wrapper {

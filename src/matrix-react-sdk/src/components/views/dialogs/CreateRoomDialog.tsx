@@ -54,7 +54,7 @@ const validateRoomName = withValidation({
         {
             key: "required",
             test: async ({ value }) => !!value,
-            invalid: () => _t("Please enter a name for the room", { type: _t("room") }),
+            invalid: () => _t("Please enter a name for the room", { roomType: _t("room") }),
         },
     ],
 });
@@ -120,7 +120,7 @@ const CreateRoomDialog: React.FC<IProps> = ({
 
     const footer = (
         <DialogButtons
-            primaryButton={_t("Create room", { type: _t("room") })}
+            primaryButton={_t("Create room", { roomType: _t("room") })}
             primaryDisabled={(nameRequired && !nameIsValid) || (inviteRequired && !invite.length)}
             onPrimaryButtonClick={onOk}
             onCancel={onCancel}
@@ -131,7 +131,7 @@ const CreateRoomDialog: React.FC<IProps> = ({
         <BaseDialog
             className="mx_CreateRoomDialog"
             onFinished={onFinished}
-            title={_t("Create a room", { type: _t("room") })}
+            title={_t("Create a room", { roomType: _t("room") })}
             screenName="CreateRoom"
             footer={footer}
         >
@@ -141,9 +141,9 @@ const CreateRoomDialog: React.FC<IProps> = ({
                     <Field
                         type="text"
                         ref={nameField}
-                        label={_t("Room name", { type: _t("Room") })}
+                        label={_t("Room name", { roomType: _t("Room") })}
                         usePlaceholderAsHint={true}
-                        placeholder={_t("Please enter a name for the room", { type: _t("room") })}
+                        placeholder={_t("Please enter a name for the room", { roomType: _t("room") })}
                         autoFocus={false}
                         onChange={onNameChange}
                         value={name}

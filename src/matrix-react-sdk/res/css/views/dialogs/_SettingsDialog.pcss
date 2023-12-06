@@ -19,24 +19,4 @@ limitations under the License.
 .mx_RoomSettingsDialog,
 .mx_SpaceSettingsDialog,
 .mx_SpacePreferencesDialog {
-    width: 90vw;
-    max-width: 1000px;
-    /* set the height too since tabbed view scrolls itself. */
-    height: 80vh;
-
-    .mx_TabbedView {
-        top: 65px;
-    }
-
-    .mx_TabbedView .mx_SettingsTab {
-        box-sizing: border-box;
-        min-width: 580px;
-        padding-right: 100px;
-        display: flex;
-        flex-direction: column;
-
-        /* Put some padding on the bottom to avoid the settings tab from */
-        /* colliding harshly with the dialog when scrolled down. */
-        padding-bottom: 100px;
-    }
 }

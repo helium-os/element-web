@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+
 .mx_ReplyTile {
     position: relative;
     display: flex;
@@ -29,11 +30,6 @@ limitations under the License.
         mask-image: url("$(res)/img/element-icons/call/video-call.svg");
     }
 
-    .mx_RedactedBody {
-        line-height: $font-18px;
-    }
-
-    .mx_RedactedBody,
     .mx_HiddenBody {
         padding: 4px 0 2px 20px;
 
@@ -42,6 +38,14 @@ limitations under the License.
             width: 13px;
             top: 3px;
         }
+    }
+
+
+
+    .mx_RedactedBody, .mx_EventTile_content {
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 16px;
     }
 
     /* We do reply size limiting with CSS to avoid duplicating the TextualBody component. */
@@ -57,9 +61,6 @@ limitations under the License.
         -webkit-box-orient: vertical;
         -webkit-line-clamp: $reply-lines;
 
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 16px;
         color: $text-secondary-color1;
 
         .mx_EventTile_body.mx_EventTile_bigEmoji {
@@ -93,10 +94,6 @@ limitations under the License.
         .markdown-body ul {
             margin-bottom: 4px;
         }
-    }
-
-    &.mx_ReplyTile_info {
-        padding-top: 0;
     }
 
     &.mx_ReplyTile_inline > a {
