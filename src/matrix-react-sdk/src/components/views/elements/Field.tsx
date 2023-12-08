@@ -331,7 +331,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
                             </label>
                             {wordLimit && (
                                 <label className="mx_Field_wordLimit">
-                                    {inputProps.value.length} / {wordLimit}
+                                    {inputProps.value.length}/{wordLimit}
                                 </label>
                             )}
                         </div>
