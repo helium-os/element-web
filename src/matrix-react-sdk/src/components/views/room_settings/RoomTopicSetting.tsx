@@ -15,18 +15,26 @@ interface IProps {
 
 function getRoomTopic(room) {
     const topicEvent = room.currentState.getStateEvents(EventType.RoomTopic, "");
-    return topicEvent?.getContent()["topic"] ?? null;
+    return topicEvent?.getContent()["topic"] ?? "";
 }
 const RoomTopicSetting: React.FC<IProps> = ({ room, title = true }) => {
     const client = MatrixClientPeg.get();
+
     const [canSetTopic, setCanSetTopic] = useState<boolean>(false);
     const [topic, setTopic] = useState<string>("");
 
+    // 判断是否有修改topic的权限
+    useEffect(() => {
+        const userId = client.getSafeUserId();
+        setCanSetTopic(room.currentState.maySendStateEvent(EventType.RoomTopic, userId) && !room.isAdminLeft());
+    }, [client, room]);
+
     useEffect(() => {
         if (!room?.roomId) {
-            setTopic(null);
+            setTopic("");
             return;
         }
+
         const onRoomStateEvents = (ev: MatrixEvent): void => {
             if (ev.getRoomId() !== room?.roomId || ev.getType() !== EventType.RoomTopic) return;
 
@@ -40,12 +48,6 @@ const RoomTopicSetting: React.FC<IProps> = ({ room, title = true }) => {
             client?.removeListener(RoomStateEvent.Events, onRoomStateEvents);
         };
     }, [client, room]);
-
-    useEffect(() => {
-        const client = MatrixClientPeg.get();
-        const userId = client.getSafeUserId();
-        setCanSetTopic(room.currentState.maySendStateEvent(EventType.RoomTopic, userId) && !room.isAdminLeft());
-    }, [room]);
 
     const onEditTopic = () => {
         if (!canSetTopic) return;
@@ -66,7 +68,7 @@ const RoomTopicSetting: React.FC<IProps> = ({ room, title = true }) => {
                     </div>
                 )}
                 <div className="mx_TextSettingsItem_info" onClick={onEditTopic}>
-                    {topic}
+                    {topic || <span className="mx_TextSettingsItem_info_default">添加描述</span>}
                     {canSetTopic && <span className="mx_Settings_icon" />}
                 </div>
             </div>

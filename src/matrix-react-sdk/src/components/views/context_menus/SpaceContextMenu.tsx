@@ -171,8 +171,8 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 {/*    label={_t("Preferences")}*/}
                 {/*    onClick={onPreferencesClick}*/}
                 {/*/>*/}
-                <SpaceAddChanelContextMenu showIcon={true} onFinished={onFinished} />
-                <SpaceAddTagContextMenu showIcon={true} onFinished={onFinished} />
+                <SpaceAddChanelContextMenu showIcon={true} />
+                <SpaceAddTagContextMenu showIcon={true} />
                 <hr />
                 {/*{devtoolsOption}*/}
                 {settingsOption}

@@ -478,9 +478,11 @@ export type ToRightOf = {
 
 // Placement method for <ContextMenu /> to position context menu to right of elementRect with chevronOffset
 export const toRightOf = (elementRect: Pick<DOMRect, "right" | "top" | "height">, chevronOffset = 12): ToRightOf => {
-    const left = elementRect.right + window.scrollX + 3;
+    const left = elementRect.right + window.scrollX;
     let top = elementRect.top + elementRect.height / 2 + window.scrollY;
-    top -= chevronOffset + 8; // where 8 is half the height of the chevron
+    if (chevronOffset) {
+        top -= chevronOffset; // where 8 is half the height of the chevron
+    }
     return { left, top, chevronOffset };
 };
 
@@ -492,9 +494,12 @@ export type ToLeftOf = {
 
 // Placement method for <ContextMenu /> to position context menu to left of elementRect with chevronOffset
 export const toLeftOf = (elementRect: DOMRect, chevronOffset = 12): ToLeftOf => {
-    const right = UIStore.instance.windowWidth - elementRect.left + window.scrollX - 3;
+    const right = UIStore.instance.windowWidth - elementRect.left + window.scrollX;
     let top = elementRect.top + elementRect.height / 2 + window.scrollY;
-    top -= chevronOffset + 8; // where 8 is half the height of the chevron
+    if (chevronOffset) {
+        // where 8 is half the height of the chevron
+        top -= chevronOffset;
+    }
     return { right, top, chevronOffset };
 };
 

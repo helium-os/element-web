@@ -14,8 +14,98 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-.mx_RolesRoomSettingsTab ul {
-    margin-bottom: 0;
+.mx_RolesRoomSettings_container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    .mx_RolesRoomSettings_search {
+        margin-bottom: 16px;
+    }
+    .mx_SearchBox {
+        width: 200px;
+        height: 36px;
+    }
+    .mx_RolesSettings_membersWrap {
+        flex: 1;
+        overflow: hidden;
+        margin: 0 -20px;
+    }
+    .mx_MemberList_wrapper {
+        padding: 0 12px;
+    }
+    .mx_MemberItem {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0;
+        padding: 10px 8px;
+        &:after {
+            content: "";
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            left: 40px;
+            height: 1px;
+            transform: scale(1, 0.5);
+            background: $border-primary-color;
+        }
+
+        &:hover, &.mx_MemberItem_active {
+            background: transparent;
+            .mx_RoleSettings_memberItem_actions {
+                display: flex;
+            }
+        }
+    }
+    .mx_EntityTile {
+        gap: 8px;
+    }
+    .mx_RoleSettings_memberItem_actions {
+        display: none;
+        list-style: none;
+        & > li {
+            position: relative;
+            padding: 2px 12px;
+            font-size: 14px;
+            line-height: 20px;
+            font-weight: 400;
+            color: $text-primary-color2;
+            cursor: pointer;
+            &:before {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: 0;
+                transform: translate(0, -50%);
+                width: 1px;
+                height: 16px;
+                background: $border-primary-color;
+            }
+            &:first-child {
+                &:before {
+                    display: none;
+                }
+            }
+        }
+    }
+    .mx_RolesSettings_tips {
+        margin-top: 12px;
+        text-align: right;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 400;
+        color: $text-secondary-color2;
+        .mx_tips_icon {
+            display: inline-block;
+            vertical-align: top;
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
+            @mixin MaskIcon url("$(res)/img/icon_answer_question.svg"), 16px, 16px, $text-secondary-color2;
+        }
+    }
 }
 
 .mx_RolesRoomSettingsTab_unbanBtn {

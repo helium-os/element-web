@@ -19,7 +19,6 @@ limitations under the License.
 .mx_TabbedView {
     margin: 0;
     display: flex;
-    align-items: flex-start;
     top: 0;
     bottom: 0;
     left: 0;
@@ -32,17 +31,17 @@ limitations under the License.
     flex-direction: column;
     width: 230px;
     height: 100vh;
-    padding: 12px 0;
+    padding: 12px;
     background: $background-secondary-color1;
-    & > * {
-        padding: 0 12px;
-    }
 }
 .mx_TabbedView_title {
     margin-bottom: 10px;
     font-size: 18px;
     font-weight: 600;
     line-height: 26px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     color: $text-primary-color2;
 }
 
@@ -81,7 +80,10 @@ limitations under the License.
     .mx_BaseCard_content {
         flex: 1;
         overflow: hidden;
-        .mx_AutoHideScrollbar {
+        & > .mx_AutoHideScrollbar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
             padding: 20px 40px;
         }
     }

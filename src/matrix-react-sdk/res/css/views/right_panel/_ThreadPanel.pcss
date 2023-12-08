@@ -186,17 +186,13 @@ limitations under the License.
 }
 
 .mx_ThreadPanel_header_dropdownBox {
-    display: flex;
-    align-items: center;
     font-size: 12px;
-    line-height: 20px; /* 166.667% */
-    font-weight: 400;
     color: $text-secondary-color2;
-}
-.mx_ThreadPanel_header_dropdownIcon {
-    width: 16px;
-    height: 16px;
-    @mixin MaskIcon url("$(res)/img/feather-customised/dropdown-arrow.svg"), 10px, 5px, $text-secondary-color2;
+    .mx_DropdownIcon {
+        &:before {
+            background: $text-secondary-color2;
+        }
+    }
 }
 
 .mx_ContextualMenu_wrapper {

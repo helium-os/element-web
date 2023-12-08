@@ -28,7 +28,7 @@ import dis from "../../../dispatcher/dispatcher";
 import { _t } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { Action } from "../../../dispatcher/actions";
-import EntityTile, { PowerStatus, PresenceState } from "./EntityTile";
+import EntityTile, { PresenceState } from "./EntityTile";
 import MemberAvatar from "./../avatars/MemberAvatar";
 import DisambiguatedProfile from "../messages/DisambiguatedProfile";
 import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
@@ -36,8 +36,11 @@ import { E2EState } from "./E2EIcon";
 
 interface IProps {
     member: RoomMember;
+    avatarSize?: number;
     showPresence?: boolean;
-    onMouseOver(e: MouseEvent): void;
+    onClick?(): void;
+    onMouseOver?(): void;
+    onMouseLeave?(): void;
 }
 
 interface IState {
@@ -51,6 +54,7 @@ export default class MemberTile extends React.Component<IProps, IState> {
 
     public static defaultProps = {
         showPresence: true,
+        avatarSize: 36,
     };
 
     public constructor(props: IProps) {
@@ -189,14 +193,21 @@ export default class MemberTile extends React.Component<IProps, IState> {
         const name = this.getDisplayName();
         const presenceState = member.user?.presence as PresenceState | undefined;
 
-        const av = <MemberAvatar member={member} width={36} height={36} aria-hidden="true" />;
+        const av = (
+            <MemberAvatar
+                member={member}
+                width={this.props.avatarSize}
+                height={this.props.avatarSize}
+                aria-hidden="true"
+            />
+        );
 
         if (member.user) {
             this.userLastModifiedTime = member.user.getLastModifiedTime();
         }
         this.memberLastModifiedTime = member.getLastModifiedTime();
 
-        const powerStatus = this.props.member.getPowerStatus();
+        const powerLevel = this.props.member.getPowerLevel();
 
         let e2eStatus: E2EState | undefined;
         if (this.state.isRoomEncrypted) {
@@ -216,10 +227,10 @@ export default class MemberTile extends React.Component<IProps, IState> {
                 title={this.getPowerLabel()}
                 name={name}
                 nameJSX={nameJSX}
-                powerStatus={powerStatus}
+                powerLevel={powerLevel}
                 showPresence={this.props.showPresence}
                 e2eStatus={e2eStatus}
-                // onClick={this.onClick}
+                onClick={this.props.onClick}
             />
         );
     }

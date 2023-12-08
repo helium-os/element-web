@@ -47,7 +47,9 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({ stepIndex, onStepChange, onSp
     const footer = (
         <DialogButtons
             primaryButton={_t("Next")}
-            primaryDisabled={!selectedSpaceType}
+            primaryButtonProps={{
+                disabled: !selectedSpaceType,
+            }}
             onPrimaryButtonClick={onOk}
             onCancel={onClose}
         />

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import { Room } from "matrix-js-sdk/src/models/room";
-import React, { ComponentType, createRef, ReactComponentElement, RefObject, SyntheticEvent } from "react";
+import React, { ComponentType, createRef, ReactComponentElement, RefObject, SyntheticEvent, useContext } from "react";
 
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import type { DropResult } from "react-beautiful-dnd";
@@ -68,6 +68,7 @@ import SpaceAddChanelContextMenu, {
 } from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -212,7 +213,15 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
         return SpaceStore.instance.activeSpaceRoom;
     });
 
-    const showCreateRoom = shouldShowComponent(UIComponent.CreateRooms);
+    const cli = useContext(MatrixClientContext);
+    const userId = cli.getUserId()!;
+    const hasPermissionToAddSpaceChild = activeSpace?.currentState.maySendStateEvent(EventType.SpaceChild, userId);
+    const canAddRooms =
+        activeSpace?.getMyMembership() === "join" &&
+        hasPermissionToAddSpaceChild &&
+        shouldShowComponent(UIComponent.CreateRooms);
+    const showCreateRoom = activeSpace ? canAddRooms : shouldShowComponent(UIComponent.CreateRooms);
+
     const showExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
 
     const createRoomLabel = _t("Create room", { roomType: _t(activeSpace ? "channel" : "room") });

@@ -20,13 +20,10 @@ import * as React from "react";
 import classNames from "classnames";
 import { logger } from "matrix-js-sdk/src/logger";
 
-import { _t } from "../../languageHandler";
 import BaseCard from "matrix-react-sdk/src/components/views/right_panel/BaseCard";
-import AutoHideScrollbar from "./AutoHideScrollbar";
 import AccessibleButton from "../views/elements/AccessibleButton";
 import { PosthogScreenTracker, ScreenName } from "../../PosthogTrackers";
 import { NonEmptyArray } from "../../@types/common";
-import { leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
 
 /**
  * Represents a tab for the TabbedView.
@@ -57,10 +54,12 @@ export enum TabLocation {
 interface IProps {
     title?: string;
     tabs: NonEmptyArray<Tab>;
+    footer?: React.ReactNode;
     initialTabId?: string;
     tabLocation: TabLocation;
     onChange?: (tabId: string) => void;
     screenName?: ScreenName;
+    showIcon: boolean;
 }
 
 interface IState {
@@ -79,6 +78,7 @@ export default class TabbedView extends React.Component<IProps, IState> {
 
     public static defaultProps = {
         tabLocation: TabLocation.LEFT,
+        showIcon: false,
     };
 
     private getTabById(id: string): Tab | undefined {
@@ -106,7 +106,7 @@ export default class TabbedView extends React.Component<IProps, IState> {
         if (this.state.activeTabId === tab.id) classes += "mx_TabbedView_tabLabel_active";
 
         let tabIcon: JSX.Element | undefined;
-        if (tab.icon) {
+        if (this.props.showIcon && tab.icon) {
             tabIcon = <span className={`mx_TabbedView_maskedIcon ${tab.icon}`} />;
         }
 
@@ -126,6 +126,7 @@ export default class TabbedView extends React.Component<IProps, IState> {
     }
 
     private renderTabPanel(tab: Tab): React.ReactNode {
+        console.log("renderTabPanel", tab);
         return (
             <BaseCard className="mx_TabbedView_tabPanel" title={tab.label}>
                 {tab.body}
@@ -144,20 +145,18 @@ export default class TabbedView extends React.Component<IProps, IState> {
 
         const screenName = tab?.screenName ?? this.props.screenName;
 
+        console.log("this.props.footer", this.props.footer);
         return (
             <div className={tabbedViewClasses}>
                 {screenName && <PosthogScreenTracker screenName={screenName} />}
                 <div className="mx_TabbedView_leftPanel">
-                    {this.props.title && <div className="mx_TabbedView_title">{this.props.title}</div>}
+                    {this.props.title && (
+                        <div className="mx_TabbedView_title" title={this.props.title}>
+                            {this.props.title}
+                        </div>
+                    )}
                     <div className="mx_TabbedView_tabLabels">{labels}</div>
-                    <AccessibleButton
-                        kind="danger"
-                        onClick={() => {
-                            leaveSpace(space);
-                        }}
-                    >
-                        {_t("Leave Space")}
-                    </AccessibleButton>
+                    {this.props.footer}
                 </div>
                 {panel}
             </div>

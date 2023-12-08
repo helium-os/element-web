@@ -5,7 +5,7 @@ import RoomNameSettings from "matrix-react-sdk/src/components/views/room_setting
 import RoomAvatarSettings from "matrix-react-sdk/src/components/views/room_settings/RoomAvatarSetting";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import { RoomPermalinkCreator } from "matrix-react-sdk/src/utils/permalinks/Permalinks";
-import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import Button, { ButtonSize } from "matrix-react-sdk/src/components/views/button/Button";
 import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 

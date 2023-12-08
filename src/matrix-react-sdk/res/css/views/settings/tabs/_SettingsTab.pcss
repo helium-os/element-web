@@ -55,12 +55,9 @@ limitations under the License.
 }
 
 .mx_SettingsTab_section {
-    margin-bottom: 20px;
     padding: 20px;
     border-radius: 10px;
     border: 1px solid $border-primary-color;
-
-    $end-gutter: 80px;
 
     hr {
         margin: 16px 0;
@@ -68,38 +65,14 @@ limitations under the License.
         background: $background-secondary-color2;
         border: none;
     }
-
-    .mx_SettingsFlag {
-        margin-inline-end: $end-gutter;
-        margin-bottom: 10px; /* TODO: Use a spacing variable */
-
-        .mx_SettingsFlag_label {
-            vertical-align: middle;
-            display: inline-block;
-            max-width: calc(100% - $font-48px); /* Force word wrap instead of colliding with the switch */
-            box-sizing: border-box;
-        }
-
-        .mx_ToggleSwitch {
-            float: inline-end;
-        }
-    }
-
-    &.mx_SettingsTab_subsectionText .mx_SettingsFlag {
-        margin-inline-end: 0 !important;
-    }
 }
 
-.mx_SettingsTab_toggleWithDescription {
-    margin-top: $spacing-24;
-}
-
-.mx_SettingsTab_sections {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-gap: $spacing-32;
-
-    padding: $spacing-16 0;
+.mx_SettingsTab_subTitle {
+    margin-bottom: 12px;
+    font-size: 14px;
+    line-height: 20px; /* 142.857% */
+    font-weight: 400;
+    color: $text-secondary-color1;
 }
 
 .mx_SettingsTab_tips {
@@ -112,4 +85,8 @@ limitations under the License.
     display: flex;
     align-items: center;
     gap: 16px;
+}
+
+.mx_SettingsTab_toggleWithDescription {
+    margin-top: $spacing-24;
 }

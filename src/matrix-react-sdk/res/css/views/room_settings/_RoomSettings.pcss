@@ -12,6 +12,9 @@
         color: $text-primary-color2;
         cursor: pointer;
     }
+    .mx_TextSettingsItem_info_default {
+        color: $text-secondary-color2;
+    }
     .mx_Settings_icon {
         opacity: 0;
         display: inline-block;
@@ -27,7 +30,9 @@
         }
     }
     &.mx_Settings_disabled {
-        cursor: not-allowed;
+        .mx_TextSettingsItem_info {
+            cursor: not-allowed;
+        }
         .mx_Settings_icon {
             display: none;
         }

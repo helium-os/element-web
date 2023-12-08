@@ -29,7 +29,7 @@ import MatrixClientContext from "../../contexts/MatrixClientContext";
 import RoomSummaryCard from "../views/right_panel/RoomSummaryCard";
 import WidgetCard from "../views/right_panel/WidgetCard";
 import SettingsStore from "../../settings/SettingsStore";
-import MemberList from "../views/rooms/MemberList";
+import MemberListPanel from "../views/right_panel/MemberListPanel";
 import UserInfo from "../views/right_panel/UserInfo";
 import ThirdPartyMemberInfo from "../views/rooms/ThirdPartyMemberInfo";
 import FilePanel from "./FilePanel";
@@ -146,10 +146,6 @@ export default class RightPanel extends React.Component<IProps, IState> {
         }
     };
 
-    private onSearchQueryChanged = (searchQuery: string): void => {
-        this.setState({ searchQuery });
-    };
-
     public render(): React.ReactNode {
         let card = <div />;
         const roomId = this.props.room?.roomId;
@@ -158,25 +154,15 @@ export default class RightPanel extends React.Component<IProps, IState> {
         switch (phase) {
             case RightPanelPhases.RoomMemberList:
                 if (roomId) {
-                    card = (
-                        <MemberList
-                            roomId={roomId}
-                            key={roomId}
-                            onClose={this.onClose}
-                            searchQuery={this.state.searchQuery}
-                            onSearchQueryChanged={this.onSearchQueryChanged}
-                        />
-                    );
+                    card = <MemberListPanel roomId={roomId} key={roomId} onClose={this.onClose} />;
                 }
                 break;
             case RightPanelPhases.SpaceMemberList:
                 card = (
-                    <MemberList
+                    <MemberListPanel
                         roomId={cardState?.spaceId ?? roomId}
                         key={cardState?.spaceId ?? roomId}
                         onClose={this.onClose}
-                        searchQuery={this.state.searchQuery}
-                        onSearchQueryChanged={this.onSearchQueryChanged}
                     />
                 );
                 break;

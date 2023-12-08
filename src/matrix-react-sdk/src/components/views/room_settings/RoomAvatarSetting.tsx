@@ -38,14 +38,23 @@ function getRoomAvatarUrl(room, size) {
 
 const RoomAvatarSetting: React.FC<AvatarEditProps> = ({ autoUpload = true, room, size, setAvatar, ...restProps }) => {
     const client = MatrixClientPeg.get();
+
     const [canSetAvatar, setCanSetAvatar] = useState<boolean>(false);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    // 判断是否有修改头像的权限
+    useEffect(() => {
+        const client = MatrixClientPeg.get();
+        const userId = client.getSafeUserId();
+        setCanSetAvatar(room.currentState.maySendStateEvent(EventType.RoomAvatar, userId) && !room.isAdminLeft());
+    }, [client, room]);
 
     useEffect(() => {
         if (!room?.roomId) {
             setAvatarUrl(null);
             return;
         }
+
         const onRoomStateEvents = (ev: MatrixEvent): void => {
             if (ev.getRoomId() !== room?.roomId || ev.getType() !== EventType.RoomAvatar) return;
 
@@ -59,13 +68,6 @@ const RoomAvatarSetting: React.FC<AvatarEditProps> = ({ autoUpload = true, room,
             client?.removeListener(RoomStateEvent.Events, onRoomStateEvents);
         };
     }, [client, room, size]);
-
-    // 判断是否有修改头像的权限
-    useEffect(() => {
-        const client = MatrixClientPeg.get();
-        const userId = client.getSafeUserId();
-        setCanSetAvatar(room.currentState.maySendStateEvent(EventType.RoomAvatar, userId) && !room.isAdminLeft());
-    }, [room]);
 
     const onSaveProfile = async (file: File | null) => {
         if (!canSetAvatar || !file) return;

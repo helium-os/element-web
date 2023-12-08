@@ -24,15 +24,16 @@ import { _t, _td } from "../../../languageHandler";
 import E2EIcon, { E2EState } from "./E2EIcon";
 import BaseAvatar from "../avatars/BaseAvatar";
 import PresenceLabel from "./PresenceLabel";
-
-export enum PowerStatus {
-    Admin = "admin",
-    Moderator = "moderator",
+export enum PowerLevel {
+    Admin = 100,
+    Moderator = 50,
+    Default = 0,
 }
 
-const PowerLabel: Record<PowerStatus, string> = {
-    [PowerStatus.Admin]: _td("Admin"),
-    [PowerStatus.Moderator]: _td("Mod"),
+export const PowerLabel: Record<PowerLevel, string> = {
+    [PowerLevel.Admin]: _td("Admin"),
+    [PowerLevel.Moderator]: _td("Mod"),
+    [PowerLevel.Default]: _td("Default"),
 };
 
 export type PresenceState = "offline" | "online" | "unavailable";
@@ -75,12 +76,14 @@ interface IProps {
     presenceCurrentlyActive?: boolean;
     showInviteButton: boolean;
     onClick(): void;
-    onMouseOver(e: MouseEvent): void;
+    onMouseOver?(): void;
+    onMouseLeave?(): void;
+    onContextMenu?(): void;
     suppressOnHover: boolean;
     showPresence: boolean;
     subtextLabel?: string;
     e2eStatus?: E2EState;
-    powerStatus?: PowerStatus;
+    powerLevel?: PowerLevel;
 }
 
 interface IState {
@@ -173,9 +176,9 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
         }
 
         let powerLabel;
-        const powerStatus = this.props.powerStatus;
-        if (powerStatus) {
-            const powerText = _t(PowerLabel[powerStatus]);
+        const powerLevel = this.props.powerLevel;
+        if (powerLevel) {
+            const powerText = _t(PowerLabel[powerLevel]);
             powerLabel = <div className="mx_EntityTile_power">{powerText}</div>;
         }
 
@@ -196,7 +199,8 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
                 className={classNames(mainClassNames)}
                 onClick={this.props.onClick}
                 onMouseOver={this.props.onMouseOver}
-                // onMouseLeave={this.props.onMouseLeave}
+                onMouseLeave={this.props.onMouseLeave}
+                onContextMenu={this.props.onContextMenu}
             >
                 <div className="mx_EntityTile_avatar">
                     {av}

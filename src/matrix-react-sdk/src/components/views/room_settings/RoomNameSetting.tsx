@@ -4,22 +4,50 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import RoomNameSettingsDialog from "matrix-react-sdk/src/components/views/dialogs/room_settings/RoomNameSettingsDialog";
 import Modal from "matrix-react-sdk/src/Modal";
-import RoomName from "matrix-react-sdk/src/components/views/elements/RoomName";
 import { _t } from "matrix-react-sdk/src/languageHandler";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
+import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 
 interface IProps {
     room: Room;
     title?: boolean | string;
 }
+
+function getRoomName(room) {
+    const topicEvent = room.currentState.getStateEvents(EventType.RoomName, "");
+    return topicEvent?.getContent()["name"] ?? "";
+}
+
 const RoomNameSetting: React.FC<IProps> = ({ room, title = true }) => {
+    const client = MatrixClientPeg.get();
+
     const [canSetName, setCanSetName] = useState<boolean>(false);
     const [name, setName] = useState<string>("");
 
+    // 判断是否有修改名称的权限
     useEffect(() => {
-        const client = MatrixClientPeg.get();
         const userId = client.getSafeUserId();
         setCanSetName(room.currentState.maySendStateEvent(EventType.RoomName, userId) && !room.isAdminLeft());
-    }, [room]);
+    }, [client, room]);
+
+    useEffect(() => {
+        if (!room?.roomId) {
+            setName("");
+            return;
+        }
+        const onRoomStateEvents = (ev: MatrixEvent): void => {
+            if (ev.getRoomId() !== room?.roomId || ev.getType() !== EventType.RoomName) return;
+
+            setName(getRoomName(room));
+        };
+
+        setName(getRoomName(room));
+        client?.on(RoomStateEvent.Events, onRoomStateEvents);
+
+        return () => {
+            client?.removeListener(RoomStateEvent.Events, onRoomStateEvents);
+        };
+    }, [client, room]);
 
     const onEditName = () => {
         if (!canSetName) return;
@@ -46,12 +74,7 @@ const RoomNameSetting: React.FC<IProps> = ({ room, title = true }) => {
                     </div>
                 )}
                 <div className="mx_TextSettingsItem_info" onClick={onEditName}>
-                    <RoomName room={room}>
-                        {(name) => {
-                            setName(name);
-                            return <>{name}</>;
-                        }}
-                    </RoomName>
+                    {name}
                     {canSetName && <span className="mx_Settings_icon" />}
                 </div>
             </div>

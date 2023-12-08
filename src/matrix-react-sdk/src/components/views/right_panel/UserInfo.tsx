@@ -75,7 +75,7 @@ import PosthogTrackers from "../../../PosthogTrackers";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { DirectoryMember, startDmOnFirstMessage } from "../../../utils/direct-messages";
 import { SdkContextClass } from "../../../contexts/SDKContext";
-import DecoratedRoomAvatar from "matrix-react-sdk/src/components/views/avatars/DecoratedRoomAvatar";
+import MemberAvatar from "matrix-react-sdk/src/components/views/avatars/MemberAvatar";
 
 export interface IDevice extends DeviceInfo {
     ambiguous?: boolean;
@@ -1550,7 +1550,7 @@ export const UserInfoHeader: React.FC<{
     return (
         <>
             <div className="mx_UserInfo_avatarBox">
-                <DecoratedRoomAvatar room={room} avatarSize={avatarSize} />
+                <MemberAvatar member={member as RoomMember} width={avatarSize} height={avatarSize} aria-hidden="true" />
             </div>
 
             <div className="mx_UserInfo_mainInfo">

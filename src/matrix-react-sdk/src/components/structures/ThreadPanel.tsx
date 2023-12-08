@@ -25,7 +25,8 @@ import ResizeNotifier from "../../utils/ResizeNotifier";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
 import { _t } from "../../languageHandler";
 import { ContextMenuButton } from "../../accessibility/context_menu/ContextMenuButton";
-import ContextMenu, { aboveRightOf, ChevronFace, MenuItemRadio, useContextMenu } from "./ContextMenu";
+import DropdownButton from "matrix-react-sdk/src/components/views/elements/DropdownButton";
+import { aboveRightOf, MenuItemRadio, useContextMenu } from "./ContextMenu";
 import RoomContext, { TimelineRenderingType } from "../../contexts/RoomContext";
 import TimelinePanel from "./TimelinePanel";
 import { Layout } from "../../settings/enums/Layout";
@@ -132,10 +133,7 @@ export const ThreadPanelHeader: React.FC<{
                             PosthogTrackers.trackInteraction("WebRightPanelThreadPanelFilterDropdown", ev);
                         }}
                     >
-                        <div className="mx_ThreadPanel_header_dropdownBox">
-                            {value?.label}
-                            <span className="mx_ThreadPanel_header_dropdownIcon"></span>
-                        </div>
+                        <DropdownButton className="mx_ThreadPanel_header_dropdownBox">{value?.label}</DropdownButton>
                     </ContextMenuButton>
                     {renderContextMenu()}
                 </>
@@ -257,7 +255,7 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
                 ref={card}
             >
                 {card.current && <Measured sensor={card.current} onMeasurement={setNarrow} />}
-                <div className="mx_ThreadPanel_search_box">搜索框</div>
+                {/*<div className="mx_ThreadPanel_search_box">搜索框</div>*/}
                 {timelineSet ? (
                     <div className="mx_ThreadView_timelinePanelWrapper">
                         <TimelinePanel

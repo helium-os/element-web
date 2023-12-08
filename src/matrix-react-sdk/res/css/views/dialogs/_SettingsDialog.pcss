@@ -15,8 +15,33 @@ limitations under the License.
 */
 
 /* Not actually a component but things shared by settings components */
-.mx_UserSettingsDialog,
-.mx_RoomSettingsDialog,
-.mx_SpaceSettingsDialog,
-.mx_SpacePreferencesDialog {
+.mx_RoomSettingsBaseDialog {
+    width: 100%;
+    height: 100%;
+    background: $background;
+    color: $primary-content;
+
+    .mx_Dialog_content {
+        padding: 0;
+    }
+    .mx_RoomSettingsBaseDialog_wrap {
+        display: flex;
+    }
+    .mx_RoomSettingsBaseDialog_backPanel {
+        box-sizing: border-box;
+        width: 52px;
+        height: 100vh;
+        padding: 12px 0;
+        background: $background-secondary-color1;
+    }
+    .mx_RoomSettingsBaseDialog_backIcon {
+        width: 100%;
+        height: 28px;
+        @mixin MaskIcon url("$(res)/img/element-icons/back.svg"), 20px, 16px, $text-primary-color3;
+        cursor: pointer;
+    }
+    .mx_RoomSettingsBaseDialog_content {
+        flex: 1;
+        overflow: hidden;
+    }
 }

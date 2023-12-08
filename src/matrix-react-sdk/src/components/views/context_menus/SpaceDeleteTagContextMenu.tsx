@@ -19,16 +19,17 @@ import { IconizedContextMenuOption } from "./IconizedContextMenu";
 import { _t } from "../../../languageHandler";
 import { ContextMenuProps } from "matrix-react-sdk/src/components/structures/ContextMenu";
 import Modal from "matrix-react-sdk/src/Modal";
-import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MatrixClientContext from "matrix-react-sdk/src/contexts/MatrixClientContext";
+import DeleteGroupConfirmDialog from "matrix-react-sdk/src/components/views/dialogs/group/DeleteGroupConfirmDialog";
+import { TagID } from "matrix-react-sdk/src/stores/room-list/models";
 
 interface IProps extends ContextMenuProps {
-    showIcon?: boolean;
+    tagId: TagID;
 }
 
-const SpaceAddTagContextMenu: React.FC<IProps> = ({ showIcon = false }) => {
+const SpaceDeleteTagContextMenu: React.FC<IProps> = ({ tagId }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
@@ -36,24 +37,24 @@ const SpaceAddTagContextMenu: React.FC<IProps> = ({ showIcon = false }) => {
         activeSpaceRoom?.getMyMembership() === "join" &&
         activeSpaceRoom?.currentState.maySendStateEvent(EventType.Tag, userId);
 
-    // 新增分组
-    const onAddSpaceTag = async (): Promise<void> => {
-        Modal.createDialog(GroupNameDialog, {
-            type: DialogType.Create,
-        });
+    // 删除分组
+    const onDeleteSpaceTag = (tagId: TagID): void => {
+        if (!tagId) return;
+
+        Modal.createDialog(DeleteGroupConfirmDialog, { tagId });
     };
 
     return (
         <>
             {hasTagPermission && (
                 <IconizedContextMenuOption
-                    iconClassName={showIcon ? "mx_SpacePanel_iconAddGroup" : ""}
-                    label={_t("Create Group")}
-                    onClick={onAddSpaceTag}
+                    isDestructive={true}
+                    label={_t("Delete Group")}
+                    onClick={() => onDeleteSpaceTag(tagId)}
                 />
             )}
         </>
     );
 };
 
-export default SpaceAddTagContextMenu;
+export default SpaceDeleteTagContextMenu;

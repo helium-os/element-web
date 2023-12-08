@@ -18,6 +18,7 @@ limitations under the License.
 */
 
 import React from "react";
+import { SdkContextClass } from "../../../contexts/SDKContext";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { RoomMember, RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
@@ -29,31 +30,13 @@ import { ClientEvent } from "matrix-js-sdk/src/client";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 
 import { _t } from "../../../languageHandler";
-import dis from "../../../dispatcher/dispatcher";
 import { isValid3pidInvite } from "../../../RoomInvite";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
-import BaseCard from "../right_panel/BaseCard";
-import RoomAvatar from "../avatars/RoomAvatar";
-import RoomName from "../elements/RoomName";
 import TruncatedList from "../elements/TruncatedList";
 import Spinner from "../elements/Spinner";
-import SearchBox from "../../structures/SearchBox";
-import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-import EntityTile from "./EntityTile";
-import MemberTile from "./MemberTile";
+import EntityTile from "../rooms/EntityTile";
 import BaseAvatar from "../avatars/BaseAvatar";
-import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
-import { UIComponent } from "../../../settings/UIFeature";
-import PosthogTrackers from "../../../PosthogTrackers";
-import { SDKContext } from "../../../contexts/SDKContext";
-import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import ContextMenu, {
-    aboveLeftOf,
-    ChevronFace,
-    IPosition,
-} from "matrix-react-sdk/src/components/structures/ContextMenu";
-import SendDMContextMenu from "matrix-react-sdk/src/components/views/context_menus/SendDMContextMenu";
-import { Member } from "matrix-react-sdk/src/utils/direct-messages";
+import { EffectiveMembership } from "matrix-react-sdk/src/utils/membership";
 
 const INITIAL_LOAD_NUM_MEMBERS = 30;
 const INITIAL_LOAD_NUM_INVITED = 5;
@@ -61,9 +44,9 @@ const SHOW_MORE_INCREMENT = 100;
 
 interface IProps {
     roomId: string;
-    searchQuery: string;
-    onClose(): void;
-    onSearchQueryChanged: (query: string) => void;
+    searchQuery?: string;
+    showInvited?: boolean;
+    makeMemberTiles: (members: Array<RoomMember | MatrixEvent>, membership?: EffectiveMembership) => JSX.Element[];
 }
 
 interface IState {
@@ -73,24 +56,20 @@ interface IState {
     canInvite: boolean;
     truncateAtJoined: number;
     truncateAtInvited: number;
-
-    showSendDMContextMenu: boolean;
-    sendDMContextMenuPosition: IPosition;
-    sendDMMember: Member;
 }
 
 export default class MemberList extends React.Component<IProps, IState> {
-    private readonly showPresence: boolean = false;
+    public static defaultProps = {
+        showInvited: true,
+    };
+
     private mounted = false;
     private showInvitedHeader: boolean = false;
 
-    public static contextType = SDKContext;
-    public context!: React.ContextType<typeof SDKContext>;
-
-    public constructor(props: IProps, context: React.ContextType<typeof SDKContext>) {
+    public constructor(props: IProps) {
         super(props);
         this.state = this.getMembersState([], []);
-        // this.showPresence = context?.memberListStore.isPresenceEnabled() ?? true;
+        // this.showPresence = SdkContextClass.instance.memberListStore.isPresenceEnabled() ?? true;
         this.mounted = true;
         this.listenForMembersChanges();
     }
@@ -144,9 +123,6 @@ export default class MemberList extends React.Component<IProps, IState> {
     private getMembersState(invitedMembers: Array<RoomMember>, joinedMembers: Array<RoomMember>): IState {
         return {
             loading: false,
-            showSendDMContextMenu: false,
-            sendDMMember: null,
-            sendDMContextMenuPosition: null,
             filteredJoinedMembers: joinedMembers,
             filteredInvitedMembers: invitedMembers,
             canInvite: this.canInvite,
@@ -221,7 +197,7 @@ export default class MemberList extends React.Component<IProps, IState> {
         if (showLoadingSpinner) {
             this.setState({ loading: true });
         }
-        const { joined, invited } = await this.context.memberListStore.loadMemberList(
+        const { joined, invited } = await SdkContextClass.instance.memberListStore.loadMemberList(
             this.props.roomId,
             this.props.searchQuery,
         );
@@ -283,17 +259,6 @@ export default class MemberList extends React.Component<IProps, IState> {
         }
     }
 
-    private onSearchQueryChanged = (searchQuery: string): void => {
-        this.props.onSearchQueryChanged(searchQuery);
-    };
-
-    private onPending3pidInviteClick = (inviteEvent: MatrixEvent): void => {
-        dis.dispatch({
-            action: "view_3pid_invite",
-            event: inviteEvent,
-        });
-    };
-
     private getPending3PidInvites(): MatrixEvent[] {
         // include 3pid invites (m.room.third_party_invite) state events.
         // The HS may have already converted these into m.room.member invites so
@@ -315,63 +280,9 @@ export default class MemberList extends React.Component<IProps, IState> {
 
         return [];
     }
-
-    private makeMemberTiles(members: Array<RoomMember | MatrixEvent>): JSX.Element[] {
-        return members.map((m) => {
-            if (m instanceof RoomMember) {
-                // Is a Matrix invite
-                return (
-                    <MemberTile
-                        key={m.userId}
-                        member={m}
-                        ref={m.userId}
-                        showPresence={this.showPresence}
-                        onMouseOver={(e) => this.onShowSendDMContextMenu(m, e)}
-                    />
-                );
-            } else {
-                // Is a 3pid invite
-                return (
-                    <EntityTile
-                        key={m.getStateKey()}
-                        name={m.getContent().display_name}
-                        showPresence={this.showPresence}
-                        suppressOnHover={true}
-                        // onClick={() => this.onPending3pidInviteClick(m)}
-                        onMouseOver={(e) => this.onShowSendDMContextMenu(m, e)}
-                    />
-                );
-            }
-        });
-    }
-
-    private onShowSendDMContextMenu = (member, e) => {
-        const rect = e.target.getBoundingClientRect();
-        this.setState({
-            showSendDMContextMenu: true,
-            sendDMMember: member,
-            sendDMContextMenuPosition: aboveLeftOf(rect),
-        });
-    };
-
-    private renderSendDMContextMenu = () => {
-        if (!this.state.showSendDMContextMenu || !this.state.sendDMContextMenuPosition || !this.state.sendDMMember) {
-            return null;
-        }
-
-        const cli = MatrixClientPeg.get();
-        const room = cli.getRoom(this.props.roomId);
-
-        return (
-            <SendDMContextMenu {...this.state.sendDMContextMenuPosition} room={room} member={this.state.sendDMMember} />
-        );
-    };
-
     private getChildrenJoined = (start: number, end: number): Array<JSX.Element> => {
-        return this.makeMemberTiles(this.state.filteredJoinedMembers.slice(start, end));
+        return this.props.makeMemberTiles(this.state.filteredJoinedMembers.slice(start, end), EffectiveMembership.Join);
     };
-
-    private getChildCountJoined = (): number => this.state.filteredJoinedMembers.length;
 
     private getChildrenInvited = (start: number, end: number): Array<JSX.Element> => {
         let targets = this.state.filteredInvitedMembers;
@@ -379,8 +290,9 @@ export default class MemberList extends React.Component<IProps, IState> {
             targets = targets.concat(this.getPending3PidInvites());
         }
 
-        return this.makeMemberTiles(targets.slice(start, end));
+        return this.props.makeMemberTiles(targets.slice(start, end), EffectiveMembership.Invite);
     };
+    private getChildCountJoined = (): number => this.state.filteredJoinedMembers.length;
 
     private getChildCountInvited = (): number => {
         return this.state.filteredInvitedMembers.length + (this.getPending3PidInvites() || []).length;
@@ -388,47 +300,12 @@ export default class MemberList extends React.Component<IProps, IState> {
 
     public render(): React.ReactNode {
         if (this.state.loading) {
-            return (
-                <BaseCard className="mx_MemberList" onClose={this.props.onClose}>
-                    <Spinner />
-                </BaseCard>
-            );
-        }
-
-        const cli = MatrixClientPeg.get();
-        const room = cli.getRoom(this.props.roomId);
-        let inviteButton;
-
-        if (room?.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)) {
-            const parentSpace = SpaceStore.instance.getCanonicalParent(room.roomId);
-
-            let inviteButtonText = "";
-            if (room.isSpaceRoom()) {
-                // 社区所在channel展示邀请到此社区按钮
-                inviteButtonText = _t("Invite to this space");
-            } else if (!parentSpace) {
-                // 非社区内的房间展示邀请到此频道按钮
-                inviteButtonText = _t("Invite to this room");
-            } else {
-                // 社区内的channel不展示邀请按钮
-            }
-
-            if (inviteButtonText) {
-                inviteButton = (
-                    <AccessibleButton
-                        className="mx_MemberList_invite"
-                        onClick={this.onInviteButtonClick}
-                        disabled={!this.state.canInvite}
-                    >
-                        <span>{inviteButtonText}</span>
-                    </AccessibleButton>
-                );
-            }
+            return <Spinner />;
         }
 
         let invitedHeader;
         let invitedSection;
-        if (this.getChildCountInvited() > 0) {
+        if (this.props.showInvited && this.getChildCountInvited() > 0) {
             invitedHeader = <h2>{_t("Invited")}</h2>;
             invitedSection = (
                 <TruncatedList
@@ -441,57 +318,20 @@ export default class MemberList extends React.Component<IProps, IState> {
             );
         }
 
-        const footer = (
-            <SearchBox
-                className="mx_MemberList_query mx_textinput_icon mx_textinput_search"
-                placeholder={_t("Filter room members")}
-                onSearch={this.onSearchQueryChanged}
-                initialValue={this.props.searchQuery}
-            />
-        );
-
-        let scopeHeader;
-        if (room?.isSpaceRoom()) {
-            scopeHeader = (
-                <div className="mx_RightPanel_scopeHeader">
-                    <RoomAvatar room={room} height={32} width={32} />
-                    <RoomName room={room} />
-                </div>
-            );
-        }
-
         return (
             <>
-                <BaseCard className="mx_MemberList" title={"成员列表"} onClose={this.props.onClose}>
-                    <div className="mx_MemberList_wrapper">
-                        <TruncatedList
-                            className="mx_MemberList_section mx_MemberList_joined"
-                            truncateAt={this.state.truncateAtJoined}
-                            createOverflowElement={this.createOverflowTileJoined}
-                            getChildren={this.getChildrenJoined}
-                            getChildCount={this.getChildCountJoined}
-                        />
-                        {this.showInvitedHeader && invitedHeader}
-                        {invitedSection}
-                    </div>
-                </BaseCard>
-                {this.state.showSendDMContextMenu && this.renderSendDMContextMenu()}
+                <div className="mx_MemberList_wrapper">
+                    <TruncatedList
+                        className="mx_MemberList_section mx_MemberList_joined"
+                        truncateAt={this.state.truncateAtJoined}
+                        createOverflowElement={this.createOverflowTileJoined}
+                        getChildren={this.getChildrenJoined}
+                        getChildCount={this.getChildCountJoined}
+                    />
+                    {this.showInvitedHeader && invitedHeader}
+                    {invitedSection}
+                </div>
             </>
         );
     }
-
-    private onInviteButtonClick = (ev: ButtonEvent): void => {
-        PosthogTrackers.trackInteraction("WebRightPanelMemberListInviteButton", ev);
-
-        if (MatrixClientPeg.get().isGuest()) {
-            dis.dispatch({ action: "require_registration" });
-            return;
-        }
-
-        // open the room inviter
-        dis.dispatch({
-            action: "view_invite",
-            roomId: this.props.roomId,
-        });
-    };
 }

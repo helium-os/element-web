@@ -61,6 +61,8 @@ import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/con
 import Modal from "matrix-react-sdk/src/Modal";
 import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
 import DeleteGroupConfirmDialog from "matrix-react-sdk/src/components/views/dialogs/group/DeleteGroupConfirmDialog";
+import SpaceDeleteTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceDeleteTagContextMenu";
+import EditSpaceTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/EditSpaceTagContextMenu";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -590,17 +592,10 @@ export default class RoomSublist extends React.Component<IProps, IState> {
             // 分组相关
             const groupSections: JSX.Element | undefined = (
                 <IconizedContextMenuOptionList first>
-                    <IconizedContextMenuOption
-                        label={_t("Edit Group Name")}
-                        onClick={() => this.onChangeTagName(this.props.tagId)}
-                    />
-                    <SpaceAddChanelContextMenu tagId={this.props.tagId} onFinished={this.onCloseMenu} />
+                    <EditSpaceTagContextMenu tagId={this.props.tagId} />
+                    <SpaceAddChanelContextMenu tagId={this.props.tagId} />
                     <hr />
-                    <IconizedContextMenuOption
-                        isDestructive={true}
-                        label={_t("Delete Group")}
-                        onClick={() => this.onRemoveSpaceTag(this.props.tagId)}
-                    />
+                    <SpaceDeleteTagContextMenu tagId={this.props.tagId} />
                 </IconizedContextMenuOptionList>
             );
 
@@ -774,19 +769,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         // the RoomTile calls scrollIntoView and the browser may scroll a div we do not wish to be scrollable
         // this fixes https://github.com/vector-im/element-web/issues/14413
         (e.target as HTMLDivElement).scrollTop = 0;
-    }
-
-    // 删除分组
-    private async onRemoveSpaceTag(tagId: TagID): Promise<void> {
-        Modal.createDialog(DeleteGroupConfirmDialog, { tagId });
-    }
-
-    // 修改分组名称
-    private async onChangeTagName(tagId: TagID): Promise<void> {
-        Modal.createDialog(GroupNameDialog, {
-            type: DialogType.Edit,
-            tagId,
-        });
     }
 
     public render(): React.ReactElement {

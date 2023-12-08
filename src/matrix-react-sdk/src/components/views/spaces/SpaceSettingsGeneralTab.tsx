@@ -14,19 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState } from "react";
+import React from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { MatrixClient } from "matrix-js-sdk/src/client";
 import RoomAvatarSettings from "matrix-react-sdk/src/components/views/room_settings/RoomAvatarSetting";
 import RoomNameSetting from "matrix-react-sdk/src/components/views/room_settings/RoomNameSetting";
-import RoomTopicSetting from "matrix-react-sdk/src/components/views/room_settings/RoomTopicSetting";
+import { _t } from "matrix-react-sdk/src/languageHandler";
+import SpaceAndChannelJoinRuleSettings from "matrix-react-sdk/src/components/views/settings/SpaceAndChannelJoinRuleSettings";
 
 interface IProps {
-    matrixClient: MatrixClient;
     space: Room;
 }
 
-const SpaceSettingsGeneralTab: React.FC<IProps> = ({ matrixClient: cli, space }) => {
+const SpaceSettingsGeneralTab: React.FC<IProps> = ({ space }) => {
     return (
         <>
             <div className="mx_SettingsTab_section">
@@ -36,8 +35,10 @@ const SpaceSettingsGeneralTab: React.FC<IProps> = ({ matrixClient: cli, space })
                 </div>
                 <hr />
                 <RoomNameSetting room={space} />
-                <hr />
-                <RoomTopicSetting room={space} />
+            </div>
+            <div className="mx_SettingsTab_section">
+                <p className="mx_SettingsTab_subTitle">{_t("Visibility")}</p>
+                <SpaceAndChannelJoinRuleSettings room={space} />
             </div>
         </>
     );

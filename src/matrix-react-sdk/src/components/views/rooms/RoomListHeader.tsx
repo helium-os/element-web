@@ -54,7 +54,6 @@ import IconizedContextMenu, {
 import SpaceContextMenu from "../context_menus/SpaceContextMenu";
 import InlineSpinner from "../elements/InlineSpinner";
 import TooltipTarget from "../elements/TooltipTarget";
-import { HomeButtonContextMenu } from "../spaces/SpacePanel";
 import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
 
 const contextMenuBelow = (elementRect: DOMRect): MenuProps => {

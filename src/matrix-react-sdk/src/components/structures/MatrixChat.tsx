@@ -150,6 +150,7 @@ import * as languageHandler from "../../../src/languageHandler";
 import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import { Layout } from "matrix-react-sdk/src/settings/enums/Layout";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -437,6 +438,9 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     public componentDidMount(): void {
+        setTimeout(() => {
+            SettingsStore.setValue("layout", null, SettingLevel.DEVICE, Layout.Group);
+        }, 500);
         window.addEventListener("resize", this.onWindowResized);
         SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
         getUserRoles().then((res) => {
@@ -1198,7 +1202,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                         : _t("Are you sure you want to leave the room '%(roomName)s'?", {
                               roomName: roomToLeave?.name ?? _t("Unnamed Room"),
                           })}
-                    {warnings}
+                    {/*{warnings}*/}
                 </span>
             ),
             button: _t("Leave"),

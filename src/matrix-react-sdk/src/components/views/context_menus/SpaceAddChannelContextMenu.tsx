@@ -17,7 +17,7 @@ limitations under the License.
 import React, { useContext } from "react";
 import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 
-import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import { ContextMenuProps } from "../../structures/ContextMenu";
 import { IconizedContextMenuOption } from "./IconizedContextMenu";
 import { _t } from "../../../languageHandler";
 import { showAddExistingRooms, showCreateNewRoom, showCreateNewSubspace } from "../../../utils/space";
@@ -32,7 +32,7 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { Tag, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import { Room } from "matrix-js-sdk/src/models/room";
 
-interface IProps extends IContextMenuProps {
+interface IProps extends ContextMenuProps {
     showIcon?: boolean;
     tagId?: TagID;
 }
@@ -41,7 +41,7 @@ export const onCreateRoom = (spaceRoom: Room, roomType?: RoomType, tags?: Tag[])
     showCreateNewRoom(spaceRoom, roomType, tags);
 };
 
-const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIcon = false }) => {
+const SpaceAddChanelContextMenu: React.FC<IProps> = ({ tagId, showIcon = false }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
 
@@ -51,7 +51,10 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
     const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
 
     const hasPermissionToAddSpaceChild = activeSpaceRoom?.currentState.maySendStateEvent(EventType.SpaceChild, userId);
-    const canAddRooms = hasPermissionToAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms);
+    const canAddRooms =
+        activeSpaceRoom.getMyMembership() === "join" &&
+        hasPermissionToAddSpaceChild &&
+        shouldShowComponent(UIComponent.CreateRooms);
     const canAddVideoRooms = canAddRooms && videoRoomsEnabled;
     const canAddSubSpaces =
         SettingsStore.getValue("Spaces.addSubSpace") &&
@@ -68,7 +71,6 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
             ev.stopPropagation();
 
             onCreateRoom(activeSpaceRoom, undefined, tags);
-            onFinished();
         };
 
         const onNewVideoRoomClick = (ev: ButtonEvent): void => {
@@ -80,7 +82,6 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
                 elementCallVideoRoomsEnabled ? RoomType.UnstableCall : RoomType.ElementVideo,
                 tags,
             );
-            onFinished();
         };
 
         const onNewSubspaceClick = (ev: ButtonEvent): void => {
@@ -88,7 +89,6 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
             ev.stopPropagation();
 
             showCreateNewSubspace(activeSpaceRoom);
-            onFinished();
         };
 
         const onAddExistingRoomClick = (ev: ButtonEvent): void => {
@@ -96,7 +96,6 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ onFinished, tagId, showIc
             ev.stopPropagation();
 
             showAddExistingRooms(activeSpaceRoom);
-            onFinished();
         };
 
         const iconClassName = showIcon ? "mx_SpacePanel_iconAddChannel" : "";

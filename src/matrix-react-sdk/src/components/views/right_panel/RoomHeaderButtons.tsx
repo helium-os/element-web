@@ -18,7 +18,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React from "react";
+import React, { createRef } from "react";
 import classNames from "classnames";
 import { NotificationCountType, Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { ThreadEvent } from "matrix-js-sdk/src/models/thread";
@@ -45,6 +45,8 @@ import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
 import Modal from "matrix-react-sdk/src/Modal";
 import CreateRoomBaseChatDialog from "matrix-react-sdk/src/components/views/dialogs/CreateRoomBaseChatDialog";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { RoomNotificationContextMenu } from "matrix-react-sdk/src/components/views/context_menus/RoomNotificationContextMenu";
+import { aboveLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -85,13 +87,21 @@ interface IProps {
     excludedRightPanelPhaseButtons?: Array<RightPanelPhases>;
 }
 
-export default class RoomHeaderButtons extends HeaderButtons<IProps> {
+interface IState {
+    showRoomNotificationContextMenu: boolean;
+}
+
+export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
+    private notificationBtnRef = createRef<HTMLDivElement>();
     private static readonly THREAD_PHASES = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView];
     private globalNotificationState: SummarizedNotificationState;
 
     public constructor(props: IProps) {
         super(props, HeaderKind.Room);
         this.globalNotificationState = RoomNotificationStateStore.instance.globalState;
+        this.state = {
+            showRoomNotificationContextMenu: false,
+        };
     }
 
     public componentDidMount(): void {
@@ -202,8 +212,15 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
     };
 
     private onNotificationsClicked = (): void => {
-        // This toggles for us, if needed
-        this.setPhase(RightPanelPhases.NotificationPanel);
+        this.setState({
+            showRoomNotificationContextMenu: true,
+        });
+    };
+
+    private onCloseRoomNotificationContextMenu = (): void => {
+        this.setState({
+            showRoomNotificationContextMenu: false,
+        });
     };
 
     private onUserInfoClicked = (): void => {
@@ -247,6 +264,20 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         showRoomInviteDialog(this.props.room.roomId);
     };
 
+    private renderRoomNotificationContextMenu = () => {
+        if (!this.state.showRoomNotificationContextMenu || !this.notificationBtnRef.current) return null;
+        const rect = this.notificationBtnRef.current.getBoundingClientRect();
+        if (!rect) return;
+
+        return (
+            <RoomNotificationContextMenu
+                room={this.props.room}
+                {...aboveLeftOf(rect)}
+                onFinished={this.onCloseRoomNotificationContextMenu}
+            />
+        );
+    };
+
     public renderButtons(): JSX.Element {
         if (!this.props.room) {
             return <></>;
@@ -276,12 +307,14 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         // );
         rightPanelPhaseButtons.set(
             HeaderButtonAction.Notification,
-            <HeaderButton
-                key="notifsButton"
-                name="notifsButton"
-                title={_t("Notifications")}
-                onClick={this.onNotificationsClicked}
-            />,
+            <div ref={this.notificationBtnRef}>
+                <HeaderButton
+                    key="notifsButton"
+                    name="notifsButton"
+                    title={_t("Notifications")}
+                    onClick={this.onNotificationsClicked}
+                />
+            </div>,
         );
         if (this.props.room.isPeopleRoom()) {
             // 私聊
@@ -364,6 +397,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                         ? null
                         : rightPanelPhaseButtons.get(phase),
                 )}
+                {this.renderRoomNotificationContextMenu()}
             </>
         );
     }
