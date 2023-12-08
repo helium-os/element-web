@@ -10,16 +10,16 @@ FROM --platform=$BUILDPLATFORM node:16-bullseye as builder
 # ARG JS_SDK_BRANCH="master"
 # ARG JS_SDK_TAG="v26.2.0"
 
-RUN apt-get update && apt-get install -y git dos2unix
-
 WORKDIR /src
 
 COPY . /src
 # RUN dos2unix /src/scripts/docker-link-repos.sh && bash /src/scripts/docker-link-repos.sh
+RUN yarn config set registry https://registry.npm.taobao.org
 RUN yarn --network-timeout=100000 install
 RUN yarn add heliumos-js-sdk
 
-RUN dos2unix /src/scripts/docker-package.sh && bash /src/scripts/docker-package.sh
+
+RUN bash /src/scripts/docker-package.sh
 
 # Copy the config now so that we don't create another layer in the app image
 RUN cp /src/config.sample.json /src/webapp/config.json

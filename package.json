@@ -46,6 +46,7 @@
         "dist": "scripts/package.sh",
         "start:easypay-internal": "cross-env ORG=easypay-internal yarn start",
         "start:heliumos": "cross-env ORG=heliumos yarn start",
+        "start:heliumos:HMR": "cross-env CSS_HOT_RELOAD=1 ORG=heliumos yarn start",
         "start:org2": "cross-env ORG=org2 yarn start",
         "start": "yarn build:module_system && concurrently --kill-others-on-fail --prefix \"{time} [{name}]\" -n res,element-js \"yarn start:res\" \"yarn start:js\"",
         "start:https": "concurrently --kill-others-on-fail --prefix \"{time} [{name}]\" -n res,element-js \"yarn start:res\" \"yarn start:js --https\"",

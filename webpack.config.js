@@ -42,17 +42,6 @@ if (!process.env.VERSION) {
     process.env.VERSION = "!!UNSET!!";
 }
 
-const cssThemes = {
-    // CSS themes
-    "theme-legacy-light": "../matrix-react-sdk/res/themes/legacy-light/css/legacy-light.pcss",
-    "theme-legacy-dark": "../matrix-react-sdk/res/themes/legacy-dark/css/legacy-dark.pcss",
-    "theme-light": "../matrix-react-sdk/res/themes/light/css/light.pcss",
-    "theme-light-high-contrast": "../matrix-react-sdk/res/themes/light-high-contrast/css/light-high-contrast.pcss",
-    "theme-dark": "../matrix-react-sdk/res/themes/dark/css/dark.pcss",
-    "theme-light-custom": "../matrix-react-sdk/res/themes/light-custom/css/light-custom.pcss",
-    "theme-dark-custom": "../matrix-react-sdk/res/themes/dark-custom/css/dark-custom.pcss",
-};
-
 function getActiveThemes() {
     // Default to `light` theme when the MATRIX_THEMES environment variable is not defined.
     const theme = process.env.MATRIX_THEMES ?? "light";
@@ -137,6 +126,17 @@ module.exports = (env, argv) => {
     const jsSdkSrcDir = path.resolve(require.resolve("matrix-js-sdk/package.json"), "..", "src");
     const appSdkDir = path.resolve(require.resolve("heliumos-js-sdk/package.json"), "..", "src");
 
+    // CSS themes
+    const cssThemesPathPrefix = useHMR ? ".." : "./src";
+    const cssThemes = {
+        "theme-legacy-light": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/legacy-light/css/legacy-light.pcss`,
+        "theme-legacy-dark": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/legacy-dark/css/legacy-dark.pcss`,
+        "theme-light": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/light/css/light.pcss`,
+        "theme-light-high-contrast": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/light-high-contrast/css/light-high-contrast.pcss`,
+        "theme-dark": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/dark/css/dark.pcss`,
+        "theme-light-custom": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/light-custom/css/light-custom.pcss`,
+        "theme-dark-custom": `${cssThemesPathPrefix}/matrix-react-sdk/res/themes/dark-custom/css/dark-custom.pcss`,
+    };
     const ACTIVE_THEMES = getActiveThemes();
     function getThemesImports() {
         const imports = ACTIVE_THEMES.map((t) => {
