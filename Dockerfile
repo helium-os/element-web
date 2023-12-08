@@ -19,8 +19,7 @@ COPY . /src
 RUN yarn --network-timeout=100000 install
 RUN yarn add heliumos-js-sdk
 
-RUN yarn build
-# RUN dos2unix /src/scripts/docker-package.sh && bash /src/scripts/docker-package.sh
+RUN dos2unix /src/scripts/docker-package.sh && bash /src/scripts/docker-package.sh
 
 # Copy the config now so that we don't create another layer in the app image
 RUN cp /src/config.sample.json /src/webapp/config.json
