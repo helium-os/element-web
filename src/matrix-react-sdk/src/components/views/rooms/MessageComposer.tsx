@@ -60,6 +60,7 @@ import { VoiceBroadcastInfoState } from "../../../voice-broadcast";
 import { createCantStartVoiceMessageBroadcastDialog } from "../dialogs/CantStartVoiceMessageBroadcastDialog";
 import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import CallButtons from "matrix-react-sdk/src/components/views/rooms/CallButtons";
+import { IS_MAC } from "matrix-react-sdk/src/Keyboard";
 
 let instanceCount = 0;
 
@@ -612,6 +613,17 @@ export class MessageComposer extends React.Component<IProps, IState> {
                                         showCallButtons={this.props.showCallButtons}
                                     />
                                 )}
+                            </div>
+                            <div className="mx_MessageComposer_sendTips">
+                                <span className="mx_MessageComposer_shortcutIcon mx_MessageComposer_shortcut_enter" />
+                                发送 <span>/</span>
+                                {IS_MAC ? (
+                                    <span className="mx_MessageComposer_shortcutIcon mx_MessageComposer_shortcut_cmd" />
+                                ) : (
+                                    <span>Ctrl</span>
+                                )}
+                                <span className="mx_MessageComposer_shortcutIcon mx_MessageComposer_shortcut_enter" />
+                                换行
                             </div>
                             <Button
                                 type={ButtonType.Primary}

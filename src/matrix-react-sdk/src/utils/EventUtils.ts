@@ -37,7 +37,7 @@ import { VoiceBroadcastInfoEventType, VoiceBroadcastInfoState } from "../voice-b
 // 需要渲染展示到聊天面板中的Event列表
 export const displayEventType = [
     EventType.RoomCreate,
-    EventType.RoomJoinRules,
+    // EventType.RoomJoinRules,
     EventType.RoomMember,
     EventType.RoomName,
     EventType.RoomTopic,

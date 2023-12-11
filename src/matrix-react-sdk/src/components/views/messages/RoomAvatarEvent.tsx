@@ -79,10 +79,10 @@ export default class RoomAvatarEvent extends React.Component<IProps> {
                 {_t(
                     "%(senderDisplayName)s changed the room avatar to <img/>",
                     {
-                        senderDisplayName: senderDisplayName,
                         roomType: roomTypeLabel,
                     },
                     {
+                        senderDisplayName: () => <label>{senderDisplayName}</label>,
                         img: () => (
                             <AccessibleButton
                                 key="avatar"

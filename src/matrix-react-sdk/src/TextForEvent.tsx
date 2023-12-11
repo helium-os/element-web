@@ -193,7 +193,10 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                               targetName: () => <label>{targetName}</label>,
                               reason,
                           })
-                        : _t("%(senderName)s withdrew %(targetName)s's invitation", { senderName, targetName });
+                        : _t("%(senderName)s withdrew %(targetName)s's invitation", {
+                              senderName: () => <label>{senderName}</label>,
+                              targetName: () => <label>{targetName}</label>,
+                          });
             } else if (prevContent.membership === "join") {
                 return () =>
                     reason
@@ -202,7 +205,10 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                               targetName: () => <label>{targetName}</label>,
                               reason,
                           })
-                        : _t("%(senderName)s removed %(targetName)s", { senderName, targetName });
+                        : _t("%(senderName)s removed %(targetName)s", {
+                              senderName: () => <label>{senderName}</label>,
+                              targetName: () => <label>{targetName}</label>,
+                          });
             } else {
                 return null;
             }

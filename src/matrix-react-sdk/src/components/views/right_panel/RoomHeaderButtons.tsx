@@ -85,12 +85,12 @@ interface IProps {
     excludedRightPanelPhaseButtons?: Array<RightPanelPhases>;
 }
 
-interface IState extends HeaderButtonState {
+interface IState {
     notificationState: RoomNotifState;
     showRoomNotificationContextMenu: boolean;
 }
 
-export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
+export default class RoomHeaderButtons extends HeaderButtons<IProps> {
     private notificationBtnRef = createRef<HTMLDivElement>();
     private static readonly THREAD_PHASES = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView];
     private echoChamber: RoomEchoChamber;
@@ -309,7 +309,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
                 <HeaderButton
                     key="inviteUsersButton"
                     name="inviteUsersButton"
-                    title={"添加成员,并创建群聊"}
+                    title={"添加成员并创建群聊"}
                     onClick={this.onInviteUsersAndCreateRoom}
                 />,
             );

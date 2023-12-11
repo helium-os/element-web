@@ -915,7 +915,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const isSending = ["sending", "queued", "encrypting"].includes(this.props.eventSendStatus!);
         const isRedacted = isMessageEvent(this.props.mxEvent) && this.props.isRedacted;
         const isEncryptionFailure = this.props.mxEvent.isDecryptionFailure();
-        const isNoThreadInfoMessage = isInfoMessage && !this.state.thread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
+        const hasThread = this.state.thread && this.state.thread.id === this.props.mxEvent.getId(); // 是否有消息列回复
+        const isNoThreadInfoMessage = isInfoMessage && !hasThread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
 
         let isContinuation = this.props.continuation;
         if (
@@ -1352,6 +1353,12 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                     <>
                         {replyChain && <div className="mx_EventTile_replyChain_wrap">{replyChain}</div>}
                         <div className="mx_EventTile_mainTile">
+                            {!isRenderingThread && hasThread && (
+                                <div
+                                    className="mx_EventTile_threadLine"
+                                    style={{ top: avatarSize + 6, left: avatarSize / 2 }}
+                                />
+                            )}
                             {ircTimestamp}
                             <div className="mx_EventTile_msgDetails">
                                 {sender}

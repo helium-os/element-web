@@ -326,7 +326,22 @@ $group_line-padding-horizontal: 20px;
             background-color: $event-selected-color;
         }
         .mx_EventTile_replyChain_wrap {
-            padding: 2px 0 6px $left-gutter;
+            position: relative;
+            margin: 2px 0 6px $left-gutter;
+            &:before {
+                content: "";
+                position: absolute;
+                top: 50%;
+                left: -3px;
+                transform: translate(-100%, 0);
+                box-sizing: border-box;
+                width: 26px;
+                height: 14px;
+                border: 1px solid $text-secondary-color3;
+                border-right-color: transparent;
+                border-bottom-color: transparent;
+                border-top-left-radius: 6px;
+            }
             .mx_DisambiguatedProfile_displayName {
                 font-size: 12px;
                 font-weight: 400;
@@ -336,6 +351,16 @@ $group_line-padding-horizontal: 20px;
         }
         .mx_EventTile_mainTile {
             position: relative;
+        }
+        .mx_EventTile_threadLine {
+            position: absolute;
+            bottom: 23px;
+            box-sizing: border-box;
+            width: 26px;
+            border: 1px solid $text-secondary-color3;
+            border-top-color: transparent;
+            border-right-color: transparent;
+            border-bottom-left-radius: 10px;
         }
         .mx_EventTile_avatar {
             position: absolute;
@@ -409,13 +434,18 @@ $group_line-padding-horizontal: 20px;
             .mx_EventTile_line {
                 order: 1;
                 padding-bottom: var(--EventTile_group_line-spacing-block-start);
-                .mx_TextualEvent {
+                .mx_TextualEvent, .mx_RoomAvatarEvent {
+                    color: $text-secondary-color2;
                     span {
                         display: flex;
                         gap: 4px;
                     }
                     label{
                         color: $text-primary-color2;
+                    }
+                    a {
+                        color: $accent;
+                        cursor: pointer;
                     }
                 }
             }
