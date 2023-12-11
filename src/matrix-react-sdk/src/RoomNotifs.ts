@@ -58,7 +58,7 @@ export function getRoomNotifsState(client: MatrixClient, roomId: string): RoomNo
     // XXX: We have to assume the default is to notify for all messages
     // (in particular this will be 'wrong' for one to one rooms because
     // they will notify loudly for all messages)
-    if (!roomRule?.enabled) return RoomNotifState.AllMessages;
+    if (!roomRule?.enabled) return RoomNotifState.AllMessagesLoud;
 
     // a mute at the room level will still allow mentions
     // to notify
@@ -79,7 +79,7 @@ export function setRoomNotifsState(roomId: string, newState: RoomNotifState): Pr
 }
 
 export function getUnreadNotificationCount(room: Room, type: NotificationCountType, threadId?: string): number {
-    let notificationCount = !!threadId
+    let notificationCount = threadId
         ? room.getThreadUnreadNotificationCount(threadId, type)
         : room.getUnreadNotificationCount(type);
 

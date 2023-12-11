@@ -19,7 +19,7 @@ import { createRef } from "react";
 import { MatrixCall } from "matrix-js-sdk/src/webrtc/call";
 
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-import ContextMenu, { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import ContextMenu, { ContextMenuProps as IContextMenuProps } from "../../structures/ContextMenu";
 import Field from "../elements/Field";
 import DialPad from "../voip/DialPad";
 

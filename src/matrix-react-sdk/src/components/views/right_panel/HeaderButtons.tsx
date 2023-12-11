@@ -41,7 +41,7 @@ interface IState {
 
 interface IProps {}
 
-export default abstract class HeaderButtons<P = {}, S = {}> extends React.Component<IProps & P, IState & S> {
+export default abstract class HeaderButtons<P = {}> extends React.Component<IProps & P, IState> {
     private unmounted = false;
     private dispatcherRef?: string = undefined;
 

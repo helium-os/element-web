@@ -17,7 +17,7 @@ limitations under the License.
 import React, { useContext } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 
-import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import { ContextMenuProps as IContextMenuProps } from "../../structures/ContextMenu";
 import IconizedContextMenu, { IconizedContextMenuOption, IconizedContextMenuOptionList } from "./IconizedContextMenu";
 import { _t } from "../../../languageHandler";
 import {

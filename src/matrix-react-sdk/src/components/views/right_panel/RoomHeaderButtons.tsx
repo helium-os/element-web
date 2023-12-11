@@ -20,26 +20,20 @@ limitations under the License.
 
 import React, { createRef } from "react";
 import classNames from "classnames";
-import { NotificationCountType, Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { ThreadEvent } from "matrix-js-sdk/src/models/thread";
 
 import { _t } from "../../../languageHandler";
 import HeaderButton from "./HeaderButton";
-import HeaderButtons, { HeaderKind } from "./HeaderButtons";
+import HeaderButtons, { HeaderKind, IState as HeaderButtonState } from "./HeaderButtons";
 import { HeaderButtonAction, RightPanelPhases } from "../../../stores/right-panel/RightPanelStorePhases";
 import { Action } from "../../../dispatcher/actions";
 import { ActionPayload } from "../../../dispatcher/payloads";
 import RightPanelStore from "../../../stores/right-panel/RightPanelStore";
 import { showThreadPanel } from "../../../dispatcher/dispatch-actions/threads";
-import {
-    RoomNotificationStateStore,
-    UPDATE_STATUS_INDICATOR,
-} from "../../../stores/notifications/RoomNotificationStateStore";
 import { NotificationColor } from "../../../stores/notifications/NotificationColor";
-import { SummarizedNotificationState } from "../../../stores/notifications/SummarizedNotificationState";
 import PosthogTrackers from "../../../PosthogTrackers";
 import { ButtonEvent } from "../elements/AccessibleButton";
-import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
 import Modal from "matrix-react-sdk/src/Modal";
@@ -47,6 +41,10 @@ import CreateRoomBaseChatDialog from "matrix-react-sdk/src/components/views/dial
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { RoomNotificationContextMenu } from "matrix-react-sdk/src/components/views/context_menus/RoomNotificationContextMenu";
 import { aboveLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
+import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
+import { EchoChamber } from "matrix-react-sdk/src/stores/local-echo/EchoChamber";
+import { CachedRoomKey, RoomEchoChamber } from "matrix-react-sdk/src/stores/local-echo/RoomEchoChamber";
+import { PROPERTY_UPDATED } from "matrix-react-sdk/src/stores/local-echo/GenericEchoChamber";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -87,19 +85,22 @@ interface IProps {
     excludedRightPanelPhaseButtons?: Array<RightPanelPhases>;
 }
 
-interface IState {
+interface IState extends HeaderButtonState {
+    notificationState: RoomNotifState;
     showRoomNotificationContextMenu: boolean;
 }
 
 export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
     private notificationBtnRef = createRef<HTMLDivElement>();
     private static readonly THREAD_PHASES = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView];
-    private globalNotificationState: SummarizedNotificationState;
+    private echoChamber: RoomEchoChamber;
+    // private state: IState;
 
     public constructor(props: IProps) {
         super(props, HeaderKind.Room);
-        this.globalNotificationState = RoomNotificationStateStore.instance.globalState;
+        this.echoChamber = EchoChamber.forRoom(this.props.room);
         this.state = {
+            notificationState: RoomNotifState.AllMessagesLoud,
             showRoomNotificationContextMenu: false,
         };
     }
@@ -117,8 +118,8 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
         this.props.room?.on(RoomEvent.MyMembership, this.onNotificationUpdate);
         this.props.room?.on(ThreadEvent.New, this.onNotificationUpdate);
         this.props.room?.on(ThreadEvent.Update, this.onNotificationUpdate);
+        this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
         this.onNotificationUpdate();
-        RoomNotificationStateStore.instance.on(UPDATE_STATUS_INDICATOR, this.onUpdateStatus);
     }
 
     public componentWillUnmount(): void {
@@ -131,41 +132,16 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
         this.props.room?.off(RoomEvent.MyMembership, this.onNotificationUpdate);
         this.props.room?.off(ThreadEvent.New, this.onNotificationUpdate);
         this.props.room?.off(ThreadEvent.Update, this.onNotificationUpdate);
-        RoomNotificationStateStore.instance.off(UPDATE_STATUS_INDICATOR, this.onUpdateStatus);
+        this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
     }
 
-    private onNotificationUpdate = (): void => {
-        // console.log
-        // XXX: why don't we read from this.state.threadNotificationColor in the render methods?
-        this.setState({
-            threadNotificationColor: this.notificationColor,
-        });
+    private onRoomPropertyUpdate = (property: CachedRoomKey): void => {
+        if (property === CachedRoomKey.NotificationVolume) this.onNotificationUpdate();
     };
 
-    private get notificationColor(): NotificationColor {
-        switch (this.props.room?.threadsAggregateNotificationType) {
-            case NotificationCountType.Highlight:
-                return NotificationColor.Red;
-            case NotificationCountType.Total:
-                return NotificationColor.Grey;
-        }
-        // We don't have any notified messages, but we might have unread messages. Let's
-        // find out.
-        for (const thread of this.props.room!.getThreads()) {
-            // If the current thread has unread messages, we're done.
-            if (doesRoomOrThreadHaveUnreadMessages(thread)) {
-                return NotificationColor.Bold;
-            }
-        }
-        // Otherwise, no notification color.
-        return NotificationColor.None;
-    }
-
-    private onUpdateStatus = (notificationState: SummarizedNotificationState): void => {
-        // XXX: why don't we read from this.state.globalNotificationCount in the render methods?
-        this.globalNotificationState = notificationState;
+    private onNotificationUpdate = (): void => {
         this.setState({
-            globalNotificationColor: notificationState.color,
+            notificationState: this.echoChamber?.notificationVolume,
         });
     };
 
@@ -311,6 +287,16 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
                 <HeaderButton
                     key="notifsButton"
                     name="notifsButton"
+                    className={classNames("mx_RoomNotification_icon", {
+                        mx_RoomNotificationContextMenu_iconBell:
+                            this.state.notificationState === RoomNotifState.AllMessages,
+                        mx_RoomNotificationContextMenu_iconBellDot:
+                            this.state.notificationState === RoomNotifState.AllMessagesLoud,
+                        mx_RoomNotificationContextMenu_iconBellMentions:
+                            this.state.notificationState === RoomNotifState.MentionsOnly,
+                        mx_RoomNotificationContextMenu_iconBellCrossed:
+                            this.state.notificationState === RoomNotifState.Mute,
+                    })}
                     title={_t("Notifications")}
                     onClick={this.onNotificationsClicked}
                 />

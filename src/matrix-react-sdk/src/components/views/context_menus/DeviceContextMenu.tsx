@@ -18,7 +18,7 @@ import React, { useEffect, useState } from "react";
 
 import MediaDeviceHandler, { MediaDeviceKindEnum } from "../../../MediaDeviceHandler";
 import IconizedContextMenu, { IconizedContextMenuOptionList, IconizedContextMenuRadio } from "./IconizedContextMenu";
-import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import { ContextMenuProps as IContextMenuProps } from "../../structures/ContextMenu";
 import { _t, _td } from "../../../languageHandler";
 
 const SECTION_NAMES: Record<MediaDeviceKindEnum, string> = {

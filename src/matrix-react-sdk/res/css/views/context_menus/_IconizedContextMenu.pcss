@@ -104,11 +104,11 @@ limitations under the License.
         margin-right: 4px;
 
         &::before {
+            content: "";
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            content: "";
             width: inherit;
             height: inherit;
             mask-position: center;
@@ -151,6 +151,8 @@ limitations under the License.
     }
 
     .mx_IconizedContextMenu_checked::before {
+        width: 18px;
+        height: 18px;
         mask-image: url("$(res)/img/element-icons/roomlist/checkmark.svg");
     }
 

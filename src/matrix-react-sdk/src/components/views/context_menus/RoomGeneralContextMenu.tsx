@@ -27,7 +27,7 @@ import { NotificationColor } from "../../../stores/notifications/NotificationCol
 import { DefaultTagID } from "../../../stores/room-list/models";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "../../../stores/room-list/RoomListStore";
 import { clearRoomNotification } from "../../../utils/notifications";
-import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import { ContextMenuProps as IContextMenuProps } from "../../structures/ContextMenu";
 import IconizedContextMenu, {
     IconizedContextMenuCheckbox,
     IconizedContextMenuOption,
