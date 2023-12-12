@@ -19,7 +19,7 @@ limitations under the License.
 import React from "react";
 import classNames from "classnames";
 
-import AccessibleButton from "../elements/AccessibleButton";
+import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
 import { _t, _td } from "../../../languageHandler";
 import E2EIcon, { E2EState } from "./E2EIcon";
 import BaseAvatar from "../avatars/BaseAvatar";
@@ -75,10 +75,10 @@ interface IProps {
     presenceLastTs: number;
     presenceCurrentlyActive?: boolean;
     showInviteButton: boolean;
-    onClick(): void;
+    onClick(e: ButtonEvent): void;
     onMouseOver?(): void;
     onMouseLeave?(): void;
-    onContextMenu?(): void;
+    onContextMenu?(e: ButtonEvent): void;
     suppressOnHover: boolean;
     showPresence: boolean;
     subtextLabel?: string;

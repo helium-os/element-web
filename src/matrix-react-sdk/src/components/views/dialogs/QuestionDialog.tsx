@@ -59,10 +59,22 @@ export default class QuestionDialog extends React.Component<IQuestionDialogProps
     };
 
     public render(): React.ReactNode {
-        let primaryButtonClass = "";
-        if (this.props.danger) {
-            primaryButtonClass = "danger";
-        }
+        const footer = (
+            <DialogButtons
+                primaryButton={this.props.button || _t("OK")}
+                primaryButtonProps={{
+                    disabled: this.props.buttonDisabled,
+                    danger: this.props.danger,
+                }}
+                onPrimaryButtonClick={this.onOk}
+                cancelButton={this.props.cancelButton}
+                hasCancel={this.props.hasCancelButton && !this.props.quitOnly}
+                focus={this.props.focus}
+                onCancel={this.onCancel}
+            >
+                {this.props.extraButtons}
+            </DialogButtons>
+        );
         return (
             <BaseDialog
                 className={classNames("mx_QuestionDialog", this.props.className)}
@@ -72,22 +84,9 @@ export default class QuestionDialog extends React.Component<IQuestionDialogProps
                 headerImage={this.props.headerImage}
                 hasCancel={this.props.hasCancelButton}
                 fixedWidth={this.props.fixedWidth}
+                footer={footer}
             >
-                <div className="mx_Dialog_content" id="mx_Dialog_content">
-                    {this.props.description}
-                </div>
-                <DialogButtons
-                    primaryButton={this.props.button || _t("OK")}
-                    primaryButtonClass={primaryButtonClass}
-                    primaryDisabled={this.props.buttonDisabled}
-                    cancelButton={this.props.cancelButton}
-                    hasCancel={this.props.hasCancelButton && !this.props.quitOnly}
-                    onPrimaryButtonClick={this.onOk}
-                    focus={this.props.focus}
-                    onCancel={this.onCancel}
-                >
-                    {this.props.extraButtons}
-                </DialogButtons>
+                {this.props.description}
             </BaseDialog>
         );
     }

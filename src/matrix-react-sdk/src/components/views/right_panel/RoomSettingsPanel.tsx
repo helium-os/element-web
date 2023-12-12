@@ -41,7 +41,10 @@ const RoomSettingsPanel: React.FC<IProps> = ({ room, onClose }) => {
                 </div>
                 <div className="mx_RoomSettings_buttons">
                     <Button size={ButtonSize.Small} block danger onClick={onLeave}>
-                        {myMember.isAdmin() ? _t("Disband room") : _t("Leave room")}
+                        {_t("Leave room", {
+                            actionType: myMember.isAdmin() ? _t("Disband") : _t("Quit"),
+                            roomType: room.getRoomTypeLabel(),
+                        })}
                     </Button>
                 </div>
             </BaseCard>

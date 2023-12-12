@@ -52,7 +52,7 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ tagId, showIcon = false }
 
     const hasPermissionToAddSpaceChild = activeSpaceRoom?.currentState.maySendStateEvent(EventType.SpaceChild, userId);
     const canAddRooms =
-        activeSpaceRoom.getMyMembership() === "join" &&
+        activeSpaceRoom?.getMyMembership() === "join" &&
         hasPermissionToAddSpaceChild &&
         shouldShowComponent(UIComponent.CreateRooms);
     const canAddVideoRooms = canAddRooms && videoRoomsEnabled;

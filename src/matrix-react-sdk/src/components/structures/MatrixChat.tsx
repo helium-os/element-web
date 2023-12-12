@@ -151,6 +151,7 @@ import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
 import { Layout } from "matrix-react-sdk/src/settings/enums/Layout";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -1187,25 +1188,52 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private leaveRoom(roomId: string): void {
-        const roomToLeave = MatrixClientPeg.get().getRoom(roomId);
+        const cli = MatrixClientPeg.get();
+        const roomToLeave = cli.getRoom(roomId);
         const warnings = this.leaveRoomWarnings(roomId);
 
+        const myUserId = cli.getSafeUserId();
+        const myMember = roomToLeave.getMember(myUserId);
+        const isRoomAdmin = myMember.isAdmin();
+
         const isSpace = roomToLeave?.isSpaceRoom();
+        const isSpaceChannel = SpaceStore.instance.getParents(roomId).length > 0;
+        const isGroupChatRoom = !isSpace && !isSpaceChannel && !roomToLeave?.isPeopleRoom(); // 是否是群聊
+
+        const roomType = roomToLeave.getRoomTypeLabel();
+
+        let actionType;
+        if (isSpace) {
+            actionType = _t("Leave");
+        } else if (isSpaceChannel) {
+            actionType = _t("Leave");
+        } else if (isGroupChatRoom) {
+            actionType = isRoomAdmin ? _t("Disband") : _t("Quit");
+        }
         Modal.createDialog(QuestionDialog, {
-            title: isSpace ? _t("Leave space") : _t("Leave room"),
+            fixedWidth: false,
+            title: isSpace
+                ? _t("Leave space")
+                : _t("Leave room", {
+                      actionType,
+                      roomType,
+                  }),
+            danger: true,
             description: (
-                <span>
+                <div style={{ padding: "20px 0" }}>
                     {isSpace
                         ? _t("Are you sure you want to leave the space '%(spaceName)s'?", {
                               spaceName: roomToLeave?.name ?? _t("Unnamed Space"),
                           })
                         : _t("Are you sure you want to leave the room '%(roomName)s'?", {
+                              actionType,
+                              roomType,
                               roomName: roomToLeave?.name ?? _t("Unnamed Room"),
                           })}
                     {/*{warnings}*/}
-                </span>
+                </div>
             ),
-            button: _t("Leave"),
+            button: actionType,
             onFinished: (shouldLeave) => {
                 if (shouldLeave) {
                     leaveRoomBehaviour(roomId);

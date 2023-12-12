@@ -117,8 +117,15 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
         case "ban":
             return () =>
                 reason
-                    ? _t("%(senderName)s banned %(targetName)s: %(reason)s", { senderName, targetName, reason })
-                    : _t("%(senderName)s banned %(targetName)s", { senderName, targetName });
+                    ? _t("%(senderName)s banned %(targetName)s: %(reason)s", {
+                          senderName: () => <label>{senderName}</label>,
+                          targetName: () => <label>{targetName}</label>,
+                          reason,
+                      })
+                    : _t("%(senderName)s banned %(targetName)s", {
+                          senderName: () => <label>{senderName}</label>,
+                          targetName: () => <label>{targetName}</label>,
+                      });
         case "join":
             if (prevContent && prevContent.membership === "join") {
                 if (prevContent.displayname && content.displayname && prevContent.displayname !== content.displayname) {
@@ -127,34 +134,45 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                             // We're taking the display namke directly from the event content here so we need
                             // to strip direction override chars which the js-sdk would normally do when
                             // calculating the display name
-                            oldDisplayName: removeDirectionOverrideChars(prevContent.displayname!),
-                            displayName: removeDirectionOverrideChars(content.displayname!),
+                            oldDisplayName: () => (
+                                <label>{removeDirectionOverrideChars(prevContent.displayname!)}</label>
+                            ),
+                            displayName: () => <label>{removeDirectionOverrideChars(content.displayname!)}</label>,
                         });
                 } else if (!prevContent.displayname && content.displayname) {
                     return () =>
                         _t("%(senderName)s set their display name to %(displayName)s", {
                             senderName: () => <label>{ev.getSender()}</label>,
-                            displayName: removeDirectionOverrideChars(content.displayname!),
+                            displayName: () => <label>{removeDirectionOverrideChars(content.displayname!)}</label>,
                         });
                 } else if (prevContent.displayname && !content.displayname) {
                     return () =>
                         _t("%(senderName)s removed their display name (%(oldDisplayName)s)", {
                             senderName: () => <label>{senderName}</label>,
-                            oldDisplayName: removeDirectionOverrideChars(prevContent.displayname!),
+                            oldDisplayName: () => (
+                                <label>{removeDirectionOverrideChars(prevContent.displayname!)}</label>
+                            ),
                         });
                 } else if (prevContent.avatar_url && !content.avatar_url) {
-                    return () => _t("%(senderName)s removed their profile picture", { senderName });
+                    return () =>
+                        _t("%(senderName)s removed their profile picture", {
+                            senderName: () => <label>{senderName}</label>,
+                        });
                 } else if (
                     prevContent.avatar_url &&
                     content.avatar_url &&
                     prevContent.avatar_url !== content.avatar_url
                 ) {
-                    return () => _t("%(senderName)s changed their profile picture", { senderName });
+                    return () =>
+                        _t("%(senderName)s changed their profile picture", {
+                            senderName: () => <label>{senderName}</label>,
+                        });
                 } else if (!prevContent.avatar_url && content.avatar_url) {
-                    return () => _t("%(senderName)s set a profile picture", { senderName });
+                    return () =>
+                        _t("%(senderName)s set a profile picture", { senderName: () => <label>{senderName}</label> });
                 } else if (showHiddenEvents ?? SettingsStore.getValue("showHiddenEventsInTimeline")) {
                     // This is a null rejoin, it will only be visible if using 'show hidden events' (labs)
-                    return () => _t("%(senderName)s made no change", { senderName });
+                    return () => _t("%(senderName)s made no change", { senderName: () => <label>{senderName}</label> });
                 } else {
                     return null;
                 }

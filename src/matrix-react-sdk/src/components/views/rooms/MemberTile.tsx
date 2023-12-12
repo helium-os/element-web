@@ -33,14 +33,16 @@ import MemberAvatar from "./../avatars/MemberAvatar";
 import DisambiguatedProfile from "../messages/DisambiguatedProfile";
 import UserIdentifierCustomisations from "../../../customisations/UserIdentifier";
 import { E2EState } from "./E2EIcon";
+import { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
 
 interface IProps {
     member: RoomMember;
     avatarSize?: number;
     showPresence?: boolean;
-    onClick?(): void;
+    onClick?(e: ButtonEvent): void;
     onMouseOver?(): void;
     onMouseLeave?(): void;
+    onContextMenu?(e: ButtonEvent): void;
 }
 
 interface IState {
