@@ -108,7 +108,7 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomGeneralContextMenu" compact>
             <IconizedContextMenuOptionList>
-                {markAsReadOption}
+                {/*{markAsReadOption}*/}
                 {!roomTags.includes(DefaultTagID.Archived) && !isAdminLeft && <>{settingsOption}</>}
             </IconizedContextMenuOptionList>
         </IconizedContextMenu>

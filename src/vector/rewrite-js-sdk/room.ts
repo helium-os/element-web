@@ -112,3 +112,14 @@ Room.prototype.isRestrictedRoom = function () {
 Room.prototype.isPrivateRoom = function () {
     return isPrivateRoom(this.getJoinRule());
 };
+
+Room.prototype.canRemoveUser = function (userId: string) {
+    if (this.getMyMembership() !== "join") {
+        return false;
+    }
+
+    const powerLevelsEvent = this.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+    const powerLevels = powerLevelsEvent && powerLevelsEvent.getContent();
+    const me = this.getMember(userId);
+    return powerLevels && me && me.powerLevel >= powerLevels.kick;
+};

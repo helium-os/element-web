@@ -19,7 +19,7 @@ const SendDMContextMenu: React.FC<IProps> = ({ room, member, ...contextMenuProps
         startDmOnFirstMessage(cli, [member]);
     };
     return (
-        <ContextMenu hasBackground={false} chevronFace={ChevronFace.None} menuWidth={200} {...contextMenuProps}>
+        <ContextMenu chevronFace={ChevronFace.None} menuWidth={200} {...contextMenuProps}>
             <div className="mx_SendDMContextMenu">
                 <UserInfoHeader member={member} room={room} roomId={room.roomId} avatarSize={56} />
                 {!isMe && (

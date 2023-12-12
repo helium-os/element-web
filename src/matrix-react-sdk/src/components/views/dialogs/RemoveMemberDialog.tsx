@@ -39,6 +39,7 @@ const RemoveMemberDialog: React.FC<IProps> = ({ roomId, userId, onFinished }) =>
             primaryButtonProps={{
                 loading: busy,
                 disabled: busy,
+                danger: true,
             }}
             onPrimaryButtonClick={onRemove}
             onCancel={onFinished}
@@ -46,7 +47,13 @@ const RemoveMemberDialog: React.FC<IProps> = ({ roomId, userId, onFinished }) =>
     );
 
     return (
-        <BaseDialog className="mx_RemoveUserDialog" onFinished={onFinished} title={_t("Remove users")} footer={footer}>
+        <BaseDialog
+            className="mx_RemoveUserDialog"
+            fixedWidth={false}
+            title={_t("Remove users")}
+            footer={footer}
+            onFinished={onFinished}
+        >
             <p>
                 你确定将该成员从
                 {room.isSpaceRoom() ? _t("Space") : SpaceStore.instance.isHomeSpace ? _t("Room") : _t("Channel")}

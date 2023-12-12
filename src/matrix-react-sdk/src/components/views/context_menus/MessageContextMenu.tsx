@@ -56,6 +56,9 @@ import { getForwardableEvent } from "../../../events/forward/getForwardableEvent
 import { getShareableLocationEvent } from "../../../events/location/getShareableLocationEvent";
 import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayload";
 import { CardContext } from "../right_panel/context";
+import { isVoiceBroadcastStartedEvent } from "matrix-react-sdk/src/voice-broadcast";
+import { Feature, ServerSupport } from "matrix-js-sdk/src/feature";
+import { IRedactOpts } from "matrix-js-sdk/src/@types/requests";
 
 interface IReplyInThreadButton {
     mxEvent: MatrixEvent;
@@ -236,13 +239,24 @@ export default class MessageContextMenu extends React.Component<IProps, IState> 
         this.closeMenu();
     };
 
-    private onRedactClick = (): void => {
-        const { mxEvent, onCloseDialog } = this.props;
-        createRedactEventDialog({
-            mxEvent,
-            onCloseDialog,
-        });
-        this.closeMenu();
+    private onRedactClick = async (): Promise<void> => {
+        const cli = MatrixClientPeg.get();
+        const { mxEvent } = this.props;
+        const room = cli.getRoom(mxEvent.getRoomId());
+
+        const withRelations: { with_relations?: RelationType[] } = {};
+        if (isVoiceBroadcastStartedEvent(mxEvent)) {
+            const relationBasedRedactionsSupport = cli.canSupport.get(Feature.RelationBasedRedactions);
+            if (relationBasedRedactionsSupport && relationBasedRedactionsSupport !== ServerSupport.Unsupported) {
+                withRelations.with_relations = [RelationType.Reference];
+            }
+        }
+
+        try {
+            await cli.redactEvent(room.roomId, mxEvent.getId(), undefined, {
+                ...withRelations,
+            } as IRedactOpts);
+        } catch (error) {}
     };
 
     private onForwardClick = (forwardableEvent: MatrixEvent) => (): void => {

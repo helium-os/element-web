@@ -137,14 +137,16 @@ limitations under the License.
     opacity: 0.6;
 }
 
-.mx_RoomHeader_name:not(.mx_RoomHeader_name--textonly),
-.mx_RoomHeader_avatar {
+.mx_RoomHeader_name:not(.mx_RoomHeader_name--textonly) {
     cursor: pointer;
+}
+
+.mx_RoomHeader_topic {
+    cursor: default;
 }
 
 .mx_RoomTopic {
     position: relative;
-    cursor: pointer;
 }
 
 .mx_RoomHeader_topic {
@@ -157,7 +159,7 @@ limitations under the License.
     font-weight: 400;
     max-height: calc($lineHeight * $lines);
     font-size: 14px;
-    color: $text-primary-color2;
+    color: $text-secondary-color2;
 
     overflow: hidden;
     -webkit-line-clamp: $lines; /* See: https://drafts.csswg.org/css-overflow-3/#webkit-line-clamp */

@@ -1212,6 +1212,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         }
         Modal.createDialog(QuestionDialog, {
             fixedWidth: false,
+            className: "mx_Dialog_LeaveRoomConfirmDialog",
             title: isSpace
                 ? _t("Leave space")
                 : _t("Leave room", {
@@ -1220,18 +1221,18 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                   }),
             danger: true,
             description: (
-                <div style={{ padding: "20px 0" }}>
+                <>
                     {isSpace
                         ? _t("Are you sure you want to leave the space '%(spaceName)s'?", {
                               spaceName: roomToLeave?.name ?? _t("Unnamed Space"),
                           })
-                        : _t("Are you sure you want to leave the room '%(roomName)s'?", {
+                        : _t("Are you sure you want to leave the room?", {
                               actionType,
                               roomType,
                               roomName: roomToLeave?.name ?? _t("Unnamed Room"),
                           })}
                     {/*{warnings}*/}
-                </div>
+                </>
             ),
             button: actionType,
             onFinished: (shouldLeave) => {

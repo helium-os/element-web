@@ -174,11 +174,13 @@ const NewRoomIntro: React.FC = () => {
         }
 
         const showJustInviteToRoom = false;
+        const showInviteToSpace = false;
 
         let buttons: JSX.Element | undefined;
         if (parentSpace && shouldShowComponent(UIComponent.InviteUsers)) {
-            buttons = (
-                <div className="mx_NewRoomIntro_buttons">
+            let inviteToSpaceBtn;
+            if (showInviteToSpace) {
+                inviteToSpaceBtn = (
                     <AccessibleButton
                         className="mx_NewRoomIntro_inviteButton"
                         kind="primary"
@@ -188,19 +190,32 @@ const NewRoomIntro: React.FC = () => {
                     >
                         {_t("Invite to %(spaceName)s", { spaceName: parentSpace.name })}
                     </AccessibleButton>
-                    {showJustInviteToRoom && room.canInvite(cli.getSafeUserId()) && (
-                        <AccessibleButton
-                            className="mx_NewRoomIntro_inviteButton"
-                            kind="primary_outline"
-                            onClick={() => {
-                                defaultDispatcher.dispatch({ action: "view_invite", roomId });
-                            }}
-                        >
-                            {_t("Invite to just this room")}
-                        </AccessibleButton>
-                    )}
-                </div>
-            );
+                );
+            }
+
+            let justInviteToRoomBtn;
+            if (showJustInviteToRoom && room.canInvite(cli.getSafeUserId())) {
+                justInviteToRoomBtn = (
+                    <AccessibleButton
+                        className="mx_NewRoomIntro_inviteButton"
+                        kind="primary_outline"
+                        onClick={() => {
+                            defaultDispatcher.dispatch({ action: "view_invite", roomId });
+                        }}
+                    >
+                        {_t("Invite to just this room")}
+                    </AccessibleButton>
+                );
+            }
+
+            if (inviteToSpaceBtn || justInviteToRoomBtn) {
+                buttons = (
+                    <div className="mx_NewRoomIntro_buttons">
+                        {inviteToSpaceBtn}
+                        {justInviteToRoomBtn}
+                    </div>
+                );
+            }
         } else if (room.canInvite(cli.getSafeUserId()) && shouldShowComponent(UIComponent.InviteUsers)) {
             buttons = (
                 <div className="mx_NewRoomIntro_buttons">

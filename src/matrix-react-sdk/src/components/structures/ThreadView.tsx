@@ -455,6 +455,7 @@ export default class ThreadView extends React.Component<IProps, IState> {
                             e2eStatus={this.props.e2eStatus}
                             compact={true}
                             showCallButtons={false}
+                            showSendBtnTips={false}
                         />
                     )}
                 </BaseCard>

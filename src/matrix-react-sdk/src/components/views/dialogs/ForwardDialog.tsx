@@ -288,14 +288,17 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
         );
     };
 
-    const prefixComponent = selectedRooms.map((room) => (
-        <SelectedUserOrRoomTile
-            key={room.roomId}
-            avatar={<RoomAndChannelAvatar room={room} avatarSize={20} />}
-            name={room.name}
-            onRemove={() => onToggle(room)}
-        />
-    ));
+    let prefixComponent;
+    if (selectedRooms.length > 0) {
+        prefixComponent = selectedRooms.map((room) => (
+            <SelectedUserOrRoomTile
+                key={room.roomId}
+                avatar={<RoomAndChannelAvatar room={room} avatarSize={20} />}
+                name={room.name}
+                onRemove={() => onToggle(room)}
+            />
+        ));
+    }
 
     const footer = <DialogButtons primaryButton={_t("Send")} onPrimaryButtonClick={onSend} onCancel={onFinished} />;
 
@@ -310,7 +313,7 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
             <div ref={searchRef}>
                 <Field
                     type="text"
-                    usePlaceholderAsHint={true}
+                    usePlaceholderAsHint={!prefixComponent || !prefixComponent.length}
                     placeholder={"请输入频道或用户名"}
                     label={"频道或用户名"}
                     className={limitForward && selectedRooms.length >= limitForward ? "mx_Field_hideInput" : ""}

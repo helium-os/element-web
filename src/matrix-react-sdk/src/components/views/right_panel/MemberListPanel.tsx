@@ -22,18 +22,17 @@ import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import BaseCard from "./BaseCard";
 import MemberTile from "../rooms/MemberTile";
-import { toLeftOf, aboveRightOf, aboveLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
+import { toLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
 import SendDMContextMenu from "matrix-react-sdk/src/components/views/context_menus/SendDMContextMenu";
-import { Member } from "matrix-react-sdk/src/utils/direct-messages";
 import MemberList from "matrix-react-sdk/src/components/views/rooms/MemberList";
 import IconizedContextMenu, {
     IconizedContextMenuOption,
     IconizedContextMenuOptionList,
 } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 import { _t } from "matrix-react-sdk/src/languageHandler";
-import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/components/views/rooms/EntityTile";
 import Modal from "matrix-react-sdk/src/Modal";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
+import { contextMenuBelow, PartialDOMRect } from "matrix-react-sdk/src/components/views/rooms/RoomTile";
 
 interface IProps {
     roomId: string;
@@ -45,6 +44,7 @@ interface IState {
     contextMenuBtn: Element | null;
     showSendDMContextMenu: boolean;
     selectedMember: RoomMember;
+    generalMenuPosition: PartialDOMRect | null;
 }
 
 export default class MemberListPanel extends React.Component<IProps, IState> {
@@ -58,6 +58,7 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
             showSendDMContextMenu: false,
             selectedMember: null,
             contextMenuBtn: null,
+            generalMenuPosition: null,
         };
     }
 
@@ -91,10 +92,16 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         const isMe = member.userId === client.getUserId();
         if (isMe) return;
 
+        const room = client.getRoom(this.props.roomId);
+        if (!room.canRemoveUser(client.getUserId())) return;
+
         this.setState({
             showContextMenu: true,
             selectedMember: member,
-            contextMenuBtn: this.memberListRef.current?.querySelector(`.mx_MemberItem[data-uid="${member.userId}"]`),
+            generalMenuPosition: {
+                left: e.clientX,
+                bottom: e.clientY,
+            },
         });
     };
 
@@ -129,13 +136,15 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
     };
 
     private renderContextMenu() {
-        if (!this.state.showContextMenu || !this.state.selectedMember || !this.state.contextMenuBtn) return null;
-
-        const rect = this.state.contextMenuBtn?.getBoundingClientRect();
-        if (!rect) return null;
+        if (!this.state.showContextMenu || !this.state.selectedMember || !this.state.generalMenuPosition) return null;
 
         return (
-            <IconizedContextMenu compact {...aboveRightOf(rect)} menuWidth={130} onFinished={this.onCloseContextMenu}>
+            <IconizedContextMenu
+                compact
+                {...contextMenuBelow(this.state.generalMenuPosition)}
+                menuWidth={130}
+                onFinished={this.onCloseContextMenu}
+            >
                 <IconizedContextMenuOptionList first>
                     <IconizedContextMenuOption label={_t("Remove users")} onClick={this.onRemoveMember} />
                 </IconizedContextMenuOptionList>
@@ -144,14 +153,6 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
     }
 
     private renderSendDMContextMenu() {
-        console.log(
-            "this.state.showSendDMContextMenu",
-            this.state.showSendDMContextMenu,
-            "this.state.contextMenuBtn",
-            this.state.contextMenuBtn,
-            "this.state.selectedMember",
-            this.state.selectedMember,
-        );
         if (!this.state.showSendDMContextMenu || !this.state.contextMenuBtn || !this.state.selectedMember) {
             return null;
         }
@@ -163,7 +164,12 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         const room = cli.getRoom(this.props.roomId);
 
         return (
-            <SendDMContextMenu {...toLeftOf(rect, rect.height / 2)} room={room} member={this.state.selectedMember} />
+            <SendDMContextMenu
+                {...toLeftOf(rect, rect.height / 2)}
+                room={room}
+                member={this.state.selectedMember}
+                onFinished={this.onCloseSendDMContextMenu}
+            />
         );
     }
 
@@ -175,9 +181,7 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
                         <MemberList roomId={this.props.roomId} makeMemberTiles={this.makeMemberTiles} />
                     </div>
                 </BaseCard>
-                <div onMouseLeave={() => this.onCloseSendDMContextMenu()}>
-                    {this.state.showSendDMContextMenu && this.renderSendDMContextMenu()}
-                </div>
+                {this.state.showSendDMContextMenu && this.renderSendDMContextMenu()}
                 {this.state.showContextMenu && this.renderContextMenu()}
             </>
         );

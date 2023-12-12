@@ -276,7 +276,9 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                 const userLevels = plContent.users || {};
                 const mLevel = userLevels[m.userId] || PowerLevel.Default;
 
-                const isMe = m.userId === client.getUserId();
+                const myUserId = client.getUserId();
+
+                const isMe = m.userId === myUserId;
                 const myUserLevel = userLevels[client.getUserId()!];
 
                 // 社区内拥有修改用户角色权限的用户
@@ -305,7 +307,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                                     </ContextMenuButton>
                                 </li>
                             )}
-                            {!isMe && myUserLevel > mLevel && (
+                            {!isMe && room.canRemoveUser(myUserId) && myUserLevel > mLevel && (
                                 <li onClick={() => this.onRemoveMember(m.userId)}>{_t("Remove users")}</li>
                             )}
                         </ul>

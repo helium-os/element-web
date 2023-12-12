@@ -60,7 +60,7 @@ interface ClassProps extends Props {
     hasLiveVoiceBroadcast: boolean;
 }
 
-type PartialDOMRect = Pick<DOMRect, "left" | "bottom">;
+export type PartialDOMRect = Pick<DOMRect, "left" | "bottom">;
 
 interface State {
     selected: boolean;

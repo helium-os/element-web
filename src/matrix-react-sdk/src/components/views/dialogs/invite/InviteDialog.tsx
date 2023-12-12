@@ -47,13 +47,7 @@ import LegacyCallHandler from "../../../../LegacyCallHandler";
 import { ScreenName } from "../../../../PosthogTrackers";
 import { KeyBindingAction } from "../../../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../../../KeyBindingsManager";
-import {
-    DirectoryMember,
-    IDMUserTileProps,
-    Member,
-    startDmOnFirstMessage,
-    ThreepidMember,
-} from "../../../../utils/direct-messages";
+import { DirectoryMember, Member, startDmOnFirstMessage, ThreepidMember } from "../../../../utils/direct-messages";
 import { InviteKind } from "./InviteDialogTypes";
 import { privateShouldBeEncrypted } from "../../../../utils/rooms";
 import { NonEmptyArray } from "../../../../@types/common";
@@ -688,9 +682,9 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
     };
 
     private renderEditor(): JSX.Element {
-        const targets =
-            this.state.targets.length > 0 &&
-            this.state.targets.map((t) => (
+        let targets;
+        if (this.state.targets.length > 0) {
+            targets = this.state.targets.map((t) => (
                 <SelectedUserOrRoomTile
                     key={t.userId}
                     avatar={<SearchResultAvatar user={t} size={20} />}
@@ -698,12 +692,13 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
                     onRemove={() => !this.props.busy && this.removeMember(t)}
                 />
             ));
+        }
 
         return (
             <div ref={this.editorRef} className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
                 <Field
                     type="text"
-                    usePlaceholderAsHint={true}
+                    usePlaceholderAsHint={!targets || !targets.length}
                     placeholder={_t("Enter username")}
                     label={_t("Username")}
                     className={
