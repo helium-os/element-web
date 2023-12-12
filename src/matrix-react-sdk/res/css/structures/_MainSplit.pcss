@@ -21,30 +21,32 @@ limitations under the License.
     min-height: 0;
     height: 100%;
     background: $background-secondary-color1;
-}
 
-.mx_MainSplit > .mx_RightPanel_ResizeWrapper {
-
-    &:hover .mx_ResizeHandle_horizontal::before {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-
-        height: 64px; /* to match width of the ones on roomlist */
-        width: 4px;
-        border-radius: 4px;
-
-        content: "";
-
-        background-color: $primary-content;
-        opacity: 0.8;
+    &.mx_RightPanel_resizeable {
+        .mx_RoomView_body {
+            border-right: 1px solid $border-primary-color;
+        }
+        .mx_RightPanel_ResizeWrapper {
+            margin-left: 6px;
+        }
     }
 
-    &.mx_ThreadPanel_ResizeWrapper {
-        margin-left: 6px;
-        & ~ .mx_RoomView_body {
-            border-right: 1px solid $border-primary-color;
+    &> .mx_RightPanel_ResizeWrapper {
+
+        &:hover .mx_ResizeHandle_horizontal::before {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+            height: 64px; /* to match width of the ones on roomlist */
+            width: 4px;
+            border-radius: 4px;
+
+            content: "";
+
+            background-color: $primary-content;
+            opacity: 0.8;
         }
     }
 }
