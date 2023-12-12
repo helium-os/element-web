@@ -408,6 +408,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             showApps: false,
             isPeeking: false,
             showRightPanel: false,
+            phase: RightPanelPhases | null,
             joining: false,
             showTopUnreadMessagesBar: false,
             statusBarVisible: false,
@@ -632,6 +633,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             mainSplitContentType: room ? this.getMainSplitContentType(room) : undefined,
             initialEventId: undefined, // default to clearing this, will get set later in the method if needed
             showRightPanel: this.context.rightPanelStore.isOpenForRoom(roomId),
+            phase: this.context.rightPanelStore.currentCardForRoom(roomId),
             activeCall: CallStore.instance.getActiveCall(roomId),
         };
 
@@ -2463,7 +2465,11 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                         <EffectsOverlay roomWidth={this.roomView.current.offsetWidth} />
                     )}
                     <ErrorBoundary>
-                        <MainSplit panel={rightPanel} resizeNotifier={this.props.resizeNotifier}>
+                        <MainSplit
+                            panel={rightPanel}
+                            phase={this.state.phase}
+                            resizeNotifier={this.props.resizeNotifier}
+                        >
                             <div
                                 className={mainSplitContentClasses}
                                 ref={this.roomViewBody}

@@ -20,6 +20,9 @@ import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
 
 import ResizeNotifier from "../../utils/ResizeNotifier";
+import RightPanelStore from "matrix-react-sdk/src/stores/right-panel/RightPanelStore";
+import { RightPanelPhases } from "matrix-react-sdk/src/stores/right-panel/RightPanelStorePhases";
+import { UPDATE_EVENT } from "matrix-react-sdk/src/stores/AsyncStore";
 
 interface IProps {
     resizeNotifier: ResizeNotifier;
@@ -28,7 +31,31 @@ interface IProps {
     children: ReactNode;
 }
 
-export default class MainSplit extends React.Component<IProps> {
+interface IState {
+    phase: RightPanelPhases | null;
+}
+export default class MainSplit extends React.Component<IProps, IState> {
+    constructor(props: IProps) {
+        super(props);
+        this.state = {
+            phase: null,
+        };
+    }
+
+    componentDidMount() {
+        RightPanelStore.instance.on(UPDATE_EVENT, this.onRightPanelUpdate);
+    }
+
+    componentWillUnmount() {
+        RightPanelStore.instance.off(UPDATE_EVENT, this.onRightPanelUpdate);
+    }
+
+    private onRightPanelUpdate = () => {
+        this.setState({
+            phase: RightPanelStore.instance.currentCard?.phase,
+        });
+    };
+
     private onResizeStart = (): void => {
         this.props.resizeNotifier.startResizing();
     };
@@ -66,27 +93,33 @@ export default class MainSplit extends React.Component<IProps> {
 
         const hasResizer = !this.props.collapsedRhs && panelView;
 
+        const isThreadPanel = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView].includes(this.state.phase);
+
         let children;
         if (hasResizer) {
             children = (
                 <Resizable
                     defaultSize={this.loadSidePanelSize()}
-                    minWidth={243}
-                    maxWidth="50%"
-                    enable={{
-                        top: false,
-                        right: false,
-                        bottom: false,
-                        left: true,
-                        topRight: false,
-                        bottomRight: false,
-                        bottomLeft: false,
-                        topLeft: false,
-                    }}
+                    minWidth={isThreadPanel ? 364 : 244}
+                    maxWidth={isThreadPanel ? "50%" : 244}
+                    enable={
+                        isThreadPanel
+                            ? {
+                                  top: false,
+                                  right: false,
+                                  bottom: false,
+                                  left: true,
+                                  topRight: false,
+                                  bottomRight: false,
+                                  bottomLeft: false,
+                                  topLeft: false,
+                              }
+                            : false
+                    }
                     onResizeStart={this.onResizeStart}
                     onResize={this.onResize}
                     onResizeStop={this.onResizeStop}
-                    className="mx_RightPanel_ResizeWrapper"
+                    className={`mx_RightPanel_ResizeWrapper ${isThreadPanel ? "mx_ThreadPanel_ResizeWrapper" : ""}`}
                     handleClasses={{ left: "mx_ResizeHandle_horizontal" }}
                 >
                     {panelView}

@@ -28,9 +28,11 @@ $roomListCollapsedWidth: 68px;
     flex-direction: column;
     max-width: 50%;
     position: relative;
+    z-index: 2;
 
     /* Contain the amount of layers rendered by constraining what actually needs re-layering via css */
     contain: layout paint;
+    border-right: 1px solid $border-primary-color;
 }
 
 .mx_LeftPanel_wrapper {
@@ -44,7 +46,6 @@ $roomListCollapsedWidth: 68px;
         display: flex;
         overflow: hidden;
         position: relative;
-        border-left: 1px solid $border-primary-color;
 
         &[data-collapsed] {
             max-width: $roomListCollapsedWidth;
