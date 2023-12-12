@@ -22,7 +22,7 @@ import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import BaseCard from "./BaseCard";
 import MemberTile from "../rooms/MemberTile";
-import { toLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
+import { ChevronFace, MenuProps, toLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
 import SendDMContextMenu from "matrix-react-sdk/src/components/views/context_menus/SendDMContextMenu";
 import MemberList from "matrix-react-sdk/src/components/views/rooms/MemberList";
 import IconizedContextMenu, {
@@ -32,7 +32,16 @@ import IconizedContextMenu, {
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import Modal from "matrix-react-sdk/src/Modal";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
-import { contextMenuBelow, PartialDOMRect } from "matrix-react-sdk/src/components/views/rooms/RoomTile";
+
+const contextMenuBelow = (elementRect: PartialDOMRect): MenuProps => {
+    // align the context menu's icons with the icon which opened the context menu
+    const left = elementRect.left + window.scrollX - 9;
+    const top = elementRect.bottom + window.scrollY + 17;
+    const chevronFace = ChevronFace.None;
+    return { left, top, chevronFace };
+};
+
+type PartialDOMRect = Pick<DOMRect, "left" | "bottom">;
 
 interface IProps {
     roomId: string;
