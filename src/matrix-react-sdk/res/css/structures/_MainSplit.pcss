@@ -30,23 +30,4 @@ limitations under the License.
             margin-left: 6px;
         }
     }
-
-    &> .mx_RightPanel_ResizeWrapper {
-
-        &:hover .mx_ResizeHandle_horizontal::before {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-
-            height: 64px; /* to match width of the ones on roomlist */
-            width: 4px;
-            border-radius: 4px;
-
-            content: "";
-
-            background-color: $primary-content;
-            opacity: 0.8;
-        }
-    }
 }

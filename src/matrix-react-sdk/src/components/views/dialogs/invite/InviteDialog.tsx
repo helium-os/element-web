@@ -682,9 +682,9 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
     };
 
     private renderEditor(): JSX.Element {
-        let targets;
+        let prefixComponent;
         if (this.state.targets.length > 0) {
-            targets = this.state.targets.map((t) => (
+            prefixComponent = this.state.targets.map((t) => (
                 <SelectedUserOrRoomTile
                     key={t.userId}
                     avatar={<SearchResultAvatar user={t} size={20} />}
@@ -698,18 +698,20 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
             <div ref={this.editorRef} className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
                 <Field
                     type="text"
-                    usePlaceholderAsHint={!targets}
+                    usePlaceholderAsHint={!prefixComponent}
                     placeholder={_t("Enter username")}
                     label={_t("Username")}
                     className={
-                        !!this.props.inviteLimit && targets.length >= this.props.inviteLimit ? "mx_Field_hideInput" : ""
+                        !!this.props.inviteLimit && this.state.targets.length >= this.props.inviteLimit
+                            ? "mx_Field_hideInput"
+                            : ""
                     }
                     autoFocus={false}
                     autoComplete="off"
                     disabled={
                         this.props.busy || (this.props.kind == InviteKind.CallTransfer && this.state.targets.length > 0)
                     }
-                    prefixComponent={targets}
+                    prefixComponent={prefixComponent}
                     hasPrefixContainer={false}
                     value={this.state.filterText}
                     onKeyDown={this.onKeyDown}

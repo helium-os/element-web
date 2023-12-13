@@ -23,12 +23,13 @@ $roomListCollapsedWidth: 68px;
     }
 }
 
+.mx_LeftPanel_ResizeWrapper {
+    z-index: 2;
+}
+
 .mx_LeftPanel_outerWrapper {
     display: flex;
     flex-direction: column;
-    max-width: 50%;
-    position: relative;
-    z-index: 2;
 
     /* Contain the amount of layers rendered by constraining what actually needs re-layering via css */
     contain: layout paint;
@@ -42,6 +43,7 @@ $roomListCollapsedWidth: 68px;
     height: 100%; /* ensure space panel is still scrollable with an outer wrapper */
 
     .mx_LeftPanel_wrapper--user {
+        flex: 1;
         background-color: $background-secondary-color1;
         display: flex;
         overflow: hidden;

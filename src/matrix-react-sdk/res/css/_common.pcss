@@ -813,4 +813,28 @@ legend {
     }
 }
 
+// resize bar
+.mx_ResizeWrapper {
+    .mx_ResizeHandle_horizontal::before {
+        display: none;
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        height: 64px;
+        width: 4px;
+        border-radius: 4px;
+
+        background-color: $primary-content;
+        opacity: 0.8;
+    }
+    &:hover {
+        .mx_ResizeHandle_horizontal::before {
+            display: block;
+        }
+    }
+}
+
 

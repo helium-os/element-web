@@ -53,14 +53,8 @@ import { SlidingSyncManager } from "../../../SlidingSyncManager";
 import NotificationBadge from "./NotificationBadge";
 import RoomTile from "./RoomTile";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import {
-    IconizedContextMenuOption,
-    IconizedContextMenuOptionList,
-} from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
+import { IconizedContextMenuOptionList } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
-import Modal from "matrix-react-sdk/src/Modal";
-import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
-import DeleteGroupConfirmDialog from "matrix-react-sdk/src/components/views/dialogs/group/DeleteGroupConfirmDialog";
 import SpaceDeleteTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceDeleteTagContextMenu";
 import EditSpaceTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/EditSpaceTagContextMenu";
 

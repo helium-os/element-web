@@ -2465,11 +2465,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                         <EffectsOverlay roomWidth={this.roomView.current.offsetWidth} />
                     )}
                     <ErrorBoundary>
-                        <MainSplit
-                            panel={rightPanel}
-                            phase={this.state.phase}
-                            resizeNotifier={this.props.resizeNotifier}
-                        >
+                        <MainSplit panel={rightPanel} resizeNotifier={this.props.resizeNotifier}>
                             <div
                                 className={mainSplitContentClasses}
                                 ref={this.roomViewBody}
