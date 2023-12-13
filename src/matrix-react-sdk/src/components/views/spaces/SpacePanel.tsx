@@ -122,7 +122,7 @@ type MetaSpaceButtonProps = Pick<IMetaSpaceButtonProps, "selected" | "isPanelCol
 
 const MetaSpaceButton: React.FC<IMetaSpaceButtonProps> = ({ selected, isPanelCollapsed, ...props }) => {
     return (
-        <li
+        <div
             className={classNames("mx_SpaceItem", {
                 collapsed: isPanelCollapsed,
             })}
@@ -130,7 +130,7 @@ const MetaSpaceButton: React.FC<IMetaSpaceButtonProps> = ({ selected, isPanelCol
             aria-selected={selected}
         >
             <SpaceButton {...props} selected={selected} isNarrow={isPanelCollapsed} />
-        </li>
+        </div>
     );
 };
 
@@ -264,54 +264,56 @@ const SpacePanelInner: React.FC<IInnerSpacePanelProps> = ({
     });
 
     return (
-        <IndicatorScrollbar
-            {...props}
-            wrappedRef={innerRef}
-            className="mx_SpaceTreeLevel"
-            style={
-                isDraggingOver
-                    ? {
-                          pointerEvents: "none",
-                      }
-                    : undefined
-            }
-            element="ul"
-            role="tree"
-            aria-label={_t("Spaces")}
-        >
+        <>
             {metaSpacesSection}
-            <li className="mx_Space_Divider" />
-            {invites.map((s) => (
-                <SpaceItem
-                    key={s.roomId}
-                    space={s}
-                    activeSpaces={activeSpaces}
-                    isPanelCollapsed={isPanelCollapsed}
-                    onExpand={() => setPanelCollapsed(false)}
-                />
-            ))}
-            {actualSpaces.map((s, i) => (
-                <Draggable key={s.roomId} draggableId={s.roomId} index={i}>
-                    {(provided, snapshot) => (
-                        <SpaceItem
-                            {...provided.draggableProps}
-                            dragHandleProps={provided.dragHandleProps}
-                            key={s.roomId}
-                            innerRef={provided.innerRef}
-                            className={snapshot.isDragging ? "mx_SpaceItem_dragging" : undefined}
-                            space={s}
-                            activeSpaces={activeSpaces}
-                            isPanelCollapsed={isPanelCollapsed}
-                            onExpand={() => setPanelCollapsed(false)}
-                        />
-                    )}
-                </Draggable>
-            ))}
-            {children}
-            {shouldShowComponent(UIComponent.CreateSpaces) && UserStore.instance().canCreateSpace && (
-                <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
-            )}
-        </IndicatorScrollbar>
+            <div className="mx_Space_Divider" />
+            <IndicatorScrollbar
+                {...props}
+                wrappedRef={innerRef}
+                className="mx_SpaceTreeLevel"
+                style={
+                    isDraggingOver
+                        ? {
+                              pointerEvents: "none",
+                          }
+                        : undefined
+                }
+                element="ul"
+                role="tree"
+                aria-label={_t("Spaces")}
+            >
+                {invites.map((s) => (
+                    <SpaceItem
+                        key={s.roomId}
+                        space={s}
+                        activeSpaces={activeSpaces}
+                        isPanelCollapsed={isPanelCollapsed}
+                        onExpand={() => setPanelCollapsed(false)}
+                    />
+                ))}
+                {actualSpaces.map((s, i) => (
+                    <Draggable key={s.roomId} draggableId={s.roomId} index={i}>
+                        {(provided, snapshot) => (
+                            <SpaceItem
+                                {...provided.draggableProps}
+                                dragHandleProps={provided.dragHandleProps}
+                                key={s.roomId}
+                                innerRef={provided.innerRef}
+                                className={snapshot.isDragging ? "mx_SpaceItem_dragging" : undefined}
+                                space={s}
+                                activeSpaces={activeSpaces}
+                                isPanelCollapsed={isPanelCollapsed}
+                                onExpand={() => setPanelCollapsed(false)}
+                            />
+                        )}
+                    </Draggable>
+                ))}
+                {children}
+                {shouldShowComponent(UIComponent.CreateSpaces) && UserStore.instance().canCreateSpace && (
+                    <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
+                )}
+            </IndicatorScrollbar>
+        </>
     );
 };
 
