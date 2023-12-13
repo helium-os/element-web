@@ -226,7 +226,6 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
                         value={this.state.name}
                         wordLimit={80}
                         className="mx_CreateRoomDialog_name"
-                        validateOnFocus={false}
                         onValidate={this.onNameValidate}
                     />
                     <Field

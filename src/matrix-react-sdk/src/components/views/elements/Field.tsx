@@ -75,6 +75,8 @@ interface IProps {
     validateOnBlur?: boolean;
     validateOnChange?: boolean;
     // All other props pass through to the <input>.
+    autoComplete?: booolean | string;
+    clearEnable?: boolean; // 是否展示清除按钮
 }
 
 export interface IInputProps extends IProps, InputHTMLAttributes<HTMLInputElement> {
@@ -127,12 +129,14 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
     public static readonly defaultProps = {
         element: "input",
         type: "text",
-        validateOnFocus: true,
+        validateOnFocus: false,
         validateOnBlur: true,
         validateOnChange: true,
         hasPrefixContainer: true,
         hasPostfixContainer: true,
         wordLimit: false,
+        clearEnable: true,
+        autoComplete: "off",
     };
 
     /*
@@ -202,6 +206,15 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
         this.props.onBlur?.(ev);
     };
 
+    private onClear = () => {
+        this.onChange({
+            target: {
+                value: "",
+            },
+        } as React.ChangeEvent<any>);
+        this.inputRef.current?.focus();
+    };
+
     public async validate({ focused, allowEmpty = true }: IValidateOpts): Promise<boolean | undefined> {
         if (!this.props.onValidate) {
             return;
@@ -244,6 +257,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             hasPrefixContainer,
             postfixComponent,
             hasPostfixContainer,
+            clearEnable,
             wordLimit,
             className,
             onValidate,
@@ -261,6 +275,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         this.inputRef = inputRef || React.createRef();
 
+        inputProps.autoComplete = inputProps.autoComplete || "off";
         inputProps.placeholder = inputProps.placeholder ?? inputProps.label;
         inputProps.id = this.id; // this overwrites the id from props
         inputProps.value = wordLimit ? this.props.value.substring(0, wordLimit) : this.props.value;
@@ -305,6 +320,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             mx_Field_valid: hasValidationFlag ? forceValidity : onValidate && this.state.valid === true,
             mx_Field_invalid: hasValidationFlag ? !forceValidity : onValidate && this.state.valid === false,
             mx_Field_focused: this.state.focused,
+            mx_Field_clearShow: this.state.focused && !!this.props.value,
         });
 
         // Handle displaying feedback on validity
@@ -335,10 +351,17 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
                                 </label>
                             )}
                         </div>
-                        <div className="mx_Field_inner">
-                            {prefixContainer}
-                            {fieldInput}
-                            {postfixContainer}
+                        <div className="mx_Field_inputBox">
+                            <div className="mx_Field_inner">
+                                {prefixContainer}
+                                {fieldInput}
+                                {postfixContainer}
+                            </div>
+                            {clearEnable && (
+                                <div className="mx_Field_clearBox">
+                                    <div className="mx_Field_clearBtn" onClick={this.onClear}></div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

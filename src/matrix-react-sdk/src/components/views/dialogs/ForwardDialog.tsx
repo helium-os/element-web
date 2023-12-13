@@ -321,6 +321,7 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
                     autoComplete="off"
                     prefixComponent={prefixComponent}
                     hasPrefixContainer={false}
+                    clearEnable={false}
                     value={query}
                     onChange={onQueryChange}
                 />

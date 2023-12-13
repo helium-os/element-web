@@ -48,9 +48,42 @@ $textarea-height: calc(3 * $input-height);
     border-left: 1px solid $input-border-color;
 }
 
+
 .mx_Field_wrap {
     position: relative;
     padding: 0 14px;
+}
+
+.mx_Field_inputBox {
+    display: flex;
+    align-items: flex-start;
+}
+
+.mx_Field_clearBox {
+    opacity: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+}
+
+.mx_Field_clearBtn {
+    width: 14px;
+    height: 14px;
+    background: $text-secondary-color1;
+    border-radius: 50%;
+    cursor: pointer;
+    @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #fff;
+}
+
+.mx_Field_clearShow .mx_Field_clearBox {
+    opacity: 1;
+}
+
+.mx_Field_inner {
+    flex: 1;
+    overflow: hidden;
 }
 
 .mx_Field .mx_Field_inner input,
@@ -96,8 +129,8 @@ $textarea-height: calc(3 * $input-height);
     pointer-events: none;
 }
 
-.mx_Field.mx_Field_labelShow .mx_Field_inner,
-.mx_Field.mx_Field_focused .mx_Field_inner {
+.mx_Field.mx_Field_labelShow .mx_Field_inputBox,
+.mx_Field.mx_Field_focused .mx_Field_inputBox {
     transform: translate(0, $input-transform-space);
     transition: all 0.25s ease-out 0.1s;
 }
@@ -293,7 +326,7 @@ $textarea-height: calc(3 * $input-height);
             height: 14px;
             border-radius: 50%;
             background: $text-secondary-color1;
-            @mixin MaskIcon url("$(res)/img/cancel.svg"), 6px, 6px, #FFFFFF;
+            @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #FFFFFF;
         }
 
         &:hover .mx_SelectedUserOrRoomTile_remove{

@@ -713,6 +713,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
                     }
                     prefixComponent={prefixComponent}
                     hasPrefixContainer={false}
+                    clearEnable={false}
                     value={this.state.filterText}
                     onKeyDown={this.onKeyDown}
                     onChange={this.updateFilter}
