@@ -698,7 +698,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
             <div ref={this.editorRef} className="mx_InviteDialog_editor" onClick={this.onClickInputArea}>
                 <Field
                     type="text"
-                    usePlaceholderAsHint={!targets || !targets.length}
+                    usePlaceholderAsHint={!targets}
                     placeholder={_t("Enter username")}
                     label={_t("Username")}
                     className={

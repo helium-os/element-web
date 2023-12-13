@@ -313,7 +313,7 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
             <div ref={searchRef}>
                 <Field
                     type="text"
-                    usePlaceholderAsHint={!prefixComponent || !prefixComponent.length}
+                    usePlaceholderAsHint={!prefixComponent}
                     placeholder={"请输入频道或用户名"}
                     label={"频道或用户名"}
                     className={limitForward && selectedRooms.length >= limitForward ? "mx_Field_hideInput" : ""}
