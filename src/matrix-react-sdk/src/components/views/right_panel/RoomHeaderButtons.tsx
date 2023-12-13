@@ -20,12 +20,12 @@ limitations under the License.
 
 import React, { createRef } from "react";
 import classNames from "classnames";
-import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import { NotificationCountType, Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { ThreadEvent } from "matrix-js-sdk/src/models/thread";
 
 import { _t } from "../../../languageHandler";
 import HeaderButton from "./HeaderButton";
-import HeaderButtons, { HeaderKind, IState as HeaderButtonState } from "./HeaderButtons";
+import HeaderButtons, { HeaderKind } from "./HeaderButtons";
 import { HeaderButtonAction, RightPanelPhases } from "../../../stores/right-panel/RightPanelStorePhases";
 import { Action } from "../../../dispatcher/actions";
 import { ActionPayload } from "../../../dispatcher/payloads";
@@ -45,6 +45,7 @@ import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
 import { EchoChamber } from "matrix-react-sdk/src/stores/local-echo/EchoChamber";
 import { CachedRoomKey, RoomEchoChamber } from "matrix-react-sdk/src/stores/local-echo/RoomEchoChamber";
 import { PROPERTY_UPDATED } from "matrix-react-sdk/src/stores/local-echo/GenericEchoChamber";
+import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -141,9 +142,29 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
 
     private onNotificationUpdate = (): void => {
         this.setState({
+            threadNotificationColor: this.notificationColor,
             notificationState: this.echoChamber?.notificationVolume,
         });
     };
+
+    private get notificationColor(): NotificationColor {
+        switch (this.props.room?.threadsAggregateNotificationType) {
+            case NotificationCountType.Highlight:
+                return NotificationColor.Red;
+            case NotificationCountType.Total:
+                return NotificationColor.Grey;
+        }
+        // We don't have any notified messages, but we might have unread messages. Let's
+        // find out.
+        for (const thread of this.props.room!.getThreads()) {
+            // If the current thread has unread messages, we're done.
+            if (doesRoomOrThreadHaveUnreadMessages(thread)) {
+                return NotificationColor.Bold;
+            }
+        }
+        // Otherwise, no notification color.
+        return NotificationColor.None;
+    }
 
     protected onAction(payload: ActionPayload): void {
         if (payload.action === Action.ViewUser) {

@@ -239,6 +239,7 @@ interface IState {
     isQuoteExpanded?: boolean;
 
     thread: Thread | null;
+    hasThread: boolean;
     threadNotification?: NotificationCountType;
 }
 
@@ -280,6 +281,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             hover: false,
 
             thread,
+            hasThread: this.calcHasThread(thread), // 此条消息是否有消息列回复
         };
 
         // don't do RR animations until we are mounted
@@ -391,7 +393,14 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
     }
 
     private updateThread = (thread: Thread): void => {
-        this.setState({ thread });
+        this.setState({
+            thread,
+            hasThread: this.calcHasThread(thread),
+        });
+    };
+
+    private calcHasThread = (thread: Thread): boolean => {
+        return thread && thread.id === this.props.mxEvent.getId() && thread.length > 0;
     };
 
     public shouldComponentUpdate(nextProps: EventTileProps, nextState: IState): boolean {
@@ -475,7 +484,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
     }
 
     private renderThreadInfo(): React.ReactNode {
-        if (this.state.thread && this.state.thread.id === this.props.mxEvent.getId()) {
+        if (this.state.hasThread) {
             return (
                 <ThreadSummary mxEvent={this.props.mxEvent} thread={this.state.thread} data-testid="thread-summary" />
             );
@@ -915,8 +924,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const isSending = ["sending", "queued", "encrypting"].includes(this.props.eventSendStatus!);
         const isRedacted = isMessageEvent(this.props.mxEvent) && this.props.isRedacted;
         const isEncryptionFailure = this.props.mxEvent.isDecryptionFailure();
-        const hasThread = this.state.thread && this.state.thread.id === this.props.mxEvent.getId(); // 是否有消息列回复
-        const isNoThreadInfoMessage = isInfoMessage && !hasThread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
+        const isNoThreadInfoMessage = isInfoMessage && !this.state.hasThread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
 
         let isContinuation = this.props.continuation;
         if (
@@ -1353,7 +1361,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                     <>
                         {replyChain && <div className="mx_EventTile_replyChain_wrap">{replyChain}</div>}
                         <div className="mx_EventTile_mainTile">
-                            {!isRenderingThread && hasThread && (
+                            {!isRenderingThread && this.state.hasThread && (
                                 <div
                                     className="mx_EventTile_threadLine"
                                     style={{ top: avatarSize + 6, left: avatarSize / 2 }}
