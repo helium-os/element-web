@@ -200,7 +200,9 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
         const footer = (
             <DialogButtons
                 primaryButton={_t("Create")}
-                primaryDisabled={!this.state.nameIsValid}
+                primaryButtonProps={{
+                    disabled: !this.state.nameIsValid,
+                }}
                 onPrimaryButtonClick={this.onOk}
                 onCancel={this.onCancel}
             />

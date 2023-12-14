@@ -22,14 +22,17 @@ limitations under the License.
     display: flex;
     align-items: center;
     contain: content; /* Not strict as it will break when resizing a sublist vertically */
-    padding: 6px 8px;
+    padding: 4px 8px 4px 22px;
     border-radius: 4px;
 
     &.mx_RoomTile_selected,
     &:hover,
     &:focus-within,
     &.mx_RoomTile_hasMenuOpen {
-        background-color: $roomtile-active-bg-color;
+        background-color: $background-primary2-secondary-color1;
+        .mx_RoomTile_title {
+            color: $text-primary-color2;
+        }
     }
 
     .mx_RoomTile_iconType {
@@ -54,37 +57,37 @@ limitations under the License.
         display: flex;
         flex-direction: column;
         justify-content: center;
+    }
 
-        .mx_RoomTile_title,
-        .mx_RoomTile_subtitle {
-            width: 100%;
+    .mx_RoomTile_title,
+    .mx_RoomTile_subtitle {
+        width: 100%;
 
-            /* Ellipsize any text overflow */
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
+        /* Ellipsize any text overflow */
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .mx_RoomTile_title {
+        font-size: $font-14px;
+        line-height: $font-20px;
+        font-weight: $font-normal-bold;
+        color: $text-primary-color3;
+
+        &.mx_RoomTile_titleHasUnreadEvents {
+            font-weight: 600;
+            color: $text-primary-color2;
         }
+    }
 
-        .mx_RoomTile_title {
-            font-size: $font-14px;
-            line-height: $font-20px;
-            font-weight: $font-normal-bold;
-            color: $text-primary-color3;
+    .mx_RoomTile_subtitle {
+        line-height: $font-18px;
+        color: $secondary-content;
+    }
 
-            &.mx_RoomTile_titleHasUnreadEvents {
-                font-weight: 500;
-                color: $text-primary-color2;
-            }
-        }
-
-        .mx_RoomTile_subtitle {
-            line-height: $font-18px;
-            color: $secondary-content;
-        }
-
-        .mx_RoomTile_titleWithSubtitle {
-            margin-top: -3px; /* shift the title up a bit more */
-        }
+    .mx_RoomTile_titleWithSubtitle {
+        margin-top: -3px; /* shift the title up a bit more */
     }
 
     .mx_RoomTile_notificationsButton {
@@ -164,16 +167,16 @@ limitations under the License.
 
 
 .mx_RoomTile_iconType {
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
     &.mx_RoomTile_iconPublic {
-        @mixin MaskIcon url("$(res)/img/element-icons/room/public.svg"), 12px, 12px, $text-primary-color2;
+        @mixin MaskIcon url("$(res)/img/element-icons/room/public.svg"), 14px, 14px;
     }
     &.mx_RoomTile_iconPrivate{
-        @mixin MaskIcon url("$(res)/img/element-icons/room/private.svg"), 10px, 12px, $text-primary-color2;
+        @mixin MaskIcon url("$(res)/img/element-icons/room/private.svg"), 12px, 14px;
     }
     &.mx_RoomTile_iconHome{
-        @mixin MaskIcon url("$(res)/img/element-icons/home.svg"), 14px, 14px, $text-primary-color2;
+        @mixin MaskIcon url("$(res)/img/element-icons/home.svg"), 16px, 16px;
     }
 }
 

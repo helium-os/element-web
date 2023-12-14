@@ -20,32 +20,63 @@ $monospace-font-family: "Inconsolata", "Twemoji", "Apple Color Emoji", "Segoe UI
 
 // text color
 $text-primary-color1: #000000;
-$text-primary-color2: #151515;
-$text-primary-color3: #303030;
+$text-primary-color2: #000000;
+$text-primary-color3: #333333;
 $text-secondary-color1: #505050;
-$text-secondary-color2: #a4a4a4;
+$text-secondary-color2: #888888;
 $text-secondary-color3: #e2e2e2;
+$text-secondary-color4: #D6D6D6;
+$text-secondary-color5: #151515;
+
+// blue text
+$text-primary-color4: #007AFF;
+
+// danger text
 $text-danger-color1: #fe5f56;
 $text-danger-color2: #F25353;
 
 
 // background color
-$background-primary-color: #ffffff;
-$background-secondary-color1: #f7f7f7;
-$background-secondary-color2: #eeeeee;
-$background-danger-color1: $text-danger-color2;
+// dark bg
+$background-primary-color2: #E6E6E6;
+$background-primary2-secondary-color1: #DADADB;
+$background-primary2-secondary-color2: #EDEDED;
+
+// light bg
+$background-primary-color1: #ffffff;
+$background-primary1-secondary-color1: #f4f4f4;
+$background-primary1-secondary-color2: #eeeeee;
+$background-primary1-secondary-color3: #f7f7f7;
+
+
+// blue bg
+$background-primary-color3: $text-primary-color4;
+$background-primary3-secondary-color1: #3395FF;
+$background-primary3-secondary-color2: #B3D7FF;
+
+
+//danger bg
+$background-danger-color1: $text-danger-color1;
 $background-danger-color2: #FE2042;
+$background-danger-color3: #FE7F78;
 
 
 // border color
-$border-primary-color: #eeeeee;
-$border-secondary-color: #303030;
+$border-primary-color: #EEEEEE;
+
+$border-primary-color1: #DADADA;
+
+$border-primary-color2: #CFCFD0;
+
+$border-secondary-color1: #303030;
 $border-secondary-color2: #a4a4a4;
-$border-secondary-color3: #505050;
+$border-secondary-color3: $text-primary-color3;
+$border-secondary-color4: $text-secondary-color2;
+$border-secondary-color5: #D6D6D6;
 
 // icon color
-$icon-primary-color: #a4a4a4;
-$icon-primary-bg-color: #eeeeee;
+$icon-primary-color: $text-primary-color3;
+$icon-primary-bg-color: #E8E8ED;
 
 
 $icon-secondary-color: #e7e7e7;
@@ -63,7 +94,7 @@ $quinary-content: #e3e8f0;
 
 $system: #f4f6fa;
 $system-transparent: rgba($system, 0); /* XXX: workaround for Safari 15.3 linear-gradient bug */
-$background: $background-primary-color;
+$background: $background-primary-color1;
 $overlay-background: rgba($background, 0.85);
 
 $panels: rgba($system, 0.9);
@@ -119,12 +150,12 @@ $muted-fg-color: #61708b;
 $light-fg-color: #747474;
 $focus-bg-color: $preview-widget-bar-color;
 $info-plinth-bg-color: #f7f7f7;
-$event-selected-color: $background-secondary-color2;
+$event-selected-color: $background-primary1-secondary-color2;
 $topleftmenu-color: #212121;
 $roomtopic-color: #9e9e9e;
-$spacePanel-bg-color: $background-secondary-color1;
-$spacePanel-active-bg-color: $background-secondary-color2;
-$spacePanel-active-border-color: $border-secondary-color;
+$spacePanel-bg-color: $background-primary1-secondary-color1;
+$spacePanel-active-bg-color: $background-primary2-secondary-color1;
+$spacePanel-active-border-color: $background-primary-color3;
 // home icon
 $spacePanel-home-content-color: #FFFFFF;
 $spacePanel-home-bg-color: #32B971;
@@ -147,8 +178,8 @@ $blockquote-bar-color: $focus-bg-color;
 
 /* Tooltip */
 /* ******************** */
-$tooltip-text-color: #ffffff;
-$tooltip-bg-color: #000000;
+$tooltip-text-color: $text-primary-color3;
+$tooltip-bg-color: $background;
 $tooltip-timeline-bg-color: $inverted-bg-color;
 $tooltip-timeline-fg-color: $background;
 /* ******************** */
@@ -163,11 +194,11 @@ $widget-body-bg-color: $background;
 /* ******************** */
 $menu-bg-color: linear-gradient(0deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.01) 100%), linear-gradient(0deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.94) 100%), rgba(255, 255, 255, 0.02);
 $menu-box-shadow-color: rgba(0, 0, 0, 0.10);
-$menu-box-shadow: 0 6px 20px 0 $menu-box-shadow-color;
+$menu-box-shadow: 0px 6px 20px 0px rgba(0, 0, 0, 0.10), 0px 0px 2px 0px rgba(0, 0, 0, 0.16);
 $menu-border-radius: 8px;
 $menu-border-color: #aeaeae;
 
-$menu-item-active-bg-color: $background-secondary-color2;
+$menu-item-active-bg-color: $background-primary1-secondary-color2;
 $menu-item-divider-color: $border-primary-color;
 $menu-text-color: $text-primary-color3;
 $menu-selected-color: $menu-text-color;
@@ -193,9 +224,9 @@ $roomheader-addroom-fg-color: #5c6470;
 
 /* Rich-text-editor */
 /* ******************** */
-$pill-bg-color: #FFF4DF;
-$pill-hover-bg-color: #FFF4DF;
-$pill-me-bg-color: #FECC6C;
+$pill-bg-color: $background-primary3-secondary-color2;
+$pill-hover-bg-color: $background-primary3-secondary-color2;
+$pill-me-bg-color: $background-primary3-secondary-color2;
 $rte-bg-color: #e9e9e9;
 $rte-code-bg-color: rgba(0, 0, 0, 0.04);
 /* ******************** */
@@ -210,7 +241,7 @@ $presence-busy: $alert;
 
 /* Inputs */
 /* ******************** */
-$input-border-color: $menu-border-color;
+$input-border-color: $border-secondary-color2;
 $input-darker-bg-color: $quinary-content;
 $input-darker-fg-color: #9fa9ba;
 $input-lighter-bg-color: $secondary-accent-color;
@@ -223,7 +254,7 @@ $input-fg-color: rgba(74, 74, 74, 0.9);
 $dialog-bg: linear-gradient(0deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.01) 100%), linear-gradient(0deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.94) 100%), rgba(255, 255, 255, 0.02);
 $dialog-shadow: 0 0 60px 0 rgba(0, 0, 0, 0.20), 0 0 3px 0 rgba(0, 0, 0, 0.06);
 $dialog-title-fg-color: #45474a;
-$dialog-title-color: $text-primary-color2;
+$dialog-title-color: $text-secondary-color5;
 $dialog-description-color: $text-secondary-color2;
 $dialog-backdrop-color: rgba(46, 48, 51, 0.38);
 $dialog-close-fg-color: #535353;
@@ -239,11 +270,11 @@ $imagebody-giflabel-color: $background;
 
 /* RoomList */
 /* ******************** */
-$roomlist-group-header-height: 28px;
+$roomlist-group-header-height: 32px;
 $roomlist-bg-color: rgba(245, 245, 245, 0.9);
 $roomsublist-skeleton-ui-bg: linear-gradient(180deg, $background 0%, #ffffff00 100%);
 $roomtile-default-badge-bg-color: $background-danger-color2;
-$roomtile-active-bg-color: $background-secondary-color2;
+$roomtile-active-bg-color: $background-primary1-secondary-color2;
 /* ******************** */
 
 /* e2e */
@@ -265,10 +296,11 @@ $tab-label-active-fg-color: $background;
 /* Buttons */
 /* ******************** */
 $button-text-color: #FFFFFF;
-$button-primary-bg-color: rgba(21, 21, 21, 1);
+$button-primary-bg-color: $background-primary-color3;
+$button-primary-hover-bg-color: $background-primary3-secondary-color1;
 $button-danger-color: $background-danger-color1;
 $button-text-text-color: $text-primary-color2;
-$button-disabled-bg-color: rgba(21, 21, 21, 0.3);
+$button-disabled-bg-color: linear-gradient(0deg, rgba(0, 0, 0, 0.20) 0%, rgba(0, 0, 0, 0.20) 100%), #F7F7F7;
 
 
 $button-primary-fg-color: $background;
@@ -280,8 +312,8 @@ $button-danger-disabled-bg-color: #f5b6bb; /* TODO: Verify color */
 
 /* Toggle switch */
 /* ******************** */
-$togglesw-off-color: $text-secondary-color2;
-$togglesw-on-color: $text-primary-color3;
+$togglesw-off-color: $background-primary3-secondary-color2;
+$togglesw-on-color: $background-primary-color3;
 $togglesw-ball-color: $background;
 /* ******************** */
 

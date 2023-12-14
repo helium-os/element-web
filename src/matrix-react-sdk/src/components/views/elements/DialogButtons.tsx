@@ -66,7 +66,7 @@ export default class DialogButtons extends React.Component<DialogButtonProps> {
         if (this.props.hasCancel) {
             cancelButton = (
                 <Button
-                    type={ButtonType.Text}
+                    type={ButtonType.Default}
                     disabled={this.props.disabled || this.props.cancelButtonProps?.disabled}
                     onClick={this.onCancelClick}
                     {...this.props.cancelButtonProps}

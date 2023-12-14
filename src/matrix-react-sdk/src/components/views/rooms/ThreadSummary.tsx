@@ -134,8 +134,8 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({
                 <MemberAvatar
                     member={lastReply.sender}
                     fallbackUserId={lastReply.getSender()}
-                    width={20}
-                    height={20}
+                    width={14}
+                    height={14}
                     className="mx_ThreadSummary_avatar"
                 />
                 {showDisplayname && (

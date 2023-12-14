@@ -121,7 +121,9 @@ const CreateRoomDialog: React.FC<IProps> = ({
     const footer = (
         <DialogButtons
             primaryButton={_t("Create room", { roomType: _t("room") })}
-            primaryDisabled={(nameRequired && !nameIsValid) || (inviteRequired && !invite.length)}
+            primaryButtonProps={{
+                disabled: (nameRequired && !nameIsValid) || (inviteRequired && !invite.length),
+            }}
             onPrimaryButtonClick={onOk}
             onCancel={onCancel}
         />

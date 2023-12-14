@@ -34,7 +34,7 @@ interface IProps {
 interface IState {
     phase: RightPanelPhases | null;
     rightPanelResizeable: boolean;
-    rightPanelDefaultWidth: number;
+    rightPanelDefaultWidth: number | string;
 }
 export default class MainSplit extends React.Component<IProps, IState> {
     constructor(props: IProps) {
@@ -60,7 +60,7 @@ export default class MainSplit extends React.Component<IProps, IState> {
         this.setState({
             phase,
             rightPanelResizeable,
-            rightPanelDefaultWidth: rightPanelResizeable ? 364 : 244,
+            rightPanelDefaultWidth: rightPanelResizeable ? "30%" : 244,
         });
     };
 
@@ -106,7 +106,7 @@ export default class MainSplit extends React.Component<IProps, IState> {
                 <Resizable
                     defaultSize={this.loadSidePanelSize()}
                     minWidth={this.state.rightPanelDefaultWidth}
-                    maxWidth={this.state.rightPanelResizeable ? "50%" : this.state.rightPanelDefaultWidth}
+                    maxWidth={this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth}
                     enable={
                         this.state.rightPanelResizeable
                             ? {

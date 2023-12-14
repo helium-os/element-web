@@ -1364,7 +1364,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             {!isRenderingThread && this.state.hasThread && (
                                 <div
                                     className="mx_EventTile_threadLine"
-                                    style={{ top: avatarSize + 6, left: avatarSize / 2 }}
+                                    style={{ top: avatarSize + 3, left: avatarSize / 2 }}
                                 />
                             )}
                             {ircTimestamp}

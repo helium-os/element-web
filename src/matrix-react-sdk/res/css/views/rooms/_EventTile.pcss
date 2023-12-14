@@ -15,9 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-$left-gutter: 46px;
-$group_line-padding-vertical: 10px;
-$group_line-padding-horizontal: 20px;
+$left-gutter: 52px;
+$group_line-padding-vertical: 6px;
+$group_line-padding-horizontal: 15px;
 
 
 .mx_DateSeparatorItem {
@@ -221,11 +221,11 @@ $group_line-padding-horizontal: 20px;
         &.mx_EventTile_isEditing,
         &.mx_EventTile_isReplying,
         &.mx_EventTile_selected {
-            background-color: $event-selected-color;
+            background-color: rgba($background-primary-color3, 0.1)!important;
         }
 
         &.mx_EventTile_isReplying {
-            border-left: 2px solid $text-primary-color1;
+            border-left: 2px solid $background-primary3-secondary-color1;
         }
 
         &.mx_EventTile_info {
@@ -327,26 +327,26 @@ $group_line-padding-horizontal: 20px;
         }
         .mx_EventTile_replyChain_wrap {
             position: relative;
-            margin: 2px 0 6px $left-gutter;
+            margin: 6px 0 6px $left-gutter;
             &:before {
                 content: "";
                 position: absolute;
                 top: 50%;
-                left: -3px;
+                left: -2px;
                 transform: translate(-100%, 0);
                 box-sizing: border-box;
-                width: 26px;
-                height: 14px;
-                border: 1px solid $text-secondary-color3;
+                width: 32px;
+                height: 15px;
+                border: 1.5px solid $border-secondary-color5;
                 border-right-color: transparent;
                 border-bottom-color: transparent;
                 border-top-left-radius: 6px;
             }
             .mx_DisambiguatedProfile_displayName {
                 font-size: 12px;
-                font-weight: 400;
+                font-weight: 500;
                 line-height: 16px;
-                color: $text-primary-color2;
+                color: rgba($text-primary-color2, 0.3);
             }
         }
         .mx_EventTile_mainTile {
@@ -356,15 +356,15 @@ $group_line-padding-horizontal: 20px;
             position: absolute;
             bottom: 23px;
             box-sizing: border-box;
-            width: 26px;
-            border: 1px solid $text-secondary-color3;
+            width: 32px;
+            border: 1.5px solid $border-secondary-color5;
             border-top-color: transparent;
             border-right-color: transparent;
             border-bottom-left-radius: 10px;
         }
         .mx_EventTile_avatar {
             position: absolute;
-            top: 0;
+            top: 3px;
             left: 0;
             z-index: 10;
         }
@@ -397,7 +397,7 @@ $group_line-padding-horizontal: 20px;
         .mx_ThreadSummary,
         .mx_ThreadSummary_icon,
         .mx_ReactionsRow {
-            margin-top: 8px;
+            margin-top: 4px;
             margin-left: $left-gutter;
         }
 
@@ -442,6 +442,7 @@ $group_line-padding-horizontal: 20px;
                         gap: 4px;
                     }
                     label{
+                        font-weight: 500;
                         color: $text-primary-color2;
                     }
                     a {
@@ -494,7 +495,7 @@ $group_line-padding-horizontal: 20px;
     font-size: $font-14px;
     font-weight: 400;
     line-height: 20px; /* 142.857% */
-    color: $text-secondary-color1;
+    color: $text-primary-color3;
 }
 
 .mx_GenericEventListSummary {
@@ -856,7 +857,7 @@ $group_line-padding-horizontal: 20px;
     padding: 10px 10px 8px;
     border-radius: 10px;
     border: 1px solid $border-primary-color;
-    background: $background-secondary-color1;
+    background: $background-primary1-secondary-color1;
     &:last-child {
         margin-bottom: 0;
     }

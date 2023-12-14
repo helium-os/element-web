@@ -22,8 +22,7 @@ limitations under the License.
     position: relative;
     padding: 8px;
     border-radius: 10px;
-    background-color: $background-secondary-color1;
-    border: 1px solid $border-primary-color; /* always render a border so the hover effect doesn't require a re-layout */
+    background-color: $background-primary1-secondary-color1;
 
     .mx_ThreadSummary_mainInfo {
         display: flex;
@@ -39,7 +38,7 @@ limitations under the License.
         font-size: 12px;
         line-height: 16px;
         font-weight: 400;
-        color: $text-secondary-color1;
+        color: $text-primary-color3;
     }
 
     .mx_ThreadSummary_replies_amount {
@@ -48,9 +47,9 @@ limitations under the License.
     }
 
     .mx_ThreadSummary_chevron {
-        width: 16px;
+        width: 8px;
         height: 16px;
-        @mixin MaskIcon url("$(res)/img/chevron.svg"), 6px, 8px, #000000;
+        @mixin MaskIcon url("$(res)/img/chevron.svg"), 6px, 8px,  $text-primary-color4;
 
     }
 
@@ -61,17 +60,22 @@ limitations under the License.
         align-items: center;
         gap: 4px;
         font-weight: 400;
+        .mx_BaseAvatar {
+            line-height: 14px;
+        }
     }
 
     .mx_ThreadSummary_sender {
         font-size: 12px;
         line-height: 16px; /* 133.333% */
-        color: $text-primary-color2;
+        font-weight: 500;
+        color: rgba($text-primary-color2, 0.3);
     }
 
     .mx_ThreadSummary_lastReplyTime {
         font-size: 10px;
         line-height: 14px; /* 140% */
+        font-weight: 400;
         color: $text-secondary-color2;
     }
 }

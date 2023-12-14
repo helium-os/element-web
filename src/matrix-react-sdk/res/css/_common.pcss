@@ -89,6 +89,7 @@ body {
 * {
     margin: 0;
     padding: 0;
+    outline: none;
 }
 
 pre,
@@ -129,7 +130,7 @@ h2 {
 a:hover,
 a:link,
 a:visited {
-    color: $accent-alt;
+    color: $text-primary-color4;
 }
 
 /* Override Firefox's UA style so we get a consistent look across browsers */
@@ -190,7 +191,7 @@ legend {
     }
 }
 
-@define-mixin HalfPxBorder $borderColor, $borderRadius {
+@define-mixin HalfPxBorder $borderColor, $borderRadius: 0 {
     position: relative;
     width: unset;
     height: unset;
@@ -740,7 +741,7 @@ legend {
 
 @define-mixin ThreadRepliesAmount {
     position: relative;
-    color: $text-primary-color2;
+    color: $text-primary-color4;
     font-size: 12px;
     font-style: normal;
     font-weight: 500;

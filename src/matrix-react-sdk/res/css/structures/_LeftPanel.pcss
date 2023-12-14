@@ -16,13 +16,6 @@ limitations under the License.
 
 $roomListCollapsedWidth: 68px;
 
-.mx_MatrixChat--with-avatar {
-    .mx_LeftPanel,
-    .mx_LeftPanel .mx_LeftPanel_roomListContainer {
-        background-color: transparent;
-    }
-}
-
 .mx_LeftPanel_ResizeWrapper {
     z-index: 2;
 }
@@ -34,8 +27,8 @@ $roomListCollapsedWidth: 68px;
     /* Contain the amount of layers rendered by constraining what actually needs re-layering via css */
     contain: layout paint;
     height: 100%;
-    background-color: $background-secondary-color1;
-    border-right: 1px solid $border-primary-color;
+    background-color: $background-primary-color2;
+    border-right: 1px solid $border-primary-color2;
 }
 
 .mx_LeftPanel_wrapper {
@@ -68,7 +61,7 @@ $roomListCollapsedWidth: 68px;
     /* Note: The 'room list' in this context is actually everything that isn't the tag */
     /* panel, such as the menu options, breadcrumbs, filtering, etc */
     .mx_LeftPanel_roomListContainer {
-        padding-top: 12px;
+        padding: 12px 12px 0;
         flex: 1 0 0;
         min-width: 0;
         /* Create another flexbox (this time a column) for the room list components */
@@ -190,7 +183,16 @@ $roomListCollapsedWidth: 68px;
         }
 
         .mx_LeftPanel_spaceInfoWrapper {
-            padding: 0 12px;
+            padding-bottom: 4px;
+            @mixin HalfPxBorder $border-primary-color2;
+            &:before {
+                border-top-width: 0;
+                border-left-width: 0;
+                border-right-width: 0;
+            }
+        }
+        .mx_LeftPanel_spaceInfoInner {
+            position: relative;
         }
 
         .mx_LeftPanel_spaceHomeEntrance {
@@ -201,6 +203,7 @@ $roomListCollapsedWidth: 68px;
         }
 
         .mx_LeftPanel_roomListWrapper {
+            margin: 0 -12px;
             /* Make the y-scrollbar more responsive */
             overflow: hidden;
             flex: 1 0 0; /* needed in Safari to properly set flex-basis */

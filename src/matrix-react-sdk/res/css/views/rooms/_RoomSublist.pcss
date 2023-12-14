@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 .mx_RoomSublist {
-    padding-bottom: 10px;
+    margin-bottom: 4px;
     &.mx_RoomSublist_hidden {
         display: none;
     }
@@ -115,12 +115,12 @@ limitations under the License.
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                width: 11px;
-                height: 11px;
+                width: 12px;
+                height: 12px;
                 mask-position: center;
                 mask-size: contain;
                 mask-repeat: no-repeat;
-                background: $text-primary-color3;
+                background: $icon-primary-color;
             }
         }
 
@@ -140,8 +140,8 @@ limitations under the License.
         .mx_RoomSublist_headerText {
             flex: 1;
             max-width: calc(100% - 16px); /* 16px is the badge width */
-            line-height: $font-16px;
-            font-size: $font-12px;
+            line-height: $font-20px;
+            font-size: $font-14px;
             font-weight: $font-normal-bold;
             color: $text-primary-color3;
 
@@ -157,9 +157,8 @@ limitations under the License.
             .mx_RoomSublist_collapseBtn {
                 position: relative;
                 display: inline-block;
-                width: 16px;
-                height: 16px;
-                margin-right: 4px;
+                width: 18px;
+                height: 18px;
 
                 &::before {
                     content: "";
@@ -169,7 +168,7 @@ limitations under the License.
                     width: 100%;
                     height: 100%;
                     mask-position: center;
-                    mask-size: 12px auto;
+                    mask-size: 14px auto;
                     mask-repeat: no-repeat;
                     background-color: $text-primary-color3;
                     mask-image: url("$(res)/img/feather-customised/chevron-down.svg");

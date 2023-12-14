@@ -16,7 +16,7 @@ limitations under the License.
 
 .mx_RoomHeader {
     flex: 0 0 50px;
-    border-bottom: 1px solid $border-primary-color;
+    border-bottom: 1px solid $border-primary-color1;
     background-color: $background;
 
     .mx_RoomHeader_icon {
@@ -46,7 +46,7 @@ limitations under the License.
 .mx_RoomHeader_wrapper {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
+    padding: 10px 16px;
 
     .mx_InviteOnlyIcon_large {
         margin: 0;
@@ -192,7 +192,11 @@ limitations under the License.
     }
 
     .mx_RoomTile_iconType {
-        margin: 0 4px;
+        width: 28px;
+        height: 28px;
+        &:before {
+            background: $text-primary-color2!important;
+        }
     }
 }
 

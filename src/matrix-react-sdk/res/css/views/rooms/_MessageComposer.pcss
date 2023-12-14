@@ -26,7 +26,7 @@ $MessageComposerBtnSpace: 12px;
     .mx_MessageComposer_row {
         padding-bottom: 9px;
         border-radius: 16px;
-        border: 1px solid $border-primary-color;
+        border: 1px solid $border-secondary-color4;
     }
 
     &.mx_MessageComposer_focused .mx_MessageComposer_row, .mx_ReplyPreview +  .mx_MessageComposer_row{
@@ -90,7 +90,7 @@ $MessageComposerBtnSpace: 12px;
     font-size: 12px;
     line-height: 16px; /* 133.333% */
     font-weight: 400;
-    color: $text-secondary-color3;
+    color: $text-secondary-color4;
 }
 .mx_MessageComposer_shortcutIcon {
     display: inline-block;
@@ -98,10 +98,10 @@ $MessageComposerBtnSpace: 12px;
     height: 12px;
 }
 .mx_MessageComposer_shortcut_enter {
-    @mixin MaskIcon url("$(res)/img/icon-enter.svg"), 100%, 100%, $text-secondary-color3;
+    @mixin MaskIcon url("$(res)/img/icon-enter.svg"), 100%, 100%, $text-secondary-color4;
 }
 .mx_MessageComposer_shortcut_cmd {
-    @mixin MaskIcon url("$(res)/img/icon-command.svg"), 100%, 100%, $text-secondary-color3;
+    @mixin MaskIcon url("$(res)/img/icon-command.svg"), 100%, 100%, $text-secondary-color4;
 }
 
 .mx_MessageComposer .mx_MessageComposer_avatar {
@@ -230,7 +230,7 @@ $MessageComposerBtnSpace: 12px;
         width: 1px;
         height: 20px;
         transform: translate(0, -50%);
-        background: $background-secondary-color2;
+        background: $background-primary1-secondary-color2;
     }
 
     &:first-child {
