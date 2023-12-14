@@ -130,6 +130,7 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
 
         const style: State = {};
         const { width: chevronWidth = 0, height: chevronHeight = 0 } = this.chevronRef.getBoundingClientRect();
+        const minDistanceToWin = 0; // 到窗口的最小距离
         switch (this.props.alignment) {
             case Alignment.Natural:
                 if (parentBox.right > width / 2) {
@@ -154,21 +155,21 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
                 // Attempt to center the tooltip on the element while clamping
                 // its horizontal translation to keep it on screen
                 // eslint-disable-next-line max-len
-                style.transform = `translate(max(10px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - 10px))), -100%)`;
+                style.transform = `translate(max(${minDistanceToWin}px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - ${minDistanceToWin}px))), -100%)`;
                 break;
             case Alignment.Bottom:
                 style.top = baseTop + parentBox.height + chevronHeight + spacing;
                 // Attempt to center the tooltip on the element while clamping
                 // its horizontal translation to keep it on screen
                 // eslint-disable-next-line max-len
-                style.transform = `translate(max(10px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - 10px))))`;
+                style.transform = `translate(max(${minDistanceToWin}px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - ${minDistanceToWin}px))))`;
                 break;
             case Alignment.InnerBottom:
                 style.top = baseTop + parentBox.height - 50;
                 // Attempt to center the tooltip on the element while clamping
                 // its horizontal translation to keep it on screen
                 // eslint-disable-next-line max-len
-                style.transform = `translate(max(10px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - 10px))))`;
+                style.transform = `translate(max(${minDistanceToWin}px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - ${minDistanceToWin}px))))`;
                 break;
             case Alignment.TopRight:
                 style.top = baseTop - spacing;
