@@ -39,13 +39,6 @@ Room.prototype.isPeopleRoom = function (): boolean {
     return isPeopleRoom(this.roomId);
 };
 
-// 判断是否可以邀请其他人
-const _canInvite = Room.prototype.canInvite;
-Room.prototype.canInvite = function (userId: string): boolean {
-    const canInvite = _canInvite.call(this, userId);
-    return canInvite && !this.isPeopleRoom() && !this.isAdminLeft(); // 私聊不展示邀请按钮；群聊房间如果管理员离开了也不展示邀请按钮
-};
-
 // 获取房间类型  私聊|频道（群聊）
 Room.prototype.getRoomType = function (): RoomType {
     return getRoomType(this.roomId);
@@ -113,6 +106,14 @@ Room.prototype.isPrivateRoom = function () {
     return isPrivateRoom(this.getJoinRule());
 };
 
+// 判断是否可以邀请其他人
+const _canInvite = Room.prototype.canInvite;
+Room.prototype.canInvite = function (userId: string): boolean {
+    const canInvite = _canInvite.call(this, userId);
+    return canInvite && !this.isPeopleRoom() && !this.isAdminLeft(); // 私聊不展示邀请按钮；群聊房间如果管理员离开了也不展示邀请按钮
+};
+
+// 判断是否可以移除用户
 Room.prototype.canRemoveUser = function (userId: string) {
     if (this.getMyMembership() !== "join") {
         return false;
@@ -122,4 +123,13 @@ Room.prototype.canRemoveUser = function (userId: string) {
     const powerLevels = powerLevelsEvent && powerLevelsEvent.getContent();
     const me = this.getMember(userId);
     return powerLevels && me && me.powerLevel >= powerLevels.kick;
+};
+
+// 判断是否可以增删改Tag
+Room.prototype.canOperateTag = function (userId: string) {
+    if (this.getMyMembership() !== "join") {
+        return false;
+    }
+
+    return this.currentState.maySendStateEvent(EventType.Tag, userId);
 };

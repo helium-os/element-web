@@ -20,7 +20,6 @@ import { _t } from "../../../languageHandler";
 import { ContextMenuProps } from "matrix-react-sdk/src/components/structures/ContextMenu";
 import Modal from "matrix-react-sdk/src/Modal";
 import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
-import { EventType } from "matrix-js-sdk/src/@types/event";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MatrixClientContext from "matrix-react-sdk/src/contexts/MatrixClientContext";
 
@@ -32,9 +31,7 @@ const SpaceAddTagContextMenu: React.FC<IProps> = ({ showIcon = false }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission =
-        activeSpaceRoom?.getMyMembership() === "join" &&
-        activeSpaceRoom?.currentState.maySendStateEvent(EventType.Tag, userId);
+    const hasTagPermission = activeSpaceRoom?.canOperateTag(userId);
 
     // 新增分组
     const onAddSpaceTag = async (): Promise<void> => {

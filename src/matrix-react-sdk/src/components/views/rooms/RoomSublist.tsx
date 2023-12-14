@@ -57,6 +57,7 @@ import { IconizedContextMenuOptionList } from "matrix-react-sdk/src/components/v
 import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 import SpaceDeleteTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceDeleteTagContextMenu";
 import EditSpaceTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/EditSpaceTagContextMenu";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -118,6 +119,8 @@ export default class RoomSublist extends React.Component<IProps, IState> {
     private notificationState: ListNotificationState;
 
     private slidingSyncMode: boolean;
+
+    private userId: string = MatrixClientPeg.get().getUserId()!;
 
     public constructor(props: IProps) {
         super(props);
@@ -524,13 +527,13 @@ export default class RoomSublist extends React.Component<IProps, IState> {
             }
 
             for (const [index, room] of visibleRooms.entries()) {
+                const disabled =
+                    (OrderedDefaultTagIDs.includes(this.props.tagId) && this.props.tagId !== DefaultTagID.Untagged) ||
+                    !room.canOperateTag(this.userId);
                 tiles.push(
                     <Draggable
                         key={`channel-${room.roomId}`}
-                        isDragDisabled={
-                            OrderedDefaultTagIDs.includes(this.props.tagId) &&
-                            this.props.tagId !== DefaultTagID.Untagged
-                        }
+                        isDragDisabled={disabled}
                         draggableId={room.roomId}
                         index={index}
                     >
@@ -907,7 +910,11 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
         return (
             <Draggable
-                isDragDisabled={OrderedDefaultTagIDs.includes(this.props.tagId)}
+                isDragDisabled={
+                    OrderedDefaultTagIDs.includes(this.props.tagId) ||
+                    (!SpaceStore.instance.isHomeSpace &&
+                        !SpaceStore.instance.activeSpaceRoom?.canOperateTag(this.userId))
+                }
                 draggableId={this.props.tagId}
                 index={this.props.index}
             >
@@ -933,6 +940,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                                         role="group"
                                         aria-hidden={hidden}
                                         aria-label={this.props.label}
+                                        data-id={this.props.tagId}
                                         onKeyDown={this.onKeyDown}
                                     >
                                         {this.renderHeader()}
