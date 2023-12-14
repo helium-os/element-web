@@ -279,15 +279,15 @@ export default class RoomHeader extends React.Component<IProps, IState> {
 
         if (!this.props.viewingCall && this.props.onSearchClick && this.props.inRoom) {
             // TODO 暂时隐藏搜索功能，等有方案后再继续开发（接入中文分词有难度）
-            // startButtons.push(
-            //     <AccessibleTooltipButton
-            //         className="mx_RoomHeader_button mx_RoomHeader_searchButton"
-            //         onClick={this.props.onSearchClick}
-            //         title={_t("Search")}
-            //         alignment={Alignment.Bottom}
-            //         key="search"
-            //     />,
-            // );
+            startButtons.push(
+                <AccessibleTooltipButton
+                    className="mx_RoomHeader_button mx_RoomHeader_searchButton"
+                    onClick={this.props.onSearchClick}
+                    title={_t("Search")}
+                    alignment={Alignment.Bottom}
+                    key="search"
+                />,
+            );
         }
 
         if (this.props.onInviteClick && (!this.props.viewingCall || isVideoRoom) && this.props.inRoom) {
