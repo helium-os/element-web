@@ -269,12 +269,12 @@ function textForRoomNameEvent(ev: MatrixEvent): (() => string) | null {
                 roomType: roomTypeLabel,
             });
     }
-    return () =>
-        _t("%(senderDisplayName)s changed the room name to %(roomName)s.", {
-            senderDisplayName: () => <label>{senderDisplayName}</label>,
-            roomName: ev.getContent().name,
-            roomType: roomTypeLabel,
-        });
+    // return () =>
+    //     _t("%(senderDisplayName)s changed the room name to %(roomName)s.", {
+    //         senderDisplayName: () => <label>{senderDisplayName}</label>,
+    //         roomName: ev.getContent().name,
+    //         roomType: roomTypeLabel,
+    //     });
 }
 
 function textForTombstoneEvent(ev: MatrixEvent): (() => string) | null {
