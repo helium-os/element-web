@@ -67,11 +67,9 @@ const AvatarSetting: React.FC<AvatarProps> = ({
                 ) : (
                     <div className="mx_AvatarSetting_avatar" onClick={() => avatarUploadRef.current?.click()} />
                 )}
-                {type === OperateType.Edit && (
-                    <div className="mx_AvatarSetting_mask" onClick={() => avatarUploadRef.current?.click()}>
-                        <label>编辑</label>
-                    </div>
-                )}
+                <div className="mx_AvatarSetting_mask" onClick={() => avatarUploadRef.current?.click()}>
+                    {type === OperateType.Edit && <label>编辑</label>}
+                </div>
             </>
         );
     }

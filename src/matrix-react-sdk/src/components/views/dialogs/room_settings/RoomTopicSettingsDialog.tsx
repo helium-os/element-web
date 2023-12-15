@@ -65,7 +65,7 @@ const RoomTopicSettingsDialog: React.FC<IProps> = ({ roomId, topic = "", canSetT
                 element="textarea"
                 label={_t("Description")}
                 usePlaceholderAsHint={true}
-                placeholder={"请输入一些描述"}
+                placeholder={"告诉大家如何使用该频道"}
                 onChange={onTopicChange}
                 value={newTopic}
                 wordLimit={1000}

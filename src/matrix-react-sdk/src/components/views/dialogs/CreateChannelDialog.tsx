@@ -235,7 +235,7 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
                         element="textarea"
                         label={_t("Description")}
                         usePlaceholderAsHint={true}
-                        placeholder={"请输入一些描述"}
+                        placeholder={"告诉大家如何使用该频道"}
                         onChange={this.onTopicChange}
                         value={this.state.topic}
                         wordLimit={1000}

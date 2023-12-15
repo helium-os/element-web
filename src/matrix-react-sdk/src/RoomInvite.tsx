@@ -67,9 +67,9 @@ export function showStartChatInviteDialog(initialText = ""): void {
             kind: InviteKind.Dm,
             initialText,
             inviteLimit: 1,
-            dialogProps: { title: "发起一个新聊天", description: "" },
+            dialogProps: { title: "创建私聊", description: "" },
             dialogButtonsProps: {
-                primaryButton: "发起聊天",
+                primaryButton: "创建私聊",
             },
         },
         /*className=*/ "mx_InviteDialog_flexWrapper",

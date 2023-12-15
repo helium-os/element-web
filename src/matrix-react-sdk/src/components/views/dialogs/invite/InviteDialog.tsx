@@ -202,6 +202,7 @@ interface BaseProps {
     onFinished: (success?: boolean) => void;
 
     initialText?: string;
+    defaultMembers?: Member[]; // 默认需要邀请的用户
     inviteLimit?: number; // 最多邀请几人
 
     dialogProps?: Partial<DialogProps>;
@@ -244,8 +245,8 @@ interface IInviteDialogState {
     errorText?: string;
 }
 
-type InviteInputProps = InviteProps &
-    Pick<BaseProps, "initialText" | "inviteLimit"> & {
+export type InviteInputProps = InviteProps &
+    Pick<BaseProps, "initialText" | "defaultMembers" | "inviteLimit"> & {
         busy?: boolean;
         inputFieldProps?: Partial<PropShapes>;
         onTextChange?: (text: string) => void;
@@ -285,6 +286,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
         kind: InviteKind.Invite,
         busy: false,
         initialText: "",
+        defaultMembers: [],
     };
 
     private encryptionByDefault = false;
@@ -295,7 +297,7 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
         super(props);
 
         this.state = {
-            targets: [], // array of Member objects (see interface above)
+            targets: this.props.defaultMembers, // array of Member objects (see interface above)
             filterText: this.props.initialText || "",
             alreadyInvited: new Set([]),
             recents: [],
@@ -307,6 +309,8 @@ export class InviteInput extends React.PureComponent<InviteInputProps, InviteInp
 
             showSuggestions: false,
         };
+
+        this.props.onTargetsChange?.(this.state.targets);
     }
 
     public componentDidMount(): void {
@@ -1136,7 +1140,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
                 })}
                 hasCancel={true}
                 title={_t("Invite people")}
-                description={"邀请自己的同事或者好友加入。"}
+                description={"邀请其他成员加入。"}
                 onFinished={this.onCancel}
                 footer={dialogFooter}
                 screenName={this.screenName}

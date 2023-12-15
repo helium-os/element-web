@@ -121,7 +121,7 @@ const HomePage: React.FC<IProps> = ({ justRegistered = false }) => {
                         <p className="mx_HomePage_actionText">向同事或朋友发消息</p>
                         <div className="mx_HomePage_actionBtn">
                             <Button type={ButtonType.Primary} onClick={onClickSendDm}>
-                                发起聊天
+                                创建私聊
                             </Button>
                         </div>
                     </div>

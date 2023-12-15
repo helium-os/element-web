@@ -112,7 +112,10 @@ export const spaceNameValidator = withValidation({
         {
             key: "required",
             test: async ({ value }) => !!value,
-            invalid: () => _t("Please enter a name for the space"),
+            invalid: () =>
+                _t("Please enter a name for the room", {
+                    roomType: _t("space"),
+                }),
         },
     ],
 });
@@ -210,7 +213,9 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
             <Field
                 name="spaceName"
                 label={_t("Space Name")}
-                placeholder={_t("Please enter a name for the space")}
+                placeholder={_t("Please enter a name for the room", {
+                    roomType: _t("space"),
+                })}
                 usePlaceholderAsHint={true}
                 autoFocus={false}
                 wordLimit={80}

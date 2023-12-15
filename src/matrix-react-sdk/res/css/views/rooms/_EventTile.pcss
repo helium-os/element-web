@@ -17,10 +17,11 @@ limitations under the License.
 
 $left-gutter: 52px;
 $group_line-padding-vertical: 6px;
-$group_line-padding-horizontal: 15px;
+$group_line-padding-horizontal: 16px;
 
 
 .mx_DateSeparatorItem {
+    margin: 5px 0;
     padding: 0 $group_line-padding-horizontal;
 }
 
@@ -214,17 +215,17 @@ $group_line-padding-horizontal: 15px;
             a {
                 text-decoration: none;
             }
-        }
+        },
 
         &.focus-visible:focus-within,
         &.mx_EventTile_actionBarFocused,
-        &.mx_EventTile_isEditing,
-        &.mx_EventTile_isReplying,
-        &.mx_EventTile_selected {
-            background-color: rgba($background-primary-color3, 0.1)!important;
+        &.mx_EventTile_selected,
+        &.mx_EventTile_isEditing {
+            background-color: $event-selected-color;
         }
 
         &.mx_EventTile_isReplying {
+            background-color: rgba($background-primary-color3, 0.1)!important;
             border-left: 2px solid $background-primary3-secondary-color1;
         }
 
@@ -1102,8 +1103,6 @@ $group_line-padding-horizontal: 15px;
 
         &[data-layout="irc"],
         &[data-layout="group"] {
-            padding-block-start: $spacing-16;
-
             .mx_EventTile_line,
             .mx_ReactionsRow {
                 margin-inline-end: var(--ThreadView_group_spacing-end);

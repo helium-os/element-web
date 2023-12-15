@@ -283,10 +283,8 @@ legend {
     backdrop-filter: blur(20px);
     box-shadow: $dialog-shadow;
     border-radius: 20px;
+    overflow: hidden;
     font-size: $font-15px;
-
-
-
 }
 
 
@@ -747,7 +745,9 @@ legend {
     font-style: normal;
     font-weight: 500;
     line-height: 16px;
-    text-decoration-line: underline;
+    &:hover {
+        text-decoration-line: underline;
+    }
 }
 
 @define-mixin ThreadSummaryIcon {

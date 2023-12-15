@@ -24,7 +24,7 @@ import { IOpts } from "../../../createRoom";
 import Field from "../elements/Field";
 import DialogButtons from "../elements/DialogButtons";
 import BaseDialog from "../dialogs/BaseDialog";
-import { InviteInput } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialog";
+import { InviteInput, InviteInputProps } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialog";
 import { InviteKind } from "matrix-react-sdk/src/components/views/dialogs/invite/InviteDialogTypes";
 import { Member } from "matrix-react-sdk/src/utils/direct-messages";
 import AvatarSetting from "matrix-react-sdk/src/components/views/settings/AvatarSetting";
@@ -43,6 +43,7 @@ interface IProps {
     type?: RoomType;
     nameRequired?: boolean; // 群聊名字是否是必须的
     inviteRequired?: boolean; // 邀请用户是否是必须的
+    inviteInputProps?: Partial<InviteInputProps>;
     defaultName?: string;
     onCreate?: (opts: CreateOpts) => Promise<void> | void;
     onFinished(proceed?: false): void;
@@ -70,6 +71,7 @@ const CreateRoomDialog: React.FC<IProps> = ({
     defaultName = "",
     nameRequired = true,
     inviteRequired = false,
+    inviteInputProps,
     onCreate,
     onFinished,
 }) => {
@@ -143,9 +145,9 @@ const CreateRoomDialog: React.FC<IProps> = ({
                     <Field
                         type="text"
                         ref={nameField}
-                        label={_t("Room name", { roomType: _t("Room") })}
+                        label={_t("Room name", { roomType: _t("roomShort") })}
                         usePlaceholderAsHint={true}
-                        placeholder={_t("Please enter a name for the room", { roomType: _t("room") })}
+                        placeholder={_t("Please enter a name for the room", { roomType: _t("roomShort") })}
                         autoFocus={false}
                         onChange={onNameChange}
                         value={name}
@@ -160,6 +162,7 @@ const CreateRoomDialog: React.FC<IProps> = ({
                         kind={InviteKind.Invite}
                         onTargetsChange={setInvite}
                         inputFieldProps={{ placeholder: "添加1人或多人" }}
+                        {...inviteInputProps}
                     />
                 </div>
             </form>

@@ -21,7 +21,9 @@ limitations under the License.
 .mx_NewRoomIntro_roomMainInfo {
     display: flex;
     align-items: center;
-    gap: 8px;
+    .mx_BaseAvatar {
+        margin-right: 8px;
+    }
     .mx_BaseAvatar_initial {
         font-size: $font-40px;
     }
@@ -29,8 +31,8 @@ limitations under the License.
         width: 32px;
         height: 32px;
         &.mx_RoomTile_iconPublic:before {
-            width: 20px;
-            height: 20px;
+            width: 23px;
+            height: 23px;
         }
         &.mx_RoomTile_iconPrivate:before {
             width: 18px;

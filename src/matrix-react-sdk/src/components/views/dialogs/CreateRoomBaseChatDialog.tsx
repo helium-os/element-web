@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, memo } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { RoomType } from "matrix-js-sdk/src/@types/event";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 
@@ -36,21 +36,21 @@ interface IProps {
  */
 const CreateRoomBaseChatDialog: React.FC<IProps> = ({ room, type, onFinished }) => {
     const [busy, setBusy] = useState<boolean>(false);
+
+    const defaultMembers = useMemo(
+        () => room?.getMembers().filter((item) => item.userId !== MatrixClientPeg.get().getUserId()) ?? [], // 邀请用户里需要过滤掉当前用户（因为当前用户创建了群聊）
+        [room],
+    );
     const onCreate = async ({ avatar, name, invite }) => {
         if (busy) return;
 
         setBusy(true);
 
-        const inviteUsers = [
-            ...room.getMembers().filter((item) => item.userId !== MatrixClientPeg.get().getUserId()), // 邀请用户里需要过滤掉当前用户（当前用户创建了群聊）
-            ...invite,
-        ];
-
         if (!name) {
-            name = [...inviteUsers.map((item) => item.name), OwnProfileStore.instance.displayName].join("、");
+            name = [...invite.map((item) => item.name), OwnProfileStore.instance.displayName].join("、");
         }
 
-        const inviteUserIds = inviteUsers.map((item) => item.userId);
+        const inviteUserIds = invite.map((item) => item.userId);
 
         try {
             await createRoom({
@@ -69,7 +69,21 @@ const CreateRoomBaseChatDialog: React.FC<IProps> = ({ room, type, onFinished }) 
         }
     };
 
-    return <CreateRoomDialog nameRequired={false} inviteRequired={true} onCreate={onCreate} onFinished={onFinished} />;
+    return (
+        <CreateRoomDialog
+            nameRequired={false}
+            inviteRequired={true}
+            inviteInputProps={{
+                defaultMembers,
+                inputFieldProps: {
+                    placeholder: "请添加其他成员",
+                    label: "成员",
+                },
+            }}
+            onCreate={onCreate}
+            onFinished={onFinished}
+        />
+    );
 };
 
 export default memo(CreateRoomBaseChatDialog);

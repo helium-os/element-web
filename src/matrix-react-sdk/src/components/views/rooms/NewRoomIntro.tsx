@@ -90,7 +90,7 @@ const NewRoomIntro: React.FC = () => {
                 <div className="mx_NewRoomIntro_roomMainInfo">
                     <RoomAvatar room={room} width={AVATAR_SIZE} height={AVATAR_SIZE} />
 
-                    <h2>{room.name}</h2>
+                    <p className="mx_NewRoomIntro_roomName">{room.name}</p>
                 </div>
 
                 <p className="mx_NewRoomIntro_tips">

@@ -400,6 +400,7 @@ export default class ThreadView extends React.Component<IProps, IState> {
                         permalinkCreator={this.props.permalinkCreator}
                         membersLoaded={true}
                         editState={this.state.editState}
+                        replyToEvent={this.state.replyToEvent}
                         eventId={this.props.initialEvent?.getId()}
                         highlightedEventId={highlightedEventId}
                         eventScrollIntoView={this.props.initialEventScrollIntoView}

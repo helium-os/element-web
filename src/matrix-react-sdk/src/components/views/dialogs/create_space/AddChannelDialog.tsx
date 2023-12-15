@@ -143,8 +143,10 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
         <BaseDialog
             className="mx_AddChannelDialog"
             onFinished={onClose}
-            title={_t("Add room")}
-            description={"让我们为每一个主题创建一个频道吧。稍后你可以添加更多频道，包括现有的。"}
+            title={_t("Create a room", {
+                roomType: _t("channel"),
+            })}
+            description={"让我们为每一个主题创建一个频道吧。稍后你可以添加更多频道。"}
             footer={footer}
         >
             <form>
@@ -165,7 +167,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
                                     value={item.name}
                                     wordLimit={80}
                                     label={_t("Room name", { roomType: _t("Channel") })}
-                                    placeholder={"请为你的频道想一个名字"}
+                                    placeholder={_t("Please enter a name for the channel")}
                                     usePlaceholderAsHint={true}
                                     autoFocus={false}
                                     onChange={(ev: React.ChangeEvent<HTMLInputElement>) =>

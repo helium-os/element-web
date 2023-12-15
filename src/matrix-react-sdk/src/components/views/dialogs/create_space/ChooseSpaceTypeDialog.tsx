@@ -60,7 +60,6 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({ stepIndex, onStepChange, onSp
             className="mx_ChooseSpaceTypeDialog"
             onFinished={onClose}
             title={_t("Create a space")}
-            description={_t("Open space for anyone, best for communities")}
             footer={footer}
         >
             <div className="mx_SpaceCreateMenu_wrapper">

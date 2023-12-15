@@ -68,7 +68,7 @@ const RoomTopicSetting: React.FC<IProps> = ({ room, title = true }) => {
                     </div>
                 )}
                 <div className="mx_TextSettingsItem_info" onClick={onEditTopic}>
-                    {topic || <span className="mx_TextSettingsItem_info_default">添加描述</span>}
+                    {topic || <span className="mx_TextSettingsItem_info_default">告诉大家如何使用该频道</span>}
                     {canSetTopic && <span className="mx_Settings_icon" />}
                 </div>
             </div>
