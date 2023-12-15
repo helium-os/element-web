@@ -5,7 +5,7 @@ import RoomNameSettings from "matrix-react-sdk/src/components/views/room_setting
 import RoomAvatarSettings from "matrix-react-sdk/src/components/views/room_settings/RoomAvatarSetting";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import { RoomPermalinkCreator } from "matrix-react-sdk/src/utils/permalinks/Permalinks";
-import Button, { ButtonSize } from "matrix-react-sdk/src/components/views/button/Button";
+import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
@@ -40,7 +40,7 @@ const RoomSettingsPanel: React.FC<IProps> = ({ room, onClose }) => {
                     <RoomNameSettings room={room} title={false} />
                 </div>
                 <div className="mx_RoomSettings_buttons">
-                    <Button size={ButtonSize.Small} block danger onClick={onLeave}>
+                    <Button type={ButtonType.Default} size={ButtonSize.Small} block danger onClick={onLeave}>
                         {_t("Leave room", {
                             actionType: myMember.isAdmin() ? _t("Disband") : _t("Quit"),
                             roomType: room.getRoomTypeLabel(),

@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { UserInfoHeader } from "matrix-react-sdk/src/components/views/right_panel/UserInfo";
 import { Room } from "matrix-js-sdk/src/models/room";
-import Button from "matrix-react-sdk/src/components/views/button/Button";
+import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import { startDmOnFirstMessage } from "matrix-react-sdk/src/utils/direct-messages";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import ContextMenu, { ChevronFace, ContextMenuProps } from "matrix-react-sdk/src/components/structures/ContextMenu";
@@ -26,7 +26,7 @@ const SendDMContextMenu: React.FC<IProps> = ({ room, member, ...contextMenuProps
                     <>
                         <hr />
                         <div className="mx_SendDMContextMenu_btnBox">
-                            <Button block onClick={onSendDM}>
+                            <Button type={ButtonType.Primary} block onClick={onSendDM}>
                                 发送私信
                             </Button>
                         </div>
