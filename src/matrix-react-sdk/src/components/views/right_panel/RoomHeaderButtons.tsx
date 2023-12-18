@@ -101,7 +101,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         super(props, HeaderKind.Room);
         this.echoChamber = EchoChamber.forRoom(this.props.room);
         this.state = {
-            notificationState: RoomNotifState.AllMessagesLoud,
+            notificationState: this.echoChamber?.notificationVolume,
             showRoomNotificationContextMenu: false,
         };
     }

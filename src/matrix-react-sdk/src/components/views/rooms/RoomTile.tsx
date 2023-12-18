@@ -48,6 +48,7 @@ import { useHasRoomLiveVoiceBroadcast, VoiceBroadcastRoomSubtitle } from "../../
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MentionsNotificationBadge from "matrix-react-sdk/src/components/views/rooms/NotificationBadge/MentionsNotificationBadge";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
+import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
 
 interface Props {
     room: Room;
@@ -69,6 +70,7 @@ interface State {
     generalMenuPosition: PartialDOMRect | null;
     call: Call | null;
     messagePreview?: string;
+    roomNotificationState: RoomNotifState;
 }
 
 const messagePreviewId = (roomId: string): string => `mx_RoomTile_messagePreview_${roomId}`;
@@ -90,6 +92,8 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
     public constructor(props: ClassProps) {
         super(props);
 
+        this.roomProps = EchoChamber.forRoom(this.props.room);
+
         this.state = {
             selected: SdkContextClass.instance.roomViewStore.getRoomId() === this.props.room.roomId,
             isPrivate: this.props.room.isPrivateRoom(),
@@ -98,11 +102,11 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
             call: CallStore.instance.getCall(this.props.room.roomId),
             // generatePreview() will return nothing if the user has previews disabled
             messagePreview: "",
+            roomNotificationState: this.roomProps?.notificationVolume,
         };
         this.generatePreview();
 
         this.notificationState = RoomNotificationStateStore.instance.getRoomState(this.props.room);
-        this.roomProps = EchoChamber.forRoom(this.props.room);
     }
 
     private onRoomNameUpdate = (room: Room): void => {
@@ -114,7 +118,12 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
     };
 
     private onRoomPropertyUpdate = (property: CachedRoomKey): void => {
-        if (property === CachedRoomKey.NotificationVolume) this.onNotificationUpdate();
+        if (property === CachedRoomKey.NotificationVolume) {
+            // this.onNotificationUpdate();
+            this.setState({
+                roomNotificationState: this.roomProps?.notificationVolume,
+            });
+        }
         // else ignore - not important for this tile
     };
 
@@ -261,51 +270,6 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         this.setState({ generalMenuPosition: null });
     };
 
-    // private renderNotificationsMenu(isActive: boolean): React.ReactElement | null {
-    //     if (
-    //         MatrixClientPeg.get().isGuest() ||
-    //         this.props.tag === DefaultTagID.Archived ||
-    //         !this.showContextMenu ||
-    //         this.props.isMinimized
-    //     ) {
-    //         // the menu makes no sense in these cases so do not show one
-    //         return null;
-    //     }
-    //
-    //     const state = this.roomProps.notificationVolume;
-    //
-    //     const classes = classNames("mx_RoomTile_notificationsButton", {
-    //         // Show bell icon for the default case too.
-    //         mx_RoomNotificationContextMenu_iconBell: state === RoomNotifState.AllMessages,
-    //         mx_RoomNotificationContextMenu_iconBellDot: state === RoomNotifState.AllMessagesLoud,
-    //         mx_RoomNotificationContextMenu_iconBellMentions: state === RoomNotifState.MentionsOnly,
-    //         mx_RoomNotificationContextMenu_iconBellCrossed: state === RoomNotifState.Mute,
-    //
-    //         // Only show the icon by default if the room is overridden to muted.
-    //         // TODO: [FTUE Notifications] Probably need to detect global mute state
-    //         mx_RoomTile_notificationsButton_show: state === RoomNotifState.Mute,
-    //     });
-    //
-    //     return (
-    //         <React.Fragment>
-    //             <ContextMenuTooltipButton
-    //                 className={classes}
-    //                 onClick={this.onNotificationsMenuOpenClick}
-    //                 title={_t("Notification options")}
-    //                 isExpanded={!!this.state.notificationsMenuPosition}
-    //                 tabIndex={isActive ? 0 : -1}
-    //             />
-    //             {this.state.notificationsMenuPosition && (
-    //                 <RoomNotificationContextMenu
-    //                     {...contextMenuBelow(this.state.notificationsMenuPosition)}
-    //                     onFinished={this.onCloseNotificationsMenu}
-    //                     room={this.props.room}
-    //                 />
-    //             )}
-    //         </React.Fragment>
-    //     );
-    // }
-
     private renderGeneralMenu(): React.ReactElement | null {
         if (!this.showContextMenu) return null; // no menu to show
         return (
@@ -330,6 +294,7 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
             mx_RoomTile_selected: this.state.selected,
             mx_RoomTile_hasMenuOpen: !!(this.state.generalMenuPosition || this.state.notificationsMenuPosition),
             mx_RoomTile_minimized: this.props.isMinimized,
+            mx_RoomTile_mute_notification: this.state.roomNotificationState === RoomNotifState.Mute,
         });
 
         let name = this.props.room.name;
