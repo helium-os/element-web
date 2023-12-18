@@ -80,7 +80,7 @@ const NewRoomIntro: React.FC = () => {
             !encryptedSingle3rdPartyInvite &&
             room.getJoinedMemberCount() + room.getInvitedMemberCount() === 2
         ) {
-            caption = _t("Only the two of you are in this conversation, unless either of you invites anyone to join.");
+            // caption = _t("Only the two of you are in this conversation, unless either of you invites anyone to join.");
         }
 
         const member = room?.getMember(dmPartner);
