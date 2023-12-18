@@ -158,10 +158,13 @@ const NewRoomIntro: React.FC = () => {
 
         let createdText: string;
         if (creator === cli.getUserId()) {
-            createdText = _t("You created this room.");
+            createdText = _t("You created this room.", {
+                roomType: room.getRoomTypeLabel(),
+            });
         } else {
             createdText = _t("%(displayName)s created this room.", {
                 displayName: creatorName,
+                roomType: room.getRoomTypeLabel(),
             });
         }
 
