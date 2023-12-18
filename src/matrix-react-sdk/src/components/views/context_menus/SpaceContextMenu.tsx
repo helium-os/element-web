@@ -160,7 +160,6 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
             {!hideHeader && <div className="mx_SpacePanel_contextMenu_header">{space.name}</div>}
             <IconizedContextMenuOptionList first>
                 {inviteOption}
-                <hr />
                 {/*<IconizedContextMenuOption*/}
                 {/*    iconClassName="mx_SpacePanel_iconExplore"*/}
                 {/*    label={canAddRooms ? _t("Manage & explore rooms") : _t("Explore rooms")}*/}
@@ -173,7 +172,8 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 {/*/>*/}
                 <SpaceAddChanelContextMenu showIcon={true} />
                 <SpaceAddTagContextMenu showIcon={true} />
-                <hr />
+
+                {settingsOption && <hr />}
                 {/*{devtoolsOption}*/}
                 {settingsOption}
                 {/*{leaveOption}*/}
