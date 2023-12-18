@@ -27,6 +27,7 @@ import ReactionPicker from "../emojipicker/ReactionPicker";
 import ReactionsRowButton from "./ReactionsRowButton";
 import RoomContext from "../../../contexts/RoomContext";
 import AccessibleButton from "../elements/AccessibleButton";
+import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 
 // The maximum number of reactions to initially show on a message.
 const MAX_ITEMS_WHEN_LIMITED = 8;
@@ -51,6 +52,7 @@ const ReactButton: React.FC<IProps> = ({ mxEvent, reactions }) => {
                     mx_ReactionsRow_addReactionButton_active: menuDisplayed,
                 })}
                 title={_t("Add reaction")}
+                alignment={Alignment.Top}
                 onClick={openMenu}
                 onContextMenu={(e: SyntheticEvent): void => {
                     e.preventDefault();

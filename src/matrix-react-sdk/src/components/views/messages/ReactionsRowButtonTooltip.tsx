@@ -20,7 +20,7 @@ import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { unicodeToShortcode } from "../../../HtmlUtils";
 import { _t } from "../../../languageHandler";
 import { formatCommaSeparatedList } from "../../../utils/FormattingUtils";
-import Tooltip from "../elements/Tooltip";
+import Tooltip, { Alignment } from "../elements/Tooltip";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 interface IProps {
     // The event we're displaying reactions for
@@ -74,7 +74,7 @@ export default class ReactionsRowButtonTooltip extends React.PureComponent<IProp
 
         let tooltip;
         if (tooltipLabel) {
-            tooltip = <Tooltip visible={visible} label={tooltipLabel} />;
+            tooltip = <Tooltip visible={visible} label={tooltipLabel} alignment={Alignment.Top} />;
         }
 
         return tooltip;

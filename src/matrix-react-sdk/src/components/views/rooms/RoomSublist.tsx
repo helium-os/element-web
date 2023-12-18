@@ -708,8 +708,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     const classes = classNames({
                         mx_RoomSublist_headerContainer: true,
                         mx_RoomSublist_headerContainer_withAux: !!addRoomButton,
-                        mx_RoomSublist_headerContainer_hidden:
-                            !SpaceStore.instance.isHomeSpace && this.props.tagId === DefaultTagID.Untagged,
                     });
 
                     const badgeContainer = <div className="mx_RoomSublist_badgeContainer">{badge}</div>;
@@ -943,7 +941,10 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                                         data-id={this.props.tagId}
                                         onKeyDown={this.onKeyDown}
                                     >
-                                        {this.renderHeader()}
+                                        {/*社区内默认分组不展示header*/}
+                                        {(SpaceStore.instance.isHomeSpace ||
+                                            this.props.tagId !== DefaultTagID.Untagged) &&
+                                            this.renderHeader()}
                                         {content}
                                     </div>
                                 </div>
