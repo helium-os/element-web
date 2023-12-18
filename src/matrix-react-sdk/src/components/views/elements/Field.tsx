@@ -403,9 +403,7 @@ export class SelectedUserOrRoomTile extends React.PureComponent<SelectedUserOrRo
         return (
             <span className="mx_SelectedUserOrRoomTile_box">
                 <span className="mx_SelectedUserOrRoomTile_pill">
-                    {this.props.avatar && (
-                        <div className="mx_SelectedUserOrRoomTile_avatarBox">{this.props.avatar}</div>
-                    )}
+                    {this.props.avatar}
                     <span className="mx_SelectedUserOrRoomTile_name">{this.props.name}</span>
                     {closeButton}
                 </span>
