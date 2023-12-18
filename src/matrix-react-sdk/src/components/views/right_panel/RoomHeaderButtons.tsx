@@ -348,6 +348,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
             const isHomeSpace = SpaceStore.instance.isHomeSpace;
             // 群聊 || 频道
             isHomeSpace &&
+                this.props.room.canInvite(MatrixClientPeg.get().getUserId()) &&
                 rightPanelPhaseButtons.set(
                     HeaderButtonAction.Invite,
                     <HeaderButton
