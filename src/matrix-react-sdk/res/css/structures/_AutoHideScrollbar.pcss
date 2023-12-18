@@ -25,22 +25,13 @@ html {
 }
 
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    border-radius: 3px;
+    border-radius: 2px;
     background-color: $scrollbar-thumb-color;
-}
-
-/* make auto-hide scrollbars not transparent again on hover */
-.mx_AutoHideScrollbar:hover {
-    scrollbar-color: $scrollbar-thumb-color transparent;
-
-    &::-webkit-scrollbar-thumb {
-        background-color: $scrollbar-thumb-color;
-    }
 }
 
 /* make scrollbars transparent for autohide scrollbars */
@@ -49,14 +40,13 @@ html {
     overflow-y: auto;
     overflow-y: overlay; /* where supported */
     -ms-overflow-style: -ms-autohiding-scrollbar;
+    scrollbar-color: $scrollbar-thumb-color transparent;
 
     &::-webkit-scrollbar {
         background-color: transparent;
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: transparent;
+        background-color: $scrollbar-thumb-color;
     }
-
-    scrollbar-color: transparent transparent;
 }
