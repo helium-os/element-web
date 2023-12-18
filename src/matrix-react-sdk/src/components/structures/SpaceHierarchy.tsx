@@ -344,7 +344,8 @@ const Tile: React.FC<ITileProps> = ({
                     mx_SpaceHierarchy_subspace: room.room_type === RoomType.Space,
                     mx_SpaceHierarchy_joining: busy,
                 })}
-                onClick={hasPermissions && onToggleClick ? onToggleClick : onPreviewClick}
+                onClick={onPreviewClick}
+                // onClick={hasPermissions && onToggleClick ? onToggleClick : onPreviewClick}
                 onKeyDown={onKeyDown}
                 inputRef={ref}
                 onFocus={onFocus}
@@ -582,7 +583,11 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
                     </div>
                     <div className="mx_RoomSublist_tiles">
                         {item.children?.map((room) => (
-                            <div key={room.room_id} className="mx_RoomTile">
+                            <div
+                                key={room.room_id}
+                                className="mx_RoomTile"
+                                onClick={() => onViewRoomClick(room.room_id, room.room_type as RoomType)}
+                            >
                                 <SpaceChannelAvatar isPrivate={isPrivateRoom(room.join_rule)} />
                                 <div className="mx_RoomTile_titleContainer">
                                     <div className="mx_RoomTile_title" tabIndex={-1}>
