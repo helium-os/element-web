@@ -27,16 +27,6 @@ limitations under the License.
     /* https://bugzilla.mozilla.org/show_bug.cgi?id=255139 */
     display: inline-block;
     user-select: none;
-
-    &.mx_RoomAvatar_isSpaceRoom {
-        &.mx_BaseAvatar_image,
-        .mx_BaseAvatar_image {
-            border-radius: $avatar-border-radius;
-            &:hover {
-                border-radius: $avatar-hover-border-radius;
-            }
-        }
-    }
 }
 
 .mx_BaseAvatar_initial {
@@ -71,9 +61,6 @@ limitations under the License.
     .mx_BaseAvatar_initial {
         background-color: var(--percy-color-avatar) !important;
         border-radius: 125px;
-    }
-    .mx_RoomAvatar_isSpaceRoom .mx_BaseAvatar_initial {
-        border-radius: $avatar-border-radius;
     }
     .mx_BaseAvatar_initial + .mx_BaseAvatar_image {
         visibility: hidden;

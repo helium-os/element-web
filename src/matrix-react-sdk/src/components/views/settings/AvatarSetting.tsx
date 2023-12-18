@@ -18,6 +18,8 @@ import React, { useRef, useState, useEffect, memo } from "react";
 
 import AccessibleButton from "../elements/AccessibleButton";
 import { chromeFileInputFix } from "matrix-react-sdk/src/utils/BrowserWorkarounds";
+import RoomAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAvatar";
+import { Room } from "matrix-js-sdk/src/models/room";
 
 export enum OperateType {
     Create,
@@ -26,6 +28,7 @@ export enum OperateType {
 
 export interface AvatarProps {
     type?: OperateType;
+    room?: Room;
     size?: number;
     avatarUrl?: string | null;
     avatarDisabled?: boolean;
@@ -34,6 +37,7 @@ export interface AvatarProps {
 
 const AvatarSetting: React.FC<AvatarProps> = ({
     type = OperateType.Create,
+    room,
     avatarUrl = "",
     size = 100,
     avatarDisabled = false,
@@ -47,11 +51,27 @@ const AvatarSetting: React.FC<AvatarProps> = ({
     }, [avatarUrl]);
 
     let avatarSection;
+
+    const getNoDateUrlAvatar = () => {
+        return (
+            <div
+                className={avatarDisabled ? "mx_AvatarSetting_disabled" : ""}
+                onClick={() => !avatarDisabled && avatarUploadRef.current?.click()}
+            >
+                {type === OperateType.Edit ? (
+                    <RoomAvatar width={size} height={size} room={room} />
+                ) : (
+                    <div className="mx_AvatarSetting_avatar" />
+                )}
+            </div>
+        );
+    };
+
     if (avatarDisabled) {
         avatarSection = avatarDataUrl ? (
             <img className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" src={avatarDataUrl} alt="" />
         ) : (
-            <div className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" />
+            getNoDateUrlAvatar()
         );
     } else {
         avatarSection = (
@@ -65,7 +85,7 @@ const AvatarSetting: React.FC<AvatarProps> = ({
                         alt=""
                     />
                 ) : (
-                    <div className="mx_AvatarSetting_avatar" onClick={() => avatarUploadRef.current?.click()} />
+                    getNoDateUrlAvatar()
                 )}
                 <div className="mx_AvatarSetting_mask" onClick={() => avatarUploadRef.current?.click()}>
                     {type === OperateType.Edit && <label>编辑</label>}

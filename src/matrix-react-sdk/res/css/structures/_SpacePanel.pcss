@@ -136,6 +136,16 @@ $activeBorderColor: $primary-content;
         height: 48px;
         cursor: pointer;
 
+        .mx_BaseAvatar_image {
+            border-radius: 10px;
+        }
+
+        &:hover, &.mx_SpaceButton_active {
+            .mx_BaseAvatar_image {
+                border-radius: $avatar-active-border-radius;
+            }
+        }
+
         &.mx_SpaceButton_active {
             background-color: $spacePanel-active-bg-color;
             &::before {
@@ -154,9 +164,6 @@ $activeBorderColor: $primary-content;
             &.mx_SpaceButton_narrow .mx_SpaceButton_selectionWrapper {
                 //padding: $activeBorderTransparentGap;
                 //border: 3px $activeBorderColor solid;
-            }
-            .mx_BaseAvatar_image {
-                border-radius: $avatar-active-border-radius;
             }
         }
 

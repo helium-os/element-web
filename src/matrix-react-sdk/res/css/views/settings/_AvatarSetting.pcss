@@ -6,17 +6,16 @@
     }
 
     .mx_AvatarSetting_avatar {
+        @mixin MaskIcon url("$(res)/img/element-icons/camera.svg"), 28px, 22px, $text-secondary-color1;
         box-sizing: border-box;
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
         height: 100%;
-        position: relative;
         border: 1px dashed $border-secondary-color3;
         border-radius: 50%;
-        @mixin MaskIcon url("$(res)/img/element-icons/camera.svg"), 28px, 22px, $text-secondary-color1;
         cursor: pointer;
-        &.mx_AvatarSetting_disabled {
-            cursor: not-allowed;
-        }
     }
 
     img.mx_AvatarSetting_avatar {
@@ -25,6 +24,10 @@
         &:before {
             display: none;
         }
+    }
+
+    .mx_AvatarSetting_disabled {
+        cursor: not-allowed;
     }
 
     .mx_AvatarSetting_mask {

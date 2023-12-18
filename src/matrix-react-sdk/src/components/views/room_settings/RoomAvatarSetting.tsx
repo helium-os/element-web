@@ -79,6 +79,7 @@ const RoomAvatarSetting: React.FC<AvatarEditProps> = ({ autoUpload = true, room,
     return (
         <AvatarSetting
             type={OperateType.Edit}
+            room={room}
             avatarUrl={avatarUrl}
             size={size}
             avatarDisabled={!canSetAvatar}
