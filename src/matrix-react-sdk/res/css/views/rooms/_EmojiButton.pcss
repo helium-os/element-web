@@ -15,15 +15,11 @@ limitations under the License.
 */
 
 .mx_EmojiButton {
-    @mixin composerButton 50%, $accent;
+    @mixin MaskIcon url("$(res)/img/element-icons/room/composer/emoji.svg"), 20px, 20px;
 }
 
 .mx_EmojiButton_highlight {
-    @mixin composerButtonHighLight;
-}
-
-.mx_EmojiButton_icon::before {
-    mask-image: url("$(res)/img/element-icons/room/composer/emoji.svg");
+    background: $icon-primary-bg-color;
 }
 
 .mx_MessageComposer_wysiwyg {

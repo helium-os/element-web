@@ -58,7 +58,7 @@ import IncomingLegacyCallToast, { getIncomingLegacyCallToastKey } from "./toasts
 import ToastStore from "./stores/ToastStore";
 import Resend from "./Resend";
 import { ViewRoomPayload } from "./dispatcher/payloads/ViewRoomPayload";
-import { InviteKind } from "./components/views/dialogs/InviteDialogTypes";
+import { InviteKind } from "./components/views/dialogs/invite/InviteDialogTypes";
 import { OpenInviteDialogPayload } from "./dispatcher/payloads/OpenInviteDialogPayload";
 import { findDMForUser } from "./utils/dm/findDMForUser";
 import { getJoinedNonFunctionalMembers } from "./utils/room/getJoinedNonFunctionalMembers";

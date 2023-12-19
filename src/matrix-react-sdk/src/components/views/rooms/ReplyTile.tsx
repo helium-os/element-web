@@ -34,6 +34,7 @@ import MVoiceMessageBody from "../messages/MVoiceMessageBody";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { renderReplyTile } from "../../../events/EventTileFactory";
 import { GetRelationsForEvent } from "../rooms/EventTile";
+import RedactedBody from "matrix-react-sdk/src/components/views/messages/RedactedBody";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -43,12 +44,16 @@ interface IProps {
     onHeightChanged?(): void;
     toggleExpandedQuote?: () => void;
     getRelationsForEvent?: GetRelationsForEvent;
+    showSenderAvatar?: boolean;
+    showReplyTile?: boolean;
 }
 
 export default class ReplyTile extends React.PureComponent<IProps> {
     private anchorElement = createRef<HTMLAnchorElement>();
 
     public static defaultProps = {
+        showSenderAvatar: true,
+        showReplyTile: true,
         onHeightChanged: () => {},
     };
 
@@ -108,6 +113,7 @@ export default class ReplyTile extends React.PureComponent<IProps> {
         const mxEvent = this.props.mxEvent;
         const msgType = mxEvent.getContent().msgtype;
         const evType = mxEvent.getType();
+        const isRedacted = mxEvent.isRedacted(); // 是否是被撤回的消息
 
         const { hasRenderer, isInfoMessage, isSeeingThroughMessageHiddenForModeration } = getEventDisplayInfo(
             mxEvent,
@@ -127,7 +133,7 @@ export default class ReplyTile extends React.PureComponent<IProps> {
 
         const classes = classNames("mx_ReplyTile", {
             mx_ReplyTile_inline: msgType === MsgType.Emote,
-            mx_ReplyTile_info: isInfoMessage && !mxEvent.isRedacted(),
+            mx_ReplyTile_info: isInfoMessage,
             mx_ReplyTile_audio: msgType === MsgType.Audio,
             mx_ReplyTile_video: msgType === MsgType.Video,
         });
@@ -138,11 +144,18 @@ export default class ReplyTile extends React.PureComponent<IProps> {
         }
 
         let sender;
-        const hasOwnSender = isInfoMessage || evType === EventType.RoomCreate;
+        const hasOwnSender = (isInfoMessage && !isRedacted) || evType === EventType.RoomCreate;
         if (!hasOwnSender) {
             sender = (
                 <div className="mx_ReplyTile_sender">
-                    <MemberAvatar member={mxEvent.sender} fallbackUserId={mxEvent.getSender()} width={16} height={16} />
+                    {this.props.showSenderAvatar && (
+                        <MemberAvatar
+                            member={mxEvent.sender}
+                            fallbackUserId={mxEvent.getSender()}
+                            width={14}
+                            height={14}
+                        />
+                    )}
                     <SenderProfile mxEvent={mxEvent} />
                 </div>
             );
@@ -161,29 +174,34 @@ export default class ReplyTile extends React.PureComponent<IProps> {
 
         return (
             <div className={classes}>
-                <a href={permalink} onClick={this.onClick} ref={this.anchorElement}>
-                    {sender}
-                    {renderReplyTile(
-                        {
-                            ...this.props,
+                {/*<a href={permalink} onClick={this.onClick} ref={this.anchorElement}>*/}
+                {sender}
+                {this.props.showReplyTile &&
+                    (isRedacted ? (
+                        <RedactedBody mxEvent={mxEvent} hasReply={true} />
+                    ) : (
+                        renderReplyTile(
+                            {
+                                ...this.props,
 
-                            // overrides
-                            ref: undefined,
-                            showUrlPreview: false,
-                            overrideBodyTypes: msgtypeOverrides,
-                            overrideEventTypes: evOverrides,
-                            maxImageHeight: 96,
-                            isSeeingThroughMessageHiddenForModeration,
+                                // overrides
+                                ref: undefined,
+                                showUrlPreview: false,
+                                overrideBodyTypes: msgtypeOverrides,
+                                overrideEventTypes: evOverrides,
+                                maxImageHeight: 96,
+                                isSeeingThroughMessageHiddenForModeration,
 
-                            // appease TS
-                            highlights: this.props.highlights,
-                            highlightLink: this.props.highlightLink,
-                            onHeightChanged: this.props.onHeightChanged,
-                            permalinkCreator: this.props.permalinkCreator,
-                        },
-                        false /* showHiddenEvents shouldn't be relevant */,
-                    )}
-                </a>
+                                // appease TS
+                                highlights: this.props.highlights,
+                                highlightLink: this.props.highlightLink,
+                                onHeightChanged: this.props.onHeightChanged,
+                                permalinkCreator: this.props.permalinkCreator,
+                            },
+                            false /* showHiddenEvents shouldn't be relevant */,
+                        )
+                    ))}
+                {/*</a>*/}
             </div>
         );
     }

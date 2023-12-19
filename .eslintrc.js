@@ -53,6 +53,7 @@ module.exports = {
         "react/no-find-dom-node": "warn",
         // 提醒使用了字符串 ref
         "react/no-string-refs": "warn",
+        "react/display-name": "warn",
 
         // ------------eslint-plugin-import
         // 提醒导入了未解析到的模块

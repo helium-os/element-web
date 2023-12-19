@@ -16,7 +16,7 @@ limitations under the License.
 
 .mx_RoomHeader {
     flex: 0 0 50px;
-    border-bottom: 1px solid $primary-hairline-color;
+    border-bottom: 1px solid $border-primary-color1;
     background-color: $background;
 
     .mx_RoomHeader_icon {
@@ -44,13 +44,10 @@ limitations under the License.
 }
 
 .mx_RoomHeader_wrapper {
-    height: 44px;
     display: flex;
     align-items: center;
-    min-width: 0;
-    margin: 0 20px 0 16px;
-    padding-top: 6px;
-    border-bottom: 1px solid $system;
+    height: $panel-header-height;
+    padding: 0 16px;
 
     .mx_InviteOnlyIcon_large {
         margin: 0;
@@ -97,20 +94,14 @@ limitations under the License.
 .mx_RoomHeader_name {
     flex: 0 1 auto;
     overflow: hidden;
-    color: $primary-content;
-    font-weight: $font-semi-bold;
-    font-size: $font-15px;
-    min-height: 24px;
-    align-items: center;
-    border-radius: 6px;
-    margin: 0 3px;
-    padding: 1px 4px;
     display: flex;
+    align-items: center;
+    font-size: $font-16px;
+    line-height: 24px;
+    font-weight: 500;
+    color: $text-primary-color1;
     user-select: none;
-
-    &:hover {
-        background-color: $quinary-content;
-    }
+    cursor: default;
 
     .mx_RoomHeader_nametext {
         white-space: nowrap;
@@ -147,31 +138,36 @@ limitations under the License.
     opacity: 0.6;
 }
 
-.mx_RoomHeader_name:not(.mx_RoomHeader_name--textonly),
-.mx_RoomHeader_avatar {
-    cursor: pointer;
-}
-
-.mx_RoomTopic {
-    position: relative;
+.mx_RoomHeader_name:not(.mx_RoomHeader_name--textonly) {
     cursor: pointer;
 }
 
 .mx_RoomHeader_topic {
-    $lineHeight: $font-16px;
-    $lines: 2;
+    cursor: default;
+}
+
+.mx_RoomTopic {
+    position: relative;
+}
+
+.mx_RoomHeader_topic {
+    margin-left: 8px;
+    $lineHeight: $font-20px;
+    $lines: 1;
 
     flex: 1;
-    color: $roomtopic-color;
-    font-weight: 400;
-    font-size: $font-13px;
     line-height: $lineHeight;
+    font-weight: 400;
     max-height: calc($lineHeight * $lines);
+    font-size: 14px;
+    color: $text-secondary-color2;
 
     overflow: hidden;
     -webkit-line-clamp: $lines; /* See: https://drafts.csswg.org/css-overflow-3/#webkit-line-clamp */
     -webkit-box-orient: vertical;
     display: -webkit-box;
+
+
 }
 
 .mx_RoomHeader_topic .mx_Emoji {
@@ -182,8 +178,39 @@ limitations under the License.
 
 .mx_RoomHeader_avatar {
     flex: 0;
-    margin: 0 7px;
     position: relative;
+
+    .mx_DecoratedRoomAvatar {
+        margin-right: 12px;
+    }
+
+    .mx_DecoratedRoomAvatar_icon {
+        width: 7px;
+        height: 7px;
+        right: -2px;
+        bottom: -2px;
+        border-color: #FFFFFF;
+    }
+
+    .mx_RoomTile_iconType {
+        width: 28px;
+        height: 28px;
+        &:before {
+            background: $text-primary-color1!important;
+        }
+        &.mx_RoomTile_iconPublic {
+            &:before {
+                width: 17px;
+                height: 17px;
+            }
+        }
+        &.mx_RoomTile_iconPrivate {
+            &:before {
+                width: 15px;
+                height: 18px;
+            }
+        }
+    }
 }
 
 .mx_RoomHeader_avatar .mx_BaseAvatar_image {

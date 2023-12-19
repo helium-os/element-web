@@ -30,18 +30,20 @@ limitations under the License.
 }
 
 .mx_ContextualMenu {
-    border-radius: 8px;
-    box-shadow: 4px 4px 12px 0 $menu-box-shadow-color;
-    background-color: $menu-bg-color;
-    color: $primary-content;
     position: absolute;
+    background: $menu-bg-color;
+    box-shadow: $menu-box-shadow;
+    backdrop-filter: blur(20px);
+    border-radius: $menu-border-radius;
+    color: $menu-text-color;
     font-size: $font-14px;
+    font-weight: 400;
     z-index: 5001;
     width: max-content;
 }
 
 .mx_ContextualMenu_right {
-    right: 16px;
+    right: 0;
 }
 
 .mx_ContextualMenu.mx_ContextualMenu_withChevron_right {

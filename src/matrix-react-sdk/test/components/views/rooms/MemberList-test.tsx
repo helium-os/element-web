@@ -25,7 +25,7 @@ import { MatrixClient, RoomState } from "matrix-js-sdk/src/matrix";
 
 import { MatrixClientPeg } from "../../../../src/MatrixClientPeg";
 import * as TestUtils from "../../../test-utils";
-import MemberList from "../../../../src/components/views/rooms/MemberList";
+import MemberListPanel from "../../../../src/components/views/right_panel/MemberListPanel";
 import { SDKContext } from "../../../../src/contexts/SDKContext";
 import { TestSdkContext } from "../../../TestSdkContext";
 
@@ -45,7 +45,7 @@ describe("MemberList", () => {
     let client: MatrixClient;
     let root: RenderResult;
     let memberListRoom: Room;
-    let memberList: MemberList;
+    let memberList: MemberListPanel;
 
     let adminUsers: RoomMember[] = [];
     let moderatorUsers: RoomMember[] = [];
@@ -201,7 +201,7 @@ describe("MemberList", () => {
                 memberListRoom.currentState.members[member.userId] = member;
             }
 
-            const gatherWrappedRef = (r: MemberList) => {
+            const gatherWrappedRef = (r: MemberListPanel) => {
                 memberList = r;
             };
             const context = new TestSdkContext();
@@ -209,7 +209,7 @@ describe("MemberList", () => {
             context.memberListStore.isPresenceEnabled = jest.fn().mockReturnValue(enablePresence);
             root = render(
                 <SDKContext.Provider value={context}>
-                    <MemberList
+                    <MemberListPanel
                         searchQuery=""
                         onClose={jest.fn()}
                         onSearchQueryChanged={jest.fn()}

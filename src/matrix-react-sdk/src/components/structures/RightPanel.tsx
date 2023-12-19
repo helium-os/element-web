@@ -29,7 +29,7 @@ import MatrixClientContext from "../../contexts/MatrixClientContext";
 import RoomSummaryCard from "../views/right_panel/RoomSummaryCard";
 import WidgetCard from "../views/right_panel/WidgetCard";
 import SettingsStore from "../../settings/SettingsStore";
-import MemberList from "../views/rooms/MemberList";
+import MemberListPanel from "../views/right_panel/MemberListPanel";
 import UserInfo from "../views/right_panel/UserInfo";
 import ThirdPartyMemberInfo from "../views/rooms/ThirdPartyMemberInfo";
 import FilePanel from "./FilePanel";
@@ -38,6 +38,7 @@ import ThreadPanel from "./ThreadPanel";
 import NotificationPanel from "./NotificationPanel";
 import ResizeNotifier from "../../utils/ResizeNotifier";
 import PinnedMessagesCard from "../views/right_panel/PinnedMessagesCard";
+import RoomSettingsPanel from "matrix-react-sdk/src/components/views/right_panel/RoomSettingsPanel";
 import { RoomPermalinkCreator } from "../../utils/permalinks/Permalinks";
 import { E2EStatus } from "../../utils/ShieldUtils";
 import TimelineCard from "../views/right_panel/TimelineCard";
@@ -145,10 +146,6 @@ export default class RightPanel extends React.Component<IProps, IState> {
         }
     };
 
-    private onSearchQueryChanged = (searchQuery: string): void => {
-        this.setState({ searchQuery });
-    };
-
     public render(): React.ReactNode {
         let card = <div />;
         const roomId = this.props.room?.roomId;
@@ -157,25 +154,15 @@ export default class RightPanel extends React.Component<IProps, IState> {
         switch (phase) {
             case RightPanelPhases.RoomMemberList:
                 if (roomId) {
-                    card = (
-                        <MemberList
-                            roomId={roomId}
-                            key={roomId}
-                            onClose={this.onClose}
-                            searchQuery={this.state.searchQuery}
-                            onSearchQueryChanged={this.onSearchQueryChanged}
-                        />
-                    );
+                    card = <MemberListPanel roomId={roomId} key={roomId} onClose={this.onClose} />;
                 }
                 break;
             case RightPanelPhases.SpaceMemberList:
                 card = (
-                    <MemberList
+                    <MemberListPanel
                         roomId={cardState?.spaceId ?? roomId}
                         key={cardState?.spaceId ?? roomId}
                         onClose={this.onClose}
-                        searchQuery={this.state.searchQuery}
-                        onSearchQueryChanged={this.onSearchQueryChanged}
                     />
                 );
                 break;
@@ -272,13 +259,24 @@ export default class RightPanel extends React.Component<IProps, IState> {
                 );
                 break;
 
+            case RightPanelPhases.RoomSettings:
+                card = (
+                    <RoomSettingsPanel
+                        room={this.props.room}
+                        onClose={this.onClose}
+                        // whenever RightPanel is passed a room it is passed a permalinkcreator
+                        permalinkCreator={this.props.permalinkCreator!}
+                    />
+                );
+                break;
+
             case RightPanelPhases.Widget:
                 card = <WidgetCard room={this.props.room} widgetId={cardState?.widgetId} onClose={this.onClose} />;
                 break;
         }
 
         return (
-            <aside className="mx_RightPanel dark-panel" id="mx_RightPanel">
+            <aside className="mx_RightPanel" id="mx_RightPanel">
                 {card}
             </aside>
         );

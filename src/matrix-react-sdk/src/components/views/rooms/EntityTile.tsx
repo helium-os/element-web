@@ -19,20 +19,21 @@ limitations under the License.
 import React from "react";
 import classNames from "classnames";
 
-import AccessibleButton from "../elements/AccessibleButton";
+import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
 import { _t, _td } from "../../../languageHandler";
 import E2EIcon, { E2EState } from "./E2EIcon";
 import BaseAvatar from "../avatars/BaseAvatar";
 import PresenceLabel from "./PresenceLabel";
-
-export enum PowerStatus {
-    Admin = "admin",
-    Moderator = "moderator",
+export enum PowerLevel {
+    Admin = 100,
+    Moderator = 50,
+    Default = 0,
 }
 
-const PowerLabel: Record<PowerStatus, string> = {
-    [PowerStatus.Admin]: _td("Admin"),
-    [PowerStatus.Moderator]: _td("Mod"),
+export const PowerLabel: Record<PowerLevel, string> = {
+    [PowerLevel.Admin]: _td("Admin"),
+    [PowerLevel.Moderator]: _td("Mod"),
+    [PowerLevel.Default]: _td("Default"),
 };
 
 export type PresenceState = "offline" | "online" | "unavailable";
@@ -74,12 +75,15 @@ interface IProps {
     presenceLastTs: number;
     presenceCurrentlyActive?: boolean;
     showInviteButton: boolean;
-    onClick(): void;
+    onClick(e: ButtonEvent): void;
+    onMouseOver?(): void;
+    onMouseLeave?(): void;
+    onContextMenu?(e: ButtonEvent): void;
     suppressOnHover: boolean;
     showPresence: boolean;
     subtextLabel?: string;
     e2eStatus?: E2EState;
-    powerStatus?: PowerStatus;
+    powerLevel?: PowerLevel;
 }
 
 interface IState {
@@ -172,9 +176,9 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
         }
 
         let powerLabel;
-        const powerStatus = this.props.powerStatus;
-        if (powerStatus) {
-            const powerText = _t(PowerLabel[powerStatus]);
+        const powerLevel = this.props.powerLevel;
+        if (powerLevel) {
+            const powerText = _t(PowerLabel[powerLevel]);
             powerLabel = <div className="mx_EntityTile_power">{powerText}</div>;
         }
 
@@ -186,26 +190,26 @@ export default class EntityTile extends React.PureComponent<IProps, IState> {
         }
 
         const av = this.props.avatarJsx || (
-            <BaseAvatar name={this.props.name} width={36} height={36} aria-hidden="true" />
+            <BaseAvatar name={this.props.name} width={32} height={32} aria-hidden="true" />
         );
 
         // The wrapping div is required to make the magic mouse listener work, for some reason.
         return (
-            <div>
-                <AccessibleButton
-                    className={classNames(mainClassNames)}
-                    // title={this.props.title}
-                    onClick={this.props.onClick}
-                >
-                    <div className="mx_EntityTile_avatar">
-                        {av}
-                        {showE2eIcon && e2eIcon}
-                    </div>
-                    {nameEl}
-                    {powerLabel}
-                    {inviteButton}
-                </AccessibleButton>
-            </div>
+            <AccessibleButton
+                className={classNames(mainClassNames)}
+                onClick={this.props.onClick}
+                onMouseOver={this.props.onMouseOver}
+                onMouseLeave={this.props.onMouseLeave}
+                onContextMenu={this.props.onContextMenu}
+            >
+                <div className="mx_EntityTile_avatar">
+                    {av}
+                    {showE2eIcon && e2eIcon}
+                </div>
+                {nameEl}
+                {powerLabel}
+                {inviteButton}
+            </AccessibleButton>
         );
     }
 }

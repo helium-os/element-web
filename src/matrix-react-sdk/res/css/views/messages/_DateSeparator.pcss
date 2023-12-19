@@ -16,30 +16,28 @@ limitations under the License.
 
 .mx_DateSeparator {
     clear: both;
-    margin: 4px 0;
     display: flex;
     align-items: center;
-    font-size: $font-14px;
-    color: $roomtopic-color;
 }
 
 .mx_DateSeparator > hr {
     flex: 1 1 0;
-    height: 0;
+    height: 0.5px;
+    background: $border-primary-color;
     border: none;
-    border-bottom: 1px solid $menu-selected-color;
 }
 
 .mx_DateSeparator_dateContent {
-    padding: 0 25px;
+    padding: 0 4px;
 }
 
 .mx_DateSeparator_dateHeading {
     flex: 0 0 auto;
     margin: 0;
-    font-size: inherit;
-    font-weight: inherit;
-    color: inherit;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 400;
+    color: $text-secondary-color2;
 }
 
 .mx_DateSeparator_jumpToDateMenu {

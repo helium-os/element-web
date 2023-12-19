@@ -15,48 +15,36 @@ limitations under the License.
 */
 
 .mx_ReplyPreview {
-    border: 1px solid $primary-hairline-color;
-    border-bottom: none;
-    background: $background;
-    max-height: 50vh;
     overflow: auto;
+    background: rgba(238, 238, 238, 0.50);
+    border-radius: 16px 16px 0 0;
+    border: 1px solid $border-primary-color;
+    border-bottom: none;
 
     .mx_ReplyPreview_section {
-        border-bottom: 1px solid $primary-hairline-color;
-        display: flex;
-        flex-flow: column;
-        row-gap: $spacing-8;
-        padding: $spacing-8 $spacing-8 0 0;
+        padding: 11px 10px 8px 19px;
 
         .mx_ReplyPreview_header {
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            column-gap: 8px;
-
-            color: $primary-content;
-            font-weight: 400;
-            opacity: 0.4;
-
-            .mx_ReplyPreview_header_cancel {
-                background-color: $primary-content;
-                mask: url("$(res)/img/cancel.svg");
-                mask-repeat: no-repeat;
-                mask-position: center;
-                mask-size: 18px;
-                width: 18px;
-                height: 18px;
-                min-width: 18px;
-                min-height: 18px;
-            }
         }
-    }
-}
-
-.mx_RoomView_body {
-    .mx_ReplyPreview {
-        /* Add box-shadow to the reply preview on the main (left) panel only. */
-        /* It is not added to the preview on the (right) panel for threads and a chat with a maximized widget. */
-        box-shadow: 0px -16px 32px $composer-shadow-color;
-        border-radius: 8px 8px 0 0;
+        .mx_ReplyPreview_mainInfo {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+        .mx_ReplyPreview_mainInfo, .mx_DisambiguatedProfile_displayName {
+            font-weight: 400;
+            color: $text-secondary-color1;
+        }
+        .mx_ReplyPreview_header_cancel {
+            width: 14px;
+            height: 14px;
+            background: $icon-secondary-hover-bg-color;
+            border-radius: 50%;
+            @mixin MaskIcon url("$(res)/img/cancel.svg"), 6px, 6px, #FFFFFF;
+        }
     }
 }

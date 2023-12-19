@@ -26,7 +26,6 @@ import dis from "../../../dispatcher/dispatcher";
 import { makeUserPermalink, RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
 import SettingsStore from "../../../settings/SettingsStore";
 import { Layout } from "../../../settings/enums/Layout";
-import { getUserNameColorClass } from "../../../utils/FormattingUtils";
 import { Action } from "../../../dispatcher/actions";
 import Spinner from "./Spinner";
 import ReplyTile from "../rooms/ReplyTile";
@@ -197,10 +196,6 @@ export default class ReplyChain extends React.Component<IProps, IState> {
         dis.fire(Action.FocusSendMessageComposer);
     };
 
-    private getReplyChainColorClass(ev: MatrixEvent): string {
-        return getUserNameColorClass(ev.getSender()!).replace("Username", "ReplyChain");
-    }
-
     public render(): React.ReactNode {
         let header: JSX.Element | undefined;
         if (this.state.err) {
@@ -216,7 +211,7 @@ export default class ReplyChain extends React.Component<IProps, IState> {
             const ev = this.state.loadedEv;
             const room = this.matrixClient.getRoom(ev.getRoomId());
             header = (
-                <blockquote className={`mx_ReplyChain ${this.getReplyChainColorClass(ev)}`}>
+                <blockquote className={`mx_ReplyChain`}>
                     {_t(
                         "<a>In reply to</a> <pill>",
                         {},
@@ -267,8 +262,7 @@ export default class ReplyChain extends React.Component<IProps, IState> {
         const { isQuoteExpanded } = this.props;
         const evTiles = this.state.events.map((ev) => {
             const classname = classNames({
-                "mx_ReplyChain": true,
-                [this.getReplyChainColorClass(ev)]: true,
+                mx_ReplyChain: true,
                 // We don't want to add the class if it's undefined, it should only be expanded/collapsed when it's true/false
                 "mx_ReplyChain--expanded": isQuoteExpanded === true,
                 // We don't want to add the class if it's undefined, it should only be expanded/collapsed when it's true/false
@@ -289,7 +283,7 @@ export default class ReplyChain extends React.Component<IProps, IState> {
 
         return (
             <div className="mx_ReplyChain_wrapper">
-                <div>{header}</div>
+                {/*<div>{header}</div>*/}
                 <div>{evTiles}</div>
             </div>
         );

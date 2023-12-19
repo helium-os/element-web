@@ -14,15 +14,34 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+$MessageComposerBtnSpace: 12px;
+
+
+.mx_MessageComposer {
+    box-sizing: border-box;
+    margin: 20px 16px;
+}
 
 .mx_MessageComposer_wrapper {
-    vertical-align: middle;
-    margin: auto;
-    border-top: 1px solid $primary-hairline-color;
-    position: relative;
-    padding-left: 42px;
-    padding-right: 16px;
+    .mx_MessageComposer_row {
+        padding-bottom: 9px;
+        border-radius: 16px;
+        border: 1px solid $border-secondary-color4;
+    }
+
+    &.mx_MessageComposer_focused .mx_MessageComposer_row, .mx_ReplyPreview +  .mx_MessageComposer_row{
+        border-color: $border-secondary-color3;
+    }
+
+    .mx_ReplyPreview +  .mx_MessageComposer_row {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
 }
+
+
+
+
 
 .mx_MessageComposer_replaced_wrapper {
     margin-left: auto;
@@ -52,17 +71,37 @@ limitations under the License.
     height: 0;
 }
 
-.mx_MessageComposer_row {
+.mx_MessageComposer_actionsWrap {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 9px;
 }
-
-.mx_MessageComposer_actions {
+.mx_MessageComposer_actionsList {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 6px;
+}
+.mx_MessageComposer_sendTips {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    line-height: 16px; /* 133.333% */
+    font-weight: 400;
+    color: $text-secondary-color4;
+}
+.mx_MessageComposer_shortcutIcon {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+}
+.mx_MessageComposer_shortcut_enter {
+    @mixin MaskIcon url("$(res)/img/icon-enter.svg"), 100%, 100%, $text-secondary-color4;
+}
+.mx_MessageComposer_shortcut_cmd {
+    @mixin MaskIcon url("$(res)/img/icon-command.svg"), 100%, 100%, $text-secondary-color4;
 }
 
 .mx_MessageComposer .mx_MessageComposer_avatar {
@@ -180,31 +219,49 @@ limitations under the License.
     color: $accent;
 }
 
-.mx_MessageComposer_button_highlight {
-    @mixin composerButtonHighLight;
-}
+.mx_MessageComposer_buttonItem, .mx_MessageComposer_callButtons {
+    position: relative;
+    padding: 0 $MessageComposerBtnSpace;
+    &:before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 1px;
+        height: 20px;
+        transform: translate(0, -50%);
+        background: $background-primary1-secondary-color2;
+    }
 
-.mx_MessageComposer_button {
-    @mixin composerButton 50%, $accent;
+    &:first-child {
+        padding-left: 0;
+        &:before {
+            display: none;
+        }
+    }
 
     &:last-child {
-        margin-right: auto;
-    }
-
-    &.mx_MessageComposer_closeButtonMenu {
-        &::after {
-            background: rgba($accent, 0.1);
+        padding-right: 0;
+        &:after {
+            display: none;
         }
-
-        &::before {
-            background-color: $accent;
-        }
-    }
-
-    &.mx_MessageComposer_hangup:not(.mx_AccessibleButton_disabled)::before {
-        background-color: $alert;
     }
 }
+.mx_MessageComposer_button {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    &:hover {
+        background: $icon-primary-bg-color;
+    }
+}
+.mx_MessageComposer_callButtons {
+    padding-right: 0;
+    display: flex;
+    gap: $MessageComposerBtnSpace;
+}
+
 .mx_MessageComposer_wysiwyg {
     .mx_MessageComposer_wrapper {
         padding-left: 16px;
@@ -216,7 +273,7 @@ limitations under the License.
         align-items: flex-end;
     }
 
-    .mx_MessageComposer_actions {
+    .mx_MessageComposer_actionsWrap {
         /* Height of the composer editor */
         height: 40px;
     }
@@ -245,8 +302,8 @@ limitations under the License.
     }
 }
 
-.mx_MessageComposer_upload::before {
-    mask-image: url("$(res)/img/element-icons/room/composer/attach.svg");
+.mx_MessageComposer_upload {
+    @mixin MaskIcon url("$(res)/img/element-icons/plus.svg"), 16px, 16px;
 }
 
 .mx_MessageComposer_poll::before {
@@ -389,7 +446,6 @@ limitations under the License.
  */
 
 .mx_MessageComposer.mx_MessageComposer--compact {
-    margin-right: 0;
 
     .mx_MessageComposer_wrapper {
         padding: 0 0 0 25px;

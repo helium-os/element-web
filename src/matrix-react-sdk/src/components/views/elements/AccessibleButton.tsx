@@ -76,6 +76,8 @@ type IProps<T extends keyof JSX.IntrinsicElements> = DynamicHtmlElementProps<T> 
     className?: string;
     triggerOnMouseDown?: boolean;
     onClick: ((e: ButtonEvent) => void | Promise<void>) | null;
+    onMouseOver?: (e: MouseEvent) => void;
+    onMouseLeave?: (e: MouseEvent) => void;
 };
 
 export interface IAccessibleButtonProps extends React.InputHTMLAttributes<Element> {

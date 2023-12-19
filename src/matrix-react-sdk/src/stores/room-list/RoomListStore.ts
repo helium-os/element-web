@@ -40,7 +40,7 @@ import { RoomListStore as Interface, RoomListStoreEvent } from "./Interface";
 import { SlidingRoomListStoreClass } from "./SlidingRoomListStore";
 import { UPDATE_EVENT } from "../AsyncStore";
 import { SdkContextClass } from "../../contexts/SDKContext";
-
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 interface IState {
     // state is tracked in underlying classes
 }
@@ -210,9 +210,11 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
                 this.updateFn.trigger();
                 return;
             }
-        } else if (payload.action === "MatrixActions.Room.tags") {
-            const roomPayload = <any>payload; // TODO: Type out the dispatcher types
-            await this.handleRoomUpdate(roomPayload.room, RoomUpdateCause.PossibleTagChange);
+        } else if (
+            payload.action === "MatrixActions.Room.tags" ||
+            (payload.action === "MatrixActions.Room.timeline" && payload.event.getType() === EventType.Tag)
+        ) {
+            await this.handleRoomUpdate(payload.room, RoomUpdateCause.PossibleTagChange);
             this.updateFn.trigger();
         } else if (payload.action === "MatrixActions.Room.timeline") {
             const eventPayload = <IRoomTimelineActionPayload>payload;
@@ -351,6 +353,16 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
             await VisibilityProvider.instance.onNewInvitedRoom(room);
         }
 
+        // 如果是space tags（社区分组列表）更新，修改store spaceTags，并触发regenerateAllLists方法重新生成algorithms
+        if (
+            cause === RoomUpdateCause.PossibleTagChange &&
+            room.isSpaceRoom() &&
+            room.roomId === SpaceStore.instance.activeSpace
+        ) {
+            SpaceStore.instance.setSpaceTags(room.getRoomTags());
+            return;
+        }
+
         if (!VisibilityProvider.instance.isRoomVisible(room)) {
             return; // don't do anything on rooms that aren't visible
         }
@@ -383,6 +395,7 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         // Reset the sticky room before resetting the known rooms so the algorithm
         // doesn't freak out.
         this.algorithm.setStickyRoom(null);
+
         this.algorithm.setKnownRooms(rooms);
 
         // Set the sticky room back, if needed, now that we have updated the store.
@@ -540,15 +553,16 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
      * @param trigger Set to false to prevent a list update from being sent. Should only
      * be used if the calling code will manually trigger the update.
      */
-    public regenerateAllLists({ trigger = true }): void {
+    public regenerateAllLists({ trigger = true, spaceTags = [] }): void {
         logger.warn("Regenerating all room lists");
 
         const rooms = this.getPlausibleRooms();
 
         const sorts: ITagSortingMap = {};
         const orders: IListOrderingMap = {};
-        const allTags = [...OrderedDefaultTagIDs];
-        for (const tagId of allTags) {
+        const spaceTagIds = spaceTags.map((item) => item.tagId);
+        const allTagIds = [...OrderedDefaultTagIDs, ...spaceTagIds];
+        for (const tagId of allTagIds) {
             sorts[tagId] = this.calculateTagSorting(tagId);
             orders[tagId] = this.calculateListOrder(tagId);
 
@@ -560,7 +574,10 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
 
         this.initialListsGenerated = true;
 
-        if (trigger) this.updateFn.trigger();
+        if (trigger) {
+            this.updateFn.mark();
+            this.updateFn.trigger();
+        }
     }
 
     /**
@@ -614,6 +631,7 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
 
     public getCount(tagId: TagID): number {
         // The room list store knows about all the rooms, so just return the length.
+
         return this.orderedLists[tagId].length || 0;
     }
 

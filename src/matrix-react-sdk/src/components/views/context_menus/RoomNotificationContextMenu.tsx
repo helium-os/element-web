@@ -22,7 +22,7 @@ import { useNotificationState } from "../../../hooks/useRoomNotificationState";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { _t } from "../../../languageHandler";
 import { RoomNotifState } from "../../../RoomNotifs";
-import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import { ContextMenuProps as IContextMenuProps } from "../../structures/ContextMenu";
 import IconizedContextMenu, {
     IconizedContextMenuOptionList,
     IconizedContextMenuRadio,
@@ -32,6 +32,29 @@ import { ButtonEvent } from "../elements/AccessibleButton";
 interface IProps extends IContextMenuProps {
     room: Room;
 }
+
+const notificationsMap = [
+    // {
+    //     key: RoomNotifState.AllMessages,
+    //     label: _t("Use default"),
+    //     icon: "Bell",
+    // },
+    {
+        key: RoomNotifState.AllMessagesLoud,
+        label: _t("All messages"),
+        icon: "BellDot",
+    },
+    {
+        key: RoomNotifState.MentionsOnly,
+        label: _t("Mentions & Keywords"),
+        icon: "BellMentions",
+    },
+    {
+        key: RoomNotifState.Mute,
+        label: _t("Off"),
+        icon: "BellCrossed",
+    },
+];
 
 export const RoomNotificationContextMenu: React.FC<IProps> = ({ room, onFinished, ...props }) => {
     const [notificationState, setNotificationState] = useNotificationState(room);
@@ -50,49 +73,24 @@ export const RoomNotificationContextMenu: React.FC<IProps> = ({ room, onFinished
         };
     };
 
-    const defaultOption: JSX.Element = (
-        <IconizedContextMenuRadio
-            label={_t("Use default")}
-            active={notificationState === RoomNotifState.AllMessages}
-            iconClassName="mx_RoomNotificationContextMenu_iconBell"
-            onClick={wrapHandler(() => setNotificationState(RoomNotifState.AllMessages))}
-        />
-    );
-
-    const allMessagesOption: JSX.Element = (
-        <IconizedContextMenuRadio
-            label={_t("All messages")}
-            active={notificationState === RoomNotifState.AllMessagesLoud}
-            iconClassName="mx_RoomNotificationContextMenu_iconBellDot"
-            onClick={wrapHandler(() => setNotificationState(RoomNotifState.AllMessagesLoud))}
-        />
-    );
-
-    const mentionsOption: JSX.Element = (
-        <IconizedContextMenuRadio
-            label={_t("Mentions & Keywords")}
-            active={notificationState === RoomNotifState.MentionsOnly}
-            iconClassName="mx_RoomNotificationContextMenu_iconBellMentions"
-            onClick={wrapHandler(() => setNotificationState(RoomNotifState.MentionsOnly))}
-        />
-    );
-
-    const muteOption: JSX.Element = (
-        <IconizedContextMenuRadio
-            label={_t("Off")}
-            active={notificationState === RoomNotifState.Mute}
-            iconClassName="mx_RoomNotificationContextMenu_iconBellCrossed"
-            onClick={wrapHandler(() => setNotificationState(RoomNotifState.Mute))}
-        />
-    );
-
     return (
-        <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomNotificationContextMenu" compact>
+        <IconizedContextMenu
+            {...props}
+            onFinished={onFinished}
+            className="mx_RoomNotificationContextMenu"
+            menuWidth={178}
+            compact
+        >
             <IconizedContextMenuOptionList first>
-                {defaultOption}
-                {allMessagesOption}
-                {mentionsOption}
-                {muteOption}
+                {notificationsMap.map((item) => (
+                    <IconizedContextMenuRadio
+                        key={item.key}
+                        label={item.label}
+                        active={notificationState === item.key}
+                        iconClassName={`mx_RoomNotification_icon mx_RoomNotificationContextMenu_icon${item.icon}`}
+                        onClick={wrapHandler(() => setNotificationState(item.key))}
+                    />
+                ))}
             </IconizedContextMenuOptionList>
         </IconizedContextMenu>
     );

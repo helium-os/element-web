@@ -18,7 +18,7 @@ import React from "react";
 import { MatrixCall } from "matrix-js-sdk/src/webrtc/call";
 
 import { _t } from "../../../languageHandler";
-import ContextMenu, { IProps as IContextMenuProps, MenuItem } from "../../structures/ContextMenu";
+import ContextMenu, { ContextMenuProps as IContextMenuProps, MenuItem } from "../../structures/ContextMenu";
 import LegacyCallHandler from "../../../LegacyCallHandler";
 
 interface IProps extends IContextMenuProps {

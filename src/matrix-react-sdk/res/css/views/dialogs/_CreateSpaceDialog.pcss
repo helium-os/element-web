@@ -1,0 +1,79 @@
+// 选择社区类型
+
+
+
+// 填写社区信息
+
+
+// 添加频道
+.mx_AddChannel_content {
+    display: flex;
+    .mx_AddChannel_actionBar {
+        margin-right: 4px;
+    }
+    .mx_AddChannel_right {
+        flex: 1
+    }
+}
+
+.mx_ChannelAction_icon {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    &.mx_IconDelete {
+        @mixin MaskIcon url("$(res)/img/element-icons/delete.svg"), 15px, 15px, $icon-primary-color;
+    }
+    &.mx_IconAdd {
+        @mixin MaskIcon url("$(res)/img/element-icons/add.svg"), 15px, 15px, $icon-primary-color;
+    }
+    &:hover {
+        &:before {
+            background: $text-secondary-color1;
+        }
+    }
+}
+
+.mx_AddChannelItem {
+    align-items: flex-start;
+    .shortLine, .longLine {
+        width: 1px;
+        margin: 0 auto;
+        background: #d9d9d9;
+    }
+    .shortLine {
+        height: 11px;
+    }
+    .longLine {
+        height: 31px;
+    }
+}
+
+.mx_AddChannel_addBox {
+    align-items: center;
+    color: $text-secondary-color2;
+    cursor: pointer;
+    .mx_AddChannel_addText {
+        font-size: 14px;
+        font-weight: $font-semi-bold;
+        line-height: 20px;
+    }
+    &:hover {
+        .mx_ChannelAction_icon:before {
+            background: $text-secondary-color1;
+        }
+        color: $text-secondary-color1;
+    }
+}
+
+.mx_AddChannel_exceedLimit .mx_AddChannelItem:last-child .longLine{
+    display: none;
+}
+
+
+// 步骤
+.mx_StepWrap {
+    color: $text-secondary-color1;
+    font-size: 12px;
+    font-weight: $font-semi-bold;
+    line-height: 16px;
+}

@@ -23,6 +23,7 @@ limitations under the License.
     flex-direction: column;
     flex: 1;
     position: relative;
+    z-index: 1;
     justify-content: center;
     /* Contain the amount of layers rendered by constraining what actually needs re-layering via css */
     contain: strict;
@@ -87,7 +88,7 @@ limitations under the License.
 
 .mx_RoomView_messagePanelSearchSpinner::before {
     background-color: $info-plinth-fg-color;
-    mask: url("$(res)/img/feather-customised/search-input.svg");
+    mask: url("$(res)/img/feather-customised/search.svg");
     mask-repeat: no-repeat;
     mask-position: center;
     mask-size: 50px;
@@ -104,6 +105,7 @@ limitations under the License.
     flex-direction: column;
     flex: 1;
     min-width: 0;
+    background: $background;
 
     .mx_RoomView_messagePanel,
     .mx_RoomView_messagePanelSpinner,
@@ -118,7 +120,6 @@ limitations under the License.
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-right: calc($container-gap-width / 2);
 }
 
 .mx_RoomView_statusArea {
@@ -149,6 +150,7 @@ limitations under the License.
 }
 
 .mx_RoomView_messageListWrapper {
+    min-height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -179,12 +181,12 @@ limitations under the License.
 }
 
 .mx_RoomView_MessageList {
+    box-sizing: border-box;
     list-style-type: none;
-    padding: var(--RoomView_MessageList-padding); /* mx_ProfileResizer depends on this value */
     margin: 0;
+    padding-top: 40px;
     /* needed as min-height is set to clientHeight in ScrollPanel
     to prevent shrinking when WhoIsTypingTile is hidden */
-    box-sizing: border-box;
 }
 
 .mx_RoomView--local .mx_ScrollPanel .mx_RoomView_MessageList {
@@ -196,10 +198,11 @@ limitations under the License.
 }
 
 li.mx_RoomView_myReadMarker_container {
-    height: 0px;
-    margin: 0px;
-    padding: 0px;
-    border: 0px;
+    display: none;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
 hr.mx_RoomView_myReadMarker {
@@ -235,11 +238,6 @@ hr.mx_RoomView_myReadMarker {
     height: 0px;
 }
 
-.mx_RoomView_inCall .mx_MessageComposer_wrapper {
-    border-top: 2px hidden;
-    padding-top: 1px;
-}
-
 .mx_RoomView_voipChevron {
     position: absolute;
     bottom: -11px;
@@ -258,9 +256,7 @@ hr.mx_RoomView_myReadMarker {
 }
 
 .mx_RoomView .mx_MessageComposer {
-    width: 100%;
     flex: 0 0 auto;
-    margin-right: 2px;
 }
 
 .mx_RoomView_ongoingConfCallNotification {
@@ -279,7 +275,6 @@ hr.mx_RoomView_myReadMarker {
 
 .mx_MatrixChat_useCompactLayout {
     .mx_RoomView_MessageList {
-        margin-bottom: 4px;
 
         h2 {
             margin-top: 6px; /* TODO: Use a spacing variable */
@@ -328,7 +323,7 @@ hr.mx_RoomView_myReadMarker {
     height: $dot-size;
     border-radius: 50%;
     transform: scale(1);
-    background: rgba($pulse-color, 1);
+    background: $background-danger-color2;
     box-shadow: 0 0 0 0 rgba($pulse-color, 1);
     animation: mx_Indicator_pulse 2s infinite;
     animation-iteration-count: 1;

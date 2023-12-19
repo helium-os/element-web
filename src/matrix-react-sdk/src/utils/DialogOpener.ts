@@ -27,7 +27,7 @@ import { Action } from "../dispatcher/actions";
 import ReportEventDialog from "../components/views/dialogs/ReportEventDialog";
 import SpacePreferencesDialog from "../components/views/dialogs/SpacePreferencesDialog";
 import SpaceSettingsDialog from "../components/views/dialogs/SpaceSettingsDialog";
-import InviteDialog from "../components/views/dialogs/InviteDialog";
+import InviteDialog from "../components/views/dialogs/invite/InviteDialog";
 import AddExistingToSpaceDialog from "../components/views/dialogs/AddExistingToSpaceDialog";
 import { ButtonEvent } from "../components/views/elements/AccessibleButton";
 import PosthogTrackers from "../PosthogTrackers";
@@ -66,6 +66,9 @@ export class DialogOpener {
                     /*className=*/ undefined,
                     /*isPriority=*/ false,
                     /*isStatic=*/ true,
+                    {
+                        fullScreen: true,
+                    },
                 );
                 break;
             case Action.OpenForwardDialog:
@@ -106,6 +109,9 @@ export class DialogOpener {
                     /*className=*/ undefined,
                     /*isPriority=*/ false,
                     /*isStatic=*/ true,
+                    {
+                        fullScreen: true,
+                    },
                 );
                 break;
             case Action.OpenInviteDialog:

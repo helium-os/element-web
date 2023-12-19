@@ -20,7 +20,6 @@ import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { User, UserEvent } from "matrix-js-sdk/src/models/user";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { EventType } from "matrix-js-sdk/src/@types/event";
-import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import { UnstableValue } from "matrix-js-sdk/src/NamespacedValue";
 
 import RoomAvatar from "./RoomAvatar";
@@ -35,7 +34,7 @@ import DMRoomMap from "../../../utils/DMRoomMap";
 import { IOOBData } from "../../../stores/ThreepidInviteStore";
 import TooltipTarget from "../elements/TooltipTarget";
 
-interface IProps {
+export interface DecoratedRoomAvatarProps {
     room: Room;
     avatarSize: number;
     displayBadge?: boolean;
@@ -77,12 +76,12 @@ function tooltipText(variant: Icon): string | undefined {
     }
 }
 
-export default class DecoratedRoomAvatar extends React.PureComponent<IProps, IState> {
+export default class DecoratedRoomAvatar extends React.PureComponent<DecoratedRoomAvatarProps, IState> {
     private _dmUser: User | null;
     private isUnmounted = false;
     private isWatchingTimeline = false;
 
-    public constructor(props: IProps) {
+    public constructor(props: DecoratedRoomAvatarProps) {
         super(props);
 
         this.state = {
@@ -95,12 +94,6 @@ export default class DecoratedRoomAvatar extends React.PureComponent<IProps, ISt
         this.isUnmounted = true;
         if (this.isWatchingTimeline) this.props.room.off(RoomEvent.Timeline, this.onRoomTimeline);
         this.dmUser = null; // clear listeners, if any
-    }
-
-    private get isPublicRoom(): boolean {
-        const joinRules = this.props.room.currentState.getStateEvents(EventType.RoomJoinRules, "");
-        const joinRule = joinRules && joinRules.getContent().join_rule;
-        return joinRule === JoinRule.Public;
     }
 
     private get dmUser(): User | null {
@@ -170,8 +163,7 @@ export default class DecoratedRoomAvatar extends React.PureComponent<IProps, ISt
                 icon = this.getPresenceIcon();
             }
         } else {
-            // Track publicity
-            icon = this.isPublicRoom ? Icon.Globe : Icon.None;
+            icon = Icon.None;
             if (!this.isWatchingTimeline) {
                 this.props.room.on(RoomEvent.Timeline, this.onRoomTimeline);
                 this.isWatchingTimeline = true;
@@ -204,7 +196,7 @@ export default class DecoratedRoomAvatar extends React.PureComponent<IProps, ISt
         }
 
         const classes = classNames("mx_DecoratedRoomAvatar", {
-            mx_DecoratedRoomAvatar_cutout: icon,
+            // mx_DecoratedRoomAvatar_cutout: icon,
         });
 
         return (

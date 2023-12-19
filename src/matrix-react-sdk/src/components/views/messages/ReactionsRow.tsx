@@ -22,11 +22,12 @@ import { Relations, RelationsEvent } from "matrix-js-sdk/src/models/relations";
 import { _t } from "../../../languageHandler";
 import { isContentActionable } from "../../../utils/EventUtils";
 import { ContextMenuTooltipButton } from "../../../accessibility/context_menu/ContextMenuTooltipButton";
-import ContextMenu, { aboveLeftOf, useContextMenu } from "../../structures/ContextMenu";
+import ContextMenu, { aboveRightOf, ChevronFace, useContextMenu } from "../../structures/ContextMenu";
 import ReactionPicker from "../emojipicker/ReactionPicker";
 import ReactionsRowButton from "./ReactionsRowButton";
 import RoomContext from "../../../contexts/RoomContext";
 import AccessibleButton from "../elements/AccessibleButton";
+import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 
 // The maximum number of reactions to initially show on a message.
 const MAX_ITEMS_WHEN_LIMITED = 8;
@@ -38,7 +39,7 @@ const ReactButton: React.FC<IProps> = ({ mxEvent, reactions }) => {
     if (menuDisplayed && button.current) {
         const buttonRect = button.current.getBoundingClientRect();
         contextMenu = (
-            <ContextMenu {...aboveLeftOf(buttonRect)} onFinished={closeMenu} managed={false}>
+            <ContextMenu {...aboveRightOf(buttonRect, ChevronFace.None, 0)} onFinished={closeMenu} managed={false}>
                 <ReactionPicker mxEvent={mxEvent} reactions={reactions} onFinished={closeMenu} />
             </ContextMenu>
         );
@@ -51,6 +52,7 @@ const ReactButton: React.FC<IProps> = ({ mxEvent, reactions }) => {
                     mx_ReactionsRow_addReactionButton_active: menuDisplayed,
                 })}
                 title={_t("Add reaction")}
+                alignment={Alignment.Top}
                 onClick={openMenu}
                 onContextMenu={(e: SyntheticEvent): void => {
                     e.preventDefault();

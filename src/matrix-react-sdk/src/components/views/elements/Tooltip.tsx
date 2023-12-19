@@ -25,13 +25,13 @@ import UIStore from "../../../stores/UIStore";
 import { objectHasDiff } from "../../../utils/objects";
 
 export enum Alignment {
-    Natural, // Pick left or right
-    Left,
-    Right,
-    Top, // Centered
-    Bottom, // Centered
-    InnerBottom, // Inside the target, at the bottom
-    TopRight, // On top of the target, right aligned
+    Natural = "natural", // Pick left or right
+    Left = "left",
+    Right = "right",
+    Top = "top", // Centered
+    Bottom = "bottom", // Centered
+    InnerBottom = "innerBottom", // Inside the target, at the bottom
+    TopRight = "topRight", // On top of the target, right aligned
 }
 
 export interface ITooltipProps {
@@ -53,6 +53,7 @@ export interface ITooltipProps {
     maxParentWidth?: number;
     // aria-role passed to the tooltip
     role?: React.AriaRole;
+    spacing?: number; // 距离触发元素的间距
 }
 
 type State = Partial<Pick<CSSProperties, "display" | "right" | "top" | "transform" | "left">>;
@@ -60,6 +61,7 @@ type State = Partial<Pick<CSSProperties, "display" | "right" | "top" | "transfor
 export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
     private static container: HTMLElement;
     private parent: Element | null = null;
+    private chevronRef: Element | null = null;
 
     // XXX: This is because some components (Field) are unable to `import` the Tooltip class,
     // so we expose the Alignment options off of us statically.
@@ -68,6 +70,7 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
     public static readonly defaultProps = {
         visible: true,
         alignment: Alignment.Natural,
+        spacing: 4,
     };
 
     public constructor(props: ITooltipProps) {
@@ -115,7 +118,7 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
 
         const parentBox = this.parent.getBoundingClientRect();
         const width = UIStore.instance.windowWidth;
-        const spacing = 6;
+        const spacing = this.props.spacing;
         const parentWidth = this.props.maxParentWidth
             ? Math.min(parentBox.width, this.props.maxParentWidth)
             : parentBox.width;
@@ -126,6 +129,8 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
         const horizontalCenter = parentBox.left - window.scrollX + parentWidth / 2;
 
         const style: State = {};
+        const { width: chevronWidth = 0, height: chevronHeight = 0 } = this.chevronRef.getBoundingClientRect();
+        const minDistanceToWin = 0; // 到窗口的最小距离
         switch (this.props.alignment) {
             case Alignment.Natural:
                 if (parentBox.right > width / 2) {
@@ -136,35 +141,35 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
                 }
             // fall through to Right
             case Alignment.Right:
-                style.left = left + spacing;
+                style.left = left + chevronWidth + spacing;
                 style.top = centerTop;
                 style.transform = "translateY(-50%)";
                 break;
             case Alignment.Left:
-                style.right = right + spacing;
+                style.right = right + chevronWidth + spacing;
                 style.top = centerTop;
                 style.transform = "translateY(-50%)";
                 break;
             case Alignment.Top:
-                style.top = baseTop - spacing;
+                style.top = baseTop - chevronHeight - spacing;
                 // Attempt to center the tooltip on the element while clamping
                 // its horizontal translation to keep it on screen
                 // eslint-disable-next-line max-len
-                style.transform = `translate(max(10px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - 10px))), -100%)`;
+                style.transform = `translate(max(${minDistanceToWin}px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - ${minDistanceToWin}px))), -100%)`;
                 break;
             case Alignment.Bottom:
-                style.top = baseTop + parentBox.height + spacing;
+                style.top = baseTop + parentBox.height + chevronHeight + spacing;
                 // Attempt to center the tooltip on the element while clamping
                 // its horizontal translation to keep it on screen
                 // eslint-disable-next-line max-len
-                style.transform = `translate(max(10px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - 10px))))`;
+                style.transform = `translate(max(${minDistanceToWin}px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - ${minDistanceToWin}px))))`;
                 break;
             case Alignment.InnerBottom:
                 style.top = baseTop + parentBox.height - 50;
                 // Attempt to center the tooltip on the element while clamping
                 // its horizontal translation to keep it on screen
                 // eslint-disable-next-line max-len
-                style.transform = `translate(max(10px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - 10px))))`;
+                style.transform = `translate(max(${minDistanceToWin}px, min(calc(${horizontalCenter}px - 50%), calc(100vw - 100% - ${minDistanceToWin}px))))`;
                 break;
             case Alignment.TopRight:
                 style.top = baseTop - spacing;
@@ -177,10 +182,15 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
     };
 
     public render(): React.ReactNode {
-        const tooltipClasses = classNames("mx_Tooltip", this.props.tooltipClassName, {
-            mx_Tooltip_visible: this.props.visible,
-            mx_Tooltip_invisible: !this.props.visible,
-        });
+        const tooltipClasses = classNames(
+            "mx_Tooltip",
+            this.props.tooltipClassName,
+            `mx_Tooltip_${this.props.alignment}`,
+            {
+                mx_Tooltip_visible: this.props.visible,
+                mx_Tooltip_invisible: !this.props.visible,
+            },
+        );
 
         const style = { ...this.state };
         // Hide the entire container when not visible.
@@ -189,7 +199,7 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
 
         const tooltip = (
             <div role={this.props.role || "tooltip"} className={tooltipClasses} style={style}>
-                <div className="mx_Tooltip_chevron" />
+                <div className="mx_Tooltip_chevron" ref={(x) => (this.chevronRef = x)} />
                 {this.props.label}
             </div>
         );

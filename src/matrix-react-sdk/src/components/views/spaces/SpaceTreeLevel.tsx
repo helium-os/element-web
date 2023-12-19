@@ -95,7 +95,8 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
         }
 
         let notifBadge;
-        if (notificationState) {
+        // 个人主页展示总的未读消息数；社区不展示
+        if (!space && notificationState) {
             let ariaLabel = _t("Jump to first unread room.");
             if (space?.getMyMembership() === "invite") {
                 ariaLabel = _t("Jump to first invite.");
@@ -146,6 +147,7 @@ export const SpaceButton = forwardRef<HTMLElement, IButtonProps>(
                     mx_SpaceButton_narrow: isNarrow,
                 })}
                 title={label}
+                tooltipSpacing={-3}
                 onClick={onClick}
                 onContextMenu={openMenu}
                 forceHide={!isNarrow || menuDisplayed}
@@ -373,7 +375,7 @@ export class SpaceItem extends React.PureComponent<IItemProps, IItemState> {
                     contextMenuTooltip={_t("Space options")}
                     notificationState={notificationState}
                     isNarrow={isPanelCollapsed}
-                    avatarSize={isNested ? 24 : 32}
+                    avatarSize={isNested ? 24 : 36}
                     onKeyDown={this.onKeyDown}
                     ContextMenuComponent={this.props.space.getMyMembership() === "join" ? SpaceContextMenu : undefined}
                 >

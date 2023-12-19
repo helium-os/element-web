@@ -31,6 +31,7 @@ import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { Action } from "../../../dispatcher/actions";
 import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayload";
 import defaultDispatcher from "../../../dispatcher/dispatcher";
+import MessageTimestamp from "matrix-react-sdk/src/components/views/messages/MessageTimestamp";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -38,20 +39,11 @@ interface IProps {
 }
 
 const ThreadSummary: React.FC<IProps> = ({ mxEvent, thread, ...props }) => {
-    const roomContext = useContext(RoomContext);
     const cardContext = useContext(CardContext);
-    const count = useTypedEventEmitterState(thread, ThreadEvent.Update, () => thread.length);
-    if (!count) return null; // We don't want to show a thread summary if the thread doesn't have replies yet
-
-    let countSection: string | number = count;
-    if (!roomContext.narrow) {
-        countSection = _t("%(count)s reply", { count });
-    }
 
     return (
         <AccessibleButton
             {...props}
-            className="mx_ThreadSummary"
             onClick={(ev: ButtonEvent) => {
                 defaultDispatcher.dispatch<ShowThreadPayload>({
                     action: Action.ShowThread,
@@ -61,21 +53,38 @@ const ThreadSummary: React.FC<IProps> = ({ mxEvent, thread, ...props }) => {
                 PosthogTrackers.trackInteraction("WebRoomTimelineThreadSummaryButton", ev);
             }}
             aria-label={_t("Open thread")}
+            onContextMenu={(e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }}
         >
-            <span className="mx_ThreadSummary_replies_amount">{countSection}</span>
-            <ThreadMessagePreview thread={thread} showDisplayname={!roomContext.narrow} />
-            <div className="mx_ThreadSummary_chevron" />
+            <ThreadMessagePreview thread={thread} />
         </AccessibleButton>
     );
 };
 
 interface IPreviewProps {
     thread: Thread;
+    showTwelveHour?: boolean;
     showDisplayname?: boolean;
+    previewContent?: React.ReactNode;
 }
 
-export const ThreadMessagePreview: React.FC<IPreviewProps> = ({ thread, showDisplayname = false }) => {
+export const ThreadMessagePreview: React.FC<IPreviewProps> = ({
+    thread,
+    showTwelveHour = false,
+    showDisplayname = true,
+    previewContent,
+}) => {
     const cli = useContext(MatrixClientContext);
+    const roomContext = useContext(RoomContext);
+
+    // 消息数
+    const count = useTypedEventEmitterState(thread, ThreadEvent.Update, () => thread.length);
+    let countSection: string | number = count;
+    if (!roomContext.narrow) {
+        countSection = _t("%(count)s reply", { count });
+    }
 
     const lastReply = useTypedEventEmitterState(thread, ThreadEvent.Update, () => thread.replyToEvent) ?? undefined;
     // track the content as a means to regenerate the thread message preview upon edits & decryption
@@ -83,46 +92,61 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({ thread, showDisp
     useTypedEventEmitter(lastReply, MatrixEventEvent.Replaced, () => {
         setContent(lastReply!.getContent());
     });
+
+    const lastReplyTime = lastReply?.getTs();
+
     const awaitDecryption = lastReply?.shouldAttemptDecryption() || lastReply?.isBeingDecrypted();
     useTypedEventEmitter(awaitDecryption ? lastReply : undefined, MatrixEventEvent.Decrypted, () => {
         setContent(lastReply!.getContent());
     });
 
-    const preview = useAsyncMemo(async (): Promise<string | undefined> => {
+    const preview = useAsyncMemo(async (): Promise<React.ReactNode | string | undefined> => {
+        if (previewContent) return previewContent;
         if (!lastReply) return;
         await cli.decryptEventIfNeeded(lastReply);
         return MessagePreviewStore.instance.generatePreviewForEvent(lastReply);
-    }, [lastReply, content]);
-    if (!preview || !lastReply) {
+    }, [lastReply, previewContent]);
+
+    if (!count || !preview || !lastReply) {
         return null;
     }
 
     return (
-        <>
-            <MemberAvatar
-                member={lastReply.sender}
-                fallbackUserId={lastReply.getSender()}
-                width={24}
-                height={24}
-                className="mx_ThreadSummary_avatar"
-            />
-            {showDisplayname && (
-                <div className="mx_ThreadSummary_sender">{lastReply.sender?.name ?? lastReply.getSender()}</div>
-            )}
+        <div className="mx_ThreadSummary">
+            <div className="mx_ThreadSummary_mainInfo">
+                {lastReply.isDecryptionFailure() ? (
+                    <div
+                        className="mx_ThreadSummary_content mx_DecryptionFailureBody"
+                        title={_t("Unable to decrypt message")}
+                    >
+                        <span className="mx_ThreadSummary_message-preview">{_t("Unable to decrypt message")}</span>
+                    </div>
+                ) : (
+                    <div className="mx_ThreadSummary_content" title={preview}>
+                        <span className="mx_ThreadSummary_message-preview">{preview}</span>
+                    </div>
+                )}
 
-            {lastReply.isDecryptionFailure() ? (
-                <div
-                    className="mx_ThreadSummary_content mx_DecryptionFailureBody"
-                    title={_t("Unable to decrypt message")}
-                >
-                    <span className="mx_ThreadSummary_message-preview">{_t("Unable to decrypt message")}</span>
+                <span className="mx_ThreadSummary_replies_amount">{countSection}</span>
+                <div className="mx_ThreadSummary_chevron" />
+            </div>
+            <div className="mx_ThreadSummary_otherInfo">
+                <MemberAvatar
+                    member={lastReply.sender}
+                    fallbackUserId={lastReply.getSender()}
+                    width={14}
+                    height={14}
+                    className="mx_ThreadSummary_avatar"
+                />
+                {showDisplayname && (
+                    <div className="mx_ThreadSummary_sender">{lastReply.sender?.name ?? lastReply.getSender()}</div>
+                )}
+                <div className="mx_ThreadSummary_lastReplyTime">
+                    最后一条消息的时间为{" "}
+                    <MessageTimestamp showRelative={true} showTwelveHour={showTwelveHour} ts={lastReplyTime} />
                 </div>
-            ) : (
-                <div className="mx_ThreadSummary_content" title={preview}>
-                    <span className="mx_ThreadSummary_message-preview">{preview}</span>
-                </div>
-            )}
-        </>
+            </div>
+        </div>
     );
 };
 

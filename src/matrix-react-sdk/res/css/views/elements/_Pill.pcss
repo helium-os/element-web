@@ -15,20 +15,19 @@ limitations under the License.
 */
 
 .mx_Pill {
-    margin: 0 0.2em;
-    padding: $font-1px 0.4em $font-1px 0.4em;
-    line-height: $font-17px;
-    border-radius: $font-16px;
-    vertical-align: text-top;
     display: inline-flex;
     align-items: center;
     box-sizing: border-box;
     max-width: 100%;
     overflow: hidden;
-    cursor: pointer;
-
-    color: $accent-fg-color !important; /* To override .markdown-body */
-    background-color: $pill-bg-color !important; /* To override .markdown-body */
+    margin: 0 4px;
+    padding: 0 2px;
+    border-radius: 2px;
+    background: $pill-bg-color!important;
+    font-size: 1.4rem;
+    line-height: 20px;
+    font-weight: 500;
+    color: $text-secondary-color1!important;
 
     > * {
         pointer-events: none;
@@ -36,24 +35,9 @@ limitations under the License.
 
     &.mx_UserPill_me,
     &.mx_AtRoomPill {
-        background-color: $alert !important; /* To override .markdown-body */
+        background-color: $pill-me-bg-color !important; /* To override .markdown-body */
     }
 
-    &:hover {
-        background-color: $pill-hover-bg-color !important; /* To override .markdown-body */
-    }
-
-    &.mx_UserPill_me:hover {
-        background-color: #ff6b75 !important; /* To override .markdown-body | same on both themes */
-    }
-
-    /* We don't want to indicate clickability */
-    &.mx_AtRoomPill:hover {
-        background-color: $alert !important; /* To override .markdown-body */
-        cursor: unset;
-    }
-
-    &::before,
     .mx_BaseAvatar {
         margin-inline-start: -0.3em; /* Otherwise the gap is too large */
         margin-inline-end: 0.2em;

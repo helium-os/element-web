@@ -29,6 +29,7 @@ import React from "react";
 
 import { _t } from "../../../languageHandler";
 import BaseDialog from "./BaseDialog";
+import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 
 interface IProps {
     onFinished: (success?: boolean) => void;
@@ -53,6 +54,13 @@ export default class ErrorDialog extends React.Component<IProps, IState> {
     };
 
     public render(): React.ReactNode {
+        const footer = (
+            <DialogButtons
+                primaryButton={this.props.button || _t("OK")}
+                onPrimaryButtonClick={this.onClick}
+                hasCancel={false}
+            />
+        );
         return (
             <BaseDialog
                 className="mx_ErrorDialog"
@@ -60,15 +68,9 @@ export default class ErrorDialog extends React.Component<IProps, IState> {
                 title={this.props.title || _t("Error")}
                 headerImage={this.props.headerImage}
                 contentId="mx_Dialog_content"
+                footer={footer}
             >
-                <div className="mx_Dialog_content" id="mx_Dialog_content">
-                    {this.props.description || _t("An error has occurred.")}
-                </div>
-                <div className="mx_Dialog_buttons">
-                    <button className="mx_Dialog_primary" onClick={this.onClick} autoFocus={this.props.focus}>
-                        {this.props.button || _t("OK")}
-                    </button>
-                </div>
+                {this.props.description || _t("An error has occurred.")}
             </BaseDialog>
         );
     }

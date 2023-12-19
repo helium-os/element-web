@@ -17,48 +17,47 @@ limitations under the License.
 .mx_RoomListHeader {
     display: flex;
     align-items: center;
+    padding: 0 8px;
 
     .mx_RoomListHeader_contextLessTitle,
     .mx_RoomListHeader_contextMenuButton {
-        font-size: $font-15px;
-        line-height: $font-24px;
-        font-weight: $font-semi-bold;
-        padding: 1px 24px 1px 4px;
         position: relative;
+        padding-right: 17px;
+        font-size: $font-18px;
+        line-height: $font-26px;
+        font-weight: $font-semi-bold;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        margin-left: 8px;
-        margin-right: auto;
         user-select: none;
+        color: $text-primary-color1;
     }
 
     .mx_RoomListHeader_contextMenuButton {
-        border-radius: 6px;
-
-        &:hover {
-            background-color: $quinary-content;
-        }
-
-        &::before {
+        &::after {
             content: "";
-            width: 20px;
-            height: 20px;
-            top: 3px;
-            right: 0;
             position: absolute;
-            mask-position: center;
-            mask-size: contain;
-            mask-repeat: no-repeat;
-            background-color: $tertiary-content;
-            mask-image: url("$(res)/img/feather-customised/chevron-down.svg");
+            top: 50%;
+            right: 0;
+            transform: translate(0, -50%);
+            width: 11px;
+            height: 6px;
+            background-color: $text-primary-color1;
+            mask: url("$(res)/img/feather-customised/dropdown-arrow.svg") no-repeat center;
+            mask-size: 100% auto;
+            transition: all 0.2s ease;
         }
 
         &[aria-expanded="true"] {
-            background-color: $quinary-content;
-
-            &::before {
+            &::after {
                 transform: rotate(180deg);
+            }
+        }
+
+        &.mx_RoomListHeader_contextMenuButton_Home {
+            cursor: default;
+            &:after {
+                display: none;
             }
         }
     }

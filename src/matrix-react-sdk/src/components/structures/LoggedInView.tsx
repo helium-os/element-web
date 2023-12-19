@@ -32,8 +32,6 @@ import dis from "../../dispatcher/dispatcher";
 import { IMatrixClientCreds, MatrixClientPeg } from "../../MatrixClientPeg";
 import SettingsStore from "../../settings/SettingsStore";
 import { SettingLevel } from "../../settings/SettingLevel";
-import ResizeHandle from "../views/elements/ResizeHandle";
-import { CollapseDistributor, Resizer } from "../../resizer";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
 import ResizeNotifier from "../../utils/ResizeNotifier";
 import PlatformPeg from "../../PlatformPeg";
@@ -46,7 +44,6 @@ import RoomListStore from "../../stores/room-list/RoomListStore";
 import NonUrgentToastContainer from "./NonUrgentToastContainer";
 import { IOOBData, IThreepidInvite } from "../../stores/ThreepidInviteStore";
 import Modal from "../../Modal";
-import { ICollapseConfig } from "../../resizer/distributors/collapse";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { IOpts } from "../../createRoom";
 import SpacePanel from "../views/spaces/SpacePanel";
@@ -74,6 +71,8 @@ import { monitorSyncedPushRules } from "../../utils/pushRules/monitorSyncedPushR
 import { accessSecretStorage } from "../../SecurityManager";
 import SetupEncryptionDialog from "../views/dialogs/security/SetupEncryptionDialog";
 import { UIFeature } from "../../settings/UIFeature";
+import { NumberSize, Resizable } from "re-resizable";
+import { Direction } from "re-resizable/lib/resizer";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -138,7 +137,8 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
     protected layoutWatcherRef: string;
     protected compactLayoutWatcherRef: string;
     protected backgroundImageWatcherRef: string;
-    protected resizer: Resizer;
+
+    private leftPanelDefaultSize: number = 297;
 
     public constructor(props: IProps) {
         super(props);
@@ -245,11 +245,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
             this.refreshBackgroundImage,
         );
 
-        this.resizer = this.createResizer();
-        this.resizer.attach();
-
         OwnProfileStore.instance.on(UPDATE_EVENT, this.refreshBackgroundImage);
-        this.loadResizerPreferences();
         this.refreshBackgroundImage();
         this.onVerifyDevice();
     }
@@ -271,7 +267,6 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         SettingsStore.unwatchSetting(this.layoutWatcherRef);
         SettingsStore.unwatchSetting(this.compactLayoutWatcherRef);
         SettingsStore.unwatchSetting(this.backgroundImageWatcherRef);
-        this.resizer.detach();
     }
 
     private onCallState = (): void => {
@@ -297,54 +292,6 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         }
         return this._roomView.current.canResetTimeline();
     };
-
-    private createResizer(): Resizer {
-        let panelSize: number;
-        let panelCollapsed: boolean;
-        const collapseConfig: ICollapseConfig = {
-            // TODO decrease this once Spaces launches as it'll no longer need to include the 56px Community Panel
-            toggleSize: 206 - 50,
-            onCollapsed: (collapsed) => {
-                panelCollapsed = collapsed;
-                if (collapsed) {
-                    dis.dispatch({ action: "hide_left_panel" });
-                    window.localStorage.setItem("mx_lhs_size", "0");
-                } else {
-                    dis.dispatch({ action: "show_left_panel" });
-                }
-            },
-            onResized: (size) => {
-                panelSize = size;
-                this.props.resizeNotifier.notifyLeftHandleResized();
-            },
-            onResizeStart: () => {
-                this.props.resizeNotifier.startResizing();
-            },
-            onResizeStop: () => {
-                if (!panelCollapsed) window.localStorage.setItem("mx_lhs_size", "" + panelSize);
-                this.props.resizeNotifier.stopResizing();
-            },
-            isItemCollapsed: (domNode) => {
-                return domNode.classList.contains("mx_LeftPanel_minimized");
-            },
-            handler: this.resizeHandler.current ?? undefined,
-        };
-        const resizer = new Resizer(this._resizeContainer.current, CollapseDistributor, collapseConfig);
-        resizer.setClassNames({
-            handle: "mx_ResizeHandle",
-            vertical: "mx_ResizeHandle_vertical",
-            reverse: "mx_ResizeHandle_reverse",
-        });
-        return resizer;
-    }
-
-    private loadResizerPreferences(): void {
-        let lhsSize = parseInt(window.localStorage.getItem("mx_lhs_size")!, 10);
-        if (isNaN(lhsSize)) {
-            lhsSize = 350;
-        }
-        this.resizer.forHandleWithId("lp-resizer")?.resize(lhsSize);
-    }
 
     private onAccountData = (event: MatrixEvent): void => {
         if (event.getType() === "m.ignored_user_list") {
@@ -690,6 +637,35 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         this._roomView.current?.handleScrollKey(ev);
     };
 
+    private onResizeStart = (): void => {
+        this.props.resizeNotifier.startResizing();
+    };
+
+    private onResize = (): void => {
+        this.props.resizeNotifier.notifyLeftHandleResized();
+    };
+
+    private onResizeStop = (
+        event: MouseEvent | TouchEvent,
+        direction: Direction,
+        elementRef: HTMLElement,
+        delta: NumberSize,
+    ): void => {
+        this.props.resizeNotifier.stopResizing();
+        window.localStorage.setItem("mx_lhs_size", (this.loadSidePanelSize().width + delta.width).toString());
+    };
+
+    private loadSidePanelSize(): { height: string | number; width: number } {
+        let lhsSize = parseInt(window.localStorage.getItem("mx_lhs_size")!, 10);
+        if (isNaN(lhsSize)) {
+            lhsSize = this.leftPanelDefaultSize;
+        }
+        return {
+            height: "100%",
+            width: lhsSize,
+        };
+    }
+
     public render(): React.ReactNode {
         let pageElement;
 
@@ -741,26 +717,45 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                 >
                     <ToastContainer />
                     <div className={bodyClasses}>
-                        <div className="mx_LeftPanel_outerWrapper">
-                            <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
-                            <nav className="mx_LeftPanel_wrapper">
-                                <BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />
-                                {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
-                                <BackdropPanel backgroundImage={this.state.backgroundImage} />
-                                <div
-                                    className="mx_LeftPanel_wrapper--user"
-                                    ref={this._resizeContainer}
-                                    data-collapsed={this.props.collapseLhs ? true : undefined}
-                                >
-                                    <LeftPanel
-                                        pageType={this.props.page_type as PageTypes}
-                                        isMinimized={this.props.collapseLhs || false}
-                                        resizeNotifier={this.props.resizeNotifier}
-                                    />
-                                </div>
-                            </nav>
-                        </div>
-                        <ResizeHandle passRef={this.resizeHandler} id="lp-resizer" />
+                        <Resizable
+                            defaultSize={this.loadSidePanelSize()}
+                            minWidth={this.leftPanelDefaultSize}
+                            maxWidth="30%"
+                            enable={{
+                                top: false,
+                                right: true,
+                                bottom: false,
+                                left: false,
+                                topRight: false,
+                                bottomRight: false,
+                                bottomLeft: false,
+                                topLeft: false,
+                            }}
+                            className="mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper"
+                            handleClasses={{ right: "mx_ResizeHandle_horizontal" }}
+                            onResizeStart={this.onResizeStart}
+                            onResize={this.onResize}
+                            onResizeStop={this.onResizeStop}
+                        >
+                            <div className="mx_LeftPanel_outerWrapper">
+                                <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
+                                <nav className="mx_LeftPanel_wrapper">
+                                    {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}
+                                    {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
+                                    {/*<BackdropPanel backgroundImage={this.state.backgroundImage} />*/}
+                                    <div
+                                        className="mx_LeftPanel_wrapper--user"
+                                        data-collapsed={this.props.collapseLhs ? true : undefined}
+                                    >
+                                        <LeftPanel
+                                            pageType={this.props.page_type as PageTypes}
+                                            isMinimized={this.props.collapseLhs || false}
+                                            resizeNotifier={this.props.resizeNotifier}
+                                        />
+                                    </div>
+                                </nav>
+                            </div>
+                        </Resizable>
                         <div className="mx_RoomView_wrapper">{pageElement}</div>
                     </div>
                 </div>

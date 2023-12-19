@@ -16,15 +16,12 @@ limitations under the License.
 
 import React, { useContext } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 
-import { IProps as IContextMenuProps } from "../../structures/ContextMenu";
+import { ContextMenuProps as IContextMenuProps } from "../../structures/ContextMenu";
 import IconizedContextMenu, { IconizedContextMenuOption, IconizedContextMenuOptionList } from "./IconizedContextMenu";
 import { _t } from "../../../languageHandler";
 import {
     shouldShowSpaceSettings,
-    showCreateNewRoom,
-    showCreateNewSubspace,
     showSpaceInvite,
     showSpacePreferences,
     showSpaceSettings,
@@ -33,14 +30,12 @@ import { leaveSpace } from "../../../utils/leave-behaviour";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { ButtonEvent } from "../elements/AccessibleButton";
 import defaultDispatcher from "../../../dispatcher/dispatcher";
-import { BetaPill } from "../beta/BetaCard";
 import SettingsStore from "../../../settings/SettingsStore";
-import { useFeatureEnabled } from "../../../hooks/useSettings";
 import { Action } from "../../../dispatcher/actions";
-import { shouldShowComponent } from "../../../customisations/helpers/UIComponents";
-import { UIComponent } from "../../../settings/UIFeature";
 import PosthogTrackers from "../../../PosthogTrackers";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
+import SpaceAddTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddTagContextMenu";
+import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 
 interface IProps extends IContextMenuProps {
     space: Room;
@@ -52,7 +47,7 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
     const userId = cli.getUserId()!;
 
     let inviteOption: JSX.Element | null = null;
-    if (space.getJoinRule() === "public" || space.canInvite(userId)) {
+    if (space.getMyMembership() === "join" && (space.getJoinRule() === "public" || space.canInvite(userId))) {
         const onInviteClick = (ev: ButtonEvent): void => {
             ev.preventDefault();
             ev.stopPropagation();
@@ -66,7 +61,7 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 data-testid="invite-option"
                 className="mx_SpacePanel_contextMenu_inviteButton"
                 iconClassName="mx_SpacePanel_iconInvite"
-                label={_t("Invite")}
+                label={_t("Invite people")}
                 onClick={onInviteClick}
             />
         );
@@ -135,81 +130,6 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
         );
     }
 
-    const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
-    const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
-
-    const hasPermissionToAddSpaceChild = space.currentState.maySendStateEvent(EventType.SpaceChild, userId);
-    const canAddRooms = hasPermissionToAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms);
-    const canAddVideoRooms = canAddRooms && videoRoomsEnabled;
-    const canAddSubSpaces =
-        SettingsStore.getValue("Spaces.addSubSpace") &&
-        hasPermissionToAddSpaceChild &&
-        shouldShowComponent(UIComponent.CreateSpaces);
-
-    let newRoomSection: JSX.Element | null = null;
-    if (canAddRooms || canAddSubSpaces) {
-        const onNewRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            PosthogTrackers.trackInteraction("WebSpaceContextMenuNewRoomItem", ev);
-            showCreateNewRoom(space);
-            onFinished();
-        };
-
-        const onNewVideoRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            showCreateNewRoom(space, elementCallVideoRoomsEnabled ? RoomType.UnstableCall : RoomType.ElementVideo);
-            onFinished();
-        };
-
-        const onNewSubspaceClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            showCreateNewSubspace(space);
-            onFinished();
-        };
-
-        newRoomSection = (
-            <>
-                <div data-testid="add-to-space-header" className="mx_SpacePanel_contextMenu_separatorLabel">
-                    {_t("Add")}
-                </div>
-                {canAddRooms && (
-                    <IconizedContextMenuOption
-                        data-testid="new-room-option"
-                        iconClassName="mx_SpacePanel_iconPlus"
-                        label={_t("Room")}
-                        onClick={onNewRoomClick}
-                    />
-                )}
-                {canAddVideoRooms && (
-                    <IconizedContextMenuOption
-                        data-testid="new-video-room-option"
-                        iconClassName="mx_SpacePanel_iconPlus"
-                        label={_t("Video room")}
-                        onClick={onNewVideoRoomClick}
-                    >
-                        <BetaPill />
-                    </IconizedContextMenuOption>
-                )}
-                {canAddSubSpaces && (
-                    <IconizedContextMenuOption
-                        data-testid="new-subspace-option"
-                        iconClassName="mx_SpacePanel_iconPlus"
-                        label={_t("Space")}
-                        onClick={onNewSubspaceClick}
-                    >
-                        <BetaPill />
-                    </IconizedContextMenuOption>
-                )}
-            </>
-        );
-    }
-
     const onPreferencesClick = (ev: ButtonEvent): void => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -235,20 +155,10 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
         openSpace(ev);
     };
 
-    const onHomeClick = (ev: ButtonEvent): void => {
-        PosthogTrackers.trackInteraction("WebSpaceContextMenuHomeItem", ev);
-        openSpace(ev);
-    };
-
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_SpacePanel_contextMenu" compact>
             {!hideHeader && <div className="mx_SpacePanel_contextMenu_header">{space.name}</div>}
             <IconizedContextMenuOptionList first>
-                <IconizedContextMenuOption
-                    iconClassName="mx_SpacePanel_iconHome"
-                    label={_t("Space home")}
-                    onClick={onHomeClick}
-                />
                 {inviteOption}
                 {/*<IconizedContextMenuOption*/}
                 {/*    iconClassName="mx_SpacePanel_iconExplore"*/}
@@ -260,10 +170,13 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
                 {/*    label={_t("Preferences")}*/}
                 {/*    onClick={onPreferencesClick}*/}
                 {/*/>*/}
-                {devtoolsOption}
+                <SpaceAddChanelContextMenu showIcon={true} />
+                <SpaceAddTagContextMenu showIcon={true} />
+
+                {settingsOption && <hr />}
+                {/*{devtoolsOption}*/}
                 {settingsOption}
-                {leaveOption}
-                {newRoomSection}
+                {/*{leaveOption}*/}
             </IconizedContextMenuOptionList>
         </IconizedContextMenu>
     );

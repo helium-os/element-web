@@ -32,7 +32,6 @@ import ReplyChain from "../elements/ReplyChain";
 import { _t } from "../../../languageHandler";
 import dis from "../../../dispatcher/dispatcher";
 import { Layout } from "../../../settings/enums/Layout";
-import { formatTime } from "../../../DateUtils";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { DecryptionFailureBody } from "../messages/DecryptionFailureBody";
@@ -60,7 +59,7 @@ import { MessagePreviewStore } from "../../../stores/room-list/MessagePreviewSto
 import RoomContext, { TimelineRenderingType } from "../../../contexts/RoomContext";
 import { MediaEventHelper } from "../../../utils/MediaEventHelper";
 import { ButtonEvent } from "../elements/AccessibleButton";
-import { copyPlaintext, getSelectedText } from "../../../utils/strings";
+import { copyPlaintext } from "../../../utils/strings";
 import { DecryptionFailureTracker } from "../../../DecryptionFailureTracker";
 import RedactedBody from "../messages/RedactedBody";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
@@ -186,6 +185,8 @@ export interface EventTileProps {
     // whether or not to show read receipts
     showReadReceipts?: boolean;
 
+    isReplying?: boolean;
+
     // Used while editing, to pass the event, and to preserve editor state
     // from one editor instance to another when remounting the editor
     // upon receiving the remote echo for an unsent event.
@@ -238,6 +239,7 @@ interface IState {
     isQuoteExpanded?: boolean;
 
     thread: Thread | null;
+    hasThread: boolean;
     threadNotification?: NotificationCountType;
 }
 
@@ -279,6 +281,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             hover: false,
 
             thread,
+            hasThread: this.calcHasThread(thread), // 此条消息是否有消息列回复
         };
 
         // don't do RR animations until we are mounted
@@ -390,7 +393,14 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
     }
 
     private updateThread = (thread: Thread): void => {
-        this.setState({ thread });
+        this.setState({
+            thread,
+            hasThread: this.calcHasThread(thread),
+        });
+    };
+
+    private calcHasThread = (thread: Thread): boolean => {
+        return thread && thread.id === this.props.mxEvent.getId() && thread.length > 0;
     };
 
     public shouldComponentUpdate(nextProps: EventTileProps, nextState: IState): boolean {
@@ -458,21 +468,23 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         return thread ?? null;
     }
 
-    private renderThreadPanelSummary(): JSX.Element | null {
+    private renderThreadPanelSummary(previewContent?: React.ReactNode): JSX.Element | null {
         if (!this.state.thread) {
             return null;
         }
 
         return (
-            <div className="mx_ThreadPanel_replies">
-                <span className="mx_ThreadPanel_replies_amount">{this.state.thread.length}</span>
-                <ThreadMessagePreview thread={this.state.thread} />
-            </div>
+            <ThreadMessagePreview
+                thread={this.state.thread}
+                showTwelveHour={this.props.isTwelveHour}
+                showDisplayname={false}
+                previewContent={previewContent}
+            />
         );
     }
 
     private renderThreadInfo(): React.ReactNode {
-        if (this.state.thread && this.state.thread.id === this.props.mxEvent.getId()) {
+        if (this.state.hasThread) {
             return (
                 <ThreadSummary mxEvent={this.props.mxEvent} thread={this.state.thread} data-testid="thread-summary" />
             );
@@ -776,9 +788,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         ev.preventDefault();
         ev.stopPropagation();
 
-        if (isInfoMessage) {
-            return;
-        }
+        if (isInfoMessage) return;
+
         this.showContextMenu(ev);
     };
 
@@ -913,6 +924,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const isSending = ["sending", "queued", "encrypting"].includes(this.props.eventSendStatus!);
         const isRedacted = isMessageEvent(this.props.mxEvent) && this.props.isRedacted;
         const isEncryptionFailure = this.props.mxEvent.isDecryptionFailure();
+        const isNoThreadInfoMessage = isInfoMessage && !this.state.hasThread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
 
         let isContinuation = this.props.continuation;
         if (
@@ -924,6 +936,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             isContinuation = false;
         }
 
+        const isRenderingThread = this.context.timelineRenderingType === TimelineRenderingType.Thread;
         const isRenderingNotification = this.context.timelineRenderingType === TimelineRenderingType.Notification;
 
         const isEditing = !!this.props.editState;
@@ -931,15 +944,18 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             mx_EventTile_bubbleContainer: isBubbleMessage,
             mx_EventTile_leftAlignedBubble: isLeftAlignedBubbleMessage,
             mx_EventTile: true,
+            mx_EventTile_isReplying: this.props.isReplying,
             mx_EventTile_isEditing: isEditing,
-            mx_EventTile_info: isInfoMessage,
+            mx_EventTile_info: isNoThreadInfoMessage,
             mx_EventTile_12hr: this.props.isTwelveHour,
             // Note: we keep the `sending` state class for tests, not for our styles
             mx_EventTile_sending: !isEditing && isSending,
             mx_EventTile_highlight: this.shouldHighlight(),
             mx_EventTile_selected: this.props.isSelectedEvent || this.state.contextMenu,
             mx_EventTile_continuation:
-                isContinuation || eventType === EventType.CallInvite || ElementCall.CALL_EVENT_TYPE.matches(eventType),
+                (isContinuation && isNoThreadInfoMessage) ||
+                eventType === EventType.CallInvite ||
+                ElementCall.CALL_EVENT_TYPE.matches(eventType),
             mx_EventTile_last: this.props.last,
             mx_EventTile_lastInSection: this.props.lastInSection,
             mx_EventTile_contextual: this.props.contextual,
@@ -975,16 +991,13 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         if (isRenderingNotification) {
             avatarSize = 24;
             needsSenderProfile = true;
-        } else if (isInfoMessage) {
+        } else if (isNoThreadInfoMessage) {
             // a small avatar, with no sender profile, for
             // joins/parts/etc
-            avatarSize = 14;
+            avatarSize = 0;
             needsSenderProfile = false;
-        } else if (
-            this.context.timelineRenderingType === TimelineRenderingType.ThreadsList ||
-            (this.context.timelineRenderingType === TimelineRenderingType.Thread && !this.props.continuation)
-        ) {
-            avatarSize = 32;
+        } else if (this.context.timelineRenderingType === TimelineRenderingType.ThreadsList) {
+            avatarSize = 24;
             needsSenderProfile = true;
         } else if (eventType === EventType.RoomCreate || isBubbleMessage) {
             avatarSize = 0;
@@ -992,16 +1005,12 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         } else if (this.props.layout == Layout.IRC) {
             avatarSize = 14;
             needsSenderProfile = true;
-        } else if (
-            (this.props.continuation && this.context.timelineRenderingType !== TimelineRenderingType.File) ||
-            eventType === EventType.CallInvite ||
-            ElementCall.CALL_EVENT_TYPE.matches(eventType)
-        ) {
-            // no avatar or sender profile for continuation messages and call tiles
+        } else if (eventType === EventType.CallInvite || ElementCall.CALL_EVENT_TYPE.matches(eventType)) {
+            // no avatar or sender profile for  call tiles
             avatarSize = 0;
             needsSenderProfile = false;
         } else {
-            avatarSize = 30;
+            avatarSize = 36;
             needsSenderProfile = true;
         }
 
@@ -1025,7 +1034,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         member={member}
                         width={avatarSize}
                         height={avatarSize}
-                        viewUserOnClick={viewUserOnClick}
+                        // viewUserOnClick={viewUserOnClick}
                         forceHistorical={this.props.mxEvent.getType() === EventType.RoomMember}
                     />
                 </div>
@@ -1047,18 +1056,9 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             }
         }
 
-        const showMessageActionBar =
-            !isEditing &&
-            !this.props.forExport &&
-            !this.props.mxEvent.isRedacted() && // 撤回的消息不展示操作按钮
-            !isInfoMessage; // 提示消息不展示操作按钮
-        const { width = 10, height = 0 } = this.mxEventTileContentRef.current?.getBoundingClientRect() || {};
+        const showMessageActionBar = !isEditing && !this.props.forExport && !isInfoMessage; // 提示消息不展示操作按钮
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
-                wrapStyle={{
-                    ...(isInfoMessage ? { right: 20 } : { [isOwnEvent ? "right" : "left"]: width + 10 }),
-                    top: height / 2,
-                }}
                 mxEvent={this.props.mxEvent}
                 reactions={this.state.reactions}
                 permalinkCreator={this.props.permalinkCreator}
@@ -1071,34 +1071,21 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             />
         ) : undefined;
 
+        const ts = this.props.mxEvent.getTs();
+
         const showTimestamp =
-            this.props.mxEvent.getTs() &&
+            ts &&
             (this.props.alwaysShowTimestamps ||
                 this.props.last ||
                 this.state.hover ||
                 this.state.actionBarFocused ||
                 Boolean(this.state.contextMenu));
 
-        // Thread panel shows the timestamp of the last reply in that thread
-        let ts =
-            this.context.timelineRenderingType !== TimelineRenderingType.ThreadsList
-                ? this.props.mxEvent.getTs()
-                : this.state.thread?.replyToEvent?.getTs();
-        if (typeof ts !== "number") {
-            // Fall back to something we can use
-            ts = this.props.mxEvent.getTs();
-        }
-
         const messageTimestamp = (
             <MessageTimestamp showRelative={true} showTwelveHour={this.props.isTwelveHour} ts={ts} />
         );
 
-        const timestamp =
-            ts &&
-            eventType !== EventType.RoomEncryption && // 房间开启加密该消息不需要额外添加时间（自身UI携带）
-            (eventType !== EventType.RoomMessage || !this.props.continuation) // 非文本/图片/文件消息展示时间；文本/图片/文件消息连续时只展示一次时间
-                ? messageTimestamp
-                : null;
+        const timestamp = ts ? messageTimestamp : null;
 
         let reactionsRow;
         if (!isRedacted) {
@@ -1111,16 +1098,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             );
         }
 
-        const linkedTimestamp = (
-            <a
-                href={permalink}
-                onClick={this.onPermalinkClicked}
-                aria-label={formatTime(new Date(this.props.mxEvent.getTs()), this.props.isTwelveHour)}
-                onContextMenu={this.onTimestampContextMenu}
-            >
-                {timestamp}
-            </a>
-        );
+        const linkedTimestamp = timestamp;
 
         const useIRCLayout = this.props.layout === Layout.IRC;
         const groupTimestamp = !useIRCLayout ? linkedTimestamp : null;
@@ -1168,63 +1146,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         }
 
         switch (this.context.timelineRenderingType) {
-            case TimelineRenderingType.Thread: {
-                return React.createElement(
-                    this.props.as || "li",
-                    {
-                        ref: this.ref,
-                        className: classes,
-                        "aria-live": ariaLive,
-                        "aria-atomic": true,
-                        "data-scroll-tokens": scrollToken,
-                        "data-has-reply": !!replyChain,
-                        "data-layout": this.props.layout,
-                        "data-self": isOwnEvent,
-                        "data-event-id": this.props.mxEvent.getId(),
-                        onMouseEnter: () => this.setState({ hover: true }),
-                        onMouseLeave: () => this.setState({ hover: false }),
-                    },
-                    [
-                        <div className="mx_EventTile_senderDetails" key="mx_EventTile_senderDetails">
-                            {avatar}
-                            {sender}
-                        </div>,
-                        <div
-                            className={lineClasses}
-                            key="mx_EventTile_line"
-                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
-                        >
-                            {this.renderContextMenu()}
-                            {replyChain}
-                            {renderTile(
-                                TimelineRenderingType.Thread,
-                                {
-                                    ...this.props,
-
-                                    // overrides
-                                    ref: this.tile,
-                                    isSeeingThroughMessageHiddenForModeration,
-
-                                    // appease TS
-                                    highlights: this.props.highlights,
-                                    highlightLink: this.props.highlightLink,
-                                    onHeightChanged: () => this.props.onHeightChanged,
-                                    permalinkCreator: this.props.permalinkCreator!,
-                                },
-                                this.context.showHiddenEvents,
-                            )}
-                            {actionBar}
-                            <a href={permalink} onClick={this.onPermalinkClicked}>
-                                {timestamp}
-                            </a>
-                            {msgOption}
-                        </div>,
-                        reactionsRow,
-                    ],
-                );
-            }
-            case TimelineRenderingType.Notification:
-            case TimelineRenderingType.ThreadsList: {
+            case TimelineRenderingType.Notification: {
                 const room = MatrixClientPeg.get().getRoom(this.props.mxEvent.getRoomId());
                 // tab-index=-1 to allow it to be focusable but do not add tab stop for it, primarily for screen readers
                 return React.createElement(
@@ -1264,7 +1186,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                     <>
                         <div className="mx_EventTile_details">
                             {sender}
-                            {isRenderingNotification && room ? (
+                            {isRenderingNotification && room && (
                                 <span className="mx_EventTile_truncated">
                                     {" "}
                                     {_t(
@@ -1273,17 +1195,13 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                                         { strong: (sub) => <strong>{sub}</strong> },
                                     )}
                                 </span>
-                            ) : (
-                                ""
                             )}
                             {timestamp}
                         </div>
-                        {isRenderingNotification && room ? (
+                        {isRenderingNotification && room && (
                             <div className="mx_EventTile_avatar">
                                 <RoomAvatar room={room} width={28} height={28} />
                             </div>
-                        ) : (
-                            avatar
                         )}
                         <div className={lineClasses} key="mx_EventTile_line">
                             <div className="mx_EventTile_body">
@@ -1297,15 +1215,78 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             </div>
                             {this.renderThreadPanelSummary()}
                         </div>
-                        {this.context.timelineRenderingType === TimelineRenderingType.ThreadsList && (
-                            <EventTileThreadToolbar
-                                viewInRoom={this.viewInRoom}
-                                copyLinkToThread={this.copyLinkToThread}
-                            />
-                        )}
 
                         {msgOption}
                         <UnreadNotificationBadge room={room || undefined} threadId={this.props.mxEvent.getId()} />
+                    </>,
+                );
+            }
+            case TimelineRenderingType.ThreadsList: {
+                const previewContent = this.props.mxEvent.isRedacted() ? (
+                    <RedactedBody mxEvent={this.props.mxEvent} />
+                ) : this.props.mxEvent.isDecryptionFailure() ? (
+                    <DecryptionFailureBody mxEvent={this.props.mxEvent} />
+                ) : (
+                    MessagePreviewStore.instance.generatePreviewForEvent(this.props.mxEvent)
+                );
+
+                // tab-index=-1 to allow it to be focusable but do not add tab stop for it, primarily for screen readers
+                return React.createElement(
+                    this.props.as || "li",
+                    {
+                        ref: this.ref,
+                        className: classes,
+                        tabIndex: -1,
+                        "aria-live": ariaLive,
+                        "aria-atomic": "true",
+                        "data-scroll-tokens": scrollToken,
+                        "data-layout": this.props.layout,
+                        "data-shape": this.context.timelineRenderingType,
+                        "data-self": isOwnEvent,
+                        "data-has-reply": !!replyChain,
+                        onMouseEnter: () => this.setState({ hover: true }),
+                        onMouseLeave: () => this.setState({ hover: false }),
+                        onClick: (ev: MouseEvent) => {
+                            const target = ev.currentTarget as HTMLElement;
+                            let index = -1;
+                            if (target.parentElement) index = Array.from(target.parentElement.children).indexOf(target);
+                            switch (this.context.timelineRenderingType) {
+                                case TimelineRenderingType.Notification:
+                                    this.viewInRoom(ev);
+                                    break;
+                                case TimelineRenderingType.ThreadsList:
+                                    dis.dispatch<ShowThreadPayload>({
+                                        action: Action.ShowThread,
+                                        rootEvent: this.props.mxEvent,
+                                        push: true,
+                                    });
+                                    PosthogTrackers.trackInteraction("WebThreadsPanelThreadItem", ev, index ?? -1);
+                                    break;
+                            }
+                        },
+                    },
+                    <>
+                        <div className="mx_EventTile_mainTile">
+                            {ircTimestamp}
+                            <div className="mx_EventTile_msgDetails">
+                                {sender}
+                                <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
+                                    {groupTimestamp}
+                                </div>
+                            </div>
+                            {ircPadlock}
+                            {avatar}
+                            <div className={lineClasses} key="mx_EventTile_line">
+                                {this.renderThreadPanelSummary(previewContent)}
+                            </div>
+                            {msgOption}
+                        </div>
+                        {/*{this.context.timelineRenderingType === TimelineRenderingType.ThreadsList && (*/}
+                        {/*    <EventTileThreadToolbar*/}
+                        {/*        viewInRoom={this.viewInRoom}*/}
+                        {/*        copyLinkToThread={this.copyLinkToThread}*/}
+                        {/*    />*/}
+                        {/*)}*/}
                     </>,
                 );
             }
@@ -1358,9 +1339,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 );
             }
 
+            case TimelineRenderingType.Thread:
             default: {
-                // Pinned, Room, Search
-                // tab-index=-1 to allow it to be focusable but do not add tab stop for it, primarily for screen readers
                 return React.createElement(
                     this.props.as || "li",
                     {
@@ -1376,59 +1356,63 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "data-has-reply": !!replyChain,
                         onMouseEnter: () => this.setState({ hover: true }),
                         onMouseLeave: () => this.setState({ hover: false }),
+                        onContextMenu: (e: React.MouseEvent) => this.onContextMenu(isInfoMessage, e),
                     },
                     <>
-                        {ircTimestamp}
-                        <div className="mx_EventTile_msgDetails">
-                            {sender}
-                            <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
-                                {groupTimestamp}
-                            </div>
-                        </div>
-                        {ircPadlock}
-                        {avatar}
-                        <div
-                            className={lineClasses}
-                            key="mx_EventTile_line"
-                            onContextMenu={(e) => this.onContextMenu(isInfoMessage, e)}
-                            ref={this.mxEventTileContentRef}
-                        >
-                            {this.renderContextMenu()}
-                            {/*{groupPadlock}*/}
-                            {replyChain}
-                            {renderTile(
-                                this.context.timelineRenderingType,
-                                {
-                                    ...this.props,
-
-                                    // overrides
-                                    ref: this.tile,
-                                    isSeeingThroughMessageHiddenForModeration,
-                                    timestamp: bubbleTimestamp,
-
-                                    // appease TS
-                                    highlights: this.props.highlights,
-                                    highlightLink: this.props.highlightLink,
-                                    onHeightChanged: this.props.onHeightChanged,
-                                    permalinkCreator: this.props.permalinkCreator,
-                                },
-                                this.context.showHiddenEvents,
+                        {replyChain && <div className="mx_EventTile_replyChain_wrap">{replyChain}</div>}
+                        <div className="mx_EventTile_mainTile">
+                            {!isRenderingThread && this.state.hasThread && (
+                                <div
+                                    className="mx_EventTile_threadLine"
+                                    style={{ top: avatarSize + 3, left: avatarSize / 2 }}
+                                />
                             )}
-                            {actionBar}
-                            {this.props.layout === Layout.IRC && (
+                            {ircTimestamp}
+                            <div className="mx_EventTile_msgDetails">
+                                {sender}
+                                <div className="mx_Event_timestamp" style={{ opacity: showTimestamp ? 1 : 0 }}>
+                                    {groupTimestamp}
+                                </div>
+                            </div>
+                            {ircPadlock}
+                            {avatar}
+                            <div className={lineClasses} key="mx_EventTile_line" ref={this.mxEventTileContentRef}>
+                                {this.renderContextMenu()}
+                                {/*{groupPadlock}*/}
+                                {renderTile(
+                                    this.context.timelineRenderingType,
+                                    {
+                                        ...this.props,
+
+                                        // overrides
+                                        ref: this.tile,
+                                        isSeeingThroughMessageHiddenForModeration,
+                                        timestamp: bubbleTimestamp,
+
+                                        // appease TS
+                                        highlights: this.props.highlights,
+                                        highlightLink: this.props.highlightLink,
+                                        onHeightChanged: this.props.onHeightChanged,
+                                        permalinkCreator: this.props.permalinkCreator,
+                                    },
+                                    this.context.showHiddenEvents,
+                                )}
+                                {this.props.layout === Layout.IRC && (
+                                    <>
+                                        {reactionsRow}
+                                        {!isRenderingThread && this.renderThreadInfo()}
+                                    </>
+                                )}
+                            </div>
+                            {this.props.layout !== Layout.IRC && (
                                 <>
                                     {reactionsRow}
-                                    {this.renderThreadInfo()}
+                                    {!isRenderingThread && this.renderThreadInfo()}
                                 </>
                             )}
+                            {msgOption}
                         </div>
-                        {this.props.layout !== Layout.IRC && (
-                            <>
-                                {reactionsRow}
-                                {this.renderThreadInfo()}
-                            </>
-                        )}
-                        {msgOption}
+                        {actionBar}
                     </>,
                 );
             }

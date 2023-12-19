@@ -19,23 +19,26 @@ import React from "react";
 import { RoomEvent } from "matrix-js-sdk/src/models/room";
 
 import TabbedView, { Tab } from "../../structures/TabbedView";
-import { _t, _td } from "../../../languageHandler";
+import { _t } from "../../../languageHandler";
 import AdvancedRoomSettingsTab from "../settings/tabs/room/AdvancedRoomSettingsTab";
 import RolesRoomSettingsTab from "../settings/tabs/room/RolesRoomSettingsTab";
 import GeneralRoomSettingsTab from "../settings/tabs/room/GeneralRoomSettingsTab";
-import SecurityRoomSettingsTab from "../settings/tabs/room/SecurityRoomSettingsTab";
+import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import NotificationSettingsTab from "../settings/tabs/room/NotificationSettingsTab";
 import BridgeSettingsTab from "../settings/tabs/room/BridgeSettingsTab";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import dis from "../../../dispatcher/dispatcher";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
-import BaseDialog from "./BaseDialog";
 import { Action } from "../../../dispatcher/actions";
 import { VoipRoomSettingsTab } from "../settings/tabs/room/VoipRoomSettingsTab";
 import { ActionPayload } from "../../../dispatcher/payloads";
 import { NonEmptyArray } from "../../../@types/common";
 import { PollHistoryTab } from "../settings/tabs/room/PollHistoryTab";
+import RoomSettingsBaseDialog from "matrix-react-sdk/src/components/views/dialogs/RoomSettingsBaseDialog";
+import AccessibleButton, { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
+import { leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
+import PosthogTrackers from "matrix-react-sdk/src/PosthogTrackers";
 
 export const ROOM_GENERAL_TAB = "ROOM_GENERAL_TAB";
 export const ROOM_VOIP_TAB = "ROOM_VOIP_TAB";
@@ -92,15 +95,24 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
         });
     };
 
+    private onLeaveClick = (ev: ButtonEvent): void => {
+        dis.dispatch({
+            action: "leave_room",
+            room_id: this.props.roomId,
+        });
+    };
+
     private getTabs(): NonEmptyArray<Tab> {
+        const room = MatrixClientPeg.get().getRoom(this.props.roomId);
+
         const tabs: Tab[] = [];
 
         tabs.push(
             new Tab(
                 ROOM_GENERAL_TAB,
-                _td("General"),
+                _t("General"),
                 "mx_RoomSettingsDialog_settingsIcon",
-                <GeneralRoomSettingsTab roomId={this.props.roomId} />,
+                <GeneralRoomSettingsTab room={room} />,
                 "RoomSettingsGeneral",
             ),
         );
@@ -108,7 +120,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             tabs.push(
                 new Tab(
                     ROOM_VOIP_TAB,
-                    _td("Voice & Video"),
+                    _t("Voice & Video"),
                     "mx_RoomSettingsDialog_voiceIcon",
                     <VoipRoomSettingsTab roomId={this.props.roomId} />,
                 ),
@@ -116,27 +128,27 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
         }
 
         if (SettingsStore.getValue(UIFeature.RoomSecurityAndPrivacySettings)) {
-            tabs.push(
-                new Tab(
-                    ROOM_SECURITY_TAB,
-                    _td("Security & Privacy"),
-                    "mx_RoomSettingsDialog_securityIcon",
-                    (
-                        <SecurityRoomSettingsTab
-                            roomId={this.props.roomId}
-                            closeSettingsFn={() => this.props.onFinished(true)}
-                        />
-                    ),
-                    "RoomSettingsSecurityPrivacy",
-                ),
-            );
+            // tabs.push(
+            //     new Tab(
+            //         ROOM_SECURITY_TAB,
+            //         _t("Security & Privacy"),
+            //         "mx_RoomSettingsDialog_securityIcon",
+            //         (
+            //             <SecurityRoomSettingsTab
+            //                 roomId={this.props.roomId}
+            //                 closeSettingsFn={() => this.props.onFinished(true)}
+            //             />
+            //         ),
+            //         "RoomSettingsSecurityPrivacy",
+            //     ),
+            // );
         }
 
         if (SettingsStore.getValue(UIFeature.RoomRolesAndPermissionsSettings)) {
             tabs.push(
                 new Tab(
                     ROOM_ROLES_TAB,
-                    _td("Roles & Permissions"),
+                    _t("Roles & Permissions"),
                     "mx_RoomSettingsDialog_rolesIcon",
                     <RolesRoomSettingsTab roomId={this.props.roomId} />,
                     "RoomSettingsRolesPermissions",
@@ -148,7 +160,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             tabs.push(
                 new Tab(
                     ROOM_NOTIFICATIONS_TAB,
-                    _td("Notifications"),
+                    _t("Notifications"),
                     "mx_RoomSettingsDialog_notificationsIcon",
                     (
                         <NotificationSettingsTab
@@ -165,7 +177,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             tabs.push(
                 new Tab(
                     ROOM_BRIDGES_TAB,
-                    _td("Bridges"),
+                    _t("Bridges"),
                     "mx_RoomSettingsDialog_bridgesIcon",
                     <BridgeSettingsTab roomId={this.props.roomId} />,
                     "RoomSettingsBridges",
@@ -177,7 +189,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             tabs.push(
                 new Tab(
                     ROOM_POLL_HISTORY_TAB,
-                    _td("Poll history"),
+                    _t("Poll history"),
                     "mx_RoomSettingsDialog_pollsIcon",
                     <PollHistoryTab roomId={this.props.roomId} onFinished={() => this.props.onFinished(true)} />,
                 ),
@@ -188,7 +200,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             tabs.push(
                 new Tab(
                     ROOM_ADVANCED_TAB,
-                    _td("Advanced"),
+                    _t("Advanced"),
                     "mx_RoomSettingsDialog_warningIcon",
                     (
                         <AdvancedRoomSettingsTab
@@ -206,21 +218,23 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
 
     public render(): React.ReactNode {
         const roomName = this.state.roomName;
+
+        const footer = (
+            <Button type={ButtonType.Text} danger onClick={this.onLeaveClick}>
+                {"删除频道"}
+            </Button>
+        );
+
         return (
-            <BaseDialog
-                className="mx_RoomSettingsDialog"
-                hasCancel={true}
-                onFinished={this.props.onFinished}
-                title={_t("Room Settings - %(roomName)s", { roomName })}
-            >
-                <div className="mx_SettingsDialog_content">
-                    <TabbedView
-                        tabs={this.getTabs()}
-                        initialTabId={this.props.initialTabId}
-                        screenName="RoomSettings"
-                    />
-                </div>
-            </BaseDialog>
+            <RoomSettingsBaseDialog onFinished={this.props.onFinished}>
+                <TabbedView
+                    title={roomName}
+                    // footer={footer}
+                    tabs={this.getTabs()}
+                    initialTabId={this.props.initialTabId}
+                    screenName="RoomSettings"
+                />
+            </RoomSettingsBaseDialog>
         );
     }
 }

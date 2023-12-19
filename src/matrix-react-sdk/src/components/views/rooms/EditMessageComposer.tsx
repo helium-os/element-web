@@ -49,6 +49,7 @@ import { PosthogAnalytics } from "../../../PosthogAnalytics";
 import { editorRoomKey, editorStateKey } from "../../../Editing";
 import DocumentOffset from "../../../editor/offset";
 import { attachMentions, attachRelation } from "./SendMessageComposer";
+import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 
 function getHtmlReplyFallback(mxEvent: MatrixEvent): string {
     const html = mxEvent.getContent().formatted_body;
@@ -91,8 +92,8 @@ export function createEditContent(model: EditorModel, editedEvent: MatrixEvent, 
         body: body,
     };
     const contentBody: IContent = {
-        "msgtype": newContent.msgtype,
-        "body": `${plainPrefix} * ${body}`,
+        msgtype: newContent.msgtype,
+        body: `${plainPrefix} * ${body}`,
         "m.new_content": newContent,
     };
 
@@ -468,12 +469,12 @@ class EditMessageComposer extends React.Component<IEditMessageComposerProps, ISt
                     onChange={this.onChange}
                 />
                 <div className="mx_EditMessageComposer_buttons">
-                    <AccessibleButton kind="secondary" onClick={this.cancelEdit}>
-                        {_t("Cancel")}
-                    </AccessibleButton>
-                    <AccessibleButton kind="primary" onClick={this.sendEdit} disabled={this.state.saveDisabled}>
-                        {_t("Save")}
-                    </AccessibleButton>
+                    <DialogButtons
+                        primaryButton={_t("Save")}
+                        primaryDisabled={this.state.saveDisabled}
+                        onPrimaryButtonClick={this.sendEdit}
+                        onCancel={this.cancelEdit}
+                    />
                 </div>
             </div>
         );

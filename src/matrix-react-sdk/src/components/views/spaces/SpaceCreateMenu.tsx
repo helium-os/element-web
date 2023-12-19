@@ -36,10 +36,10 @@ import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ContextMenu, { ChevronFace } from "../../structures/ContextMenu";
 import createRoom, { IOpts as ICreateOpts } from "../../../createRoom";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
-import SpaceBasicSettings, { SpaceAvatar } from "./SpaceBasicSettings";
+import SpaceBasicSettings from "./SpaceBasicSettings";
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
 import Field from "../elements/Field";
-import withValidation from "../elements/Validation";
+import withValidation, { IFieldState, IValidationResult } from "../elements/Validation";
 import RoomAliasField from "../elements/RoomAliasField";
 import Modal from "../../../Modal";
 import GenericFeatureFeedbackDialog from "../dialogs/GenericFeatureFeedbackDialog";
@@ -48,6 +48,7 @@ import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { shouldShowFeedback } from "../../../utils/Feedback";
+import AvatarSetting from "matrix-react-sdk/src/components/views/settings/AvatarSetting";
 
 export const createSpace = async (
     name: string,
@@ -77,7 +78,8 @@ export const createSpace = async (
         },
         avatar,
         roomType: RoomType.Space,
-        historyVisibility: isPublic ? HistoryVisibility.WorldReadable : HistoryVisibility.Invited,
+        historyVisibility: HistoryVisibility.WorldReadable,
+        // historyVisibility: isPublic ? HistoryVisibility.WorldReadable : HistoryVisibility.Invited,
         spinner: false,
         encryption: false,
         andView: true,
@@ -86,26 +88,34 @@ export const createSpace = async (
     });
 };
 
-const SpaceCreateMenuType: React.FC<{
+export const SpaceCreateMenuType: React.FC<{
     title: string;
     description: string;
     className: string;
     onClick(): void;
 }> = ({ title, description, className, onClick }) => {
     return (
-        <AccessibleButton className={classNames("mx_SpaceCreateMenuType", className)} onClick={onClick}>
-            <h3>{title}</h3>
-            <span>{description}</span>
+        <AccessibleButton className={classNames("mx_SpaceTypeItem", className)} onClick={onClick}>
+            <div className="mx_SpaceTypeItem_wrap">
+                <span className="mx_SpaceTypeItem_icon" />
+                <div className="mx_SpaceTypeItem_introduce">
+                    <p className="mx_SpaceTypeItem_title">{title}</p>
+                    <span className="mx_SpaceTypeItem_description">{description}</span>
+                </div>
+            </div>
         </AccessibleButton>
     );
 };
 
-const spaceNameValidator = withValidation({
+export const spaceNameValidator = withValidation({
     rules: [
         {
             key: "required",
             test: async ({ value }) => !!value,
-            invalid: () => _t("Please enter a name for the space"),
+            invalid: () =>
+                _t("Please enter a name for the room", {
+                    roomType: _t("space"),
+                }),
         },
     ],
 });
@@ -154,28 +164,32 @@ export const SpaceFeedbackPrompt: React.FC<{
 
 type BProps = Omit<ComponentProps<typeof SpaceBasicSettings>, "nameDisabled" | "topicDisabled" | "avatarDisabled">;
 interface ISpaceCreateFormProps extends BProps {
-    busy: boolean;
-    alias: string;
+    busy?: boolean;
     nameFieldRef: RefObject<Field>;
-    aliasFieldRef: RefObject<RoomAliasField>;
+    onNameValidate?: (input: IFieldState) => Promise<IValidationResult>;
     showAliasField?: boolean;
+    aliasFieldRef?: RefObject<RoomAliasField>;
+    alias?: string;
+    setAlias?(alias: string): void;
+    showTopicField?: boolean;
     children?: ReactNode;
-    onSubmit(e: SyntheticEvent): void;
-    setAlias(alias: string): void;
+    onSubmit?(e: SyntheticEvent): void;
 }
 
 export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
-    busy,
+    busy = false,
     onSubmit,
     avatarUrl,
     setAvatar,
     name,
-    setName,
     nameFieldRef,
+    setName,
+    onNameValidate,
     alias,
     aliasFieldRef,
     setAlias,
     showAliasField,
+    showTopicField = false,
     topic,
     setTopic,
     children,
@@ -187,23 +201,28 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
         const action = getKeyBindingsManager().getAccessibilityAction(ev);
         switch (action) {
             case KeyBindingAction.Enter:
-                onSubmit(ev);
+                onSubmit?.(ev);
                 break;
         }
     };
 
     return (
         <form className="mx_SpaceBasicSettings" onSubmit={onSubmit}>
-            <SpaceAvatar avatarUrl={avatarUrl} setAvatar={setAvatar} avatarDisabled={busy} />
+            <AvatarSetting avatarUrl={avatarUrl} setAvatar={setAvatar} avatarDisabled={busy} />
 
             <Field
                 name="spaceName"
-                label={_t("Name")}
-                autoFocus={true}
+                label={_t("Space Name")}
+                placeholder={_t("Please enter a name for the room", {
+                    roomType: _t("space"),
+                })}
+                usePlaceholderAsHint={true}
+                autoFocus={false}
+                wordLimit={80}
                 value={name}
                 onChange={(ev: ChangeEvent<HTMLInputElement>) => {
                     const newName = ev.target.value;
-                    if (!alias || alias === `#${nameToLocalpart(name)}:${domain}`) {
+                    if (showAliasField && (!alias || alias === `#${nameToLocalpart(name)}:${domain}`)) {
                         setAlias(`#${nameToLocalpart(newName)}:${domain}`);
                         aliasFieldRef.current?.validate({ allowEmpty: true });
                     }
@@ -211,9 +230,10 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                 }}
                 onKeyDown={onKeyDown}
                 ref={nameFieldRef}
-                onValidate={spaceNameValidator}
                 disabled={busy}
                 autoComplete="off"
+                validateOnFocus={false}
+                onValidate={onNameValidate}
             />
 
             {showAliasField ? (
@@ -229,15 +249,17 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                 />
             ) : null}
 
-            <Field
-                name="spaceTopic"
-                element="textarea"
-                label={_t("Description")}
-                value={topic ?? ""}
-                onChange={(ev) => setTopic(ev.target.value)}
-                rows={3}
-                disabled={busy}
-            />
+            {showTopicField && (
+                <Field
+                    name="spaceTopic"
+                    element="textarea"
+                    label={_t("Description")}
+                    value={topic ?? ""}
+                    onChange={(ev) => setTopic(ev.target.value)}
+                    rows={3}
+                    disabled={busy}
+                />
+            )}
 
             {children}
         </form>
@@ -305,13 +327,13 @@ const SpaceCreateMenu: React.FC<{
                 <SpaceCreateMenuType
                     title={_t("Public")}
                     description={_t("Open space for anyone, best for communities")}
-                    className="mx_SpaceCreateMenuType_public"
+                    className="mx_SpaceTypeItem_public"
                     onClick={() => setVisibility(Visibility.Public)}
                 />
                 <SpaceCreateMenuType
                     title={_t("Private")}
                     description={_t("Invite only, best for yourself or teams")}
-                    className="mx_SpaceCreateMenuType_private"
+                    className="mx_SpaceTypeItem_private"
                     onClick={() => setVisibility(Visibility.Private)}
                 />
 
@@ -336,17 +358,18 @@ const SpaceCreateMenu: React.FC<{
 
                 <SpaceCreateForm
                     busy={busy}
-                    onSubmit={onSpaceCreateClick}
                     setAvatar={setAvatar}
                     name={name}
-                    setName={setName}
                     nameFieldRef={spaceNameField}
-                    topic={topic}
-                    setTopic={setTopic}
-                    alias={alias}
-                    setAlias={setAlias}
+                    setName={setName}
                     showAliasField={visibility === Visibility.Public}
                     aliasFieldRef={spaceAliasField}
+                    alias={alias}
+                    setAlias={setAlias}
+                    showTopicField={false}
+                    topic={topic}
+                    setTopic={setTopic}
+                    onSubmit={onSpaceCreateClick}
                 />
 
                 <AccessibleButton kind="primary" onClick={onSpaceCreateClick} disabled={busy}>

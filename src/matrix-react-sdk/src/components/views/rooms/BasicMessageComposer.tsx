@@ -108,6 +108,7 @@ interface IProps {
     disabled?: boolean;
 
     onChange?(): void;
+    onFocusChange?(focused: boolean): void;
     onPaste?(event: ClipboardEvent<HTMLDivElement>, model: EditorModel): boolean;
 }
 
@@ -457,10 +458,12 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
     }
 
     private onBlur = (): void => {
+        this.props.onFocusChange?.(false);
         document.removeEventListener("selectionchange", this.onSelectionChange);
     };
 
     private onFocus = (): void => {
+        this.props.onFocusChange?.(true);
         document.addEventListener("selectionchange", this.onSelectionChange);
         // force to recalculate
         this.lastSelection = null;
@@ -798,14 +801,19 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
             activeDescendant = generateCompletionDomId(completionIndex);
         }
 
+        const showMessageFormatBar = false;
+
         return (
             <div className={wrapperClasses}>
                 {autoComplete}
-                <MessageComposerFormatBar
-                    ref={this.formatBarRef}
-                    onAction={this.onFormatAction}
-                    shortcuts={shortcuts}
-                />
+                {showMessageFormatBar && (
+                    <MessageComposerFormatBar
+                        ref={this.formatBarRef}
+                        onAction={this.onFormatAction}
+                        shortcuts={shortcuts}
+                    />
+                )}
+
                 <div
                     className={classes}
                     contentEditable={this.props.disabled ? undefined : true}

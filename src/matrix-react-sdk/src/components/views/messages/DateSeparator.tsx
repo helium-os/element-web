@@ -21,7 +21,7 @@ import { logger } from "matrix-js-sdk/src/logger";
 import { ConnectionError, MatrixError, HTTPError } from "matrix-js-sdk/src/http-api";
 
 import { _t } from "../../../languageHandler";
-import { formatFullDateNoDay, formatFullDateNoTime } from "../../../DateUtils";
+import { formatFullDateNoDay, formatFullDateNoTime, formatFullRelativeTime } from "../../../DateUtils";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import dispatcher from "../../../dispatcher/dispatcher";
 import { Action } from "../../../dispatcher/actions";
@@ -116,7 +116,7 @@ export default class DateSeparator extends React.Component<IProps, IState> {
         } else if (today.getTime() - date.getTime() < 6 * 24 * 60 * 60 * 1000) {
             return days[date.getDay()];
         } else {
-            return formatFullDateNoTime(date);
+            return formatFullRelativeTime(date);
         }
     }
 

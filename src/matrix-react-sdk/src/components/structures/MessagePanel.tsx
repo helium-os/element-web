@@ -179,6 +179,8 @@ interface IProps {
     permalinkCreator?: RoomPermalinkCreator;
     editState?: EditorStateTransfer;
 
+    replyToEvent?: MatrixEvent;
+
     // callback which is called when the panel is scrolled.
     onScroll?(event: Event): void;
 
@@ -710,6 +712,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const ret: ReactNode[] = [];
 
         const isEditing = this.props.editState?.getEvent().getId() === mxEv.getId();
+        const isReplying = this.props.replyToEvent?.getId() === mxEv.getId();
         // local echoes have a fake date, which could even be yesterday. Treat them as 'today' for the date separators.
         let ts1 = mxEv.getTs();
         let eventDate = mxEv.getDate();
@@ -722,7 +725,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const wantsDateSeparator = this.wantsDateSeparator(prevEvent, eventDate);
         if (wantsDateSeparator && !isGrouped && this.props.room) {
             const dateSeparator = (
-                <li key={ts1}>
+                <li className="mx_DateSeparatorItem" key={ts1}>
                     <DateSeparator key={ts1} roomId={this.props.room.roomId} ts={ts1} />
                 </li>
             );
@@ -788,6 +791,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
                     isRedacted={mxEv.isRedacted()}
                     replacingEventId={mxEv.replacingEventId()}
                     editState={isEditing ? this.props.editState : undefined}
+                    isReplying={isReplying}
                     onHeightChanged={this.onHeightChanged}
                     readReceipts={readReceipts}
                     readReceiptMap={this.readReceiptMap}
@@ -1175,7 +1179,7 @@ class CreationGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, createEvent.event.getDate())) {
             const ts = createEvent.event.getTs();
             ret.push(
-                <li key={ts + "~"}>
+                <li className="mx_DateSeparatorItem" key={ts + "~"}>
                     <DateSeparator roomId={createEvent.event.getRoomId()} ts={ts} />
                 </li>,
             );
@@ -1327,7 +1331,7 @@ class MainGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, this.events[0].getDate())) {
             const ts = this.events[0].getTs();
             ret.push(
-                <li key={ts + "~"}>
+                <li className="mx_DateSeparatorItem" key={ts + "~"}>
                     <DateSeparator roomId={this.events[0].getRoomId()} ts={ts} />
                 </li>,
             );

@@ -121,22 +121,14 @@ const BaseAvatar: React.FC<IProps> = (props) => {
     if (!imageUrl && defaultToInitialLetter && name) {
         const initialLetter = AvatarLogic.getInitialLetter(name);
         const textNode = (
-            <span
-                className="mx_BaseAvatar_initial"
-                aria-hidden="true"
-                style={{
-                    fontSize: toPx(width * 0.65),
-                    width: toPx(width),
-                    lineHeight: toPx(height),
-                }}
-            >
+            <span className="mx_BaseAvatar_initial" style={{ fontSize: Math.max(width / 1.8, 10) }} aria-hidden="true">
                 {initialLetter}
             </span>
         );
         const imgNode = (
             <img
                 className="mx_BaseAvatar_image"
-                src={AvatarLogic.defaultAvatarUrlForString(idName || name)}
+                src={AvatarLogic.defaultAvatarUrlForString(name || idName)}
                 alt=""
                 // title={title}
                 onError={onError}

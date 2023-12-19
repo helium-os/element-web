@@ -15,12 +15,10 @@ limitations under the License.
 */
 
 import React, {
-    Dispatch,
     KeyboardEvent,
     KeyboardEventHandler,
     ReactElement,
     ReactNode,
-    SetStateAction,
     useCallback,
     useContext,
     useEffect,
@@ -34,7 +32,7 @@ import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 import { IHierarchyRelation, IHierarchyRoom } from "matrix-js-sdk/src/@types/spaces";
 import { MatrixClient, MatrixError } from "matrix-js-sdk/src/matrix";
 import classNames from "classnames";
-import { sortBy, uniqBy } from "lodash";
+import { sortBy } from "lodash";
 import { GuestAccess, HistoryVisibility } from "matrix-js-sdk/src/@types/partials";
 import { logger } from "matrix-js-sdk/src/logger";
 
@@ -46,17 +44,18 @@ import SearchBox from "./SearchBox";
 import RoomAvatar from "../views/avatars/RoomAvatar";
 import StyledCheckbox from "../views/elements/StyledCheckbox";
 import BaseAvatar from "../views/avatars/BaseAvatar";
-import {getHttpUrlFromMxc} from "../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../customisations/Media";
 import InfoTooltip from "../views/elements/InfoTooltip";
 import TextWithTooltip from "../views/elements/TextWithTooltip";
 import { useStateToggle } from "../../hooks/useStateToggle";
-import { getChildOrder } from "../../stores/spaces/SpaceStore";
+import SpaceStore, { getChildOrder } from "../../stores/spaces/SpaceStore";
 import AccessibleTooltipButton from "../views/elements/AccessibleTooltipButton";
 import { Linkify, topicToHtml } from "../../HtmlUtils";
 import { useDispatcher } from "../../hooks/useDispatcher";
 import { Action } from "../../dispatcher/actions";
 import { IState, RovingTabIndexProvider, useRovingTabIndex } from "../../accessibility/RovingTabIndex";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
+import { SdkContextClass } from "../../contexts/SDKContext";
 import { useTypedEventEmitterState } from "../../hooks/useEventEmitter";
 import { IOOBData } from "../../stores/ThreepidInviteStore";
 import { awaitRoomDownSync } from "../../utils/RoomUpgrade";
@@ -64,11 +63,13 @@ import { ViewRoomPayload } from "../../dispatcher/payloads/ViewRoomPayload";
 import { JoinRoomReadyPayload } from "../../dispatcher/payloads/JoinRoomReadyPayload";
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
-import { Alignment } from "../views/elements/Tooltip";
 import { getTopic } from "../../hooks/room/useTopic";
-import { SdkContextClass } from "../../contexts/SDKContext";
 import { getDisplayAliasForAliasSet } from "../../Rooms";
 import SettingsStore from "../../settings/SettingsStore";
+import { UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
+import { DefaultTagID } from "matrix-react-sdk/src/stores/room-list/models";
+import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
+import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 
 interface IProps {
     space: Room;
@@ -343,7 +344,8 @@ const Tile: React.FC<ITileProps> = ({
                     mx_SpaceHierarchy_subspace: room.room_type === RoomType.Space,
                     mx_SpaceHierarchy_joining: busy,
                 })}
-                onClick={hasPermissions && onToggleClick ? onToggleClick : onPreviewClick}
+                onClick={onPreviewClick}
+                // onClick={hasPermissions && onToggleClick ? onToggleClick : onPreviewClick}
                 onKeyDown={onKeyDown}
                 inputRef={ref}
                 onFocus={onFocus}
@@ -486,35 +488,118 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
     const space = cli.getRoom(root.room_id);
     const hasPermissions = space?.currentState.maySendStateEvent(EventType.SpaceChild, cli.getSafeUserId());
 
-    const sortedChildren = sortBy(root.children_state, (ev) => {
-        return getChildOrder(ev.content.order, ev.origin_server_ts, ev.state_key);
-    });
+    const [subspaces, childRooms] = useMemo(() => {
+        const sortedChildren = sortBy(root.children_state, (ev) => {
+            return getChildOrder(ev.content.order, ev.origin_server_ts, ev.state_key);
+        });
+        return sortedChildren.reduce(
+            (result, ev: IHierarchyRelation) => {
+                const room = hierarchy.roomMap.get(ev.state_key);
+                if (room && roomSet.has(room)) {
+                    result[room.room_type === RoomType.Space ? 0 : 1].push(toLocalRoom(cli, room, hierarchy));
+                }
+                return result;
+            },
+            [[] as IHierarchyRoom[], [] as IHierarchyRoom[]],
+        );
+    }, [root.children_state, hierarchy, roomSet, cli]);
 
-    const [subspaces, childRooms] = sortedChildren.reduce(
-        (result, ev: IHierarchyRelation) => {
-            const room = hierarchy.roomMap.get(ev.state_key);
-            if (room && roomSet.has(room)) {
-                result[room.room_type === RoomType.Space ? 0 : 1].push(toLocalRoom(cli, room, hierarchy));
+    const [spaceTags, setSpaceTags] = useState(SpaceStore.instance.spaceTags);
+
+    const [hierarchyList, setHierarchyList] = useState([]);
+
+    useEffect(() => {
+        const updateSpaceTags = (tags) => {
+            setSpaceTags(tags);
+        };
+
+        SpaceStore.instance.on(UPDATE_SPACE_TAGS, updateSpaceTags);
+        return () => {
+            SpaceStore.instance.off(UPDATE_SPACE_TAGS, updateSpaceTags);
+        };
+    }, []);
+
+    // 生成分组 & 频道列表
+    useEffect(() => {
+        if (!spaceTags) {
+            setHierarchyList([]);
+            return;
+        }
+        const newHierarchyList = spaceTags.map((item) => ({
+            ...item,
+            children: [],
+        }));
+        if (!childRooms || !childRooms.length) {
+            setHierarchyList(newHierarchyList);
+            return;
+        }
+
+        // 建议的频道（未加入的频道）
+        const suggestedTagHierarchy = {
+            tagId: DefaultTagID.Suggested,
+            tagName: _t("Suggested Rooms"),
+            children: [],
+        };
+
+        const defaultTagHierarchy = {
+            tagId: DefaultTagID.Untagged,
+            tagName: _t("channel"),
+            children: [],
+        };
+
+        for (const room of childRooms) {
+            const roomInfo = cli.getRoom(room.room_id);
+            if (!roomInfo) {
+                suggestedTagHierarchy.children.push(room);
+                continue;
             }
-            return result;
-        },
-        [[] as IHierarchyRoom[], [] as IHierarchyRoom[]],
-    );
+            const roomTags = roomInfo.getRoomTags();
+            if (!roomTags || !roomTags.length) {
+                defaultTagHierarchy.children.push(room);
+                continue;
+            }
+            for (const roomTagItem of roomTags) {
+                const index = newHierarchyList.findIndex((item) => item.tagId === roomTagItem.tagId);
+                if (index !== -1) {
+                    newHierarchyList[index].children.push(room);
+                }
+            }
+        }
+        setHierarchyList([suggestedTagHierarchy, defaultTagHierarchy, ...newHierarchyList]);
+    }, [cli, spaceTags, childRooms]);
 
     const newParents = new Set(parents).add(root.room_id);
+
     return (
         <React.Fragment>
-            {uniqBy(childRooms, "room_id").map((room) => (
-                <Tile
-                    key={room.room_id}
-                    room={room}
-                    suggested={hierarchy.isSuggested(root.room_id, room.room_id)}
-                    selected={selectedMap?.get(root.room_id)?.has(room.room_id)}
-                    onViewRoomClick={() => onViewRoomClick(room.room_id, room.room_type as RoomType)}
-                    onJoinRoomClick={() => onJoinRoomClick(room.room_id)}
-                    hasPermissions={hasPermissions}
-                    onToggleClick={onToggleClick ? () => onToggleClick(root.room_id, room.room_id) : undefined}
-                />
+            {hierarchyList.map((item) => (
+                <div key={item.tagId} className="mx_RoomSublist">
+                    <div className="mx_RoomSublist_headerContainer">
+                        <div className="mx_RoomSublist_stickableContainer">
+                            <div className="mx_RoomSublist_stickable">
+                                <div className="mx_RoomSublist_headerText">{item.tagName}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="mx_RoomSublist_tiles">
+                        {item.children?.map((room) => (
+                            <div
+                                key={room.room_id}
+                                className="mx_RoomTile"
+                                onClick={() => onViewRoomClick(room.room_id, room.room_type as RoomType)}
+                            >
+                                <SpaceChannelAvatar isPrivate={isPrivateRoom(room.join_rule)} />
+                                <div className="mx_RoomTile_titleContainer">
+                                    <div className="mx_RoomTile_title" tabIndex={-1}>
+                                        <span className="mx_RoomTile_title" dir="auto">
+                                            {room.name}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             ))}
 
             {subspaces
@@ -570,6 +655,7 @@ export const useRoomHierarchy = (
     const resetHierarchy = useCallback(() => {
         setError(undefined);
         const hierarchy = new RoomHierarchy(space, INITIAL_PAGE_SIZE);
+
         hierarchy.load().then(() => {
             if (space !== hierarchy.root) return; // discard stale results
             setRooms(hierarchy.rooms ?? []);
@@ -588,6 +674,7 @@ export const useRoomHierarchy = (
     const loadMore = useCallback(
         async (pageSize?: number): Promise<void> => {
             if (!hierarchy || hierarchy.loading || !hierarchy.canLoadMore || hierarchy.noSupport || error) return;
+
             await hierarchy.load(pageSize).catch(setError);
             setRooms(hierarchy.rooms ?? []);
         },
@@ -634,116 +721,6 @@ const useIntersectionObserver = (callback: () => void): ((element: HTMLDivElemen
             observerRef.current.observe(element);
         }
     };
-};
-
-interface IManageButtonsProps {
-    hierarchy: RoomHierarchy;
-    selected: Map<string, Set<string>>;
-    setSelected: Dispatch<SetStateAction<Map<string, Set<string>>>>;
-    setError: Dispatch<SetStateAction<string>>;
-}
-
-const ManageButtons: React.FC<IManageButtonsProps> = ({ hierarchy, selected, setSelected, setError }) => {
-    const cli = useContext(MatrixClientContext);
-
-    const [removing, setRemoving] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-    const selectedRelations = Array.from(selected.keys()).flatMap((parentId) => {
-        return [...selected.get(parentId)!.values()].map((childId) => [parentId, childId]);
-    });
-
-    const selectionAllSuggested = selectedRelations.every(([parentId, childId]) => {
-        return hierarchy.isSuggested(parentId, childId);
-    });
-
-    const disabled = !selectedRelations.length || removing || saving;
-
-    let Button: React.ComponentType<React.ComponentProps<typeof AccessibleButton>> = AccessibleButton;
-    let props = {};
-    if (!selectedRelations.length) {
-        Button = AccessibleTooltipButton;
-        props = {
-            tooltip: _t("Select a room below first"),
-            alignment: Alignment.Top,
-        };
-    }
-
-    let buttonText = _t("Saving…");
-    if (!saving) {
-        buttonText = selectionAllSuggested ? _t("Mark as not suggested") : _t("Mark as suggested");
-    }
-
-    return (
-        <>
-            <Button
-                {...props}
-                onClick={async (): Promise<void> => {
-                    setRemoving(true);
-                    try {
-                        const userId = cli.getSafeUserId();
-                        for (const [parentId, childId] of selectedRelations) {
-                            await cli.sendStateEvent(parentId, EventType.SpaceChild, {}, childId);
-
-                            // remove the child->parent relation too, if we have permission to.
-                            const childRoom = cli.getRoom(childId);
-                            const parentRelation = childRoom?.currentState.getStateEvents(
-                                EventType.SpaceParent,
-                                parentId,
-                            );
-                            if (
-                                childRoom?.currentState.maySendStateEvent(EventType.SpaceParent, userId) &&
-                                Array.isArray(parentRelation?.getContent().via)
-                            ) {
-                                await cli.sendStateEvent(childId, EventType.SpaceParent, {}, parentId);
-                            }
-
-                            hierarchy.removeRelation(parentId, childId);
-                        }
-                    } catch (e) {
-                        setError(_t("Failed to remove some rooms. Try again later"));
-                    }
-                    setRemoving(false);
-                    setSelected(new Map());
-                }}
-                kind="danger_outline"
-                disabled={disabled}
-            >
-                {removing ? _t("Removing…") : _t("Remove")}
-            </Button>
-            <Button
-                {...props}
-                onClick={async (): Promise<void> => {
-                    setSaving(true);
-                    try {
-                        for (const [parentId, childId] of selectedRelations) {
-                            const suggested = !selectionAllSuggested;
-                            const existingContent = hierarchy.getRelation(parentId, childId)?.content;
-                            if (!existingContent || existingContent.suggested === suggested) continue;
-
-                            const content = {
-                                ...existingContent,
-                                suggested: !selectionAllSuggested,
-                            };
-
-                            await cli.sendStateEvent(parentId, EventType.SpaceChild, content, childId);
-
-                            // mutate the local state to save us having to refetch the world
-                            existingContent.suggested = content.suggested;
-                        }
-                    } catch (e) {
-                        setError("Failed to update some suggestions. Try again later");
-                    }
-                    setSaving(false);
-                    setSelected(new Map());
-                }}
-                kind="primary_outline"
-                disabled={disabled}
-            >
-                {buttonText}
-            </Button>
-        </>
-    );
 };
 
 const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, additionalButtons }) => {
@@ -863,22 +840,6 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
 
                     content = (
                         <>
-                            <div className="mx_SpaceHierarchy_listHeader">
-                                <h4 className="mx_SpaceHierarchy_listHeader_header">
-                                    {query.trim() ? _t("Results") : _t("Rooms and spaces")}
-                                </h4>
-                                <div className="mx_SpaceHierarchy_listHeader_buttons">
-                                    {additionalButtons}
-                                    {hasPermissions && (
-                                        <ManageButtons
-                                            hierarchy={hierarchy}
-                                            selected={selected}
-                                            setSelected={setSelected}
-                                            setError={setError}
-                                        />
-                                    )}
-                                </div>
-                            </div>
                             {errorText && <div className="mx_SpaceHierarchy_error">{errorText}</div>}
                             <ul
                                 className="mx_SpaceHierarchy_list"
@@ -894,18 +855,25 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
                 }
 
                 return (
-                    <>
-                        <SearchBox
-                            className="mx_SpaceHierarchy_search mx_textinput_icon mx_textinput_search"
-                            placeholder={_t("Search names and descriptions")}
-                            onSearch={setQuery}
-                            autoFocus={true}
-                            initialValue={initialText}
-                            onKeyDown={onKeyDownHandler}
-                        />
-
+                    <div className="mx_SpaceHierarchy_page">
+                        <div className="mx_SpaceHierarchy_header">
+                            <div className="mx_SpaceHierarchy_title_box">
+                                <div className="mx_SpaceHierarchy_title_icon" />
+                                <p className="mx_SpaceHierarchy_title">首页</p>
+                            </div>
+                            <div className="mx_SpaceHierarchy_search_wrap">
+                                <SearchBox
+                                    className="mx_SpaceHierarchy_search mx_textinput_icon mx_textinput_search"
+                                    placeholder={_t("Search names and descriptions")}
+                                    onSearch={setQuery}
+                                    autoFocus={false}
+                                    initialValue={initialText}
+                                    onKeyDown={onKeyDownHandler}
+                                />
+                            </div>
+                        </div>
                         {content}
-                    </>
+                    </div>
                 );
             }}
         </RovingTabIndexProvider>

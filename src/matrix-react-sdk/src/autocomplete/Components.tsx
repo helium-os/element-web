@@ -16,6 +16,8 @@ limitations under the License.
 
 import React, { forwardRef } from "react";
 import classNames from "classnames";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { _t } from "matrix-react-sdk/src/languageHandler";
 
 /* These were earlier stateless functional components but had to be converted
 since we need to use refs/findDOMNode to access the underlying DOM node to focus the correct completion,
@@ -71,8 +73,20 @@ export const PillCompletion = forwardRef<IPillCompletionProps, any>((props, ref)
         >
             {children}
             <span className="mx_Autocomplete_Completion_title">{title}</span>
-            <span className="mx_Autocomplete_Completion_subtitle">{subtitle}</span>
-            {/* <span className="mx_Autocomplete_Completion_description">{description}</span> */}
+            {subtitle && <span className="mx_Autocomplete_Completion_subtitle">{subtitle}</span>}
+            {description && <span className="mx_Autocomplete_Completion_description">{description}</span>}
         </div>
     );
 });
+
+export const AllMemberCompletion = ({ title, ...restProps }: IPillCompletionProps) => {
+    return (
+        <PillCompletion
+            title={`@${title}`}
+            subtitle={`此${SpaceStore.instance.isHomeSpace ? _t("Room") : _t("Channel")}中的所有人`}
+            {...restProps}
+        >
+            <span className="mx_Autocomplete_Completion_mentionAllIcon" />
+        </PillCompletion>
+    );
+};

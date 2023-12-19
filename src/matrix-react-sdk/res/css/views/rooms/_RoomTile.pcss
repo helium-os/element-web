@@ -16,27 +16,44 @@ limitations under the License.
 
 /* Note: the room tile expects to be in a flexbox column container */
 .mx_RoomTile {
-    margin-bottom: 4px;
-    padding: 4px;
+    box-sizing: border-box;
 
     /* The tile is also a flexbox row itself */
     display: flex;
+    align-items: center;
     contain: content; /* Not strict as it will break when resizing a sublist vertically */
-    box-sizing: border-box;
+    padding: 4px 8px 4px 22px;
+    border-radius: 4px;
 
-    font-size: $font-13px;
 
-    &.mx_RoomTile_selected,
-    &:hover,
-    &:focus-within,
-    &.mx_RoomTile_hasMenuOpen {
-        background-color: $panel-actions;
-        border-radius: 8px;
+    &:hover{
+        background-color: $background-primary2-secondary-color1;
     }
 
-    .mx_DecoratedRoomAvatar,
+    &.mx_RoomTile_selected,
+    &:focus-within,
+    &.mx_RoomTile_hasMenuOpen {
+        background-color: $background-primary2-secondary-color3;
+        .mx_RoomTile_title {
+            color: $text-primary-color1;
+        }
+    }
+
+    &.mx_RoomTile_mute_notification {
+        opacity: 0.3;
+    }
+
+    .mx_RoomTile_iconType {
+        margin-right: 4px;
+    }
+
     .mx_RoomTile_avatarContainer {
-        margin-right: 10px;
+        margin-right: 4px;
+    }
+
+    .mx_DecoratedRoomAvatar {
+        margin-right: 8px;
+        padding: 3px 0;
     }
 
     .mx_RoomTile_details {
@@ -44,44 +61,45 @@ limitations under the License.
     }
 
     .mx_RoomTile_titleContainer {
-        height: 32px;
         min-width: 0;
         flex-basis: 0;
         flex-grow: 1;
-        margin-right: 8px; /* spacing to buttons/badges */
 
         /* Create a new column layout flexbox for the title parts */
         display: flex;
         flex-direction: column;
         justify-content: center;
+    }
 
-        .mx_RoomTile_title,
-        .mx_RoomTile_subtitle {
-            width: 100%;
+    .mx_RoomTile_title,
+    .mx_RoomTile_subtitle {
+        width: 100%;
 
-            /* Ellipsize any text overflow */
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
+        /* Ellipsize any text overflow */
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .mx_RoomTile_title {
+        font-size: $font-14px;
+        line-height: $font-20px;
+        font-weight: $font-normal-bold;
+        color: $text-primary-color3;
+
+        &.mx_RoomTile_titleHasUnreadEvents {
+            font-weight: 600;
+            color: $text-primary-color1;
         }
+    }
 
-        .mx_RoomTile_title {
-            font-size: $font-14px;
-            line-height: $font-18px;
+    .mx_RoomTile_subtitle {
+        line-height: $font-18px;
+        color: $secondary-content;
+    }
 
-            &.mx_RoomTile_titleHasUnreadEvents {
-                font-weight: 600;
-            }
-        }
-
-        .mx_RoomTile_subtitle {
-            line-height: $font-18px;
-            color: $secondary-content;
-        }
-
-        .mx_RoomTile_titleWithSubtitle {
-            margin-top: -3px; /* shift the title up a bit more */
-        }
+    .mx_RoomTile_titleWithSubtitle {
+        margin-top: -3px; /* shift the title up a bit more */
     }
 
     .mx_RoomTile_notificationsButton {
@@ -89,23 +107,16 @@ limitations under the License.
     }
 
     .mx_RoomTile_badgeContainer {
-        height: 16px;
-        /* don't set width so that it takes no space when there is no badge to show */
-        margin: auto 0; /* vertically align */
-
-        /* Create a flexbox to make aligning dot badges easier */
-        display: flex;
-        align-items: center;
-
-        .mx_NotificationBadge {
-            margin-right: 2px; /* centering */
-        }
-
+        margin-left: 2px;
         .mx_NotificationBadge_dot {
             /* make the smaller dot occupy the same width for centering */
             margin-left: 5px;
             margin-right: 7px;
         }
+    }
+
+    .mx_RoomTile_mentionsBadgeContainer {
+        margin-left: 2px;
     }
 
     /* The context menu buttons are hidden by default */
@@ -146,13 +157,6 @@ limitations under the License.
         &:hover,
         &:focus-within,
         &.mx_RoomTile_hasMenuOpen {
-            /* Hide the badge container on hover because it'll be a menu button */
-            .mx_RoomTile_badgeContainer {
-                width: 0;
-                height: 0;
-                display: none;
-            }
-
             .mx_RoomTile_notificationsButton,
             .mx_RoomTile_menuButton {
                 display: block;
@@ -169,6 +173,22 @@ limitations under the License.
         .mx_RoomTile_avatarContainer {
             margin-right: 0;
         }
+    }
+}
+
+
+
+.mx_RoomTile_iconType {
+    width: 24px;
+    height: 24px;
+    &.mx_RoomTile_iconPublic {
+        @mixin MaskIcon url("$(res)/img/element-icons/room/public.svg"), 14px, 14px;
+    }
+    &.mx_RoomTile_iconPrivate{
+        @mixin MaskIcon url("$(res)/img/element-icons/room/private.svg"), 12px, 14px;
+    }
+    &.mx_RoomTile_iconHome{
+        @mixin MaskIcon url("$(res)/img/element-icons/home.svg"), 16px, 16px;
     }
 }
 

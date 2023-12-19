@@ -25,13 +25,9 @@ import AccessibleButton, { ButtonEvent } from "../../views/elements/AccessibleBu
 import defaultDispatcher from "../../../dispatcher/dispatcher";
 import { Action } from "../../../dispatcher/actions";
 import { _t } from "../../../languageHandler";
-import { ChevronFace, ContextMenuTooltipButton, MenuProps } from "../../structures/ContextMenu";
+import { ChevronFace, MenuProps } from "../../structures/ContextMenu";
 import { DefaultTagID, TagID } from "../../../stores/room-list/models";
 import { MessagePreviewStore } from "../../../stores/room-list/MessagePreviewStore";
-import DecoratedRoomAvatar from "../avatars/DecoratedRoomAvatar";
-import { RoomNotifState } from "../../../RoomNotifs";
-import { MatrixClientPeg } from "../../../MatrixClientPeg";
-import { RoomNotificationContextMenu } from "../context_menus/RoomNotificationContextMenu";
 import NotificationBadge from "./NotificationBadge";
 import { ActionPayload } from "../../../dispatcher/payloads";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
@@ -49,6 +45,10 @@ import { RoomGeneralContextMenu } from "../context_menus/RoomGeneralContextMenu"
 import { CallStore, CallStoreEvent } from "../../../stores/CallStore";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import { useHasRoomLiveVoiceBroadcast, VoiceBroadcastRoomSubtitle } from "../../../voice-broadcast";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import MentionsNotificationBadge from "matrix-react-sdk/src/components/views/rooms/NotificationBadge/MentionsNotificationBadge";
+import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
+import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
 
 interface Props {
     room: Room;
@@ -61,14 +61,16 @@ interface ClassProps extends Props {
     hasLiveVoiceBroadcast: boolean;
 }
 
-type PartialDOMRect = Pick<DOMRect, "left" | "bottom">;
+export type PartialDOMRect = Pick<DOMRect, "left" | "bottom">;
 
 interface State {
     selected: boolean;
+    isPrivate: boolean;
     notificationsMenuPosition: PartialDOMRect | null;
     generalMenuPosition: PartialDOMRect | null;
     call: Call | null;
     messagePreview?: string;
+    roomNotificationState: RoomNotifState;
 }
 
 const messagePreviewId = (roomId: string): string => `mx_RoomTile_messagePreview_${roomId}`;
@@ -90,18 +92,21 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
     public constructor(props: ClassProps) {
         super(props);
 
+        this.roomProps = EchoChamber.forRoom(this.props.room);
+
         this.state = {
             selected: SdkContextClass.instance.roomViewStore.getRoomId() === this.props.room.roomId,
+            isPrivate: this.props.room.isPrivateRoom(),
             notificationsMenuPosition: null,
             generalMenuPosition: null,
             call: CallStore.instance.getCall(this.props.room.roomId),
             // generatePreview() will return nothing if the user has previews disabled
             messagePreview: "",
+            roomNotificationState: this.roomProps?.notificationVolume,
         };
         this.generatePreview();
 
         this.notificationState = RoomNotificationStateStore.instance.getRoomState(this.props.room);
-        this.roomProps = EchoChamber.forRoom(this.props.room);
     }
 
     private onRoomNameUpdate = (room: Room): void => {
@@ -113,12 +118,17 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
     };
 
     private onRoomPropertyUpdate = (property: CachedRoomKey): void => {
-        if (property === CachedRoomKey.NotificationVolume) this.onNotificationUpdate();
+        if (property === CachedRoomKey.NotificationVolume) {
+            // this.onNotificationUpdate();
+            this.setState({
+                roomNotificationState: this.roomProps?.notificationVolume,
+            });
+        }
         // else ignore - not important for this tile
     };
 
     private get showContextMenu(): boolean {
-        return this.props.tag !== DefaultTagID.Invite;
+        return !SpaceStore.instance.isHomeSpace && this.props.tag !== DefaultTagID.Invite; // 私聊和群聊不展示频道右键菜单；社区内频道展示
     }
 
     private get showMessagePreview(): boolean {
@@ -242,26 +252,6 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         this.setState({ selected: isActive });
     };
 
-    private onNotificationsMenuOpenClick = (ev: ButtonEvent): void => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const target = ev.target as HTMLButtonElement;
-        this.setState({ notificationsMenuPosition: target.getBoundingClientRect() });
-
-        PosthogTrackers.trackInteraction("WebRoomListRoomTileNotificationsMenu", ev);
-    };
-
-    private onCloseNotificationsMenu = (): void => {
-        this.setState({ notificationsMenuPosition: null });
-    };
-
-    private onGeneralMenuOpenClick = (ev: ButtonEvent): void => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const target = ev.target as HTMLButtonElement;
-        this.setState({ generalMenuPosition: target.getBoundingClientRect() });
-    };
-
     private onContextMenu = (ev: React.MouseEvent): void => {
         // If we don't have a context menu to show, ignore the action.
         if (!this.showContextMenu) return;
@@ -280,77 +270,17 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         this.setState({ generalMenuPosition: null });
     };
 
-    private renderNotificationsMenu(isActive: boolean): React.ReactElement | null {
-        if (
-            MatrixClientPeg.get().isGuest() ||
-            this.props.tag === DefaultTagID.Archived ||
-            !this.showContextMenu ||
-            this.props.isMinimized
-        ) {
-            // the menu makes no sense in these cases so do not show one
-            return null;
-        }
-
-        const state = this.roomProps.notificationVolume;
-
-        const classes = classNames("mx_RoomTile_notificationsButton", {
-            // Show bell icon for the default case too.
-            mx_RoomNotificationContextMenu_iconBell: state === RoomNotifState.AllMessages,
-            mx_RoomNotificationContextMenu_iconBellDot: state === RoomNotifState.AllMessagesLoud,
-            mx_RoomNotificationContextMenu_iconBellMentions: state === RoomNotifState.MentionsOnly,
-            mx_RoomNotificationContextMenu_iconBellCrossed: state === RoomNotifState.Mute,
-
-            // Only show the icon by default if the room is overridden to muted.
-            // TODO: [FTUE Notifications] Probably need to detect global mute state
-            mx_RoomTile_notificationsButton_show: state === RoomNotifState.Mute,
-        });
-
-        return (
-            <React.Fragment>
-                <ContextMenuTooltipButton
-                    className={classes}
-                    onClick={this.onNotificationsMenuOpenClick}
-                    title={_t("Notification options")}
-                    isExpanded={!!this.state.notificationsMenuPosition}
-                    tabIndex={isActive ? 0 : -1}
-                />
-                {this.state.notificationsMenuPosition && (
-                    <RoomNotificationContextMenu
-                        {...contextMenuBelow(this.state.notificationsMenuPosition)}
-                        onFinished={this.onCloseNotificationsMenu}
-                        room={this.props.room}
-                    />
-                )}
-            </React.Fragment>
-        );
-    }
-
     private renderGeneralMenu(): React.ReactElement | null {
         if (!this.showContextMenu) return null; // no menu to show
         return (
             <React.Fragment>
-                <ContextMenuTooltipButton
-                    className="mx_RoomTile_menuButton"
-                    onClick={this.onGeneralMenuOpenClick}
-                    title={_t("Room options")}
-                    isExpanded={!!this.state.generalMenuPosition}
-                />
                 {this.state.generalMenuPosition && (
                     <RoomGeneralContextMenu
                         {...contextMenuBelow(this.state.generalMenuPosition)}
                         onFinished={this.onCloseGeneralMenu}
                         room={this.props.room}
-                        onPostFavoriteClick={(ev: ButtonEvent) =>
-                            PosthogTrackers.trackInteraction("WebRoomListRoomTileContextMenuFavouriteToggle", ev)
-                        }
-                        onPostInviteClick={(ev: ButtonEvent) =>
-                            PosthogTrackers.trackInteraction("WebRoomListRoomTileContextMenuInviteItem", ev)
-                        }
                         onPostSettingsClick={(ev: ButtonEvent) =>
                             PosthogTrackers.trackInteraction("WebRoomListRoomTileContextMenuSettingsItem", ev)
-                        }
-                        onPostLeaveClick={(ev: ButtonEvent) =>
-                            PosthogTrackers.trackInteraction("WebRoomListRoomTileContextMenuLeaveItem", ev)
                         }
                     />
                 )}
@@ -364,6 +294,7 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
             mx_RoomTile_selected: this.state.selected,
             mx_RoomTile_hasMenuOpen: !!(this.state.generalMenuPosition || this.state.notificationsMenuPosition),
             mx_RoomTile_minimized: this.props.isMinimized,
+            mx_RoomTile_mute_notification: this.state.roomNotificationState === RoomNotifState.Mute,
         });
 
         let name = this.props.room.name;
@@ -371,7 +302,12 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         name = name.replace(":", ":\u200b"); // add a zero-width space to allow linewrapping after the colon
 
         let badge: React.ReactNode;
-        if (!this.props.isMinimized && this.notificationState) {
+
+        if (
+            !this.props.isMinimized &&
+            this.notificationState &&
+            (SpaceStore.instance.isHomeSpace || this.notificationState.hasMentions) // 私聊 & 群聊有未读消息时展示小红点；社区频道只有被@时才展示小红点
+        ) {
             // aria-hidden because we summarise the unread count/highlight status in a manual aria-label below
             badge = (
                 <div className="mx_RoomTile_badgeContainer" aria-hidden="true">
@@ -380,6 +316,24 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
                         forceCount={false}
                         roomId={this.props.room.roomId}
                     />
+                </div>
+            );
+        }
+
+        let mentionsBadge;
+        /**
+         * 群聊里有人@时展示"@我"标识（邀请分组下不展示标识）
+         * 社区频道内有人@时不展示
+         */
+        if (
+            !this.props.isMinimized &&
+            SpaceStore.instance.isHomeSpace &&
+            this.props.tag !== DefaultTagID.Invite &&
+            this.notificationState
+        ) {
+            mentionsBadge = (
+                <div className="mx_RoomTile_mentionsBadgeContainer">
+                    <MentionsNotificationBadge notification={this.notificationState} />
                 </div>
             );
         }
@@ -408,7 +362,7 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         const titleClasses = classNames({
             mx_RoomTile_title: true,
             mx_RoomTile_titleWithSubtitle: !!subtitle,
-            mx_RoomTile_titleHasUnreadEvents: this.notificationState.isUnread,
+            mx_RoomTile_titleHasUnreadEvents: !SpaceStore.instance.isHomeSpace && this.notificationState.isUnread, // 社区下频道有未读消息时加粗显示；私聊和群聊不需要加粗，直接显示小红点
         });
 
         const titleContainer = this.props.isMinimized ? null : (
@@ -471,16 +425,15 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
                             aria-selected={this.state.selected}
                             aria-describedby={ariaDescribedBy}
                         >
-                            <DecoratedRoomAvatar
+                            <RoomAndChannelAvatar
                                 room={this.props.room}
                                 avatarSize={32}
                                 displayBadge={this.props.isMinimized}
-                                tooltipProps={{ tabIndex: isActive ? 0 : -1 }}
                             />
                             {titleContainer}
+                            {mentionsBadge}
                             {badge}
                             {this.renderGeneralMenu()}
-                            {this.renderNotificationsMenu(isActive)}
                         </Button>
                     )}
                 </RovingTabIndexWrapper>

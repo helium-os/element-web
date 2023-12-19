@@ -20,6 +20,9 @@ import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
 
 import ResizeNotifier from "../../utils/ResizeNotifier";
+import RightPanelStore from "matrix-react-sdk/src/stores/right-panel/RightPanelStore";
+import { RightPanelPhases } from "matrix-react-sdk/src/stores/right-panel/RightPanelStorePhases";
+import { UPDATE_EVENT } from "matrix-react-sdk/src/stores/AsyncStore";
 
 interface IProps {
     resizeNotifier: ResizeNotifier;
@@ -28,7 +31,39 @@ interface IProps {
     children: ReactNode;
 }
 
-export default class MainSplit extends React.Component<IProps> {
+interface IState {
+    phase: RightPanelPhases | null;
+    rightPanelResizeable: boolean;
+    rightPanelDefaultWidth: number | string;
+}
+export default class MainSplit extends React.Component<IProps, IState> {
+    constructor(props: IProps) {
+        super(props);
+        this.state = {
+            phase: null,
+            rightPanelResizeable: false,
+            rightPanelDefaultWidth: 0,
+        };
+    }
+
+    componentDidMount() {
+        RightPanelStore.instance.on(UPDATE_EVENT, this.onRightPanelUpdate);
+    }
+
+    componentWillUnmount() {
+        RightPanelStore.instance.off(UPDATE_EVENT, this.onRightPanelUpdate);
+    }
+
+    private onRightPanelUpdate = () => {
+        const { phase } = RightPanelStore.instance.currentCard || {};
+        const rightPanelResizeable = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView].includes(phase);
+        this.setState({
+            phase,
+            rightPanelResizeable,
+            rightPanelDefaultWidth: rightPanelResizeable ? "30%" : 244,
+        });
+    };
+
     private onResizeStart = (): void => {
         this.props.resizeNotifier.startResizing();
     };
@@ -51,9 +86,8 @@ export default class MainSplit extends React.Component<IProps> {
         let rhsSize = parseInt(window.localStorage.getItem("mx_rhs_size")!, 10);
 
         if (isNaN(rhsSize)) {
-            rhsSize = 350;
+            rhsSize = this.state.rightPanelDefaultWidth;
         }
-
         return {
             height: "100%",
             width: rhsSize,
@@ -71,22 +105,26 @@ export default class MainSplit extends React.Component<IProps> {
             children = (
                 <Resizable
                     defaultSize={this.loadSidePanelSize()}
-                    minWidth={264}
-                    maxWidth="50%"
-                    enable={{
-                        top: false,
-                        right: false,
-                        bottom: false,
-                        left: true,
-                        topRight: false,
-                        bottomRight: false,
-                        bottomLeft: false,
-                        topLeft: false,
-                    }}
+                    minWidth={this.state.rightPanelDefaultWidth}
+                    maxWidth={this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth}
+                    enable={
+                        this.state.rightPanelResizeable
+                            ? {
+                                  top: false,
+                                  right: false,
+                                  bottom: false,
+                                  left: true,
+                                  topRight: false,
+                                  bottomRight: false,
+                                  bottomLeft: false,
+                                  topLeft: false,
+                              }
+                            : false
+                    }
                     onResizeStart={this.onResizeStart}
                     onResize={this.onResize}
                     onResizeStop={this.onResizeStop}
-                    className="mx_RightPanel_ResizeWrapper"
+                    className="mx_ResizeWrapper mx_RightPanel_ResizeWrapper"
                     handleClasses={{ left: "mx_ResizeHandle_horizontal" }}
                 >
                     {panelView}
@@ -95,7 +133,7 @@ export default class MainSplit extends React.Component<IProps> {
         }
 
         return (
-            <div className="mx_MainSplit">
+            <div className={`mx_MainSplit ${this.state.rightPanelResizeable ? "mx_RightPanel_resizeable" : ""}`}>
                 {bodyView}
                 {children}
             </div>

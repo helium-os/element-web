@@ -15,14 +15,14 @@ limitations under the License.
 */
 
 .mx_ToggleSwitch {
-    --ToggleSwitch-min-width: $font-44px;
+    position: relative;
+    --ToggleSwitch-min-width: 40px;
 
     transition: background-color 0.2s ease-out 0.1s;
 
-    width: $font-44px;
-    height: $font-20px;
-    border-radius: 1.5rem;
-    padding: 2px;
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
 
     background-color: $togglesw-off-color;
     opacity: 0.5;
@@ -37,20 +37,28 @@ limitations under the License.
     opacity: 1;
 }
 
-.mx_ToggleSwitch.mx_ToggleSwitch_on {
-    background-color: $accent;
+.mx_ToggleSwitch_ball {
+    @mixin HalfPxBorder $togglesw-off-color, 20px;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translate(0, -50%);
 
-    > .mx_ToggleSwitch_ball {
-        left: calc(100% - $font-20px);
+    width: 20px;
+    height: 20px;
+    transition: left 0.15s ease-out 0.1s;
+    &:before {
+        background-color: $togglesw-ball-color;
     }
 }
 
-.mx_ToggleSwitch_ball {
-    position: relative;
-    width: $font-20px;
-    height: $font-20px;
-    border-radius: $font-20px;
-    background-color: $togglesw-ball-color;
-    transition: left 0.15s ease-out 0.1s;
-    left: 0;
+.mx_ToggleSwitch.mx_ToggleSwitch_on {
+    background-color: $togglesw-on-color;
+    > .mx_ToggleSwitch_ball {
+        left: unset;
+        right: 0;
+        &:before {
+            border-color: $togglesw-on-color;
+        }
+    }
 }

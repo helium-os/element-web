@@ -39,7 +39,7 @@ function getMonthsArray(): string[] {
     ];
 }
 
-const monthToEnArr: string[] = ['Jan','Feb','Mar','Apr' ,'May','Jun','Jul','Aug','Sept','Oct','Nov','Dec'];
+const monthToEnArr: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
 
 function pad(n: number): string {
     return (n < 10 ? "0" : "") + n;
@@ -233,19 +233,27 @@ export function formatFullDateNoDayNoTime(date: Date): string {
     return date.getFullYear() + "/" + pad(date.getMonth() + 1) + "/" + pad(date.getDate());
 }
 
-export function formatFullRelativeTime(date: Date, showTwelveHour = false, showSeconds = false): string {
+interface TimeParams {
+    showTwelveHour: boolean;
+    showSeconds: boolean;
+}
+export function formatFullRelativeTime(date: Date, timeParams?: TimeParams): string {
     const now = new Date(Date.now());
-    if (withinCurrentDay(date, now)) {
-        return formatTime(date, showTwelveHour);
+    if (timeParams && withinCurrentDay(date, now)) {
+        return formatTime(date, timeParams.showTwelveHour);
     } else {
         const day = date.getDate();
-        const month = getCurrentLanguage() !== 'en' ? date.getMonth() + 1 : monthToEnArr[date.getMonth()];
-        const time = showSeconds ? formatFullTime(date, showTwelveHour) : formatTime(date, showTwelveHour);
+        const month = getCurrentLanguage() !== "en" ? date.getMonth() + 1 : monthToEnArr[date.getMonth()];
+        const time = !timeParams
+            ? ""
+            : timeParams.showSeconds
+              ? formatFullTime(date, timeParams.showTwelveHour)
+              : formatTime(date, timeParams.showTwelveHour);
         if (withinCurrentYear(date, now)) {
             return _t("MxEventTimeNoYear", {
                 month,
                 day,
-                time
+                time,
             });
         }
 
@@ -253,8 +261,8 @@ export function formatFullRelativeTime(date: Date, showTwelveHour = false, showS
             fullYear: date.getFullYear(),
             month,
             day,
-            time
-        })
+            time,
+        });
     }
 }
 

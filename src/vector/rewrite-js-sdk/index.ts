@@ -4,3 +4,4 @@ import "./room-state";
 import "./room";
 import "./event";
 import "./mediaHandler";
+import "./client";

@@ -30,6 +30,7 @@ limitations under the License.
 
     .mx_HomePage_default_wrapper {
         margin: auto;
+        text-align: center;
     }
 
     img {
@@ -37,72 +38,57 @@ limitations under the License.
     }
 
     h1 {
-        font-weight: $font-semi-bold;
-        font-size: $font-32px;
-        line-height: $font-44px;
-        margin-bottom: 4px;
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 40px; /* 125% */
+        color: $text-primary-color3;
     }
 
     h2 {
-        margin-top: 4px;
-        font-weight: $font-semi-bold;
-        font-size: $font-18px;
-        line-height: $font-25px;
-        color: $muted-fg-color;
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        color: $text-secondary-color1;
     }
 
     .mx_MiniAvatarUploader {
         margin: 0 auto;
     }
 
-    .mx_HomePage_default_buttons {
+    .mx_HomePage_actionWrap {
         display: flex;
-        margin: 60px auto 0;
-        width: fit-content;
-
-        .mx_AccessibleButton {
-            padding: 73px 8px 15px; /* top: 20px top padding + 40px icon + 13px margin */
-
-            width: 160px;
-            min-height: 132px;
-            margin: 20px;
-            position: relative;
-            display: inline-block;
-            border-radius: 8px;
-            vertical-align: top;
-            word-break: break-word;
-            box-sizing: border-box;
-
-            font-weight: 600;
-            font-size: $font-15px;
-            line-height: $font-20px;
-            color: #fff; /* on all themes */
-            background-color: $accent;
-
-            &::before {
-                top: 20px;
-                left: 60px; /* (160px-40px)/2 */
-                width: 40px;
-                height: 40px;
-
-                content: "";
-                position: absolute;
-                background-color: #fff; /* on all themes */
-                mask-repeat: no-repeat;
-                mask-size: contain;
-            }
-
-            &.mx_HomePage_button_sendDm::before {
-                mask-image: url("$(res)/img/element-icons/feedback.svg");
-            }
-
-            &.mx_HomePage_button_explore::before {
-                mask-image: url("$(res)/img/element-icons/roomlist/explore.svg");
-            }
-
-            &.mx_HomePage_button_createGroup::before {
-                mask-image: url("$(res)/img/element-icons/group-members.svg");
-            }
+        margin: 20px auto 0;
+        gap: 60px;
+        .mx_HomePage_actionItem {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 300px;
+            height: 300px;
+            border-radius: 20px;
+            background: rgba(238, 238, 238, 0.50);
+        }
+        .mx_HomePage_actionIcon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto;
+        }
+        .mx_sendDm_icon {
+            @mixin MaskIcon url("$(res)/img/element-icons/room/direct-message.svg"), 42px, 41px, $text-primary-color3;
+        }
+        .mx_createGroup_icon {
+            @mixin MaskIcon url("$(res)/img/element-icons/room/group-chat.svg"), 74px, 40px, $text-primary-color3;
+        }
+        .mx_HomePage_actionText {
+            margin-top: 12px;
+            font-size: 16px;
+            line-height: 24px;
+            font-weight: 400;
+            color: $text-primary-color3;
+        }
+        .mx_HomePage_actionBtn {
+            margin-top: 30px;
         }
     }
 }

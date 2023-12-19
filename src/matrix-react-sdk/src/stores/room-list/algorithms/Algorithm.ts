@@ -138,6 +138,7 @@ export class Algorithm extends EventEmitter {
 
         const algorithm: OrderingAlgorithm = this.algorithms[tagId];
         algorithm.setSortAlgorithm(sort);
+
         this._cachedRooms[tagId] = algorithm.orderedRooms;
         this.recalculateStickyRoom(tagId); // update sticky room to make sure it appears if needed
         this.recalculateActiveCallRooms(tagId);
@@ -160,6 +161,7 @@ export class Algorithm extends EventEmitter {
         this.algorithms[tagId] = algorithm;
 
         algorithm.setRooms(this._cachedRooms[tagId]);
+
         this._cachedRooms[tagId] = algorithm.orderedRooms;
         this.recalculateStickyRoom(tagId); // update sticky room to make sure it appears if needed
         this.recalculateActiveCallRooms(tagId);
@@ -336,7 +338,7 @@ export class Algorithm extends EventEmitter {
 
         if (!this._stickyRoom) {
             // If there's no sticky room, just do nothing useful.
-            if (!!this._cachedStickyRooms) {
+            if (this._cachedStickyRooms) {
                 // Clear the cache if we won't be needing it
                 this._cachedStickyRooms = null;
                 if (this.updatesInhibited) return;
@@ -431,6 +433,7 @@ export class Algorithm extends EventEmitter {
         for (const tag of Object.keys(tagSortingMap)) {
             this.algorithms[tag] = getListAlgorithmInstance(this.listAlgorithms[tag], tag, this.sortAlgorithms[tag]);
         }
+
         return this.setKnownRooms(this.rooms);
     }
 
@@ -562,16 +565,17 @@ export class Algorithm extends EventEmitter {
     }
 
     private getTagsOfJoinedRoom(room: Room): TagID[] {
-        let tags = Object.keys(room.tags || {});
+        const roomTags = room.getAllTags();
+        let tagIds: TagID[] = roomTags.map((item) => item.tagId);
 
-        if (tags.length === 0) {
+        if (tagIds.length === 0) {
             // Check to see if it's a DM if it isn't anything else
             if (DMRoomMap.shared().getUserIdForRoomId(room.roomId)) {
-                tags = [DefaultTagID.DM];
+                tagIds = [DefaultTagID.DM];
             }
         }
 
-        return tags;
+        return tagIds;
     }
 
     /**
@@ -681,6 +685,7 @@ export class Algorithm extends EventEmitter {
                     const algorithm: OrderingAlgorithm = this.algorithms[rmTag];
                     if (!algorithm) throw new Error(`No algorithm for ${rmTag}`);
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.RoomRemoved);
+
                     this._cachedRooms[rmTag] = algorithm.orderedRooms;
                     this.recalculateStickyRoom(rmTag); // update sticky room to make sure it moves if needed
                     this.recalculateActiveCallRooms(rmTag);
@@ -689,6 +694,7 @@ export class Algorithm extends EventEmitter {
                     const algorithm: OrderingAlgorithm = this.algorithms[addTag];
                     if (!algorithm) throw new Error(`No algorithm for ${addTag}`);
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.NewRoom);
+
                     this._cachedRooms[addTag] = algorithm.orderedRooms;
                 }
 

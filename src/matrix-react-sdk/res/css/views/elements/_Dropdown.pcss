@@ -130,3 +130,33 @@ input.mx_Dropdown_option:focus {
     margin-left: 5px;
     margin-bottom: 5px;
 }
+
+
+
+// dropdown button
+@define-mixin DropdownIcon $color: $text-primary-color1 {
+    width: 16px;
+    height: 16px;
+    @mixin MaskIcon url("$(res)/img/feather-customised/dropdown-arrow.svg"), 10px, 5px, $color;
+}
+
+@define-mixin DropdownBtn $color: $text-primary-color1, $fontSize: 14px {
+    display: flex;
+    align-items: center;
+    font-size: $fontSize;
+    line-height: 20px;
+    font-weight: 400;
+    color: $color;
+    .mx_DropdownIcon {
+        transition: all 0.2s ease;
+        @mixin DropdownIcon $color;
+    }
+}
+
+.mx_DropdownButton {
+    @mixin DropdownBtn;
+}
+
+[aria-expanded="true"] .mx_DropdownIcon {
+    transform: rotate(180deg);
+}

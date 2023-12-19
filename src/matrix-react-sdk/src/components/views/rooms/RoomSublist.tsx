@@ -23,6 +23,8 @@ import { Direction } from "re-resizable/lib/resizer";
 import * as React from "react";
 import { ComponentType, createRef, ReactComponentElement, ReactNode } from "react";
 
+import { Droppable, Draggable } from "react-beautiful-dnd";
+
 import { polyfillTouchEvent } from "../../../@types/polyfill";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { RovingAccessibleButton, RovingTabIndexWrapper } from "../../../accessibility/RovingTabIndex";
@@ -36,18 +38,13 @@ import { ListNotificationState } from "../../../stores/notifications/ListNotific
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { ListAlgorithm, SortAlgorithm } from "../../../stores/room-list/algorithms/models";
 import { ListLayout } from "../../../stores/room-list/ListLayout";
-import { DefaultTagID, TagID } from "../../../stores/room-list/models";
+import { DefaultTagID, DragType, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
 import RoomListLayoutStore from "../../../stores/room-list/RoomListLayoutStore";
 import RoomListStore, { LISTS_UPDATE_EVENT, LISTS_LOADING_EVENT } from "../../../stores/room-list/RoomListStore";
 import { arrayFastClone, arrayHasOrderChange } from "../../../utils/arrays";
 import { objectExcluding, objectHasDiff } from "../../../utils/objects";
 import ResizeNotifier from "../../../utils/ResizeNotifier";
-import ContextMenu, {
-    ChevronFace,
-    ContextMenuTooltipButton,
-    StyledMenuItemCheckbox,
-    StyledMenuItemRadio,
-} from "../../structures/ContextMenu";
+import ContextMenu, { ChevronFace, StyledMenuItemCheckbox, StyledMenuItemRadio } from "../../structures/ContextMenu";
 import AccessibleButton from "../../views/elements/AccessibleButton";
 import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ExtraTile from "./ExtraTile";
@@ -55,6 +52,12 @@ import SettingsStore from "../../../settings/SettingsStore";
 import { SlidingSyncManager } from "../../../SlidingSyncManager";
 import NotificationBadge from "./NotificationBadge";
 import RoomTile from "./RoomTile";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { IconizedContextMenuOptionList } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
+import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
+import SpaceDeleteTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceDeleteTagContextMenu";
+import EditSpaceTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/EditSpaceTagContextMenu";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -67,10 +70,12 @@ polyfillTouchEvent();
 
 export interface IAuxButtonProps {
     tabIndex: number;
+    tagId?: TagID;
     dispatcher?: MatrixDispatcher;
 }
 
 interface IProps {
+    index: number;
     forRooms: boolean;
     startAsHidden: boolean;
     label: string;
@@ -94,6 +99,8 @@ interface ResizeDelta {
 type PartialDOMRect = Pick<DOMRect, "left" | "top" | "height">;
 
 interface IState {
+    showAppearanceMenu: boolean;
+    showSortMenu: boolean;
     contextMenuPosition?: PartialDOMRect;
     isResizing: boolean;
     isExpanded: boolean; // used for the for expand of the sublist when the room list is being filtered
@@ -113,6 +120,8 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
     private slidingSyncMode: boolean;
 
+    private userId: string = MatrixClientPeg.get().getUserId()!;
+
     public constructor(props: IProps) {
         super(props);
         // when this setting is toggled it restarts the app so it's safe to not watch this.
@@ -122,6 +131,8 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         this.heightAtStart = 0;
         this.notificationState = RoomNotificationStateStore.instance.getListState(this.props.tagId);
         this.state = {
+            showSortMenu: false, // 是否展示排序相关菜单
+            showAppearanceMenu: false, // 是否展示外观相关菜单
             isResizing: false,
             isExpanded: !this.layout.isCollapsed,
             height: 0, // to be fixed in a moment, we need `rooms` to calculate this.
@@ -365,13 +376,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         }
     };
 
-    private onOpenMenuClick = (ev: React.MouseEvent): void => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        const target = ev.target as HTMLButtonElement;
-        this.setState({ contextMenuPosition: target.getBoundingClientRect() });
-    };
-
     private onContextMenu = (ev: React.MouseEvent): void => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -460,7 +464,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
     };
 
     private toggleCollapsed = (): void => {
-        if (this.props.forceExpanded) return;
         this.layout.isCollapsed = this.state.isExpanded;
         this.setState({ isExpanded: !this.layout.isCollapsed });
         if (this.props.onListCollapse) {
@@ -510,7 +513,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
     };
 
     private renderVisibleTiles(): React.ReactElement[] {
-        if (!this.state.isExpanded && !this.props.forceExpanded) {
+        if (!this.state.isExpanded) {
             // don't waste time on rendering
             return [];
         }
@@ -523,15 +526,32 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 visibleRooms = visibleRooms.slice(0, this.numVisibleTiles);
             }
 
-            for (const room of visibleRooms) {
+            for (const [index, room] of visibleRooms.entries()) {
+                const disabled =
+                    (OrderedDefaultTagIDs.includes(this.props.tagId) && this.props.tagId !== DefaultTagID.Untagged) ||
+                    !room.canOperateTag(this.userId);
                 tiles.push(
-                    <RoomTile
-                        room={room}
-                        key={`room-${room.roomId}`}
-                        showMessagePreview={this.layout.showPreviews}
-                        isMinimized={this.props.isMinimized}
-                        tag={this.props.tagId}
-                    />,
+                    <Draggable
+                        key={`channel-${room.roomId}`}
+                        isDragDisabled={disabled}
+                        draggableId={room.roomId}
+                        index={index}
+                    >
+                        {(draggableProvided, draggableSnapshot) => (
+                            <div
+                                ref={draggableProvided.innerRef}
+                                {...draggableProvided.draggableProps}
+                                {...draggableProvided.dragHandleProps}
+                            >
+                                <RoomTile
+                                    room={room}
+                                    showMessagePreview={this.layout.showPreviews}
+                                    isMinimized={this.props.isMinimized}
+                                    tag={this.props.tagId}
+                                />
+                            </div>
+                        )}
+                    </Draggable>,
                 );
             }
         }
@@ -554,6 +574,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
 
     private renderMenu(): ReactNode {
         if (this.props.tagId === DefaultTagID.Suggested || this.props.tagId === DefaultTagID.SavedItems) return null; // not sortable
+        if (SpaceStore.instance.isHomeSpace || OrderedDefaultTagIDs.includes(this.props.tagId)) return null; // 个人主页 & user tag 不展示分组相关操作
 
         let contextMenu: JSX.Element | undefined;
         if (this.state.contextMenuPosition) {
@@ -565,9 +586,45 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 isUnreadFirst = (slidingList?.sort || [])[0] === "by_notification_level";
             }
 
+            // 分组相关
+            const groupSections: JSX.Element | undefined = (
+                <IconizedContextMenuOptionList first>
+                    <EditSpaceTagContextMenu tagId={this.props.tagId} />
+                    <SpaceAddChanelContextMenu tagId={this.props.tagId} />
+                    <hr />
+                    <SpaceDeleteTagContextMenu tagId={this.props.tagId} />
+                </IconizedContextMenuOptionList>
+            );
+
+            // 排序相关
+            let sortSections: JSX.Element | undefined;
+            if (this.state.showSortMenu) {
+                sortSections = (
+                    <>
+                        <div className="mx_RoomSublist_contextMenu_title">{_t("Sort by")}</div>
+                        <StyledMenuItemRadio
+                            onClose={this.onCloseMenu}
+                            onChange={() => this.onTagSortChanged(SortAlgorithm.Recent)}
+                            checked={!isAlphabetical}
+                            name={`mx_${this.props.tagId}_sortBy`}
+                        >
+                            {_t("Activity")}
+                        </StyledMenuItemRadio>
+                        <StyledMenuItemRadio
+                            onClose={this.onCloseMenu}
+                            onChange={() => this.onTagSortChanged(SortAlgorithm.Alphabetic)}
+                            checked={isAlphabetical}
+                            name={`mx_${this.props.tagId}_sortBy`}
+                        >
+                            {_t("A-Z")}
+                        </StyledMenuItemRadio>
+                    </>
+                );
+            }
+
             // Invites don't get some nonsense options, so only add them if we have to.
             let otherSections: JSX.Element | undefined;
-            if (this.props.tagId !== DefaultTagID.Invite) {
+            if (this.state.showAppearanceMenu) {
                 otherSections = (
                     <React.Fragment>
                         <hr />
@@ -599,43 +656,20 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     top={this.state.contextMenuPosition.top + this.state.contextMenuPosition.height}
                     onFinished={this.onCloseMenu}
                 >
-                    <div className="mx_RoomSublist_contextMenu">
-                        <div>
-                            <div className="mx_RoomSublist_contextMenu_title">{_t("Sort by")}</div>
-                            <StyledMenuItemRadio
-                                onClose={this.onCloseMenu}
-                                onChange={() => this.onTagSortChanged(SortAlgorithm.Recent)}
-                                checked={!isAlphabetical}
-                                name={`mx_${this.props.tagId}_sortBy`}
-                            >
-                                {_t("Activity")}
-                            </StyledMenuItemRadio>
-                            <StyledMenuItemRadio
-                                onClose={this.onCloseMenu}
-                                onChange={() => this.onTagSortChanged(SortAlgorithm.Alphabetic)}
-                                checked={isAlphabetical}
-                                name={`mx_${this.props.tagId}_sortBy`}
-                            >
-                                {_t("A-Z")}
-                            </StyledMenuItemRadio>
-                        </div>
-                        {otherSections}
+                    <div className="mx_IconizedContextMenu mx_IconizedContextMenu_compact">
+                        {groupSections}
+                        {(sortSections || otherSections) && (
+                            <div className="mx_RoomSublist_contextMenu">
+                                {sortSections}
+                                {otherSections}
+                            </div>
+                        )}
                     </div>
                 </ContextMenu>
             );
         }
 
-        return (
-            <React.Fragment>
-                <ContextMenuTooltipButton
-                    className="mx_RoomSublist_menuButton"
-                    onClick={this.onOpenMenuClick}
-                    title={_t("List options")}
-                    isExpanded={!!this.state.contextMenuPosition}
-                />
-                {contextMenu}
-            </React.Fragment>
-        );
+        return <React.Fragment>{contextMenu}</React.Fragment>;
     }
 
     private renderHeader(): React.ReactElement {
@@ -663,12 +697,12 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     let addRoomButton: JSX.Element | undefined;
                     if (this.props.AuxButtonComponent) {
                         const AuxButtonComponent = this.props.AuxButtonComponent;
-                        addRoomButton = <AuxButtonComponent tabIndex={tabIndex} />;
+                        addRoomButton = <AuxButtonComponent tabIndex={tabIndex} tagId={this.props.tagId} />;
                     }
 
                     const collapseClasses = classNames({
                         mx_RoomSublist_collapseBtn: true,
-                        mx_RoomSublist_collapseBtn_collapsed: !this.state.isExpanded && !this.props.forceExpanded,
+                        mx_RoomSublist_collapseBtn_collapsed: !this.state.isExpanded,
                     });
 
                     const classes = classNames({
@@ -713,11 +747,11 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                                         <span>{this.props.label}</span>
                                     </Button>
                                     {this.renderMenu()}
-                                    {this.props.isMinimized ? null : badgeContainer}
+                                    {/*{this.props.isMinimized ? null : badgeContainer}*/}
                                     {this.props.isMinimized ? null : addRoomButton}
                                 </div>
                             </div>
-                            {this.props.isMinimized ? badgeContainer : null}
+                            {/*{this.props.isMinimized ? badgeContainer : null}*/}
                             {this.props.isMinimized ? addRoomButton : null}
                         </div>
                     );
@@ -873,17 +907,52 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         }
 
         return (
-            <div
-                ref={this.sublistRef}
-                className={classes}
-                role="group"
-                aria-hidden={hidden}
-                aria-label={this.props.label}
-                onKeyDown={this.onKeyDown}
+            <Draggable
+                isDragDisabled={
+                    OrderedDefaultTagIDs.includes(this.props.tagId) ||
+                    (!SpaceStore.instance.isHomeSpace &&
+                        !SpaceStore.instance.activeSpaceRoom?.canOperateTag(this.userId))
+                }
+                draggableId={this.props.tagId}
+                index={this.props.index}
             >
-                {this.renderHeader()}
-                {content}
-            </div>
+                {(draggableProvided, draggableSnapshot) => (
+                    <div
+                        ref={draggableProvided.innerRef}
+                        {...draggableProvided.draggableProps}
+                        {...draggableProvided.dragHandleProps}
+                    >
+                        <Droppable
+                            isDropDisabled={
+                                OrderedDefaultTagIDs.includes(this.props.tagId) &&
+                                this.props.tagId !== DefaultTagID.Untagged
+                            }
+                            droppableId={this.props.tagId}
+                            type={DragType.Channel}
+                        >
+                            {(droppableProvided, droppableSnapshot) => (
+                                <div ref={droppableProvided.innerRef}>
+                                    <div
+                                        ref={this.sublistRef}
+                                        className={classes}
+                                        role="group"
+                                        aria-hidden={hidden}
+                                        aria-label={this.props.label}
+                                        data-id={this.props.tagId}
+                                        onKeyDown={this.onKeyDown}
+                                    >
+                                        {/*社区内默认分组不展示header*/}
+                                        {(SpaceStore.instance.isHomeSpace ||
+                                            this.props.tagId !== DefaultTagID.Untagged) &&
+                                            this.renderHeader()}
+                                        {content}
+                                    </div>
+                                </div>
+                            )}
+                        </Droppable>
+                    </div>
+                )}
+            </Draggable>
         );
     }
 }

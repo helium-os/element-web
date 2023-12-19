@@ -16,21 +16,20 @@ limitations under the License.
 
 $roomListCollapsedWidth: 68px;
 
-.mx_MatrixChat--with-avatar {
-    .mx_LeftPanel,
-    .mx_LeftPanel .mx_LeftPanel_roomListContainer {
-        background-color: transparent;
-    }
+.mx_LeftPanel_ResizeWrapper {
+    z-index: 2;
 }
 
 .mx_LeftPanel_outerWrapper {
     display: flex;
     flex-direction: column;
-    max-width: 50%;
-    position: relative;
 
     /* Contain the amount of layers rendered by constraining what actually needs re-layering via css */
     contain: layout paint;
+    height: 100%;
+    background-color: $background-primary-color2;
+    border-right: 1px solid $border-primary-color2;
+    user-select: none;
 }
 
 .mx_LeftPanel_wrapper {
@@ -40,7 +39,7 @@ $roomListCollapsedWidth: 68px;
     height: 100%; /* ensure space panel is still scrollable with an outer wrapper */
 
     .mx_LeftPanel_wrapper--user {
-        background-color: $roomlist-bg-color;
+        flex: 1;
         display: flex;
         overflow: hidden;
         position: relative;
@@ -52,7 +51,6 @@ $roomListCollapsedWidth: 68px;
 }
 
 .mx_LeftPanel {
-    background-color: $roomlist-bg-color;
 
     /* Create a row-based flexbox for the space panel and the room list */
     display: flex;
@@ -64,7 +62,7 @@ $roomListCollapsedWidth: 68px;
     /* Note: The 'room list' in this context is actually everything that isn't the tag */
     /* panel, such as the menu options, breadcrumbs, filtering, etc */
     .mx_LeftPanel_roomListContainer {
-        background-color: $roomlist-bg-color;
+        padding: 12px 12px 0;
         flex: 1 0 0;
         min-width: 0;
         /* Create another flexbox (this time a column) for the room list components */
@@ -185,29 +183,45 @@ $roomListCollapsedWidth: 68px;
             }
         }
 
-        .mx_RoomListHeader:first-child {
+        .mx_LeftPanel_spaceInfoWrapper {
+            padding-bottom: 4px;
+            @mixin HalfPxBorder $border-primary-color2;
+            &:before {
+                border-top-width: 0;
+                border-left-width: 0;
+                border-right-width: 0;
+            }
+        }
+        .mx_LeftPanel_spaceInfoInner {
+            position: relative;
+        }
+
+        .mx_LeftPanel_spaceHomeEntrance {
             margin-top: 12px;
+        }
+        .mx_SpaceHomeTile {
+            cursor: pointer;
         }
 
         .mx_LeftPanel_roomListWrapper {
+            margin: 0 -12px;
             /* Make the y-scrollbar more responsive */
-            padding-right: 2px;
             overflow: hidden;
-            margin-top: 10px; /* so we're not up against the search/filter */
             flex: 1 0 0; /* needed in Safari to properly set flex-basis */
 
             &.mx_LeftPanel_roomListWrapper_stickyBottom {
-                padding-bottom: 32px;
+                padding-bottom: $roomlist-group-header-height;
             }
 
             &.mx_LeftPanel_roomListWrapper_stickyTop {
-                padding-top: 32px;
+                padding-top: $roomlist-group-header-height;
             }
         }
 
         .mx_LeftPanel_actualRoomListContainer {
             position: relative; /* for sticky headers */
             height: 100%; /* ensure scrolling still works */
+            padding: 0 12px;
         }
     }
 

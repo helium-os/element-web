@@ -14,23 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useMemo } from "react";
-import { Room } from "matrix-js-sdk/src/models/room";
+import React, { useState, useEffect, useMemo } from "react";
+import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 
-import { _t, _td } from "../../../languageHandler";
-import BaseDialog from "./BaseDialog";
+import { _t } from "../../../languageHandler";
+import RoomSettingsBaseDialog from "./RoomSettingsBaseDialog";
 import defaultDispatcher from "../../../dispatcher/dispatcher";
 import { useDispatcher } from "../../../hooks/useDispatcher";
 import TabbedView, { Tab } from "../../structures/TabbedView";
 import SpaceSettingsGeneralTab from "../spaces/SpaceSettingsGeneralTab";
-import SpaceSettingsVisibilityTab from "../spaces/SpaceSettingsVisibilityTab";
 import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
 import AdvancedRoomSettingsTab from "../settings/tabs/room/AdvancedRoomSettingsTab";
 import RolesRoomSettingsTab from "../settings/tabs/room/RolesRoomSettingsTab";
 import { Action } from "../../../dispatcher/actions";
 import { NonEmptyArray } from "../../../@types/common";
+import { useTypedEventEmitter } from "matrix-react-sdk/src/hooks/useEventEmitter";
+import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import { leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
 
 export enum SpaceSettingsTab {
     General = "SPACE_GENERAL_TAB",
@@ -46,6 +48,16 @@ interface IProps {
 }
 
 const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFinished }) => {
+    const [spaceName, setSpaceName] = useState<string>("");
+
+    useTypedEventEmitter(space, RoomEvent.Name, () => {
+        setSpaceName(space?.name);
+    });
+
+    useEffect(() => {
+        setSpaceName(space?.name);
+    }, [space]);
+
     useDispatcher(defaultDispatcher, (payload) => {
         if (payload.action === Action.AfterLeaveRoom && payload.room_id === space.roomId) {
             onFinished();
@@ -54,47 +66,44 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
 
     const tabs = useMemo(() => {
         return [
-            new Tab(
-                SpaceSettingsTab.General,
-                _td("General"),
-                "mx_SpaceSettingsDialog_generalIcon",
-                <SpaceSettingsGeneralTab matrixClient={cli} space={space} />,
-            ),
-            new Tab(
-                SpaceSettingsTab.Visibility,
-                _td("Visibility"),
-                "mx_SpaceSettingsDialog_visibilityIcon",
-                <SpaceSettingsVisibilityTab matrixClient={cli} space={space} closeSettingsFn={onFinished} />,
-            ),
+            new Tab(SpaceSettingsTab.General, _t("General"), null, <SpaceSettingsGeneralTab space={space} />),
+            // new Tab(
+            //     SpaceSettingsTab.Visibility,
+            //     _t("Visibility"),
+            //     null,
+            //     <SpaceSettingsVisibilityTab matrixClient={cli} space={space} closeSettingsFn={onFinished} />,
+            // ),
             new Tab(
                 SpaceSettingsTab.Roles,
-                _td("Roles & Permissions"),
-                "mx_RoomSettingsDialog_rolesIcon",
+                _t("Roles & Permissions"),
+                null,
                 <RolesRoomSettingsTab roomId={space.roomId} />,
             ),
             SettingsStore.getValue(UIFeature.SpaceAdvancedSettings)
                 ? new Tab(
                       SpaceSettingsTab.Advanced,
-                      _td("Advanced"),
-                      "mx_RoomSettingsDialog_warningIcon",
+                      _t("Advanced"),
+                      null,
                       <AdvancedRoomSettingsTab roomId={space.roomId} closeSettingsFn={onFinished} />,
                   )
                 : null,
         ].filter(Boolean) as NonEmptyArray<Tab>;
     }, [cli, space, onFinished]);
 
+    const footer = (
+        <Button type={ButtonType.Text} danger onClick={() => leaveSpace(space)}>
+            {_t("Leave Space")}
+        </Button>
+    );
+
     return (
-        <BaseDialog
-            title={_t("Settings - %(spaceName)s", { spaceName: space.name || _t("Unnamed Space") })}
-            className="mx_SpaceSettingsDialog"
-            contentId="mx_SpaceSettingsDialog"
-            onFinished={onFinished}
-            fixedWidth={false}
-        >
-            <div className="mx_SpaceSettingsDialog_content" id="mx_SpaceSettingsDialog">
-                <TabbedView tabs={tabs} />
-            </div>
-        </BaseDialog>
+        <RoomSettingsBaseDialog onFinished={onFinished}>
+            <TabbedView
+                // footer={footer}
+                title={spaceName || _t("Unnamed Space")}
+                tabs={tabs}
+            />
+        </RoomSettingsBaseDialog>
     );
 };
 

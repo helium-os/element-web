@@ -23,6 +23,7 @@ import { _t } from "../../../languageHandler";
 import { getBlobSafeMimeType } from "../../../utils/blobs";
 import BaseDialog from "./BaseDialog";
 import DialogButtons from "../elements/DialogButtons";
+import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 
 interface IProps {
     file: File;
@@ -99,8 +100,23 @@ export default class UploadConfirmDialog extends React.Component<IProps> {
 
         let uploadAllButton: JSX.Element | undefined;
         if (this.props.currentIndex + 1 < this.props.totalFiles) {
-            uploadAllButton = <button onClick={this.onUploadAllClick}>{_t("Upload all")}</button>;
+            uploadAllButton = (
+                <Button type={ButtonType.Primary} onClick={this.onUploadAllClick}>
+                    {_t("Upload all")}
+                </Button>
+            );
         }
+
+        const footer = (
+            <DialogButtons
+                primaryButton={_t("Upload")}
+                hasCancel={false}
+                onPrimaryButtonClick={this.onUploadClick}
+                focus={true}
+            >
+                {uploadAllButton}
+            </DialogButtons>
+        );
 
         return (
             <BaseDialog
@@ -109,27 +125,15 @@ export default class UploadConfirmDialog extends React.Component<IProps> {
                 onFinished={this.onCancelClick}
                 title={title}
                 contentId="mx_Dialog_content"
+                footer={footer}
             >
-                <div id="mx_Dialog_content">
-                    <div className="mx_UploadConfirmDialog_previewOuter">
-                        <div className="mx_UploadConfirmDialog_previewInner">
-                            {preview && <div>{preview}</div>}
-                            <div id={fileId}>
-                                {placeholder}
-                                {this.props.file.name} ({filesize(this.props.file.size)})
-                            </div>
-                        </div>
+                <div className="mx_UploadConfirmDialog_previewOuter">
+                    {preview && <>{preview}</>}
+                    <div className="mx_UploadConfirmDialog_fileName" id={fileId}>
+                        {placeholder}
+                        {this.props.file.name} ({filesize(this.props.file.size)})
                     </div>
                 </div>
-
-                <DialogButtons
-                    primaryButton={_t("Upload")}
-                    hasCancel={false}
-                    onPrimaryButtonClick={this.onUploadClick}
-                    focus={true}
-                >
-                    {uploadAllButton}
-                </DialogButtons>
             </BaseDialog>
         );
     }

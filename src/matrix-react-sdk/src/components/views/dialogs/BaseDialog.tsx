@@ -25,55 +25,57 @@ import AccessibleButton from "../elements/AccessibleButton";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { _t } from "../../../languageHandler";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
-import Heading from "../typography/Heading";
 import { PosthogScreenTracker, ScreenName } from "../../../PosthogTrackers";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 
-interface IProps {
+export interface DialogProps {
     // Whether the dialog should have a 'close' button that will
     // cause the dialog to be cancelled. This should only be set
     // to false if there is nothing the app can sensibly do if the
     // dialog is cancelled, eg. "We can't restore your session and
     // the app cannot work". Default: true.
-    "hasCancel"?: boolean;
+    hasCancel?: boolean;
 
     // called when a key is pressed
-    "onKeyDown"?: (e: KeyboardEvent | React.KeyboardEvent) => void;
+    onKeyDown?: (e: KeyboardEvent | React.KeyboardEvent) => void;
 
     // CSS class to apply to dialog div
-    "className"?: string;
+    className?: string;
 
     // if true, dialog container is 60% of the viewport width. Otherwise,
     // the container will have no fixed size, allowing its contents to
     // determine its size. Default: true.
-    "fixedWidth"?: boolean;
+    fixedWidth?: boolean;
 
     // To be displayed at the top of the dialog. Even above the title.
-    "top"?: React.ReactNode;
+    top?: React.ReactNode;
 
     // Title for the dialog.
-    "title"?: JSX.Element | string;
+    title?: JSX.Element | string;
     // Specific aria label to use, if not provided will set aria-labelledBy to mx_Dialog_title
     "aria-label"?: string;
+    description?: string;
 
     // Path to an icon to put in the header
-    "headerImage"?: string;
+    headerImage?: string;
 
     // children should be the content of the dialog
-    "children"?: React.ReactNode;
+    children?: React.ReactNode;
+
+    footer?: React.ReactNode;
 
     // Id of content element
     // If provided, this is used to add a aria-describedby attribute
-    "contentId"?: string;
+    contentId?: string;
 
     // optional additional class for the title element (basically anything that can be passed to classnames)
-    "titleClass"?: string | string[];
+    titleClass?: string | string[];
 
-    "headerButton"?: JSX.Element;
+    headerButton?: JSX.Element;
 
     // optional Posthog ScreenName to supply during the lifetime of this dialog
-    "screenName"?: ScreenName;
+    screenName?: ScreenName;
     onFinished(): void;
 }
 
@@ -83,15 +85,15 @@ interface IProps {
  * Includes a div for the title, and a keypress handler which cancels the
  * dialog on escape.
  */
-export default class BaseDialog extends React.Component<IProps> {
+export default class BaseDialog extends React.Component<DialogProps> {
     private matrixClient: MatrixClient;
 
-    public static defaultProps: Partial<IProps> = {
+    public static defaultProps: Partial<DialogProps> = {
         hasCancel: true,
         fixedWidth: true,
     };
 
-    public constructor(props: IProps) {
+    public constructor(props: DialogProps) {
         super(props);
 
         this.matrixClient = MatrixClientPeg.get();
@@ -134,8 +136,8 @@ export default class BaseDialog extends React.Component<IProps> {
         }
 
         const lockProps: Record<string, any> = {
-            "onKeyDown": this.onKeyDown,
-            "role": "dialog",
+            onKeyDown: this.onKeyDown,
+            role: "dialog",
             // This should point to a node describing the dialog.
             // If we were about to completely follow this recommendation we'd need to
             // make all the components relying on BaseDialog to be aware of it.
@@ -151,9 +153,6 @@ export default class BaseDialog extends React.Component<IProps> {
             lockProps["aria-labelledby"] = "mx_BaseDialog_title";
         }
 
-        const isHeaderWithCancelOnly =
-            !!cancelButton && !this.props.title && !this.props.headerButton && !this.props.headerImage;
-
         return (
             <MatrixClientContext.Provider value={this.matrixClient}>
                 {this.props.screenName && <PosthogScreenTracker screenName={this.props.screenName} />}
@@ -165,27 +164,27 @@ export default class BaseDialog extends React.Component<IProps> {
                     })}
                 >
                     {this.props.top}
-                    <div
-                        className={classNames("mx_Dialog_header", {
-                            mx_Dialog_headerWithButton: !!this.props.headerButton,
-                            mx_Dialog_headerWithCancel: !!cancelButton,
-                            mx_Dialog_headerWithCancelOnly: isHeaderWithCancelOnly,
-                        })}
-                    >
-                        {!!(this.props.title || headerImage) && (
-                            <Heading
-                                size="h2"
-                                className={classNames("mx_Dialog_title", this.props.titleClass)}
-                                id="mx_BaseDialog_title"
-                            >
-                                {headerImage}
-                                {this.props.title}
-                            </Heading>
-                        )}
-                        {this.props.headerButton}
-                        {cancelButton}
-                    </div>
-                    {this.props.children}
+                    {(this.props.title || this.props.headerButton || cancelButton || this.props.description) && (
+                        <div
+                            className={classNames("mx_Dialog_header", {
+                                mx_Dialog_headerWithButton: !!this.props.headerButton,
+                            })}
+                        >
+                            <div className="mx_Dialog_title_box">
+                                <div className={classNames("mx_Dialog_title", this.props.titleClass)}>
+                                    {headerImage}
+                                    {this.props.title}
+                                </div>
+                                {this.props.headerButton}
+                                {cancelButton}
+                            </div>
+                            {this.props.description && (
+                                <div className="mx_Dialog_description">{this.props.description}</div>
+                            )}
+                        </div>
+                    )}
+                    <div className="mx_Dialog_content">{this.props.children}</div>
+                    {this.props.footer && <div className="mx_Dialog_footer">{this.props.footer}</div>}
                 </FocusLock>
             </MatrixClientContext.Provider>
         );

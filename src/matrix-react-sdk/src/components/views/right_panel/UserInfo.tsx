@@ -52,10 +52,8 @@ import { Action } from "../../../dispatcher/actions";
 import { useIsEncrypted } from "../../../hooks/useIsEncrypted";
 import BaseCard from "./BaseCard";
 import { E2EStatus } from "../../../utils/ShieldUtils";
-import ImageView from "../elements/ImageView";
 import Spinner from "../elements/Spinner";
 import PowerSelector from "../elements/PowerSelector";
-import MemberAvatar from "../avatars/MemberAvatar";
 import PresenceLabel from "../rooms/PresenceLabel";
 import BulkRedactDialog from "../dialogs/BulkRedactDialog";
 import ShareDialog from "../dialogs/ShareDialog";
@@ -64,8 +62,6 @@ import QuestionDialog from "../dialogs/QuestionDialog";
 import ConfirmUserActionDialog from "../dialogs/ConfirmUserActionDialog";
 import RoomAvatar from "../avatars/RoomAvatar";
 import RoomName from "../elements/RoomName";
-import {getHttpUrlFromMxc} from "../../../customisations/Media";
-import UIStore from "../../../stores/UIStore";
 import { ComposerInsertPayload } from "../../../dispatcher/payloads/ComposerInsertPayload";
 import ConfirmSpaceUserActionDialog from "../dialogs/ConfirmSpaceUserActionDialog";
 import { bulkSpaceBehaviour } from "../../../utils/space";
@@ -79,6 +75,7 @@ import PosthogTrackers from "../../../PosthogTrackers";
 import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { DirectoryMember, startDmOnFirstMessage } from "../../../utils/direct-messages";
 import { SdkContextClass } from "../../../contexts/SDKContext";
+import MemberAvatar from "matrix-react-sdk/src/components/views/avatars/MemberAvatar";
 
 export interface IDevice extends DeviceInfo {
     ambiguous?: boolean;
@@ -1274,11 +1271,9 @@ const BasicUserInfo: React.FC<{
     // Check whether the user is ignored
     const [isIgnored, setIsIgnored] = useState(cli.isUserIgnored(member.userId));
 
-
     const showVerifyButton = false;
     const showDevices = false;
     const showEditDevices = false;
-
 
     // Recheck if the user or client changes
     useEffect(() => {
@@ -1514,45 +1509,11 @@ export type Member = User | RoomMember;
 export const UserInfoHeader: React.FC<{
     member: Member;
     e2eStatus?: E2EStatus;
+    room: Room;
     roomId?: string;
-}> = ({ member, e2eStatus, roomId }) => {
+    avatarSize?: number;
+}> = ({ member, e2eStatus, room, roomId, avatarSize = 36 }) => {
     const cli = useContext(MatrixClientContext);
-
-    const onMemberAvatarClick = useCallback(() => {
-        const avatarUrl = (member as RoomMember).getMxcAvatarUrl
-            ? (member as RoomMember).getMxcAvatarUrl()
-            : (member as User).avatarUrl;
-        if (!avatarUrl) return;
-
-        const httpUrl = getHttpUrlFromMxc(avatarUrl);
-        const params = {
-            src: httpUrl,
-            name: (member as RoomMember).name || (member as User).displayName,
-        };
-
-        Modal.createDialog(ImageView, params, "mx_Dialog_lightbox", undefined, true);
-    }, [member]);
-
-    const avatarUrl = (member as User).avatarUrl;
-
-    const avatarElement = (
-        <div className="mx_UserInfo_avatar">
-            <div className="mx_UserInfo_avatar_transition">
-                <div className="mx_UserInfo_avatar_transition_child">
-                    <MemberAvatar
-                        key={member.userId} // to instantly blank the avatar when UserInfo changes members
-                        member={member as RoomMember}
-                        width={2 * 0.3 * UIStore.instance.windowHeight} // 2x@30vh
-                        height={2 * 0.3 * UIStore.instance.windowHeight} // 2x@30vh
-                        resizeMethod="scale"
-                        fallbackUserId={member.userId}
-                        onClick={onMemberAvatarClick}
-                        urls={avatarUrl ? [avatarUrl] : undefined}
-                    />
-                </div>
-            </div>
-        </div>
-    );
 
     let presenceState;
     let presenceLastActiveAgo;
@@ -1585,11 +1546,14 @@ export const UserInfoHeader: React.FC<{
     const displayName = (member as RoomMember).rawDisplayName;
     const showUserId = false;
     const showE2eIcon = false;
+    const showPresenceLabel = false;
     return (
-        <React.Fragment>
-            {avatarElement}
+        <>
+            <div className="mx_UserInfo_avatarBox">
+                <MemberAvatar member={member as RoomMember} width={avatarSize} height={avatarSize} aria-hidden="true" />
+            </div>
 
-            <div className="mx_UserInfo_container mx_UserInfo_separator">
+            <div className="mx_UserInfo_mainInfo">
                 <div className="mx_UserInfo_profile">
                     <div>
                         <h2>
@@ -1599,20 +1563,18 @@ export const UserInfoHeader: React.FC<{
                             </span>
                         </h2>
                     </div>
-                    {
-                        showUserId && (
-                            <div className="mx_UserInfo_profile_mxid">
-                                {UserIdentifierCustomisations.getDisplayUserIdentifier?.(member.userId, {
-                                    roomId,
-                                    withDisplayName: true,
-                                })}
-                            </div>
-                        )
-                    }
-                    <div className="mx_UserInfo_profileStatus">{presenceLabel}</div>
+                    {showUserId && (
+                        <div className="mx_UserInfo_profile_mxid">
+                            {UserIdentifierCustomisations.getDisplayUserIdentifier?.(member.userId, {
+                                roomId,
+                                withDisplayName: true,
+                            })}
+                        </div>
+                    )}
+                    {showPresenceLabel && <div className="mx_UserInfo_profileStatus">{presenceLabel}</div>}
                 </div>
             </div>
-        </React.Fragment>
+        </>
     );
 };
 
@@ -1639,7 +1601,7 @@ const UserInfo: React.FC<IProps> = ({ user, room, onClose, phase = RightPanelPha
         e2eStatus = getE2EStatus(cli, user.userId, devices);
     }
 
-    const classes = ["mx_UserInfo"];
+    const classes = ["mx_UserInfoPanel"];
 
     let cardState: IRightPanelCardState = {};
     // We have no previousPhase for when viewing a UserInfo without a Room at this time
@@ -1653,28 +1615,51 @@ const UserInfo: React.FC<IProps> = ({ user, room, onClose, phase = RightPanelPha
         RightPanelStore.instance.popCard();
     };
 
+    let scopeHeader;
+    if (room?.isSpaceRoom()) {
+        scopeHeader = (
+            <div data-testid="space-header" className="mx_RightPanel_scopeHeader">
+                <RoomAvatar room={room} height={32} width={32} />
+                <RoomName room={room} />
+            </div>
+        );
+    }
+
+    const userInfo = (
+        <>
+            {scopeHeader}
+            <UserInfoHeader member={member} e2eStatus={e2eStatus} room={room} roomId={room?.roomId} avatarSize={80} />
+        </>
+    );
+
     let content: JSX.Element | undefined;
     switch (phase) {
         case RightPanelPhases.RoomMemberInfo:
         case RightPanelPhases.SpaceMemberInfo:
             content = (
-                <BasicUserInfo
-                    room={room as Room}
-                    member={member as User}
-                    devices={devices}
-                    isRoomEncrypted={Boolean(isRoomEncrypted)}
-                />
+                <>
+                    {userInfo}
+                    {/*<BasicUserInfo*/}
+                    {/*    room={room as Room}*/}
+                    {/*    member={member as User}*/}
+                    {/*    devices={devices}*/}
+                    {/*    isRoomEncrypted={Boolean(isRoomEncrypted)}*/}
+                    {/*/>*/}
+                </>
             );
             break;
         case RightPanelPhases.EncryptionPanel:
             classes.push("mx_UserInfo_smallAvatar");
             content = (
-                <EncryptionPanel
-                    {...(props as React.ComponentProps<typeof EncryptionPanel>)}
-                    member={member as User | RoomMember}
-                    onClose={onEncryptionPanelClose}
-                    isRoomEncrypted={Boolean(isRoomEncrypted)}
-                />
+                <>
+                    {userInfo}
+                    <EncryptionPanel
+                        {...(props as React.ComponentProps<typeof EncryptionPanel>)}
+                        member={member as User | RoomMember}
+                        onClose={onEncryptionPanelClose}
+                        isRoomEncrypted={Boolean(isRoomEncrypted)}
+                    />
+                </>
             );
             break;
     }
@@ -1687,26 +1672,10 @@ const UserInfo: React.FC<IProps> = ({ user, room, onClose, phase = RightPanelPha
         }
     }
 
-    let scopeHeader;
-    if (room?.isSpaceRoom()) {
-        scopeHeader = (
-            <div data-testid="space-header" className="mx_RightPanel_scopeHeader">
-                <RoomAvatar room={room} height={32} width={32} />
-                <RoomName room={room} />
-            </div>
-        );
-    }
-
-    const header = (
-        <>
-            {scopeHeader}
-            <UserInfoHeader member={member} e2eStatus={e2eStatus} roomId={room?.roomId} />
-        </>
-    );
     return (
         <BaseCard
             className={classes.join(" ")}
-            header={header}
+            title={"用户信息"}
             onClose={onClose}
             closeLabel={closeLabel}
             cardState={cardState}

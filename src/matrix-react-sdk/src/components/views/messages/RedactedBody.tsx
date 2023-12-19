@@ -20,32 +20,29 @@ import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 
 import { _t } from "../../../languageHandler";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
-import { formatFullDate } from "../../../DateUtils";
-import SettingsStore from "../../../settings/SettingsStore";
 import { IBodyProps } from "./IBodyProps";
 interface IProps {
     mxEvent: MatrixEvent;
+    hasReply?: boolean;
 }
 
-const RedactedBody = React.forwardRef<any, IProps | IBodyProps>(({ mxEvent }, ref) => {
+const RedactedBody = React.forwardRef<any, IProps | IBodyProps>(({ mxEvent, hasReply = false }, ref) => {
     const cli: MatrixClient = useContext(MatrixClientContext);
-    let text = _t("Message deleted");
+    const hasThread = mxEvent.getThread(); // 是否有消息列回复
+    let text = _t("Message deleted"); // "消息被撤回"
     const unsigned = mxEvent.getUnsigned();
     const redactedBecauseUserId = unsigned && unsigned.redacted_because && unsigned.redacted_because.sender;
-    if (redactedBecauseUserId && redactedBecauseUserId !== mxEvent.getSender()) {
+    // 没有普通回复||消息列回复的消息被撤回后展示"xxx 撤回了一条消息"
+    if (!hasThread && !hasReply && redactedBecauseUserId) {
         const room = cli.getRoom(mxEvent.getRoomId());
         const sender = room && room.getMember(redactedBecauseUserId);
-        text = _t("Message deleted by %(name)s", { name: sender ? sender.name : redactedBecauseUserId });
+        text = _t("Message deleted by %(name)s", {
+            name: () => <label>{sender ? sender.name : redactedBecauseUserId}</label>,
+        });
     }
 
-    const showTwelveHour = SettingsStore.getValue("showTwelveHourTimestamps");
-    const fullDate = unsigned.redacted_because
-        ? formatFullDate(new Date(unsigned.redacted_because.origin_server_ts), showTwelveHour)
-        : undefined;
-    const titleText = fullDate ? _t("Message deleted on %(date)s", { date: fullDate }) : undefined;
-
     return (
-        <span className="mx_RedactedBody" ref={ref} title={titleText}>
+        <span className="mx_RedactedBody mx_TextualEvent" ref={ref}>
             {text}
         </span>
     );

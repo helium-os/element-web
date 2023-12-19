@@ -33,7 +33,7 @@ import { UIFeature } from "../../../../../settings/UIFeature";
 import AccessibleButton from "../../../elements/AccessibleButton";
 import SettingsFlag from "../../../elements/SettingsFlag";
 import createRoom from "../../../../../createRoom";
-import CreateRoomDialog from "../../../dialogs/CreateRoomDialog";
+import CreateChannelDialog from "../../../dialogs/CreateChannelDialog";
 import JoinRuleSettings from "../../JoinRuleSettings";
 import ErrorDialog from "../../../dialogs/ErrorDialog";
 import SettingsFieldset from "../../SettingsFieldset";
@@ -206,7 +206,7 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
     };
 
     private createNewRoom = async (defaultPublic: boolean, defaultEncrypted: boolean): Promise<boolean> => {
-        const modal = Modal.createDialog(CreateRoomDialog, { defaultPublic, defaultEncrypted });
+        const modal = Modal.createDialog(CreateChannelDialog, { defaultPublic, defaultEncrypted });
 
         PosthogTrackers.trackInteraction("WebRoomSettingsSecurityTabCreateNewRoomButton");
 
@@ -345,7 +345,8 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
         const client = this.context;
         const history = this.state.history;
         const state = client.getRoom(this.props.roomId)?.currentState;
-        const canChangeHistory = state?.mayClientSendStateEvent(EventType.RoomHistoryVisibility, client) && !state?.isAdminLeft();
+        const canChangeHistory =
+            state?.mayClientSendStateEvent(EventType.RoomHistoryVisibility, client) && !state?.isAdminLeft();
 
         const options = [
             {
@@ -457,22 +458,20 @@ export default class SecurityRoomSettingsTab extends React.Component<IProps, ISt
             <div className="mx_SettingsTab mx_SecurityRoomSettingsTab">
                 <div className="mx_SettingsTab_heading">{_t("Security & Privacy")}</div>
 
-                {
-                    this.state.showChangeEncryption && (
-                        <SettingsFieldset
-                            legend={_t("Encryption")}
-                            description={_t("Once enabled, encryption cannot be disabled.")}
-                        >
-                            <LabelledToggleSwitch
-                                value={isEncrypted}
-                                onChange={this.onEncryptionChange}
-                                label={_t("Encrypted")}
-                                disabled={!canEnableEncryption}
-                            />
-                            {encryptionSettings}
-                        </SettingsFieldset>
-                    )
-                }
+                {this.state.showChangeEncryption && (
+                    <SettingsFieldset
+                        legend={_t("Encryption")}
+                        description={_t("Once enabled, encryption cannot be disabled.")}
+                    >
+                        <LabelledToggleSwitch
+                            value={isEncrypted}
+                            onChange={this.onEncryptionChange}
+                            label={_t("Encrypted")}
+                            disabled={!canEnableEncryption}
+                        />
+                        {encryptionSettings}
+                    </SettingsFieldset>
+                )}
 
                 {this.renderJoinRule()}
 

@@ -206,7 +206,7 @@ abstract class PlainBasePart extends BasePart {
         }
         // when not pasting or dropping text, reject characters that should start a pill candidate
         if (inputType !== "insertFromPaste" && inputType !== "insertFromDrop") {
-            if (chr.startsWith('@')) {
+            if (chr.startsWith("@")) {
                 /**
                  * 输入@时不做字符插入，而是做分割处理
                  * bugfix: 在文字后输入@用户列表不会展示，必须添加空格才会展示
@@ -264,7 +264,10 @@ export class PlainPart extends PlainBasePart implements IBasePart {
 }
 
 export abstract class PillPart extends BasePart implements IPillPart {
-    public constructor(public resourceId: string, label: string) {
+    public constructor(
+        public resourceId: string,
+        label: string,
+    ) {
         super(label);
     }
 
@@ -312,14 +315,14 @@ export abstract class PillPart extends BasePart implements IPillPart {
 
     // helper method for subclasses
     protected setAvatarVars(node: HTMLElement, avatarUrl: string, initialLetter: string): void {
-        const avatarBackground = `url('${avatarUrl}')`;
+        const avatarBackground = avatarUrl ? `url('${avatarUrl}')` : undefined;
         const avatarLetter = `'${initialLetter}'`;
         // check if the value is changing,
         // otherwise the avatars flicker on every keystroke while updating.
-        if (node.style.getPropertyValue("--avatar-background") !== avatarBackground) {
+        if (avatarBackground && node.style.getPropertyValue("--avatar-background") !== avatarBackground) {
             node.style.setProperty("--avatar-background", avatarBackground);
         }
-        if (node.style.getPropertyValue("--avatar-letter") !== avatarLetter) {
+        if (initialLetter && node.style.getPropertyValue("--avatar-letter") !== avatarLetter) {
             node.style.setProperty("--avatar-letter", avatarLetter);
         }
     }
@@ -424,7 +427,11 @@ export class EmojiPart extends BasePart implements IBasePart {
 }
 
 class RoomPillPart extends PillPart {
-    public constructor(resourceId: string, label: string, private room?: Room) {
+    public constructor(
+        resourceId: string,
+        label: string,
+        private room?: Room,
+    ) {
         super(resourceId, label);
     }
 
@@ -465,7 +472,12 @@ class AtRoomPillPart extends RoomPillPart {
 }
 
 class UserPillPart extends PillPart {
-    public constructor(userId: string, displayName: string, private member?: RoomMember) {
+    public constructor(
+        userId: string,
+        displayName: string,
+        private member?: RoomMember,
+    ) {
+        console.log("UserPillPart constructor", "displayName", displayName);
         super(userId, displayName);
     }
 
@@ -481,28 +493,24 @@ class UserPillPart extends PillPart {
         if (!this.member) {
             return;
         }
-        const name = this.member.name || this.member.userId;
-        const defaultAvatarUrl = Avatar.defaultAvatarUrlForString(this.member.userId);
-        const avatarUrl = Avatar.avatarUrlForMember(this.member, 16, 16, "crop");
-        let initialLetter = "";
-        if (avatarUrl === defaultAvatarUrl) {
-            initialLetter = Avatar.getInitialLetter(name) ?? "";
-        }
-        this.setAvatarVars(node, avatarUrl, initialLetter);
+        this.setAvatarVars(node, "", "@");
     }
 
     protected onClick = (): void => {
-        if (AllMember.instance().isAllMember(this.member.userId, this.member.roomId)) return; // @All不需要支持点击预览用户
-
-        defaultDispatcher.dispatch({
-            action: Action.ViewUser,
-            member: this.member,
-        });
+        // if (AllMember.instance().isAllMember(this.member.userId, this.member.roomId)) return; // @All不需要支持点击预览用户
+        //
+        // defaultDispatcher.dispatch({
+        //     action: Action.ViewUser,
+        //     member: this.member,
+        // });
     };
 }
 
 class PillCandidatePart extends PlainBasePart implements IPillCandidatePart {
-    public constructor(text: string, private autoCompleteCreator: IAutocompleteCreator) {
+    public constructor(
+        text: string,
+        private autoCompleteCreator: IAutocompleteCreator,
+    ) {
         super(text);
     }
 
@@ -636,7 +644,9 @@ export class PartCreator {
     }
 
     public userPill(displayName: string, userId: string): UserPillPart {
-        const member = !AllMember.instance().isAllMember(userId, this.room.roomId) ? this.room.getMember(userId) : AllMember.instance().getAllMember(this.room.roomId);
+        const member = !AllMember.instance().isAllMember(userId, this.room.roomId)
+            ? this.room.getMember(userId)
+            : AllMember.instance().getAllMember(this.room.roomId);
         return new UserPillPart(userId, displayName, member || undefined);
     }
 

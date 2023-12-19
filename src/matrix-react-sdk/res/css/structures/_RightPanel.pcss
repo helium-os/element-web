@@ -16,20 +16,16 @@ limitations under the License.
 */
 
 .mx_RightPanel {
+    box-sizing: border-box;
     overflow-x: hidden;
     flex: 0 0 auto;
     position: relative;
     display: flex;
     flex-direction: column;
-    border-radius: 8px;
-    padding: $container-border-width 0;
-    box-sizing: border-box;
     height: 100%;
+    background: $background;
+    border-left: 1px solid $border-primary-color1;
     contain: strict;
-
-    .mx_RoomView_MessageList {
-        padding: 14px 18px; /* top and bottom is 4px smaller to balance with the padding set above */
-    }
 }
 
 .mx_RightPanel_header {
@@ -52,48 +48,58 @@ limitations under the License.
  * TODO: factor out a common component to avoid this duplication.
  */
 .mx_RightPanel_headerButton {
-    cursor: pointer;
-    flex: 0 0 auto;
-    margin-left: 1px;
-    margin-right: 1px;
-    height: 32px;
-    width: 32px;
     position: relative;
-    border-radius: 100%;
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
 
     &::before {
         content: "";
         position: absolute;
-        top: 4px; /* center with parent of 32px */
-        left: 4px; /* center with parent of 32px */
-        height: 24px;
-        width: 24px;
-        background-color: $icon-button-color;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: $icon-primary-color;
         mask-repeat: no-repeat;
+        mask-position: center;
         mask-size: contain;
     }
 
-    &:hover {
-        background: rgba($accent, 0.1);
-
-        &::before {
-            background-color: $accent;
-        }
+    &:hover, &.mx_RightPanel_headerButton_highlight {
+        background: $icon-primary-bg-color;
     }
 }
 
+.mx_RightPanel_inviteUsersButton::before {
+    width: 24px;
+    height: 22px;
+    mask-image: url("$(res)/img/element-icons/room/invite.svg");
+}
+
+
 .mx_RightPanel_threadsButton::before {
+    width: 18px;
+    height: 18px;
     mask-image: url("$(res)/img/element-icons/room/thread.svg");
 }
-
-.mx_RightPanel_notifsButton::before {
-    mask-image: url("$(res)/img/element-icons/notifications.svg");
-    mask-position: center;
+.mx_RightPanel_memberInfoButton::before {
+    width: 20px;
+    height: 16px;
+    mask-image: url("$(res)/img/element-icons/room/room-summary.svg");
 }
 
-.mx_RightPanel_roomSummaryButton::before {
-    mask-image: url("$(res)/img/element-icons/room/room-summary.svg");
-    mask-position: center;
+.mx_RightPanel_roomMembersButton::before {
+    width: 24px;
+    height: 18px;
+    mask-image: url("$(res)/img/element-icons/room/room-members.svg");
+}
+
+.mx_RightPanel_roomSettingsButton::before {
+    width: 16px;
+    height: 4px;
+    mask-image: url("$(res)/img/element-icons/more-actions.svg");
 }
 
 $dot-size: 8px;
@@ -127,18 +133,18 @@ $pulse-color: $alert;
     margin: 4px;
 
     &.mx_Indicator_red {
-        background: rgba($alert, 1);
-        box-shadow: rgba($alert, 1);
+        background: $background-danger-color2;
+        box-shadow: 0 0 0 0 rgba($background-danger-color2, 1);
     }
 
     &.mx_Indicator_gray {
         background: rgba($room-icon-unread-color, 1);
-        box-shadow: rgba($room-icon-unread-color, 1);
+        box-shadow: 0 0 0 0 rgba($room-icon-unread-color, 1);
     }
 
     &.mx_Indicator_bold {
         background: rgba($primary-content, 1);
-        box-shadow: rgba($primary-content, 1);
+        box-shadow: 0 0 0 0 rgba($primary-content, 1);
     }
 }
 
@@ -178,19 +184,6 @@ $pulse-color: $alert;
     }
 }
 
-.mx_RightPanel_headerButton_unread {
-    &::before {
-        background-color: $room-icon-unread-color !important;
-    }
-}
-
-.mx_RightPanel_headerButton_highlight,
-.mx_RightPanel_headerButton:hover {
-    &::before {
-        background-color: $accent !important;
-    }
-}
-
 .mx_RightPanel_headerButton_badge {
     font-size: $font-8px;
     border-radius: 8px;
@@ -210,7 +203,7 @@ $pulse-color: $alert;
     border: none;
 }
 
-.mx_RightPanel .mx_MemberList,
+.mx_RightPanel .mx_MemberListPanel,
 .mx_RightPanel .mx_MemberInfo,
 .mx_RightPanel_blank {
     order: 2;

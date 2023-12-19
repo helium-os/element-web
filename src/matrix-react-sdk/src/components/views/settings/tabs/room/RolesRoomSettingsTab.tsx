@@ -14,27 +14,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React from "react";
+import React, { createRef } from "react";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 import { RoomState, RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { logger } from "matrix-js-sdk/src/logger";
-import { throttle, get } from "lodash";
-import { compare } from "matrix-js-sdk/src/utils";
-import { IContent } from "matrix-js-sdk/src/models/event";
+import { throttle } from "lodash";
 
 import { _t, _td } from "../../../../../languageHandler";
 import { MatrixClientPeg } from "../../../../../MatrixClientPeg";
-import AccessibleButton from "../../../elements/AccessibleButton";
+import AccessibleButton, { ButtonEvent } from "../../../elements/AccessibleButton";
 import Modal from "../../../../../Modal";
 import ErrorDialog from "../../../dialogs/ErrorDialog";
-import PowerSelector from "../../../elements/PowerSelector";
-import SettingsFieldset from "../../SettingsFieldset";
 import SettingsStore from "../../../../../settings/SettingsStore";
 import { VoiceBroadcastInfoEventType } from "../../../../../voice-broadcast";
 import { ElementCall } from "../../../../../models/Call";
-import SdkConfig, { DEFAULTS } from "../../../../../SdkConfig";
-import { AddPrivilegedUsers } from "../../AddPrivilegedUsers";
+import SearchBox from "matrix-react-sdk/src/components/structures/SearchBox";
+import MemberList from "matrix-react-sdk/src/components/views/rooms/MemberList";
+import MemberTile from "matrix-react-sdk/src/components/views/rooms/MemberTile";
+import { ContextMenuButton } from "matrix-react-sdk/src/accessibility/context_menu/ContextMenuButton";
+import IconizedContextMenu, {
+    IconizedContextMenuOptionList,
+    IconizedContextMenuOption,
+} from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
+import { aboveLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
+import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/components/views/rooms/EntityTile";
+import AutoHideScrollbar from "matrix-react-sdk/src/components/structures/AutoHideScrollbar";
+import DropdownButton from "matrix-react-sdk/src/components/views/elements/DropdownButton";
+import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
 
 interface IEventShowOpts {
     isState?: boolean;
@@ -132,7 +139,36 @@ interface IProps {
     roomId: string;
 }
 
-export default class RolesRoomSettingsTab extends React.Component<IProps> {
+interface IState {
+    searchQuery: string;
+    showContextMenu: boolean;
+    contextMenuBtn: Element | null;
+    selectedMember: RoomMember;
+}
+
+const options = [PowerLevel.Admin, PowerLevel.Moderator];
+
+const changeMemberPermissionBtnClassName = "mx_RoleSettings_changeMemberPermission";
+
+export default class RolesRoomSettingsTab extends React.Component<IProps, IState> {
+    private memberListRef = createRef<HTMLDivElement>();
+
+    // 当前用户是否拥有修改社区内用户角色的权限
+    get canChangeLevels(): boolean {
+        const client = MatrixClientPeg.get();
+        const room = client.getRoom(this.props.roomId);
+        return room?.currentState.mayClientSendStateEvent(EventType.RoomPowerLevels, client);
+    }
+    public constructor(props: IProps) {
+        super(props);
+        this.state = {
+            searchQuery: "",
+            showContextMenu: false,
+            contextMenuBtn: null,
+            selectedMember: null,
+        };
+    }
+
     public componentDidMount(): void {
         MatrixClientPeg.get().on(RoomStateEvent.Update, this.onRoomStateUpdate);
     }
@@ -169,48 +205,6 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
         }
     }
 
-    private onPowerLevelsChanged = (value: number, powerLevelKey: string): void => {
-        const client = MatrixClientPeg.get();
-        const room = client.getRoom(this.props.roomId);
-        const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
-        let plContent = plEvent?.getContent() ?? {};
-
-        // Clone the power levels just in case
-        plContent = Object.assign({}, plContent);
-
-        const eventsLevelPrefix = "event_levels_";
-
-        if (powerLevelKey.startsWith(eventsLevelPrefix)) {
-            // deep copy "events" object, Object.assign itself won't deep copy
-            plContent["events"] = Object.assign({}, plContent["events"] || {});
-            plContent["events"][powerLevelKey.slice(eventsLevelPrefix.length)] = value;
-        } else {
-            const keyPath = powerLevelKey.split(".");
-            let parentObj: IContent | undefined;
-            let currentObj = plContent;
-            for (const key of keyPath) {
-                if (!currentObj[key]) {
-                    currentObj[key] = {};
-                }
-                parentObj = currentObj;
-                currentObj = currentObj[key];
-            }
-            parentObj[keyPath[keyPath.length - 1]] = value;
-        }
-
-        client.sendStateEvent(this.props.roomId, EventType.RoomPowerLevels, plContent).catch((e) => {
-            logger.error(e);
-
-            Modal.createDialog(ErrorDialog, {
-                title: _t("Error changing power level requirement"),
-                description: _t(
-                    "An error occurred changing the room's power level requirements. Ensure you have sufficient " +
-                        "permissions and try again.",
-                ),
-            });
-        });
-    };
-
     private onUserPowerLevelChanged = (value: number, powerLevelKey: string): void => {
         const client = MatrixClientPeg.get();
         const room = client.getRoom(this.props.roomId);
@@ -237,6 +231,121 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
         });
     };
 
+    private onRemoveMember = (userId: string) => {
+        if (!userId) return;
+
+        Modal.createDialog(RemoveUserDialog, {
+            roomId: this.props.roomId,
+            userId,
+        });
+    };
+
+    private onSearchQueryChanged = (searchQuery: string) => {
+        this.setState({
+            searchQuery,
+        });
+    };
+
+    private onShowMenu = (member: RoomMember) => {
+        this.setState({
+            showContextMenu: true,
+            contextMenuBtn: this.memberListRef.current?.querySelector(
+                `.${changeMemberPermissionBtnClassName}[data-uid="${member.userId}"]`,
+            ),
+            selectedMember: member,
+        });
+    };
+
+    private onCloseMenu = () => {
+        this.setState({
+            showContextMenu: false,
+            contextMenuBtn: null,
+            selectedMember: null,
+        });
+    };
+
+    private makeMemberTiles = (members: Array<RoomMember>): JSX.Element[] => {
+        return members
+            .sort((a, b) => b.getPowerLevel() - a.getPowerLevel())
+            .map((m, index) => {
+                const client = MatrixClientPeg.get();
+                const room = client.getRoom(this.props.roomId);
+
+                const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+                const plContent = plEvent?.getContent() || {};
+                const userLevels = plContent.users || {};
+                const mLevel = userLevels[m.userId] || PowerLevel.Default;
+
+                const myUserId = client.getUserId();
+
+                const isMe = m.userId === myUserId;
+                const myUserLevel = userLevels[client.getUserId()!];
+
+                // 社区内拥有修改用户角色权限的用户
+                const canChangeLevelsUsers = Object.keys(userLevels).filter(
+                    (userId) => room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, userId),
+                );
+
+                const canChange =
+                    this.canChangeLevels && // 当前用户拥有修改社区内用户角色的权限
+                    ((isMe && canChangeLevelsUsers.length > 1) || // 如果是当前用户，必须保证当前社区内拥有修改角色权限的用户数 > 1时，才允许当前用户修改自己的角色权限
+                        myUserLevel > mLevel); // 如果当前用户的level > 某个用户的level，则当前用户可以修改该用户的角色权限
+
+                const isSelected = this.state.selectedMember?.userId === m.userId;
+
+                return (
+                    <div key={index} className={`mx_MemberItem ${isSelected ? "mx_MemberItem_active" : ""}`}>
+                        <MemberTile member={m} avatarSize={24} showPresence={false} />
+                        <ul className="mx_RoleSettings_memberItem_actions">
+                            {canChange && (
+                                <li className={changeMemberPermissionBtnClassName} data-uid={m.userId}>
+                                    <ContextMenuButton
+                                        isExpanded={this.state.showContextMenu && isSelected}
+                                        onClick={(ev: ButtonEvent) => this.onShowMenu(m)}
+                                    >
+                                        <DropdownButton>角色修改</DropdownButton>
+                                    </ContextMenuButton>
+                                </li>
+                            )}
+                            {!isMe && room.canRemoveUser(myUserId) && myUserLevel > mLevel && (
+                                <li onClick={() => this.onRemoveMember(m.userId)}>{_t("Remove users")}</li>
+                            )}
+                        </ul>
+                    </div>
+                );
+            });
+    };
+
+    private onChangeMemberPower(powerLevel: number) {
+        if (!this.state.selectedMember) return;
+
+        this.onUserPowerLevelChanged(powerLevel, this.state.selectedMember.userId);
+    }
+
+    private renderContextMenu = () => {
+        if (!this.state.showContextMenu || !this.state.contextMenuBtn || !this.state.selectedMember) return null;
+
+        const rect = this.state.contextMenuBtn?.getBoundingClientRect();
+        if (!rect) return null;
+
+        return (
+            <IconizedContextMenu compact {...aboveLeftOf(rect)} menuWidth={130} onFinished={this.onCloseMenu}>
+                <IconizedContextMenuOptionList first>
+                    {options.map((powerLevel) => {
+                        const isMatch = this.state.selectedMember.getPowerLevel() === powerLevel;
+                        return (
+                            <IconizedContextMenuOption
+                                key={powerLevel}
+                                label={`${isMatch ? "取消" : "设置成"}${_t(PowerLabel[powerLevel])}`}
+                                onClick={() => this.onChangeMemberPower(isMatch ? PowerLevel.Default : powerLevel)}
+                            />
+                        );
+                    })}
+                </IconizedContextMenuOptionList>
+            </IconizedContextMenu>
+        );
+    };
+
     public render(): React.ReactNode {
         const client = MatrixClientPeg.get();
         const room = client.getRoom(this.props.roomId);
@@ -244,7 +353,6 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
 
         const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
         const plContent = plEvent ? plEvent.getContent() || {} : {};
-        const canChangeLevels = room?.currentState.mayClientSendStateEvent(EventType.RoomPowerLevels, client);
 
         const plEventsToLabels: Record<EventType | string, string | null> = {
             // These will be translated for us later.
@@ -316,17 +424,6 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
         };
 
         const eventsLevels = plContent.events || {};
-        const userLevels = plContent.users || {};
-        const banLevel = parseIntWithDefault(plContent.ban, powerLevelDescriptors.ban.defaultValue);
-        const defaultUserLevel = parseIntWithDefault(
-            plContent.users_default,
-            powerLevelDescriptors.users_default.defaultValue,
-        );
-
-        let currentUserLevel = userLevels[client.getUserId()!];
-        if (currentUserLevel === undefined) {
-            currentUserLevel = defaultUserLevel;
-        }
 
         this.populateDefaultPlEvents(
             eventsLevels,
@@ -334,178 +431,37 @@ export default class RolesRoomSettingsTab extends React.Component<IProps> {
             parseIntWithDefault(plContent.events_default, powerLevelDescriptors.events_default.defaultValue),
         );
 
-        let privilegedUsersSection = <div>{_t("No users have specific privileges in this room")}</div>;
-        let mutedUsersSection;
-        if (Object.keys(userLevels).length) {
-            const privilegedUsers: JSX.Element[] = [];
-            const mutedUsers: JSX.Element[] = [];
-
-            // 社区内拥有修改用户角色权限的用户
-            const canChangeLevelsUsers = Object.keys(userLevels).filter(
-                (userId) => room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, userId),
-            );
-
-            Object.keys(userLevels).forEach((user) => {
-                if (!Number.isInteger(userLevels[user])) return;
-                const isMe = user === client.getUserId();
-                const canChange =
-                    canChangeLevels && // 当前用户拥有修改社区内用户角色的权限
-                    ((isMe && canChangeLevelsUsers.length > 1) || // 如果是当前用户，必须保证当前社区内拥有修改角色权限的用户数 > 1时，才允许当前用户修改自己的角色权限
-                        currentUserLevel > userLevels[user]); // 如果当前用户的level > 某个用户的level，则当前用户可以修改该用户的角色权限
-                if (userLevels[user] > defaultUserLevel) {
-                    // privileged
-                    privilegedUsers.push(
-                        <PowerSelector
-                            value={userLevels[user]}
-                            disabled={!canChange}
-                            label={room.getMemberEmail(user)}
-                            key={user}
-                            powerLevelKey={user} // Will be sent as the second parameter to `onChange`
-                            onChange={this.onUserPowerLevelChanged}
-                        />,
-                    );
-                } else if (userLevels[user] < defaultUserLevel) {
-                    // muted
-                    mutedUsers.push(
-                        <PowerSelector
-                            value={userLevels[user]}
-                            disabled={!canChange}
-                            label={room.getMemberEmail(user)}
-                            key={user}
-                            powerLevelKey={user} // Will be sent as the second parameter to `onChange`
-                            onChange={this.onUserPowerLevelChanged}
-                        />,
-                    );
-                }
-            });
-
-            // comparator for sorting PL users lexicographically on PL descending, MXID ascending. (case-insensitive)
-            const comparator = (a: JSX.Element, b: JSX.Element): number => {
-                const aKey = a.key as string;
-                const bKey = b.key as string;
-                const plDiff = userLevels[bKey] - userLevels[aKey];
-                return plDiff !== 0 ? plDiff : compare(aKey.toLocaleLowerCase(), bKey.toLocaleLowerCase());
-            };
-
-            privilegedUsers.sort(comparator);
-            mutedUsers.sort(comparator);
-
-            if (privilegedUsers.length) {
-                privilegedUsersSection = (
-                    <SettingsFieldset legend={_t("Privileged Users")}>{privilegedUsers}</SettingsFieldset>
-                );
-            }
-            if (mutedUsers.length) {
-                mutedUsersSection = <SettingsFieldset legend={_t("Muted Users")}>{mutedUsers}</SettingsFieldset>;
-            }
-        }
-
-        const banned = room?.getMembersWithMembership("ban");
-        let bannedUsersSection: JSX.Element | undefined;
-        if (banned?.length) {
-            const canBanUsers = currentUserLevel >= banLevel;
-            bannedUsersSection = (
-                <SettingsFieldset legend={_t("Banned users")}>
-                    <ul>
-                        {banned.map((member) => {
-                            const banEvent = member.events.member?.getContent();
-                            const sender = room?.getMember(member.events.member.getSender());
-                            let bannedBy = member.events.member?.getSender(); // start by falling back to mxid
-                            if (sender) bannedBy = sender.name;
-                            return (
-                                <BannedUser
-                                    key={member.userId}
-                                    canUnban={canBanUsers}
-                                    member={member}
-                                    reason={banEvent?.reason}
-                                    by={bannedBy}
-                                />
-                            );
-                        })}
-                    </ul>
-                </SettingsFieldset>
-            );
-        }
-
-        const powerSelectors = Object.keys(powerLevelDescriptors)
-            .map((key, index) => {
-                const descriptor = powerLevelDescriptors[key];
-                if (isSpaceRoom && descriptor.hideForSpace) {
-                    return null;
-                }
-
-                const value = parseIntWithDefault(get(plContent, key), descriptor.defaultValue);
-                return (
-                    <div key={index} className="">
-                        <PowerSelector
-                            label={descriptor.desc}
-                            value={value}
-                            usersDefault={defaultUserLevel}
-                            disabled={!canChangeLevels || currentUserLevel < value}
-                            powerLevelKey={key} // Will be sent as the second parameter to `onChange`
-                            onChange={this.onPowerLevelsChanged}
-                        />
-                    </div>
-                );
-            })
-            .filter(Boolean);
-
         // hide the power level selector for enabling E2EE if it the room is already encrypted
         if (client.isRoomEncrypted(this.props.roomId)) {
             delete eventsLevels[EventType.RoomEncryption];
         }
 
-        const eventPowerSelectors = Object.keys(eventsLevels)
-            .map((eventType, i) => {
-                if (isSpaceRoom && plEventsToShow[eventType]?.hideForSpace) {
-                    return null;
-                } else if (!isSpaceRoom && plEventsToShow[eventType]?.hideForRoom) {
-                    return null;
-                }
-
-                let label = plEventsToLabels[eventType];
-                if (label) {
-                    const brand = SdkConfig.get("element_call").brand ?? DEFAULTS.element_call.brand;
-                    label = _t(label, { brand });
-                } else {
-                    label = _t("Send %(eventType)s events", { eventType });
-                }
-                return (
-                    <div className="" key={eventType}>
-                        <PowerSelector
-                            label={label}
-                            value={eventsLevels[eventType]}
-                            usersDefault={defaultUserLevel}
-                            disabled={!canChangeLevels || currentUserLevel < eventsLevels[eventType]}
-                            powerLevelKey={"event_levels_" + eventType}
-                            onChange={this.onPowerLevelsChanged}
+        return (
+            <>
+                <div className="mx_SettingsTab_section mx_RolesRoomSettings_container">
+                    <div className="mx_RolesRoomSettings_search">
+                        <SearchBox
+                            placeholder={_t("Search")}
+                            onSearch={this.onSearchQueryChanged}
+                            initialValue={this.state.searchQuery}
                         />
                     </div>
-                );
-            })
-            .filter(Boolean);
-
-        return (
-            <div className="mx_SettingsTab mx_RolesRoomSettingsTab">
-                <div className="mx_SettingsTab_heading">{_t("Roles & Permissions")}</div>
-                {privilegedUsersSection}
-                {canChangeLevels && room !== null && (
-                    <AddPrivilegedUsers room={room} defaultUserLevel={defaultUserLevel} />
-                )}
-                {mutedUsersSection}
-                {bannedUsersSection}
-                <SettingsFieldset
-                    legend={_t("Permissions")}
-                    description={
-                        isSpaceRoom
-                            ? _t("Select the roles required to change various parts of the space")
-                            : _t("Select the roles required to change various parts of the room")
-                    }
-                >
-                    {powerSelectors}
-                    {eventPowerSelectors}
-                </SettingsFieldset>
-            </div>
+                    <div className="mx_RolesSettings_membersWrap" ref={this.memberListRef}>
+                        <AutoHideScrollbar>
+                            <MemberList
+                                roomId={this.props.roomId}
+                                searchQuery={this.state.searchQuery}
+                                makeMemberTiles={this.makeMemberTiles}
+                            />
+                        </AutoHideScrollbar>
+                    </div>
+                    <div className="mx_RolesSettings_tips">
+                        <span className="mx_tips_icon" />
+                        协管员拥有除分配角色、删除社区以外的所有权限。
+                    </div>
+                </div>
+                {this.renderContextMenu()}
+            </>
         );
     }
 }

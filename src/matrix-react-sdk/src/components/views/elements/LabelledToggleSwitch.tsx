@@ -22,20 +22,20 @@ import { Caption } from "../typography/Caption";
 
 interface IProps {
     // The value for the toggle switch
-    "value": boolean;
+    value: boolean;
     // The translated label for the switch
-    "label": string;
+    label: string;
     // The translated caption for the switch
-    "caption"?: string;
+    caption?: string;
     // Tooltip to display
-    "tooltip"?: string;
+    tooltip?: string;
     // Whether or not to disable the toggle switch
-    "disabled"?: boolean;
+    disabled?: boolean;
     // True to put the toggle in front of the label
     // Default false.
-    "toggleInFront"?: boolean;
+    toggleInFront?: boolean;
     // Additional class names to append to the switch. Optional.
-    "className"?: string;
+    className?: string;
     // The function to call when the value changes
     onChange(checked: boolean): void;
 
@@ -58,13 +58,7 @@ export default class LabelledToggleSwitch extends React.PureComponent<IProps> {
             </span>
         );
         let secondPart = (
-            <ToggleSwitch
-                checked={this.props.value}
-                disabled={this.props.disabled}
-                onChange={this.props.onChange}
-                title={this.props.label}
-                tooltip={this.props.tooltip}
-            />
+            <ToggleSwitch checked={this.props.value} disabled={this.props.disabled} onChange={this.props.onChange} />
         );
 
         if (this.props.toggleInFront) {

@@ -58,7 +58,7 @@
         "url": "https://element-call.netlify.app"
     },
     "setting_defaults": {
-        "layout": "bubble"
+        "layout": "group"
     },
     "map_style_url": "https://api.maptiler.com/maps/streets/style.json?key=fU3vlMsMn4Jb6dnEIFsx"
 }

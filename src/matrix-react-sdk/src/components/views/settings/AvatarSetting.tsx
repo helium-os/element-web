@@ -14,92 +14,111 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useRef, useState } from "react";
-import classNames from "classnames";
+import React, { useRef, useState, useEffect, memo } from "react";
 
-import { _t } from "../../../languageHandler";
-import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
+import AccessibleButton from "../elements/AccessibleButton";
+import { chromeFileInputFix } from "matrix-react-sdk/src/utils/BrowserWorkarounds";
+import RoomAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAvatar";
+import { Room } from "matrix-js-sdk/src/models/room";
 
-interface IProps {
-    avatarUrl?: string;
-    avatarName: string; // name of user/room the avatar belongs to
-    uploadAvatar?: (e: ButtonEvent) => void;
-    removeAvatar?: (e: ButtonEvent) => void;
-    avatarAltText: string;
+export enum OperateType {
+    Create,
+    Edit,
 }
 
-const AvatarSetting: React.FC<IProps> = ({ avatarUrl, avatarAltText, avatarName, uploadAvatar, removeAvatar }) => {
-    const [isHovering, setIsHovering] = useState(false);
-    const hoveringProps = {
-        onMouseEnter: () => setIsHovering(true),
-        onMouseLeave: () => setIsHovering(false),
-    };
-    // TODO: Use useId() as soon as we're using React 18.
-    // Prevents ID collisions when this component is used more than once on the same page.
-    const a11yId = useRef(`hover-text-${Math.random()}`);
+export interface AvatarProps {
+    type?: OperateType;
+    room?: Room;
+    size?: number;
+    avatarUrl?: string | null;
+    avatarDisabled?: boolean;
+    setAvatar?(avatar?: File): void;
+}
 
-    let avatarElement = (
-        <AccessibleButton
-            element="div"
-            onClick={uploadAvatar ?? null}
-            className="mx_AvatarSetting_avatarPlaceholder"
-            aria-labelledby={uploadAvatar ? a11yId.current : undefined}
-            // Inhibit tab stop as we have explicit upload/remove buttons
-            tabIndex={-1}
-            {...hoveringProps}
-        />
-    );
-    if (avatarUrl) {
-        avatarElement = (
-            <AccessibleButton
-                element="img"
-                src={avatarUrl}
-                alt={avatarAltText}
-                onClick={uploadAvatar ?? null}
-                // Inhibit tab stop as we have explicit upload/remove buttons
-                tabIndex={-1}
-                {...hoveringProps}
-            />
-        );
-    }
+const AvatarSetting: React.FC<AvatarProps> = ({
+    type = OperateType.Create,
+    room,
+    avatarUrl = "",
+    size = 100,
+    avatarDisabled = false,
+    setAvatar,
+}) => {
+    const avatarUploadRef = useRef<HTMLInputElement>();
+    const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
 
-    let uploadAvatarBtn: JSX.Element | undefined;
-    if (uploadAvatar) {
-        // insert an empty div to be the host for a css mask containing the upload.svg
-        uploadAvatarBtn = (
-            <AccessibleButton
-                onClick={uploadAvatar}
-                className="mx_AvatarSetting_uploadButton"
-                aria-labelledby={a11yId.current}
-                {...hoveringProps}
-            />
-        );
-    }
+    useEffect(() => {
+        setAvatarDataUrl(avatarUrl);
+    }, [avatarUrl]);
 
-    let removeAvatarBtn: JSX.Element | undefined;
-    if (avatarUrl && removeAvatar) {
-        removeAvatarBtn = (
-            <AccessibleButton onClick={removeAvatar} kind="link_sm">
-                {_t("Remove")}
-            </AccessibleButton>
-        );
-    }
+    let avatarSection;
 
-    const avatarClasses = classNames({
-        mx_AvatarSetting_avatar: true,
-        mx_AvatarSetting_avatar_hovering: isHovering && uploadAvatar,
-    });
-    return (
-        <div className={avatarClasses} role="group" aria-label={avatarAltText}>
-            {avatarElement}
-            <div className="mx_AvatarSetting_hover" aria-hidden="true">
-                <div className="mx_AvatarSetting_hoverBg" />
-                {uploadAvatar && <span id={a11yId.current}>{_t("Upload")}</span>}
+    const getNoDateUrlAvatar = () => {
+        return (
+            <div
+                className={avatarDisabled ? "mx_AvatarSetting_disabled" : ""}
+                onClick={() => !avatarDisabled && avatarUploadRef.current?.click()}
+            >
+                {type === OperateType.Edit ? (
+                    <RoomAvatar width={size} height={size} room={room} />
+                ) : (
+                    <div className="mx_AvatarSetting_avatar" />
+                )}
             </div>
-            {uploadAvatarBtn}
-            {removeAvatarBtn}
+        );
+    };
+
+    if (avatarDisabled) {
+        avatarSection = avatarDataUrl ? (
+            <img className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" src={avatarDataUrl} alt="" />
+        ) : (
+            getNoDateUrlAvatar()
+        );
+    } else {
+        avatarSection = (
+            <>
+                {avatarDataUrl ? (
+                    <AccessibleButton
+                        className="mx_AvatarSetting_avatar"
+                        onClick={() => avatarUploadRef.current?.click()}
+                        element="img"
+                        src={avatarDataUrl}
+                        alt=""
+                    />
+                ) : (
+                    getNoDateUrlAvatar()
+                )}
+                <div className="mx_AvatarSetting_mask" onClick={() => avatarUploadRef.current?.click()}>
+                    {type === OperateType.Edit && <label>编辑</label>}
+                </div>
+            </>
+        );
+    }
+
+    const onFileChange = (e) => {
+        if (!e.target.files?.length) return;
+        const file = e.target.files[0];
+        setAvatar(file);
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setAvatarDataUrl(ev.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    return (
+        <div className="mx_AvatarSetting_container" style={{ width: size, height: size }}>
+            {avatarSection}
+            {!avatarDisabled && (
+                <input
+                    type="file"
+                    ref={avatarUploadRef}
+                    onClick={chromeFileInputFix}
+                    onChange={onFileChange}
+                    accept="image/*"
+                />
+            )}
         </div>
     );
 };
 
-export default AvatarSetting;
+export default memo(AvatarSetting);

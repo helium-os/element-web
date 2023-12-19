@@ -16,16 +16,29 @@ limitations under the License.
 
 /* TODO: Consider unifying with general input styles in _light.pcss */
 
+$input-transform-space: 8px;
+$input-height: 24px;
+$textarea-height: calc(3 * $input-height);
+
 .mx_Field {
-    display: flex;
-    flex: 1;
-    min-width: 0;
+    @mixin HalfPxBorder $input-border-color, 8px;
     position: relative;
-    margin: 1em 0;
-    border-radius: 4px;
-    transition: border-color 0.25s;
-    border: 1px solid $input-border-color;
+    padding: 14px 0;
+    margin: 0 -2px;
+    border: 2px solid transparent;
+    &.mx_Field_focused {
+        border-color: $input-focus-border-color;
+        &:before {
+            display: none;
+        }
+    }
+    &.mx_Field_hideInput {
+        input {
+            display: none;
+        }
+    }
 }
+
 
 .mx_Field_prefix {
     border-right: 1px solid $input-border-color;
@@ -35,24 +48,68 @@ limitations under the License.
     border-left: 1px solid $input-border-color;
 }
 
-.mx_Field input,
-.mx_Field select,
-.mx_Field textarea {
+
+.mx_Field_wrap {
+    position: relative;
+    padding: 0 14px;
+}
+
+.mx_Field_inputBox {
+    display: flex;
+    align-items: flex-start;
+}
+
+.mx_Field_clearBox {
+    opacity: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+}
+
+.mx_Field_clearBtn {
+    width: 14px;
+    height: 14px;
+    background: $text-secondary-color1;
+    border-radius: 50%;
+    cursor: pointer;
+    @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #fff;
+}
+
+.mx_Field_clearShow .mx_Field_clearBox {
+    opacity: 1;
+}
+
+.mx_Field_inner {
+    flex: 1;
+    overflow: hidden;
+}
+
+.mx_Field .mx_Field_inner input,
+.mx_Field .mx_Field_inner select,
+.mx_Field .mx_Field_inner textarea {
+    box-sizing: border-box;
+    width: 100%;
+    height: $input-height;
     font-family: inherit;
-    font-weight: normal;
-    font-size: $font-14px;
+    font-weight: $font-normal-bold;
+    font-size: $font-16px;
+    line-height: $input-height;
+    background: transparent;
     border: none;
     /* Even without a border here, we still need this avoid overlapping the rounded */
     /* corners on the field above. */
-    border-radius: 4px;
-    padding: 8px 9px;
-    color: $primary-content;
-    background-color: $background;
-    flex: 1;
-    min-width: 0;
+    color: $text-primary-color3;
+    outline: none;
 }
 
-.mx_Field select {
+.mx_Field .mx_Field_inner textarea {
+    height: $textarea-height;
+    resize: none;
+}
+
+.mx_Field .mx_Field_inner select {
     -moz-appearance: none;
     -webkit-appearance: none;
 }
@@ -72,99 +129,84 @@ limitations under the License.
     pointer-events: none;
 }
 
-.mx_Field:focus-within {
-    border-color: $accent-alt;
-}
-
-.mx_Field input:focus,
-.mx_Field select:focus,
-.mx_Field textarea:focus {
-    outline: 0;
+.mx_Field.mx_Field_labelShow .mx_Field_inputBox,
+.mx_Field.mx_Field_focused .mx_Field_inputBox {
+    transform: translate(0, $input-transform-space);
+    transition: all 0.25s ease-out 0.1s;
 }
 
 .mx_Field input::placeholder,
 .mx_Field textarea::placeholder {
-    transition: color 0.25s ease-in 0s;
+    transition: color 0.25s ease-in 0.1s;
     color: transparent;
 }
 
-.mx_Field input:placeholder-shown:focus::placeholder,
-.mx_Field textarea:placeholder-shown:focus::placeholder,
-.mx_Field.mx_Field_placeholderIsHint input::placeholder {
-    transition: color 0.25s ease-in 0.1s;
-    color: $info-plinth-fg-color;
+
+.mx_Field.mx_Field_placeholderIsHint input::placeholder,
+.mx_Field.mx_Field_placeholderIsHint textarea::placeholder{
+    color: $text-secondary-color3;
 }
 
-.mx_Field label {
-    transition: font-size 0.25s ease-out 0.1s, color 0.25s ease-out 0.1s, transform 0.25s ease-out 0.1s,
-        background-color 0.25s ease-out 0.1s;
-    background-color: transparent;
-    font-size: $font-14px;
-    transform: translateY(0);
-    position: absolute;
-    left: 0px;
-    margin: 7px 8px;
-    padding: 2px;
-    pointer-events: none; /* Allow clicks to fall through to the input */
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    max-width: calc(100% - 20px); /* 100% of parent minus margin and padding */
-}
-
-.mx_Field_labelAlwaysTopLeft label,
-.mx_Field select + label /* Always show a select's label on top to not collide with the value */,
-.mx_Field input:focus + label,
-.mx_Field input:not(:placeholder-shown) + label,
-.mx_Field textarea:focus + label,
-.mx_Field textarea:not(:placeholder-shown) + label {
-    transition: font-size 0.25s ease-out 0s, color 0.25s ease-out 0s, transform 0.25s ease-out 0s,
-        background-color 0.25s ease-out 0s;
-    font-size: $font-10px;
-    transform: translateY(-13px);
-    padding: 0 2px;
-    background-color: $background;
-    pointer-events: initial;
-}
-
-.mx_Field input:focus + label,
-.mx_Field select:focus + label,
-.mx_Field textarea:focus + label {
-    color: $accent-alt;
+.mx_Field  {
+    .mx_Field_labelBox {
+        position: absolute;
+        top: 0;
+        left: 14px;
+        right: 14px;
+        margin-top: -$input-transform-space;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        opacity: 0;
+        font-size: 12px;
+        line-height: 16px;
+        font-weight: 400;
+        color: $text-secondary-color1;
+        transition: opacity 0.25s ease-out 0.1s;
+        pointer-events: none; /* Allow clicks to fall through to the input */
+    }
+    .mx_Field_label {
+        flex: 1;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .mx_Field_wordLimit {
+    }
+    &.mx_Field_labelShow {
+        .mx_Field_labelBox {
+            opacity: 1;
+        }
+    }
 }
 
 .mx_Field select:disabled,
-.mx_Field select:disabled + label,
+.mx_Field select:disabled + .mx_Field_label,
 .mx_Field input:disabled,
-.mx_Field input:disabled + label,
+.mx_Field input:disabled + .mx_Field_label,
 .mx_Field textarea:disabled,
-.mx_Field textarea:disabled + label {
-    background-color: $background;
+.mx_Field textarea:disabled + .mx_Field_label {
     color: $info-plinth-fg-color;
 }
 
-.mx_Field_valid {
-    &.mx_Field,
-    &.mx_Field:focus-within {
-        border-color: $accent;
+.mx_Field_invalid {
+    &.mx_Field {
+        border-color: transparent;
+        &:before {
+            display: block!important;
+            border-color: $text-danger-color1;
+        }
     }
 
-    &.mx_Field label,
-    &.mx_Field:focus-within label {
-        color: $accent;
+    &.mx_Field .mx_Field_label,
+    &.mx_Field:focus-within .mx_Field_label {
+        color: $text-danger-color1;
     }
 }
 
-.mx_Field_invalid {
-    &.mx_Field,
-    &.mx_Field:focus-within {
-        border-color: $alert;
-    }
-
-    &.mx_Field label,
-    &.mx_Field:focus-within label {
-        color: $alert;
-    }
+.mx_Field_invalidTipsBox {
+    margin-top: 2px;
+    padding-left: 14px;
 }
 
 .mx_Field_tooltip {
@@ -184,4 +226,104 @@ limitations under the License.
 
 .mx_Field .mx_CountryDropdown {
     width: $font-78px;
+}
+
+
+// dropdown
+.mx_Field_DropdownMenuWrap {
+    position: relative;
+    padding: 8px 0;
+}
+.mx_Field_DropdownMenuInner{
+    padding: 0 8px;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.mx_Field_DropdownMenuList {
+
+}
+.mx_Field_DropdownMenuItem {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 4px;
+
+    padding: 4px 6px;
+    border-radius: 4px;
+
+    &:hover {
+        background: $background-primary1-secondary-color2;
+    }
+}
+.mx_Field_DropdownMenuItem_title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: $font-14px;
+    line-height: 20px;
+    font-weight: $font-normal-bold;
+    color: $text-primary-color3;
+}
+.mx_Field_DropdownMenuItem_description {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: $font-12px;
+    color: $text-secondary-color2;
+}
+.mx_Field_DropdownMenu_noResults {
+    font-size: $font-14px;
+    line-height: 20px;
+    font-weight: $font-normal-bold;
+    color: $text-primary-color3;
+}
+
+
+
+// 被选中的用户或频道
+.mx_SelectedUserOrRoomTile_box {
+    margin: 0 4px 4px 0;
+    min-width: max-content; /* prevent manipulation by flexbox */
+
+    .mx_SelectedUserOrRoomTile_pill {
+        display: flex;
+        align-items: center;
+        height: 24px;
+        border-radius: 12px;
+        padding: 0 5px 0 2px;
+        background-color: $background-primary1-secondary-color2;
+        color: $text-primary-color3; /* this is fine without a var because it's for both themes */
+
+
+        .mx_SelectedUserOrRoomTile_name {
+            max-width: 100px;
+            padding: 0 7px 0 4px;
+            font-size: 16px;
+            font-weight: 400;
+            line-height: 1.5;
+            color: $text-primary-color3;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .mx_SelectedUserOrRoomTile_remove {
+            display: none;
+            padding: 2px;
+            cursor: pointer;
+        }
+        .mx_SelectedUserOrRoomTile_remove_icon {
+            margin: 0 auto;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: $text-secondary-color1;
+            @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #FFFFFF;
+        }
+
+        &:hover .mx_SelectedUserOrRoomTile_remove{
+            display: block;
+        }
+    }
 }

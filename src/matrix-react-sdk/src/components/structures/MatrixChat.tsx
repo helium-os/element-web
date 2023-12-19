@@ -93,7 +93,7 @@ import SecurityCustomisations from "../../customisations/Security";
 import Spinner from "../views/elements/Spinner";
 import QuestionDialog from "../views/dialogs/QuestionDialog";
 import UserSettingsDialog from "../views/dialogs/UserSettingsDialog";
-import CreateRoomDialog from "../views/dialogs/CreateRoomDialog";
+import CreateChannelDialog from "../views/dialogs/CreateChannelDialog";
 import KeySignatureUploadFailedDialog from "../views/dialogs/KeySignatureUploadFailedDialog";
 import IncomingSasDialog from "../views/dialogs/IncomingSasDialog";
 // import CompleteSecurity from "./auth/CompleteSecurity";
@@ -150,6 +150,7 @@ import * as languageHandler from "../../../src/languageHandler";
 import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -1083,7 +1084,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private async createRoom(defaultPublic = false, defaultName?: string, type?: RoomType): Promise<void> {
-        const modal = Modal.createDialog(CreateRoomDialog, {
+        const modal = Modal.createDialog(CreateChannelDialog, {
             type,
             defaultPublic,
             defaultName,
@@ -1183,25 +1184,53 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private leaveRoom(roomId: string): void {
-        const roomToLeave = MatrixClientPeg.get().getRoom(roomId);
+        const cli = MatrixClientPeg.get();
+        const roomToLeave = cli.getRoom(roomId);
         const warnings = this.leaveRoomWarnings(roomId);
 
+        const myUserId = cli.getSafeUserId();
+        const myMember = roomToLeave.getMember(myUserId);
+        const isRoomAdmin = myMember.isAdmin();
+
         const isSpace = roomToLeave?.isSpaceRoom();
+        const isSpaceChannel = SpaceStore.instance.getParents(roomId).length > 0;
+        const isGroupChatRoom = !isSpace && !isSpaceChannel && !roomToLeave?.isPeopleRoom(); // 是否是群聊
+
+        const roomType = roomToLeave.getRoomTypeLabel();
+
+        let actionType;
+        if (isSpace) {
+            actionType = _t("Leave");
+        } else if (isSpaceChannel) {
+            actionType = _t("Leave");
+        } else if (isGroupChatRoom) {
+            actionType = isRoomAdmin ? _t("Disband") : _t("Quit");
+        }
         Modal.createDialog(QuestionDialog, {
-            title: isSpace ? _t("Leave space") : _t("Leave room"),
+            fixedWidth: false,
+            className: "mx_Dialog_LeaveRoomConfirmDialog",
+            title: isSpace
+                ? _t("Leave space")
+                : _t("Leave room", {
+                      actionType,
+                      roomType,
+                  }),
+            danger: true,
             description: (
-                <span>
+                <>
                     {isSpace
                         ? _t("Are you sure you want to leave the space '%(spaceName)s'?", {
                               spaceName: roomToLeave?.name ?? _t("Unnamed Space"),
                           })
-                        : _t("Are you sure you want to leave the room '%(roomName)s'?", {
+                        : _t("Are you sure you want to leave the room?", {
+                              actionType,
+                              roomType,
                               roomName: roomToLeave?.name ?? _t("Unnamed Room"),
                           })}
-                    {warnings}
-                </span>
+                    {/*{warnings}*/}
+                </>
             ),
-            button: _t("Leave"),
+            button: actionType,
             onFinished: (shouldLeave) => {
                 if (shouldLeave) {
                     leaveRoomBehaviour(roomId);
@@ -1928,13 +1957,13 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         const LHS_THRESHOLD = 1000;
         const width = UIStore.instance.windowWidth;
 
-        if (this.prevWindowWidth < LHS_THRESHOLD && width >= LHS_THRESHOLD) {
-            dis.dispatch({ action: "show_left_panel" });
-        }
-
-        if (this.prevWindowWidth >= LHS_THRESHOLD && width < LHS_THRESHOLD) {
-            dis.dispatch({ action: "hide_left_panel" });
-        }
+        // if (this.prevWindowWidth < LHS_THRESHOLD && width >= LHS_THRESHOLD) {
+        //     dis.dispatch({ action: "show_left_panel" });
+        // }
+        //
+        // if (this.prevWindowWidth >= LHS_THRESHOLD && width < LHS_THRESHOLD) {
+        //     dis.dispatch({ action: "hide_left_panel" });
+        // }
 
         this.prevWindowWidth = width;
         this.state.resizeNotifier.notifyWindowResized();

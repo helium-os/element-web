@@ -98,21 +98,34 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                 if (threePidContent.display_name) {
                     return () =>
                         _t("%(targetName)s accepted the invitation for %(displayName)s", {
-                            targetName,
+                            targetName: () => <label>{targetName}</label>,
                             displayName: threePidContent.display_name,
                         });
                 } else {
-                    return () => _t("%(targetName)s accepted an invitation", { targetName });
+                    return () =>
+                        _t("%(targetName)s accepted an invitation", { targetName: () => <label>{targetName}</label> });
                 }
             } else {
-                return () => _t("%(senderName)s invited %(targetName)s", { senderName, targetName });
+                return () =>
+                    _t("%(senderName)s invited %(targetName)s", {
+                        senderName: () => <label>{senderName}</label>,
+                        targetName: () => <label>{targetName}</label>,
+                        roomType: roomTypeLabel,
+                    });
             }
         }
         case "ban":
             return () =>
                 reason
-                    ? _t("%(senderName)s banned %(targetName)s: %(reason)s", { senderName, targetName, reason })
-                    : _t("%(senderName)s banned %(targetName)s", { senderName, targetName });
+                    ? _t("%(senderName)s banned %(targetName)s: %(reason)s", {
+                          senderName: () => <label>{senderName}</label>,
+                          targetName: () => <label>{targetName}</label>,
+                          reason,
+                      })
+                    : _t("%(senderName)s banned %(targetName)s", {
+                          senderName: () => <label>{senderName}</label>,
+                          targetName: () => <label>{targetName}</label>,
+                      });
         case "join":
             if (prevContent && prevContent.membership === "join") {
                 if (prevContent.displayname && content.displayname && prevContent.displayname !== content.displayname) {
@@ -121,43 +134,55 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                             // We're taking the display namke directly from the event content here so we need
                             // to strip direction override chars which the js-sdk would normally do when
                             // calculating the display name
-                            oldDisplayName: removeDirectionOverrideChars(prevContent.displayname!),
-                            displayName: removeDirectionOverrideChars(content.displayname!),
+                            oldDisplayName: () => (
+                                <label>{removeDirectionOverrideChars(prevContent.displayname!)}</label>
+                            ),
+                            displayName: () => <label>{removeDirectionOverrideChars(content.displayname!)}</label>,
                         });
                 } else if (!prevContent.displayname && content.displayname) {
                     return () =>
                         _t("%(senderName)s set their display name to %(displayName)s", {
-                            senderName: ev.getSender(),
-                            displayName: removeDirectionOverrideChars(content.displayname!),
+                            senderName: () => <label>{ev.getSender()}</label>,
+                            displayName: () => <label>{removeDirectionOverrideChars(content.displayname!)}</label>,
                         });
                 } else if (prevContent.displayname && !content.displayname) {
                     return () =>
                         _t("%(senderName)s removed their display name (%(oldDisplayName)s)", {
-                            senderName,
-                            oldDisplayName: removeDirectionOverrideChars(prevContent.displayname!),
+                            senderName: () => <label>{senderName}</label>,
+                            oldDisplayName: () => (
+                                <label>{removeDirectionOverrideChars(prevContent.displayname!)}</label>
+                            ),
                         });
                 } else if (prevContent.avatar_url && !content.avatar_url) {
-                    return () => _t("%(senderName)s removed their profile picture", { senderName });
+                    return () =>
+                        _t("%(senderName)s removed their profile picture", {
+                            senderName: () => <label>{senderName}</label>,
+                        });
                 } else if (
                     prevContent.avatar_url &&
                     content.avatar_url &&
                     prevContent.avatar_url !== content.avatar_url
                 ) {
-                    return () => _t("%(senderName)s changed their profile picture", { senderName });
+                    return () =>
+                        _t("%(senderName)s changed their profile picture", {
+                            senderName: () => <label>{senderName}</label>,
+                        });
                 } else if (!prevContent.avatar_url && content.avatar_url) {
-                    return () => _t("%(senderName)s set a profile picture", { senderName });
+                    return () =>
+                        _t("%(senderName)s set a profile picture", { senderName: () => <label>{senderName}</label> });
                 } else if (showHiddenEvents ?? SettingsStore.getValue("showHiddenEventsInTimeline")) {
                     // This is a null rejoin, it will only be visible if using 'show hidden events' (labs)
-                    return () => _t("%(senderName)s made no change", { senderName });
+                    return () => _t("%(senderName)s made no change", { senderName: () => <label>{senderName}</label> });
                 } else {
                     return null;
                 }
             } else {
                 if (!ev.target) logger.warn("Join message has no target! -- " + ev.getContent().state_key);
-                return () => _t("%(targetName)s joined the room", {
-                    targetName,
-                    roomType: roomTypeLabel
-                });
+                return () =>
+                    _t("%(targetName)s joined the room", {
+                        targetName: () => <label>{targetName}</label>,
+                        roomType: roomTypeLabel,
+                    });
             }
         case "leave":
             if (ev.getSender() === ev.getStateKey()) {
@@ -167,14 +192,14 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                     return () =>
                         reason
                             ? _t("%(targetName)s left the room: %(reason)s", {
-                                targetName,
-                                reason,
-                                roomType: roomTypeLabel
-                            })
+                                  targetName: () => <label>{targetName}</label>,
+                                  reason,
+                                  roomType: roomTypeLabel,
+                              })
                             : _t("%(targetName)s left the room", {
-                                targetName,
-                                roomType: roomTypeLabel
-                            });
+                                  targetName: () => <label>{targetName}</label>,
+                                  roomType: roomTypeLabel,
+                              });
                 }
             } else if (prevContent.membership === "ban") {
                 return () => _t("%(senderName)s unbanned %(targetName)s", { senderName, targetName });
@@ -182,20 +207,26 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
                 return () =>
                     reason
                         ? _t("%(senderName)s withdrew %(targetName)s's invitation: %(reason)s", {
-                              senderName,
-                              targetName,
+                              senderName: () => <label>{senderName}</label>,
+                              targetName: () => <label>{targetName}</label>,
                               reason,
                           })
-                        : _t("%(senderName)s withdrew %(targetName)s's invitation", { senderName, targetName });
+                        : _t("%(senderName)s withdrew %(targetName)s's invitation", {
+                              senderName: () => <label>{senderName}</label>,
+                              targetName: () => <label>{targetName}</label>,
+                          });
             } else if (prevContent.membership === "join") {
                 return () =>
                     reason
                         ? _t("%(senderName)s removed %(targetName)s: %(reason)s", {
-                              senderName,
-                              targetName,
+                              senderName: () => <label>{senderName}</label>,
+                              targetName: () => <label>{targetName}</label>,
                               reason,
                           })
-                        : _t("%(senderName)s removed %(targetName)s", { senderName, targetName });
+                        : _t("%(senderName)s removed %(targetName)s", {
+                              senderName: () => <label>{senderName}</label>,
+                              targetName: () => <label>{targetName}</label>,
+                          });
             } else {
                 return null;
             }
@@ -208,7 +239,7 @@ function textForTopicEvent(ev: MatrixEvent): (() => string) | null {
     const senderDisplayName = ev.sender && ev.sender.name ? ev.sender.name : ev.getSender();
     return () =>
         _t('%(senderDisplayName)s changed the topic to "%(topic)s".', {
-            senderDisplayName,
+            senderDisplayName: () => <label>{senderDisplayName}</label>,
             topic: ev.getContent().topic,
         });
 }
@@ -223,26 +254,27 @@ function textForRoomNameEvent(ev: MatrixEvent): (() => string) | null {
     const roomTypeLabel = ev.getRoomTypeLabel();
 
     if (!ev.getContent().name || ev.getContent().name.trim().length === 0) {
-        return () => _t("%(senderDisplayName)s removed the room name.", {
-            senderDisplayName,
-            roomType: roomTypeLabel
-        });
+        return () =>
+            _t("%(senderDisplayName)s removed the room name.", {
+                senderDisplayName: () => <label>{senderDisplayName}</label>,
+                roomType: roomTypeLabel,
+            });
     }
     if (ev.getPrevContent().name) {
         return () =>
             _t("%(senderDisplayName)s changed the room name from %(oldRoomName)s to %(newRoomName)s.", {
-                senderDisplayName,
+                senderDisplayName: () => <label>{senderDisplayName}</label>,
                 oldRoomName: ev.getPrevContent().name,
                 newRoomName: ev.getContent().name,
-                roomType: roomTypeLabel
+                roomType: roomTypeLabel,
             });
     }
-    return () =>
-        _t("%(senderDisplayName)s changed the room name to %(roomName)s.", {
-            senderDisplayName,
-            roomName: ev.getContent().name,
-            roomType: roomTypeLabel
-        });
+    // return () =>
+    //     _t("%(senderDisplayName)s changed the room name to %(roomName)s.", {
+    //         senderDisplayName: () => <label>{senderDisplayName}</label>,
+    //         roomName: ev.getContent().name,
+    //         roomType: roomTypeLabel,
+    //     });
 }
 
 function textForTombstoneEvent(ev: MatrixEvent): (() => string) | null {
@@ -265,41 +297,44 @@ function textForJoinRulesEvent(ev: MatrixEvent, allowJSX: boolean): () => Render
         case JoinRule.Public:
             return () =>
                 _t("%(senderDisplayName)s made the room public to whoever knows the link.", {
-                    senderDisplayName,
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
                 });
         case JoinRule.Invite:
             return () =>
                 _t("%(senderDisplayName)s made the room invite only.", {
-                    senderDisplayName,
-                    roomType: roomTypeLabel
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
+                    roomType: roomTypeLabel,
                 });
         case JoinRule.Restricted:
-            if (allowJSX) {
-                return () => (
-                    <span>
-                        {_t(
-                            "%(senderDisplayName)s changed who can join this room. <a>View settings</a>.",
-                            {
-                                senderDisplayName,
-                            },
-                            {
-                                a: (sub) => (
-                                    <AccessibleButton kind="link_inline" onClick={onViewJoinRuleSettingsClick}>
-                                        {sub}
-                                    </AccessibleButton>
-                                ),
-                            },
-                        )}
-                    </span>
-                );
-            }
+            // if (allowJSX) {
+            //     return () => (
+            //         <span>
+            //             {_t(
+            //                 "%(senderDisplayName)s changed who can join this room. <a>View settings</a>.",
+            //                 {
+            //                     senderDisplayName: () => <label>{senderDisplayName}</label>,
+            //                 },
+            //                 {
+            //                     a: (sub) => (
+            //                         <AccessibleButton kind="link_inline" onClick={onViewJoinRuleSettingsClick}>
+            //                             {sub}
+            //                         </AccessibleButton>
+            //                     ),
+            //                 },
+            //             )}
+            //         </span>
+            //     );
+            // }
 
-            return () => _t("%(senderDisplayName)s changed who can join this room.", { senderDisplayName });
+            return () =>
+                _t("%(senderDisplayName)s changed who can join this room.", {
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
+                });
         default:
             // The spec supports "knock" and "private", however nothing implements these.
             return () =>
                 _t("%(senderDisplayName)s changed the join rule to %(rule)s", {
-                    senderDisplayName,
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
                     rule: ev.getContent().join_rule,
                 });
     }
@@ -311,22 +346,24 @@ function textForGuestAccessEvent(ev: MatrixEvent): (() => string) | null {
 
     switch (ev.getContent().guest_access) {
         case GuestAccess.CanJoin:
-            return () => _t("%(senderDisplayName)s has allowed guests to join the room.", {
-                senderDisplayName,
-                roomType: roomTypeLabel
-            });
+            return () =>
+                _t("%(senderDisplayName)s has allowed guests to join the room.", {
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
+                    roomType: roomTypeLabel,
+                });
         case GuestAccess.Forbidden:
-            return () => _t("%(senderDisplayName)s has prevented guests from joining the room.", {
-                senderDisplayName,
-                roomType: roomTypeLabel
-            });
+            return () =>
+                _t("%(senderDisplayName)s has prevented guests from joining the room.", {
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
+                    roomType: roomTypeLabel,
+                });
         default:
             // There's no other options we can expect, however just for safety's sake we'll do this.
             return () =>
                 _t("%(senderDisplayName)s changed guest access to %(rule)s", {
-                    senderDisplayName,
+                    senderDisplayName: () => <label>{senderDisplayName}</label>,
                     rule: ev.getContent().guest_access,
-                    roomType: roomTypeLabel
+                    roomType: roomTypeLabel,
                 });
     }
 }
@@ -469,7 +506,6 @@ function textForHistoryVisibilityEvent(event: MatrixEvent): (() => string) | nul
     const senderName = getSenderName(event);
     const roomTypeLabel = event.getRoomTypeLabel();
 
-
     switch (event.getContent().history_visibility) {
         case HistoryVisibility.Invited:
             return () =>
@@ -478,7 +514,7 @@ function textForHistoryVisibilityEvent(event: MatrixEvent): (() => string) | nul
                         "from the point they are invited.",
                     {
                         senderName,
-                        roomType: roomTypeLabel
+                        roomType: roomTypeLabel,
                     },
                 );
         case HistoryVisibility.Joined:
@@ -488,25 +524,27 @@ function textForHistoryVisibilityEvent(event: MatrixEvent): (() => string) | nul
                         "from the point they joined.",
                     {
                         senderName,
-                        roomType: roomTypeLabel
+                        roomType: roomTypeLabel,
                     },
                 );
         case HistoryVisibility.Shared:
-            return () => _t("%(senderName)s made future room history visible to all room members.", {
-                senderName,
-                roomType: roomTypeLabel
-            });
+            return () =>
+                _t("%(senderName)s made future room history visible to all room members.", {
+                    senderName,
+                    roomType: roomTypeLabel,
+                });
         case HistoryVisibility.WorldReadable:
-            return () => _t("%(senderName)s made future room history visible to anyone.", {
-                senderName,
-                roomType: roomTypeLabel
-            });
+            return () =>
+                _t("%(senderName)s made future room history visible to anyone.", {
+                    senderName,
+                    roomType: roomTypeLabel,
+                });
         default:
             return () =>
                 _t("%(senderName)s made future room history visible to unknown (%(visibility)s).", {
                     senderName,
                     visibility: event.getContent().history_visibility,
-                    roomType: roomTypeLabel
+                    roomType: roomTypeLabel,
                 });
     }
 }
@@ -926,7 +964,7 @@ const stateHandlers: IHandlers = {
     // TODO: Enable support for m.widget event type (https://github.com/vector-im/element-web/issues/13111)
     "im.vector.modular.widgets": textForWidgetEvent,
     [WIDGET_LAYOUT_EVENT_TYPE]: textForWidgetLayoutEvent,
-    [VoiceBroadcastInfoEventType]: textForVoiceBroadcastStoppedEvent,
+    [VoiceBroadcastInfoEventType]: (event: MatrixEvent) => null,
 };
 
 // Add all the Mjolnir stuff to the renderer

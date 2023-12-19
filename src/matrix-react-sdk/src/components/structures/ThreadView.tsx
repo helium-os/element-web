@@ -50,7 +50,6 @@ import PosthogTrackers from "../../PosthogTrackers";
 import { ButtonEvent } from "../views/elements/AccessibleButton";
 import Spinner from "../views/elements/Spinner";
 import { ComposerInsertPayload, ComposerType } from "../../dispatcher/payloads/ComposerInsertPayload";
-import Heading from "../views/typography/Heading";
 import { SdkContextClass } from "../../contexts/SDKContext";
 import { ThreadPayload } from "../../dispatcher/payloads/ThreadPayload";
 
@@ -360,15 +359,8 @@ export default class ThreadView extends React.Component<IProps, IState> {
         return relation;
     }
 
-    private renderThreadViewHeader = (): JSX.Element => {
-        return (
-            <div className="mx_BaseCard_header_title">
-                <Heading size="h4" className="mx_BaseCard_header_title_heading">
-                    {_t("Thread")}
-                </Heading>
-                <ThreadListContextMenu mxEvent={this.props.mxEvent} permalinkCreator={this.props.permalinkCreator} />
-            </div>
-        );
+    private renderThreadViewHeaderButton = (): JSX.Element => {
+        return <ThreadListContextMenu mxEvent={this.props.mxEvent} permalinkCreator={this.props.permalinkCreator} />;
     };
 
     public render(): React.ReactNode {
@@ -408,6 +400,7 @@ export default class ThreadView extends React.Component<IProps, IState> {
                         permalinkCreator={this.props.permalinkCreator}
                         membersLoaded={true}
                         editState={this.state.editState}
+                        replyToEvent={this.state.replyToEvent}
                         eventId={this.props.initialEvent?.getId()}
                         highlightedEventId={highlightedEventId}
                         eventScrollIntoView={this.props.initialEventScrollIntoView}
@@ -439,7 +432,7 @@ export default class ThreadView extends React.Component<IProps, IState> {
                     })}
                     onClose={this.props.onClose}
                     withoutScrollContainer={true}
-                    header={this.renderThreadViewHeader()}
+                    title={_t("Thread")}
                     ref={this.card}
                     onKeyDown={this.onKeyDown}
                     onBack={(ev: ButtonEvent) => {
@@ -462,6 +455,8 @@ export default class ThreadView extends React.Component<IProps, IState> {
                             permalinkCreator={this.props.permalinkCreator}
                             e2eStatus={this.props.e2eStatus}
                             compact={true}
+                            showCallButtons={false}
+                            showSendBtnTips={false}
                         />
                     )}
                 </BaseCard>

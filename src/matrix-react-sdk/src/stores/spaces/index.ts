@@ -18,6 +18,7 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import { IHierarchyRoom } from "matrix-js-sdk/src/@types/spaces";
 
 import { _t } from "../../languageHandler";
+import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 
 // The consts & types are moved out here to prevent cyclical imports
 
@@ -26,6 +27,8 @@ export const UPDATE_INVITED_SPACES = Symbol("invited-spaces");
 export const UPDATE_SELECTED_SPACE = Symbol("selected-space");
 export const UPDATE_HOME_BEHAVIOUR = Symbol("home-behaviour");
 export const UPDATE_SUGGESTED_ROOMS = Symbol("suggested-rooms");
+
+export const UPDATE_SPACE_TAGS = Symbol("space-tags");
 // Space Key will be emitted when a Space's children change
 
 export enum MetaSpace {
@@ -38,7 +41,7 @@ export enum MetaSpace {
 export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): string => {
     switch (spaceKey) {
         case MetaSpace.Home:
-            return allRoomsInHome ? _t("All rooms") : _t("Home");
+            return allRoomsInHome ? _t("All rooms") : _t("Messages");
         case MetaSpace.Favourites:
             return _t("Favourites");
         case MetaSpace.People:
@@ -52,6 +55,7 @@ export type SpaceKey = MetaSpace | Room["roomId"];
 
 export interface ISuggestedRoom extends IHierarchyRoom {
     viaServers: string[];
+    join_rule: JoinRule;
 }
 
 export function isMetaSpace(spaceKey?: SpaceKey): boolean {

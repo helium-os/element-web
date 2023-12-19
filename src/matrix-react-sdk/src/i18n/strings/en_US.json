@@ -20,7 +20,7 @@
     "An error has occurred.": "An error has occurred.",
     "Anyone": "Anyone",
     "Are you sure?": "Are you sure?",
-    "Are you sure you want to leave the room '%(roomName)s'?": "Are you sure you want to leave the room '%(roomName)s'?",
+    "Are you sure you want to leave the room?": "Are you sure you want to %(actionType)s the %(roomType)s?",
     "Are you sure you want to reject the invitation?": "Are you sure you want to reject the invitation?",
     "Attachment": "Attachment",
     "Banned users": "Banned users",

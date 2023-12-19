@@ -27,7 +27,7 @@ import { Alignment } from "../elements/Tooltip";
 
 interface IProps {
     // Whether this button is highlighted
-    isHighlighted: boolean;
+    isHighlighted?: boolean;
     isUnread?: boolean;
     // click handler
     onClick: (ev: ButtonEvent) => void;
@@ -37,14 +37,15 @@ interface IProps {
     // Button title
     title: string;
     children?: ReactNode;
+    className?: string;
 }
 
 // TODO: replace this, the composer buttons and the right panel buttons with a unified representation
 export default class HeaderButton extends React.Component<IProps> {
     public render(): React.ReactNode {
-        const { isHighlighted, isUnread = false, onClick, name, title, ...props } = this.props;
+        const { isHighlighted, isUnread = false, onClick, name, className, title, ...props } = this.props;
 
-        const classes = classNames({
+        const classes = classNames(className, {
             mx_RightPanel_headerButton: true,
             mx_RightPanel_headerButton_highlight: isHighlighted,
             mx_RightPanel_headerButton_unread: isUnread,

@@ -18,10 +18,11 @@ import classNames from "classnames";
 import React, { useContext } from "react";
 
 import { _t } from "../../../languageHandler";
-import ContextMenu, { aboveLeftOf, MenuProps, useContextMenu } from "../../structures/ContextMenu";
+import ContextMenu, { aboveLeftOf, MenuProps, useContextMenu, ChevronFace } from "../../structures/ContextMenu";
 import EmojiPicker from "../emojipicker/EmojiPicker";
 import { CollapsibleButton } from "./CollapsibleButton";
 import { OverflowMenuContext } from "./MessageComposerButtons";
+import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 
 interface IEmojiButtonProps {
     addEmoji: (unicode: string) => boolean;
@@ -35,11 +36,14 @@ export function EmojiButton({ addEmoji, menuPosition, className }: IEmojiButtonP
 
     let contextMenu: React.ReactElement | null = null;
     if (menuDisplayed && button.current) {
-        const position = menuPosition ?? aboveLeftOf(button.current.getBoundingClientRect());
+        const horizontalCenter = false;
+        const position =
+            menuPosition ?? aboveLeftOf(button.current.getBoundingClientRect(), ChevronFace.None, 0, horizontalCenter);
 
         contextMenu = (
             <ContextMenu
                 {...position}
+                horizontalCenter={horizontalCenter}
                 onFinished={() => {
                     closeMenu();
                     overflowMenuCloser?.();
@@ -61,10 +65,10 @@ export function EmojiButton({ addEmoji, menuPosition, className }: IEmojiButtonP
         <>
             <CollapsibleButton
                 className={computedClassName}
-                iconClassName="mx_EmojiButton_icon"
                 onClick={openMenu}
                 title={_t("Emoji")}
                 inputRef={button}
+                alignment={Alignment.Top}
             />
 
             {contextMenu}

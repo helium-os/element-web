@@ -1,0 +1,58 @@
+.mx_btn {
+    box-sizing: border-box;
+    background: none;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    &, &.mx-btn-size-default {
+        padding: 0 20px;
+        height: 36px;
+    }
+    &.mx-btn-size-small {
+        padding: 0 16px;
+        height: 32px;
+    }
+    &.mx-btn-size-large {
+    }
+    &.mx-btn-block {
+        display: block;
+        width: 100%;
+    }
+    &.mx-btn-default {
+        border: 1px solid $border-secondary-color2;
+        color: $text-secondary-color5;
+        &:hover {
+            background: $background-primary1-secondary-color3;
+        }
+        &.mx-btn-danger {
+            color: $button-danger-color;
+        }
+    }
+    &.mx-btn-primary {
+        background: $button-primary-bg-color;
+        color: $button-text-color;
+        &:hover {
+            background: $button-primary-hover-bg-color;
+        }
+        &.mx-btn-danger {
+            background: $button-danger-color;
+            color: $button-text-color;
+            &:hover {
+                background: $background-danger-color3;
+            }
+        }
+    }
+    &.mx-btn-text {
+        color: $button-text-text-color;
+        &.mx-btn-danger {
+            color: $button-danger-color;
+        }
+    }
+    &[disabled] {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+}

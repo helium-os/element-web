@@ -17,7 +17,7 @@ limitations under the License.
 import { RoomListStore as Interface } from "./Interface";
 import { SpaceFilterCondition } from "./filters/SpaceFilterCondition";
 import SpaceStore from "../spaces/SpaceStore";
-import { MetaSpace, SpaceKey, UPDATE_HOME_BEHAVIOUR, UPDATE_SELECTED_SPACE } from "../spaces";
+import { MetaSpace, SpaceKey, UPDATE_HOME_BEHAVIOUR, UPDATE_SELECTED_SPACE, UPDATE_SPACE_TAGS } from "../spaces";
 
 /**
  * Watches for changes in spaces to manage the filter on the provided RoomListStore
@@ -35,6 +35,7 @@ export class SpaceWatcher {
         }
         SpaceStore.instance.on(UPDATE_SELECTED_SPACE, this.onSelectedSpaceUpdated);
         SpaceStore.instance.on(UPDATE_HOME_BEHAVIOUR, this.onHomeBehaviourUpdated);
+        SpaceStore.instance.on(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
     }
 
     private static needsFilter(spaceKey: SpaceKey, allRoomsInHome: boolean): boolean {
@@ -63,6 +64,13 @@ export class SpaceWatcher {
 
     private onHomeBehaviourUpdated = (allRoomsInHome: boolean): void => {
         this.onSelectedSpaceUpdated(this.activeSpace, allRoomsInHome);
+    };
+
+    private onSpaceTagsUpdate = (spaceTags) => {
+        this.store.regenerateAllLists({
+            spaceTags,
+            trigger: true,
+        });
     };
 
     private updateFilter = (): void => {

@@ -15,15 +15,15 @@ limitations under the License.
 */
 
 export enum DefaultTagID {
-    Invite = "im.vector.fake.invite",
+    Invite = "im.vector.fake.invite", // 邀请
     Untagged = "im.vector.fake.recent", // legacy: used to just be 'recent rooms' but now it's all untagged rooms
-    Archived = "im.vector.fake.archived",
-    LowPriority = "m.lowpriority",
-    Favourite = "m.favourite",
-    DM = "im.vector.fake.direct",
-    ServerNotice = "m.server_notice",
-    Suggested = "im.vector.fake.suggested",
-    SavedItems = "im.vector.fake.saved_items",
+    Archived = "im.vector.fake.archived", // 历史房间（已离开的房间）
+    LowPriority = "m.lowpriority", // 低优先级
+    Favourite = "m.favourite", // 收藏夹
+    DM = "im.vector.fake.direct", // 私聊
+    ServerNotice = "m.server_notice", // 系统警告
+    Suggested = "im.vector.fake.suggested", // 建议的频道
+    SavedItems = "im.vector.fake.saved_items", // 已保存
 }
 
 export const OrderedDefaultTagIDs = [
@@ -40,10 +40,26 @@ export const OrderedDefaultTagIDs = [
 
 export type TagID = string | DefaultTagID;
 
+export type Tag = {
+    tagId: TagID;
+    tagName?: string;
+    [key: string]: any;
+};
+
+export type TagMap = {
+    [tagId in TagID]: Omit<Tag, "tagId">;
+};
+
 export enum RoomUpdateCause {
     Timeline = "TIMELINE",
     PossibleTagChange = "POSSIBLE_TAG_CHANGE",
     ReadReceipt = "READ_RECEIPT",
     NewRoom = "NEW_ROOM",
     RoomRemoved = "ROOM_REMOVED",
+}
+
+// 拖拽相关
+export enum DragType {
+    Channel = "CHANNEL", // 拖拽频道修改频道所属分组
+    SpaceTag = "SPACE_TAG", // 拖拽社区分组修改分组排序
 }

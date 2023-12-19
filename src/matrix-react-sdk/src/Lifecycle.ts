@@ -641,7 +641,9 @@ async function doSetLoggedIn(credentials: IMatrixClientCreds, clearStorageEnable
         logger.warn("No local storage available: can't persist session!");
     }
 
-    await setOrgList();
+    try {
+        await setOrgList();
+    } catch (error) {}
     dis.fire(Action.OnLoggedIn);
     await startMatrixClient(/*startSyncing=*/ !softLogout);
 

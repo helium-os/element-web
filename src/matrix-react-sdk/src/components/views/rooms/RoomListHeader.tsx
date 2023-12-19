@@ -54,7 +54,6 @@ import IconizedContextMenu, {
 import SpaceContextMenu from "../context_menus/SpaceContextMenu";
 import InlineSpinner from "../elements/InlineSpinner";
 import TooltipTarget from "../elements/TooltipTarget";
-import { HomeButtonContextMenu } from "../spaces/SpacePanel";
 import SettingsStore from "matrix-react-sdk/src/settings/SettingsStore";
 
 const contextMenuBelow = (elementRect: DOMRect): MenuProps => {
@@ -144,7 +143,7 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         onVisibilityChange?.();
     }, [onVisibilityChange]);
 
-    const canExploreRooms = shouldShowComponent(UIComponent.ExploreRooms);
+    const canExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
     const canCreateRooms = shouldShowComponent(UIComponent.CreateRooms);
     const canCreateSpaces =
         SettingsStore.getValue("Spaces.addSubSpace") && shouldShowComponent(UIComponent.CreateSpaces);
@@ -159,7 +158,7 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
     // If the user can't do anything on the plus menu, don't show it. This aims to target the
     // plus menu shown on the Home tab primarily: the user has options to use the menu for
     // communities and spaces, but is at risk of no options on the Home tab.
-    const canShowPlusMenu = canCreateRooms || canExploreRooms || canCreateSpaces || activeSpace;
+    const canShowPlusMenu = false && (canCreateRooms || canExploreRooms || canCreateSpaces || activeSpace);
 
     let contextMenu: JSX.Element | undefined;
     if (mainMenuDisplayed && mainMenuHandle.current) {
@@ -167,17 +166,19 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         if (activeSpace) {
             ContextMenuComponent = SpaceContextMenu;
         } else {
-            ContextMenuComponent = HomeButtonContextMenu;
+            // ContextMenuComponent = HomeButtonContextMenu;
         }
 
-        contextMenu = (
-            <ContextMenuComponent
-                {...contextMenuBelow(mainMenuHandle.current.getBoundingClientRect())}
-                space={activeSpace}
-                onFinished={closeMainMenu}
-                hideHeader={true}
-            />
-        );
+        if (ContextMenuComponent) {
+            contextMenu = (
+                <ContextMenuComponent
+                    {...contextMenuBelow(mainMenuHandle.current.getBoundingClientRect())}
+                    space={activeSpace}
+                    onFinished={closeMainMenu}
+                    hideHeader={true}
+                />
+            );
+        }
     } else if (plusMenuDisplayed && activeSpace) {
         let inviteOption: JSX.Element | undefined;
         if (shouldShowSpaceInvite(activeSpace)) {
@@ -399,14 +400,11 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         contextMenuButton = (
             <ContextMenuTooltipButton
                 inputRef={mainMenuHandle}
-                onClick={openMainMenu}
+                onClick={() => !!activeSpace && openMainMenu()}
                 isExpanded={mainMenuDisplayed}
-                className="mx_RoomListHeader_contextMenuButton"
-                title={
-                    activeSpace
-                        ? _t("%(spaceName)s menu", { spaceName: spaceName ?? activeSpace.name })
-                        : _t("Home options")
-                }
+                className={`mx_RoomListHeader_contextMenuButton ${
+                    !activeSpace ? "mx_RoomListHeader_contextMenuButton_Home" : ""
+                }`}
             >
                 {title}
             </ContextMenuTooltipButton>

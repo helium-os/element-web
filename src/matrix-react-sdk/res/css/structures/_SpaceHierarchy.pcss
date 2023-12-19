@@ -13,14 +13,61 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
 .mx_SpaceRoomView_landing {
-    .mx_AccessibleButton_kind_link {
-        font-size: inherit;
+    padding: 0!important;
+    display: block!important;
+    overflow-x: hidden;
+}
+.mx_SpaceHierarchy_page {
+    .mx_SpaceHierarchy_header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        border-bottom: 1px solid $border-primary-color;
+    }
+    .mx_SpaceHierarchy_title_box {
+        flex: 1;
+        display: flex;
+        align-items: center;
+    }
+    .mx_SpaceHierarchy_title_icon {
+        width: 24px;
+        height: 24px;
+        @mixin MaskIcon url("$(res)/img/element-icons/home.svg"), 16px, 15px, $text-primary-color1;
+    }
+    .mx_SpaceHierarchy_title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 16px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: $text-primary-color1;
     }
 
-    .mx_SearchBox {
-        margin: 24px 0 16px;
+    .mx_SpaceHierarchy_search_wrap {
+        width: 200px;
+    }
+
+
+    .mx_SpaceHierarchy_list {
+        .mx_RoomSublist {
+            padding: 10px 20px;
+            margin-bottom: 12px;
+        }
+        .mx_RoomTile {
+            padding: 12px 20px 12px 8px;
+            border-bottom: 1px solid $border-primary-color;
+            cursor: pointer;
+            &:hover, &:focus-within {
+                background: $background-primary1-secondary-color2;
+            }
+        }
+        .mx_RoomSublist_headerText {
+            font-weight: 500!important;
+        }
     }
 
     .mx_SpaceHierarchy_noResults {
@@ -33,41 +80,6 @@ limitations under the License.
         }
     }
 
-    .mx_SpaceHierarchy_listHeader {
-        display: flex;
-        flex-flow: wrap;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        font-size: $font-15px;
-        line-height: $font-24px;
-        color: $primary-content;
-        margin-bottom: 12px;
-
-        .mx_SpaceHierarchy_listHeader_header {
-            grid-column-start: 1;
-            font-weight: $font-semi-bold;
-            margin: 0;
-        }
-
-        .mx_SpaceHierarchy_listHeader_buttons {
-            grid-column-start: 2;
-            display: flex;
-            flex-flow: wrap;
-            gap: 12px;
-            min-height: 32px;
-
-            .mx_AccessibleButton {
-                padding: 4px 12px;
-                font-weight: normal;
-            }
-        }
-
-        .mx_AccessibleButton_kind_danger_outline,
-        .mx_AccessibleButton_kind_primary_outline {
-            padding: 3px 12px; /* to account for the 1px border */
-        }
-    }
 
     .mx_SpaceHierarchy_error {
         position: relative;
@@ -88,23 +100,6 @@ limitations under the License.
             background-image: url("$(res)/img/element-icons/warning-badge.svg");
             background-size: cover;
             background-repeat: no-repeat;
-        }
-    }
-
-    .mx_SpaceHierarchy_roomCount {
-        > h3 {
-            display: inline;
-            font-weight: $font-semi-bold;
-            font-size: $font-18px;
-            line-height: $font-22px;
-            color: $primary-content;
-        }
-
-        > span {
-            margin-left: 8px;
-            font-size: $font-15px;
-            line-height: $font-24px;
-            color: $secondary-content;
         }
     }
 
@@ -146,149 +141,6 @@ limitations under the License.
     .mx_SpaceHierarchy_subspace_children {
         position: relative;
         padding-left: 12px;
-    }
-
-    .mx_SpaceHierarchy_list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-
-        li.mx_SpaceHierarchy_roomTileWrapper {
-            list-style: none;
-
-            .mx_SpaceHierarchy_roomTile {
-                position: relative;
-                padding: 8px 16px;
-                border-radius: 8px;
-                box-sizing: border-box;
-
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px 12px;
-
-                .mx_SpaceHierarchy_roomTile_item {
-                    font-weight: $font-semi-bold;
-                    font-size: $font-15px;
-                    line-height: $font-18px;
-                    display: grid;
-                    grid-template-columns: 20px auto;
-                    gap: 6px 8px;
-                    align-items: center;
-                    flex: 1; /* wrap action buttons */
-
-                    .mx_SpaceHierarchy_roomTile_avatar {
-                        grid-row: 1;
-                        grid-column: 1;
-                    }
-
-                    .mx_SpaceHierarchy_roomTile_name {
-                        grid-row: 1;
-                        grid-column: 2;
-
-                        .mx_InfoTooltip,
-                        .mx_SpaceHierarchy_roomTile_joined {
-                            margin-left: 12px;
-                            color: $tertiary-content;
-                            font-size: $font-12px;
-                            line-height: $font-15px;
-
-                            .mx_InfoTooltip_icon {
-                                margin-right: 4px;
-                                position: relative;
-                                vertical-align: text-top;
-
-                                &::before {
-                                    position: absolute;
-                                    top: 0;
-                                    left: 0;
-                                }
-                            }
-                        }
-
-                        .mx_InfoTooltip {
-                            display: inline-block;
-                        }
-
-                        .mx_SpaceHierarchy_roomTile_joined {
-                            display: inline;
-                            position: relative;
-                            padding-left: 16px;
-
-                            &::before {
-                                content: "";
-                                width: 20px;
-                                height: 20px;
-                                top: -2px;
-                                left: -4px;
-                                position: absolute;
-                                mask-position: center;
-                                mask-size: contain;
-                                mask-repeat: no-repeat;
-                                background-color: $accent;
-                                mask-image: url("$(res)/img/element-icons/roomlist/checkmark.svg");
-                            }
-                        }
-                    }
-
-                    .mx_SpaceHierarchy_roomTile_info {
-                        grid-row: 2;
-                        grid-column: 2;
-                        font-size: $font-14px;
-                        font-weight: initial;
-                        line-height: $font-18px;
-                        color: $secondary-content;
-                        display: -webkit-box;
-                        -webkit-box-orient: vertical;
-                        -webkit-line-clamp: 2;
-                        overflow: hidden;
-                    }
-                }
-
-                .mx_SpaceHierarchy_actions {
-                    display: flex;
-                    align-items: center;
-                    column-gap: 12px;
-                    margin-left: auto;
-
-                    .mx_AccessibleButton {
-                        line-height: $font-24px;
-                        padding: 4px 16px;
-                        display: inline-block;
-                        visibility: hidden;
-                    }
-
-                    .mx_AccessibleButton_kind_danger_outline,
-                    .mx_AccessibleButton_kind_primary_outline {
-                        padding: 3px 16px; /* to account for the 1px border */
-                    }
-
-                    .mx_Checkbox {
-                        display: inline-flex;
-
-                        label {
-                            width: 16px;
-                            height: 16px;
-                        }
-                    }
-                }
-
-                &:hover,
-                &:focus-within {
-                    background-color: $spacePanel-bg-color;
-
-                    .mx_AccessibleButton {
-                        visibility: visible;
-                    }
-                }
-
-                &.mx_SpaceHierarchy_joining {
-                    .mx_AccessibleButton {
-                        visibility: visible;
-                        padding: 4px 18px;
-                    }
-                }
-            }
-        }
     }
 
     .mx_SpaceHierarchy_roomTile,

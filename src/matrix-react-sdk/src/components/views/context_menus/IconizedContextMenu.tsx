@@ -19,7 +19,7 @@ import classNames from "classnames";
 
 import ContextMenu, {
     ChevronFace,
-    IProps as IContextMenuProps,
+    ContextMenuProps as IContextMenuProps,
     MenuItem,
     MenuItemCheckbox,
     MenuItemRadio,

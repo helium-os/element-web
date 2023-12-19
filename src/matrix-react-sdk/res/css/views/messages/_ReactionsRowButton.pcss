@@ -15,21 +15,27 @@ limitations under the License.
 */
 
 .mx_ReactionsRowButton {
+    box-sizing: border-box;
     display: inline-flex;
+    height: 20px;
     line-height: $font-20px;
-    padding: 1px 6px;
-    border: 1px solid $message-action-bar-border-color;
+    padding: 0 8px;
+    border: 1px solid $background-primary1-secondary-color1;
     border-radius: 10px;
-    background-color: $header-panel-bg-color;
+    background-color: $background-primary1-secondary-color1;
+    font-size: 12px;
     user-select: none;
 
-    &:hover {
-        border-color: $reaction-row-button-hover-border-color;
+    &.mx_ReactionsRowButton_selected {
+        border-radius: 100px;
+        border: 1px solid $border-primary-color3;
+        background: rgba($border-primary-color3, 0.10);
     }
 
-    &.mx_ReactionsRowButton_selected {
-        background-color: $reaction-row-button-selected-bg-color;
-        border-color: $accent;
+
+    &:not(.mx_ReactionsRowButton_selected):hover {
+        border-color: $border-secondary-color2;
+        background: $background;
     }
 
     &.mx_AccessibleButton_disabled {
@@ -37,10 +43,13 @@ limitations under the License.
     }
 
     .mx_ReactionsRowButton_content {
-        max-width: 100px;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-        padding-right: 4px;
+    }
+    .mx_ReactionsRowButton_count {
+        margin-left: 4px;
+        font-weight: 500;
+        color: $text-primary-color3;
     }
 }

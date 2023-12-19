@@ -20,6 +20,7 @@ import { debounce } from "lodash";
 
 import { IFieldState, IValidationResult } from "./Validation";
 import Tooltip from "./Tooltip";
+import AccessibleButton, { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
 
 // Invoke validation from user input (when typing, etc.) at most once every N ms.
 const VALIDATION_THROTTLE_MS = 200;
@@ -47,8 +48,11 @@ interface IProps {
     usePlaceholderAsHint?: boolean;
     // Optional component to include inside the field before the input.
     prefixComponent?: React.ReactNode;
+    hasPrefixContainer?: boolean; // 是否需要对prefixComponent用container做包裹
     // Optional component to include inside the field after the input.
     postfixComponent?: React.ReactNode;
+    hasPostfixContainer?: boolean; // 是否需要对postfixComponent用container做包裹
+    wordLimit: false | number; // 字数限制
     // The callback called whenever the contents of the field
     // changes.  Returns an object with `valid` boolean field
     // and a `feedback` react component field to provide feedback
@@ -71,6 +75,8 @@ interface IProps {
     validateOnBlur?: boolean;
     validateOnChange?: boolean;
     // All other props pass through to the <input>.
+    autoComplete?: booolean | string;
+    clearEnable?: boolean; // 是否展示清除按钮
 }
 
 export interface IInputProps extends IProps, InputHTMLAttributes<HTMLInputElement> {
@@ -107,7 +113,7 @@ export interface INativeOnChangeInputProps extends IProps, InputHTMLAttributes<H
     value: string;
 }
 
-type PropShapes = IInputProps | ISelectProps | ITextareaProps | INativeOnChangeInputProps;
+export type PropShapes = IInputProps | ISelectProps | ITextareaProps | INativeOnChangeInputProps;
 
 interface IState {
     valid?: boolean;
@@ -123,9 +129,14 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
     public static readonly defaultProps = {
         element: "input",
         type: "text",
-        validateOnFocus: true,
+        validateOnFocus: false,
         validateOnBlur: true,
         validateOnChange: true,
+        hasPrefixContainer: true,
+        hasPostfixContainer: true,
+        wordLimit: false,
+        clearEnable: true,
+        autoComplete: "off",
     };
 
     /*
@@ -195,6 +206,15 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
         this.props.onBlur?.(ev);
     };
 
+    private onClear = () => {
+        this.onChange({
+            target: {
+                value: "",
+            },
+        } as React.ChangeEvent<any>);
+        this.inputRef.current?.focus();
+    };
+
     public async validate({ focused, allowEmpty = true }: IValidateOpts): Promise<boolean | undefined> {
         if (!this.props.onValidate) {
             return;
@@ -234,7 +254,11 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             element,
             inputRef,
             prefixComponent,
+            hasPrefixContainer,
             postfixComponent,
+            hasPostfixContainer,
+            clearEnable,
+            wordLimit,
             className,
             onValidate,
             children,
@@ -251,8 +275,10 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         this.inputRef = inputRef || React.createRef();
 
+        inputProps.autoComplete = inputProps.autoComplete || "off";
         inputProps.placeholder = inputProps.placeholder ?? inputProps.label;
         inputProps.id = this.id; // this overwrites the id from props
+        inputProps.value = wordLimit ? this.props.value.substring(0, wordLimit) : this.props.value;
 
         inputProps.onFocus = this.onFocus;
         inputProps.onChange = this.onChange;
@@ -269,11 +295,19 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
 
         let prefixContainer: JSX.Element | undefined;
         if (prefixComponent) {
-            prefixContainer = <span className="mx_Field_prefix">{prefixComponent}</span>;
+            prefixContainer = hasPrefixContainer ? (
+                <span className="mx_Field_prefix">{prefixComponent}</span>
+            ) : (
+                <>{prefixComponent}</>
+            );
         }
         let postfixContainer: JSX.Element | undefined;
         if (postfixComponent) {
-            postfixContainer = <span className="mx_Field_postfix">{postfixComponent}</span>;
+            postfixContainer = hasPostfixContainer ? (
+                <span className="mx_Field_postfix">{postfixComponent}</span>
+            ) : (
+                <>{postfixComponent}</>
+            );
         }
 
         const hasValidationFlag = forceValidity !== null && forceValidity !== undefined;
@@ -281,41 +315,99 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             // If we have a prefix element, leave the label always at the top left and
             // don't animate it, as it looks a bit clunky and would add complexity to do
             // properly.
-            mx_Field_labelAlwaysTopLeft: prefixComponent || usePlaceholderAsHint,
-            mx_Field_placeholderIsHint: usePlaceholderAsHint,
+            mx_Field_labelShow: prefixComponent || this.state.focused || !!this.props.value,
+            mx_Field_placeholderIsHint: !this.state.focused && usePlaceholderAsHint,
             mx_Field_valid: hasValidationFlag ? forceValidity : onValidate && this.state.valid === true,
             mx_Field_invalid: hasValidationFlag ? !forceValidity : onValidate && this.state.valid === false,
+            mx_Field_focused: this.state.focused,
+            mx_Field_clearShow: this.state.focused && !!this.props.value,
         });
 
         // Handle displaying feedback on validity
         let fieldTooltip: JSX.Element | undefined;
-        if (tooltipContent || this.state.feedback) {
-            let role: React.AriaRole;
-            if (tooltipContent) {
-                role = "tooltip";
-            } else {
-                role = this.state.valid ? "status" : "alert";
-            }
-
+        if (tooltipContent) {
             fieldTooltip = (
                 <Tooltip
                     tooltipClassName={classNames("mx_Field_tooltip", "mx_Tooltip_noMargin", tooltipClassName)}
                     visible={(this.state.focused && forceTooltipVisible) || this.state.feedbackVisible}
-                    label={tooltipContent || this.state.feedback}
+                    label={tooltipContent}
                     alignment={Tooltip.Alignment.Right}
-                    role={role}
+                    role="tooltip"
                 />
             );
         }
 
         return (
-            <div className={fieldClasses}>
-                {prefixContainer}
-                {fieldInput}
-                <label htmlFor={this.id}>{this.props.label}</label>
-                {postfixContainer}
+            <>
+                <div className={fieldClasses}>
+                    <div className="mx_Field_wrap">
+                        <div className="mx_Field_labelBox">
+                            <label className="mx_Field_label" htmlFor={this.id}>
+                                {this.props.label}
+                            </label>
+                            {wordLimit && (
+                                <label className="mx_Field_wordLimit">
+                                    {inputProps.value.length}/{wordLimit}
+                                </label>
+                            )}
+                        </div>
+                        <div className="mx_Field_inputBox">
+                            <div className="mx_Field_inner">
+                                {prefixContainer}
+                                {fieldInput}
+                                {postfixContainer}
+                            </div>
+                            {clearEnable && (
+                                <div className="mx_Field_clearBox">
+                                    <div className="mx_Field_clearBtn" onClick={this.onClear}></div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/*校验不通过文案*/}
+                {this.state.feedback && !this.state.valid && (
+                    <div className="mx_Field_invalidTipsBox">{this.state.feedback}</div>
+                )}
+
                 {fieldTooltip}
-            </div>
+            </>
+        );
+    }
+}
+
+interface SelectedUserOrRoomTileProps {
+    avatar?: React.ReactNode;
+    name: string;
+    onRemove?(): void;
+}
+export class SelectedUserOrRoomTile extends React.PureComponent<SelectedUserOrRoomTileProps> {
+    private onRemove = (e: ButtonEvent): void => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        this.props.onRemove?.();
+    };
+
+    public render(): React.ReactNode {
+        let closeButton;
+        if (this.props.onRemove) {
+            closeButton = (
+                <AccessibleButton className="mx_SelectedUserOrRoomTile_remove" onClick={this.onRemove}>
+                    <div className="mx_SelectedUserOrRoomTile_remove_icon" />
+                </AccessibleButton>
+            );
+        }
+
+        return (
+            <span className="mx_SelectedUserOrRoomTile_box">
+                <span className="mx_SelectedUserOrRoomTile_pill">
+                    {this.props.avatar}
+                    <span className="mx_SelectedUserOrRoomTile_name">{this.props.name}</span>
+                    {closeButton}
+                </span>
+            </span>
         );
     }
 }

@@ -32,13 +32,12 @@ import DMRoomMap from "../../utils/DMRoomMap";
 import { FetchRoomFn } from "../notifications/ListNotificationState";
 import { SpaceNotificationState } from "../notifications/SpaceNotificationState";
 import { RoomNotificationStateStore } from "../notifications/RoomNotificationStateStore";
-import { DefaultTagID } from "../room-list/models";
+import { DefaultTagID, OrderedDefaultTagIDs, Tag } from "../room-list/models";
 import { EnhancedMap, mapDiff } from "../../utils/maps";
 import { setDiff, setHasDiff } from "../../utils/sets";
 import { Action } from "../../dispatcher/actions";
 import { arrayHasDiff, arrayHasOrderChange, filterBoolean } from "../../utils/arrays";
 import { reorderLexicographically } from "../../utils/stringOrderField";
-import { TAG_ORDER } from "../../components/views/rooms/RoomList";
 import { SettingUpdatedPayload } from "../../dispatcher/payloads/SettingUpdatedPayload";
 import {
     isMetaSpace,
@@ -48,6 +47,7 @@ import {
     UPDATE_HOME_BEHAVIOUR,
     UPDATE_INVITED_SPACES,
     UPDATE_SELECTED_SPACE,
+    UPDATE_SPACE_TAGS,
     UPDATE_SUGGESTED_ROOMS,
     UPDATE_TOP_LEVEL_SPACES,
 } from ".";
@@ -141,7 +141,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         userIdsBySpace: new Map<Room["roomId"], Set<string>>(),
     };
     // The space currently selected in the Space Panel
-    private _activeSpace: SpaceKey = MetaSpace.Home; // set properly by onReady
+    private _activeSpace: SpaceKey; // set properly by onReady
     private _suggestedRooms: ISuggestedRoom[] = [];
     private _invitedSpaces = new Set<Room>();
     private spaceOrderLocalEchoMap = new Map<string, string>();
@@ -151,8 +151,12 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     /** Whether the feature flag is set for MSC3946 */
     private _msc3946ProcessDynamicPredecessor: boolean = SettingsStore.getValue("feature_dynamic_room_predecessors");
 
+    private _spaceTags: Tag[] = []; // 组织（tag）列表
+
     public constructor() {
         super(defaultDispatcher, {});
+
+        this.setActiveSpace(MetaSpace.Home, false);
 
         SettingsStore.monitorSetting("Spaces.allRoomsInHome", null);
         SettingsStore.monitorSetting("Spaces.enabledMetaSpaces", null);
@@ -176,6 +180,10 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         return this._activeSpace;
     }
 
+    public get isHomeSpace(): boolean {
+        return this.activeSpace === MetaSpace.Home;
+    }
+
     public get activeSpaceRoom(): Room | null {
         if (isMetaSpace(this._activeSpace)) return null;
         return this.matrixClient?.getRoom(this._activeSpace);
@@ -187,6 +195,19 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     public get allRoomsInHome(): boolean {
         return this._allRoomsInHome;
+    }
+
+    public get spaceTags(): Tag[] {
+        return this._spaceTags;
+    }
+
+    public setSpaceTags(tags: Tag[]) {
+        this._spaceTags = tags;
+        this.emit(UPDATE_SPACE_TAGS, this._spaceTags);
+    }
+
+    public async sendSpaceTags(tags: Tag[]) {
+        return this.matrixClient?.setRoomOnlyTags(this.activeSpace, tags);
     }
 
     public setActiveRoomInSpace(space: SpaceKey): void {
@@ -203,8 +224,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             });
         } else {
             const lists = RoomListStore.instance.orderedLists;
-            for (let i = 0; i < TAG_ORDER.length; i++) {
-                const t = TAG_ORDER[i];
+            for (let i = 0; i < OrderedDefaultTagIDs.length; i++) {
+                const t = OrderedDefaultTagIDs[i];
                 const listRooms = lists[t];
                 const unreadRoom = listRooms.find((r: Room) => {
                     if (this.showInHomeSpace(r)) {
@@ -307,7 +328,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     public fetchSuggestedRooms = async (space: Room, limit = MAX_SUGGESTED_ROOMS): Promise<ISuggestedRoom[]> => {
         try {
-            const { rooms } = await this.matrixClient.getRoomHierarchy(space.roomId, limit, 1, true);
+            const { rooms } = await this.matrixClient.getRoomHierarchy(space.roomId, limit, 1, false);
 
             const viaMap = new EnhancedMap<string, Set<string>>();
             rooms.forEach((room) => {
@@ -1133,6 +1154,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             this.matrixClient.removeListener(ClientEvent.AccountData, this.onAccountData);
         }
         await this.reset();
+
+        this.off(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
     }
 
     protected async onReady(): Promise<void> {
@@ -1142,6 +1165,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.matrixClient.on(RoomStateEvent.Events, this.onRoomState);
         this.matrixClient.on(RoomStateEvent.Members, this.onRoomStateMembers);
         this.matrixClient.on(ClientEvent.AccountData, this.onAccountData);
+
+        this.on(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
 
         const oldMetaSpaces = this._enabledMetaSpaces;
         const enabledMetaSpaces = SettingsStore.getValue("Spaces.enabledMetaSpaces");
@@ -1168,6 +1193,17 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         } else {
             this.switchSpaceIfNeeded();
         }
+    }
+
+    // 切换社区时，更新社区分组列表
+    private refreshSpaceTags() {
+        if (!this.activeSpace || this.activeSpace === MetaSpace.Home) {
+            this.setSpaceTags([]);
+            return;
+        }
+
+        const tags = this.activeSpaceRoom.getRoomTags();
+        this.setSpaceTags(tags);
     }
 
     private sendUserProperties(): void {

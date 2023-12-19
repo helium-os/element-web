@@ -190,6 +190,7 @@ export interface IRoomState {
     // this is true if we are fully scrolled-down, and are looking at
     // the end of the live timeline. It has the effect of hiding the
     // 'scroll to bottom' knob, among a couple of other things.
+    showJupToBottomBtn: boolean;
     atEndOfLiveTimeline?: boolean;
     showTopUnreadMessagesBar: boolean;
     statusBarVisible: boolean;
@@ -407,6 +408,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             showApps: false,
             isPeeking: false,
             showRightPanel: false,
+            phase: RightPanelPhases | null,
             joining: false,
             showTopUnreadMessagesBar: false,
             statusBarVisible: false,
@@ -420,7 +422,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             readMarkerInViewThresholdMs: SettingsStore.getValue("readMarkerInViewThresholdMs"),
             readMarkerOutOfViewThresholdMs: SettingsStore.getValue("readMarkerOutOfViewThresholdMs"),
             showHiddenEvents: SettingsStore.getValue("showHiddenEventsInTimeline"),
-            showReadReceipts: true,
+            showReadReceipts: false,
             showRedactions: true,
             showJoinLeaves: true,
             showAvatarChanges: true,
@@ -433,6 +435,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             visibleDecryptionFailures: [],
             msc3946ProcessDynamicPredecessor: SettingsStore.getValue("feature_dynamic_room_predecessors"),
             isAdminLeft: false,
+            showJupToBottomBtn: false,
         };
 
         this.dispatcherRef = dis.register(this.onAction);
@@ -621,7 +624,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             replyToEvent: this.context.roomViewStore.getQuotingEvent() ?? undefined,
             // we should only peek once we have a ready client
             shouldPeek: this.state.matrixClientIsReady && this.context.roomViewStore.shouldPeek(),
-            showReadReceipts: SettingsStore.getValue("showReadReceipts", roomId),
+            showReadReceipts: false && SettingsStore.getValue("showReadReceipts", roomId),
             showRedactions: SettingsStore.getValue("showRedactions", roomId),
             showJoinLeaves: SettingsStore.getValue("showJoinLeaves", roomId),
             showAvatarChanges: SettingsStore.getValue("showAvatarChanges", roomId),
@@ -630,6 +633,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             mainSplitContentType: room ? this.getMainSplitContentType(room) : undefined,
             initialEventId: undefined, // default to clearing this, will get set later in the method if needed
             showRightPanel: this.context.rightPanelStore.isOpenForRoom(roomId),
+            phase: this.context.rightPanelStore.currentCardForRoom(roomId),
             activeCall: CallStore.instance.getActiveCall(roomId),
         };
 
@@ -2298,7 +2302,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 timelineSet={this.state.room.getUnfilteredTimelineSet()}
                 overlayTimelineSet={this.state.virtualRoom?.getUnfilteredTimelineSet()}
                 overlayTimelineSetFilter={isCallEvent}
-                showReadReceipts={this.state.showReadReceipts}
+                showReadReceipts={this.state.showReadReceipts} // 不展示发送 & 已读icon
                 manageReadReceipts={!this.state.isPeeking}
                 sendReadReceiptOnLoad={!this.state.wasContextSwitch}
                 manageReadMarkers={!this.state.isPeeking}
@@ -2318,19 +2322,20 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 showReactions={true}
                 layout={this.state.layout}
                 editState={this.state.editState}
+                replyToEvent={this.state.replyToEvent}
             />
         );
 
         let topUnreadMessagesBar: JSX.Element | undefined;
         // Do not show TopUnreadMessagesBar if we have search results showing, it makes no sense
         if (this.state.showTopUnreadMessagesBar && !this.state.search) {
-            topUnreadMessagesBar = (
-                <TopUnreadMessagesBar onScrollUpClick={this.jumpToReadMarker} onCloseClick={this.forgetReadMarker} />
-            );
+            // topUnreadMessagesBar = (
+            //     <TopUnreadMessagesBar onScrollUpClick={this.jumpToReadMarker} onCloseClick={this.forgetReadMarker} />
+            // );
         }
         let jumpToBottom;
         // Do not show JumpToBottomButton if we have search results showing, it makes no sense
-        if (this.state.atEndOfLiveTimeline === false && !this.state.search) {
+        if (this.state.showJupToBottomBtn && this.state.atEndOfLiveTimeline === false && !this.state.search) {
             jumpToBottom = (
                 <JumpToBottomButton
                     highlight={this.state.room.getUnreadNotificationCount(NotificationCountType.Highlight) > 0}
@@ -2460,29 +2465,29 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                         <EffectsOverlay roomWidth={this.roomView.current.offsetWidth} />
                     )}
                     <ErrorBoundary>
-                        <RoomHeader
-                            room={this.state.room}
-                            searchInfo={this.state.search}
-                            oobData={this.props.oobData}
-                            inRoom={myMembership === "join"}
-                            onSearchClick={onSearchClick}
-                            onInviteClick={onInviteClick}
-                            onForgetClick={myMembership === "leave" ? onForgetClick : null}
-                            e2eStatus={this.state.e2eStatus}
-                            onAppsClick={this.state.hasPinnedWidgets ? onAppsClick : null}
-                            appsShown={this.state.showApps}
-                            excludedRightPanelPhaseButtons={excludedRightPanelPhaseButtons}
-                            showButtons={!this.viewsLocalRoom}
-                            enableRoomOptionsMenu={!this.viewsLocalRoom}
-                            viewingCall={viewingCall}
-                            activeCall={this.state.activeCall}
-                        />
                         <MainSplit panel={rightPanel} resizeNotifier={this.props.resizeNotifier}>
                             <div
                                 className={mainSplitContentClasses}
                                 ref={this.roomViewBody}
                                 data-layout={this.state.layout}
                             >
+                                <RoomHeader
+                                    room={this.state.room}
+                                    searchInfo={this.state.search}
+                                    oobData={this.props.oobData}
+                                    inRoom={myMembership === "join"}
+                                    onSearchClick={onSearchClick}
+                                    onInviteClick={onInviteClick}
+                                    onForgetClick={myMembership === "leave" ? onForgetClick : null}
+                                    e2eStatus={this.state.e2eStatus}
+                                    onAppsClick={this.state.hasPinnedWidgets ? onAppsClick : null}
+                                    appsShown={this.state.showApps}
+                                    excludedRightPanelPhaseButtons={excludedRightPanelPhaseButtons}
+                                    showButtons={!this.viewsLocalRoom}
+                                    enableRoomOptionsMenu={!this.viewsLocalRoom}
+                                    viewingCall={viewingCall}
+                                    activeCall={this.state.activeCall}
+                                />
                                 {mainSplitBody}
                             </div>
                         </MainSplit>

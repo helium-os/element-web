@@ -13,23 +13,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+.mx_UploadConfirmDialog {
+    max-width: 450px;
+}
 .mx_UploadConfirmDialog_fileIcon {
     margin-right: 5px;
 }
 
 .mx_UploadConfirmDialog_previewOuter {
-    text-align: center;
-}
-
-.mx_UploadConfirmDialog_previewInner {
-    display: inline-block;
-    text-align: left;
 }
 
 .mx_UploadConfirmDialog_imagePreview {
-    max-height: 300px;
-    max-width: 100%;
-    border-radius: 4px;
-    border: 1px solid $dialog-close-fg-color;
+    width: 100%;
+    border-radius: 10px;
+}
+.mx_UploadConfirmDialog_fileName {
+    margin-top: 4px;
+    text-align: left;
+    font-size: 12px;
+    line-height: 20px;
+    font-weight: 400;
+    word-break: break-all;
+    color: $text-secondary-color2;
 }

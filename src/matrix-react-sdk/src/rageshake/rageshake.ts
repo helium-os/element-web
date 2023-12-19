@@ -70,7 +70,7 @@ export class ConsoleLogger {
                 const originalFn = consoleObj[fnName].bind(consoleObj);
                 this.originalFunctions[fnName] = originalFn;
                 consoleObj[fnName] = (...args) => {
-                    this.log(level, ...args);
+                    // this.log(level, ...args);
                     originalFn(...args);
                 };
             },
@@ -136,7 +136,10 @@ export class IndexedDBLogStore {
     private flushPromise: Promise<void> | null = null;
     private flushAgainPromise: Promise<void> | null = null;
 
-    public constructor(private indexedDB: IDBFactory, private logger: ConsoleLogger) {
+    public constructor(
+        private indexedDB: IDBFactory,
+        private logger: ConsoleLogger,
+    ) {
         this.id = "instance-" + randomString(16);
     }
 
