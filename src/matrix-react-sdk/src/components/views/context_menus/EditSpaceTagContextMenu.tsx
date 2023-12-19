@@ -34,7 +34,7 @@ const EditSpaceTagContextMenu: React.FC<IProps> = ({ tagId }) => {
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
     const hasTagPermission = activeSpaceRoom?.canOperateTag(userId);
 
-    // 删除分组
+    // 编辑分组名称
     const onChangeTagName = (tagId: TagID): void => {
         Modal.createDialog(GroupNameDialog, {
             type: DialogType.Edit,

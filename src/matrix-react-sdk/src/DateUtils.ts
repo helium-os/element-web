@@ -237,16 +237,10 @@ interface TimeParams {
     showTwelveHour: boolean;
     showSeconds: boolean;
 }
-export function formatFullRelativeTime(
-    date: Date,
-    timeParams?: TimeParams,
-    showTwelveHour = false,
-    showTime = true,
-    showSeconds = false,
-): string {
+export function formatFullRelativeTime(date: Date, timeParams?: TimeParams): string {
     const now = new Date(Date.now());
     if (timeParams && withinCurrentDay(date, now)) {
-        return formatTime(date, showTwelveHour);
+        return formatTime(date, timeParams.showTwelveHour);
     } else {
         const day = date.getDate();
         const month = getCurrentLanguage() !== "en" ? date.getMonth() + 1 : monthToEnArr[date.getMonth()];

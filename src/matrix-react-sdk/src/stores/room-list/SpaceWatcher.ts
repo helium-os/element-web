@@ -67,7 +67,6 @@ export class SpaceWatcher {
     };
 
     private onSpaceTagsUpdate = (spaceTags) => {
-        console.log("dyptest regenerateAllLists2");
         this.store.regenerateAllLists({
             spaceTags,
             trigger: true,

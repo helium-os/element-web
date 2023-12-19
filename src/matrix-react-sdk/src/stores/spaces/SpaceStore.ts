@@ -304,7 +304,6 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.emit(UPDATE_SUGGESTED_ROOMS, (this._suggestedRooms = []));
 
         if (cliSpace) {
-            console.log("loadSuggestedRooms2");
             this.loadSuggestedRooms(cliSpace);
 
             // Load all members for the selected space and its subspaces,
@@ -328,7 +327,6 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     }
 
     public fetchSuggestedRooms = async (space: Room, limit = MAX_SUGGESTED_ROOMS): Promise<ISuggestedRoom[]> => {
-        console.log("fetchSuggestedRooms");
         try {
             const { rooms } = await this.matrixClient.getRoomHierarchy(space.roomId, limit, 1, false);
 
@@ -1019,7 +1017,6 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                     target?.getMyMembership() !== "join" && // target not joined
                     ev.getPrevContent().suggested !== ev.getContent().suggested // suggested flag changed
                 ) {
-                    console.log("loadSuggestedRooms1");
                     this.loadSuggestedRooms(room);
                 }
 

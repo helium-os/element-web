@@ -150,7 +150,6 @@ import * as languageHandler from "../../../src/languageHandler";
 import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
-import { Layout } from "matrix-react-sdk/src/settings/enums/Layout";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // legacy export

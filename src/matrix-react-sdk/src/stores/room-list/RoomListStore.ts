@@ -61,11 +61,9 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
     private algorithm = new Algorithm();
     private prefilterConditions: IFilterCondition[] = [];
     private updateFn = new MarkedExecution(() => {
-        console.log("!!!!!!!!!!!!!!dyptest getOrderedLists1");
         for (const tagId of Object.keys(this.orderedLists)) {
             RoomNotificationStateStore.instance.getListState(tagId).setRooms(this.orderedLists[tagId]);
         }
-        console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX dyptest emit LISTS_UPDATE_EVENT1");
         this.emit(LISTS_UPDATE_EVENT);
     });
 
@@ -80,7 +78,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
             null,
             (_settingName, _roomId, _level, _newValAtLevel, newVal) => {
                 this.msc3946ProcessDynamicPredecessor = newVal;
-                console.log("regenerateAllLists2");
                 this.regenerateAllLists({ trigger: true });
             },
         );
@@ -132,7 +129,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         // Update any settings here, as some may have happened before we were logically ready.
         logger.log("Regenerating room lists: Startup");
         this.updateAlgorithmInstances();
-        console.log("dyptest regenerateAllLists1");
         this.regenerateAllLists({ trigger: false });
         this.handleRVSUpdate({ trigger: false }); // fake an RVS update to adjust sticky room, if needed
 
@@ -218,7 +214,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
             payload.action === "MatrixActions.Room.tags" ||
             (payload.action === "MatrixActions.Room.timeline" && payload.event.getType() === EventType.Tag)
         ) {
-            console.log("MatrixActions.Room.tags", payload);
             await this.handleRoomUpdate(payload.room, RoomUpdateCause.PossibleTagChange);
             this.updateFn.trigger();
         } else if (payload.action === "MatrixActions.Room.timeline") {
@@ -401,7 +396,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         // doesn't freak out.
         this.algorithm.setStickyRoom(null);
 
-        console.log("dyptest setKnownRooms3");
         this.algorithm.setKnownRooms(rooms);
 
         // Set the sticky room back, if needed, now that we have updated the store.
@@ -499,7 +493,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         // to setTagSorting and setListOrder from causing triggers.
         this.updateFn.mark();
 
-        console.log("!!!!!!dyptest getOrderedLists2");
         for (const tag of Object.keys(this.orderedLists)) {
             const definedSort = this.getTagSorting(tag);
             const definedOrder = this.getListOrder(tag);
@@ -564,14 +557,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         logger.warn("Regenerating all room lists");
 
         const rooms = this.getPlausibleRooms();
-        console.log(
-            "-----------------------------------------------------------dyptest regenerateAllLists rooms",
-            rooms,
-            "trigger",
-            trigger,
-            "spaceTags",
-            spaceTags,
-        );
 
         const sorts: ITagSortingMap = {};
         const orders: IListOrderingMap = {};
@@ -585,7 +570,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         }
 
         this.algorithm.populateTags(sorts, orders);
-        console.log("dyptest setKnownRooms1");
         this.algorithm.setKnownRooms(rooms);
 
         this.initialListsGenerated = true;
@@ -648,7 +632,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
     public getCount(tagId: TagID): number {
         // The room list store knows about all the rooms, so just return the length.
 
-        console.log("!!!!!!!dyptest getOrderedLists3");
         return this.orderedLists[tagId].length || 0;
     }
 

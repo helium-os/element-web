@@ -11,7 +11,7 @@ import { isPeopleRoom } from "./room";
  *
  * tips:
  * 私聊里，因为两人都为管理员角色，所以有一人离开后，即视为管理员离开
- * 群聊里，当所有管理员都离开时，才视为管理员离开
+ * 群聊里，可能会有多个管理员（比如社区管理员可以赋予其他人管理员角色），所以当所有管理员都离开时，才视为管理员离开
  */
 RoomState.prototype.isAdminLeft = function (): boolean {
     const members = this.getMembers();

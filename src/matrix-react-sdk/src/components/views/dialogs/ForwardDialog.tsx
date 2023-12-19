@@ -128,7 +128,6 @@ const transformEvent = (event: MatrixEvent): { type: string; content: IContent }
 };
 
 const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCreator, onFinished }) => {
-    console.log("ForwardDialog", event);
     const userId = cli.getSafeUserId();
     const [profileInfo, setProfileInfo] = useState<any>({});
     useEffect(() => {

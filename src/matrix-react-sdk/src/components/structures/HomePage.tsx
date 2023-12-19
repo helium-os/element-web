@@ -68,35 +68,6 @@ const UserWelcomeTop: React.FC = () => {
 
     return (
         <div>
-            {/*{SettingsStore.getValue(UIFeature.EditSelfAvatarEnable) ? (*/}
-            {/*    <MiniAvatarUploader*/}
-            {/*        hasAvatar={!!ownProfile.avatarUrl}*/}
-            {/*        hasAvatarLabel={_tDom("Great, that'll help people know it's you")}*/}
-            {/*        noAvatarLabel={_tDom("Add a photo so people know it's you.")}*/}
-            {/*        setAvatarUrl={(url) => cli.setAvatarUrl(url)}*/}
-            {/*        isUserAvatar*/}
-            {/*        onClick={(ev) => PosthogTrackers.trackInteraction("WebHomeMiniAvatarUploadButton", ev)}*/}
-            {/*    >*/}
-            {/*        <BaseAvatar*/}
-            {/*            idName={userId}*/}
-            {/*            name={ownProfile.displayName}*/}
-            {/*            url={ownProfile.avatarUrl}*/}
-            {/*            width={AVATAR_SIZE}*/}
-            {/*            height={AVATAR_SIZE}*/}
-            {/*            resizeMethod="crop"*/}
-            {/*        />*/}
-            {/*    </MiniAvatarUploader>*/}
-            {/*) : (*/}
-            {/*    <BaseAvatar*/}
-            {/*        idName={userId}*/}
-            {/*        name={ownProfile.displayName}*/}
-            {/*        url={ownProfile.avatarUrl}*/}
-            {/*        width={AVATAR_SIZE}*/}
-            {/*        height={AVATAR_SIZE}*/}
-            {/*        resizeMethod="crop"*/}
-            {/*    />*/}
-            {/*)}*/}
-
             <h1>{_tDom("Welcome %(name)s", { name: ownProfile.displayName })}</h1>
             <h2>{_tDom("Now, let's help you get started")}</h2>
         </div>

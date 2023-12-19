@@ -126,7 +126,6 @@ export default class TabbedView extends React.Component<IProps, IState> {
     }
 
     private renderTabPanel(tab: Tab): React.ReactNode {
-        console.log("renderTabPanel", tab);
         return (
             <BaseCard className="mx_TabbedView_tabPanel" title={tab.label}>
                 {tab.body}
@@ -145,7 +144,6 @@ export default class TabbedView extends React.Component<IProps, IState> {
 
         const screenName = tab?.screenName ?? this.props.screenName;
 
-        console.log("this.props.footer", this.props.footer);
         return (
             <div className={tabbedViewClasses}>
                 {screenName && <PosthogScreenTracker screenName={screenName} />}

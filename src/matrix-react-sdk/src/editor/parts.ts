@@ -690,7 +690,7 @@ export class PartCreator {
             insertTrailingCharacter = false;
         }
         // const postfix = this.plain(insertTrailingCharacter ? ": " : " ");
-        const postfix = this.plain("");
+        const postfix = this.plain(" ");
         return [pill, postfix];
     }
 }
