@@ -47,7 +47,7 @@ const SpaceContextMenu: React.FC<IProps> = ({ space, hideHeader, onFinished, ...
     const userId = cli.getUserId()!;
 
     let inviteOption: JSX.Element | null = null;
-    if (space.getJoinRule() === "public" || space.canInvite(userId)) {
+    if (space.getMyMembership() === "join" && (space.getJoinRule() === "public" || space.canInvite(userId))) {
         const onInviteClick = (ev: ButtonEvent): void => {
             ev.preventDefault();
             ev.stopPropagation();

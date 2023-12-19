@@ -8,7 +8,7 @@
     "Download %(text)s": "下载 %(text)s",
     "Email": "电子邮箱",
     "Email address": "邮箱地址",
-    "Emoji": "表情包",
+    "Emoji": "表情",
     "Error": "错误",
     "Error decrypting attachment": "解密附件时出错",
     "Export E2E room keys": "导出频道的端到端加密密钥",

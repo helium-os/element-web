@@ -439,9 +439,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     public componentDidMount(): void {
-        setTimeout(() => {
-            SettingsStore.setValue("layout", null, SettingLevel.DEVICE, Layout.Group);
-        }, 500);
         window.addEventListener("resize", this.onWindowResized);
         SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
         getUserRoles().then((res) => {
