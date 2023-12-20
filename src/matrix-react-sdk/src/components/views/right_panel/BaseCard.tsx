@@ -28,6 +28,7 @@ interface IProps {
     header?: ReactNode;
     title?: string;
     headerButton?: ReactNode;
+    displayBackBtn?: boolean; // 是否允许展示返回按钮
     footer?: ReactNode;
     className?: string;
     withoutScrollContainer?: boolean;
@@ -65,6 +66,7 @@ const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
             header,
             title,
             headerButton,
+            displayBackBtn = false,
             footer,
             withoutScrollContainer,
             children,
@@ -74,7 +76,7 @@ const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
     ) => {
         let backButton;
         const cardHistory = RightPanelStore.instance.roomPhaseHistory;
-        if (cardHistory.length > 1) {
+        if (displayBackBtn && cardHistory.length > 1) {
             const prevCard = cardHistory[cardHistory.length - 2];
             const onBackClick = (ev: ButtonEvent): void => {
                 onBack?.(ev);
