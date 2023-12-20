@@ -11,10 +11,6 @@ import { Room } from "matrix-js-sdk/src/models/room";
 export default function useIsSpaceChannel(roomId): [boolean, Room[]] {
     const [parents, setParents] = useState<Room[]>([]);
 
-    const onRoomState = (state: RoomState) => {
-        setChannelParents(roomId);
-    };
-
     const setChannelParents = (roomId) => {
         const parents = SpaceStore.instance.getParents(roomId);
         setParents(parents);
@@ -23,6 +19,11 @@ export default function useIsSpaceChannel(roomId): [boolean, Room[]] {
     useEffect(() => {
         if (!roomId) return;
         setChannelParents(roomId);
+
+        const onRoomState = (state: RoomState) => {
+            setChannelParents(roomId);
+        };
+
         MatrixClientPeg.get().on(RoomStateEvent.Update, onRoomState);
         return () => {
             MatrixClientPeg.get().off(RoomStateEvent.Update, onRoomState);
