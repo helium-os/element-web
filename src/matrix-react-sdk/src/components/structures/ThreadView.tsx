@@ -433,6 +433,7 @@ export default class ThreadView extends React.Component<IProps, IState> {
                     onClose={this.props.onClose}
                     withoutScrollContainer={true}
                     title={_t("Thread")}
+                    displayBackBtn={true}
                     ref={this.card}
                     onKeyDown={this.onKeyDown}
                     onBack={(ev: ButtonEvent) => {

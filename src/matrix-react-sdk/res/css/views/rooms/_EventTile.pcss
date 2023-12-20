@@ -251,24 +251,6 @@ $group_line-padding-horizontal: 16px;
                 padding-bottom: 0!important;
             }
         }
-
-        &:hover {
-
-            &.mx_EventTile_verified .mx_EventTile_line {
-                box-shadow: inset var(--EventTile-box-shadow-offset-x) 0 0 var(--EventTile-box-shadow-spread-radius)
-                    $e2e-verified-color;
-            }
-
-            &.mx_EventTile_unverified .mx_EventTile_line {
-                box-shadow: inset var(--EventTile-box-shadow-offset-x) 0 0 var(--EventTile-box-shadow-spread-radius)
-                    $e2e-unverified-color;
-            }
-
-            &.mx_EventTile_unknown .mx_EventTile_line {
-                box-shadow: inset var(--EventTile-box-shadow-offset-x) 0 0 var(--EventTile-box-shadow-spread-radius)
-                    $e2e-unknown-color;
-            }
-        }
     }
 
     &[data-layout="bubble"],
@@ -1144,14 +1126,6 @@ $group_line-padding-horizontal: 16px;
                         margin-left: 8px;
                         flex: 1;
                     }
-                }
-            }
-
-            &:hover {
-                &.mx_EventTile_verified.mx_EventTile_info .mx_EventTile_line,
-                &.mx_EventTile_unverified.mx_EventTile_info .mx_EventTile_line,
-                &.mx_EventTile_unknown.mx_EventTile_info .mx_EventTile_line {
-                    padding-inline-start: 0;
                 }
             }
         }
