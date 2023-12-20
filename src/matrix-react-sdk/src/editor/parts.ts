@@ -477,7 +477,6 @@ class UserPillPart extends PillPart {
         displayName: string,
         private member?: RoomMember,
     ) {
-        console.log("UserPillPart constructor", "displayName", displayName);
         super(userId, displayName);
     }
 

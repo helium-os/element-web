@@ -156,8 +156,6 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     public constructor() {
         super(defaultDispatcher, {});
 
-        this.setActiveSpace(MetaSpace.Home, false);
-
         SettingsStore.monitorSetting("Spaces.allRoomsInHome", null);
         SettingsStore.monitorSetting("Spaces.enabledMetaSpaces", null);
         SettingsStore.monitorSetting("Spaces.showPeopleInSpace", null);
