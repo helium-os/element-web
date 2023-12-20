@@ -404,10 +404,13 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
                 this.setState({ feature_favourite_messages: value });
             },
         );
+
+        this.updateUserTags(); // 初始化userTags
+        this.updateSpaceTags(SpaceStore.instance.spaceTags); // 初始化spaceTags
         this.updateLists(); // trigger the first update
 
         SdkContextClass.instance.spaceStore.on(UPDATE_SELECTED_SPACE, this.onActiveSpaceUpdate);
-        SdkContextClass.instance.spaceStore.on(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
+        SdkContextClass.instance.spaceStore.on(UPDATE_SPACE_TAGS, this.updateSpaceTags);
         this.refreshSpaceTagsRelatedInfo();
     }
 
@@ -425,10 +428,21 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         SdkContextClass.instance.roomViewStore.off(UPDATE_EVENT, this.onRoomViewStoreUpdate);
 
         SdkContextClass.instance.spaceStore.off(UPDATE_SELECTED_SPACE, this.onActiveSpaceUpdate);
-        SdkContextClass.instance.spaceStore.off(UPDATE_SPACE_TAGS, this.onSpaceTagsUpdate);
+        SdkContextClass.instance.spaceStore.off(UPDATE_SPACE_TAGS, this.updateSpaceTags);
     }
 
     private onActiveSpaceUpdate = () => {
+        this.updateUserTags();
+    };
+
+    private updateUserTags = () => {
+        if (!SpaceStore.instance.activeSpace) {
+            this.setState({
+                userTagIds: [],
+            });
+            return;
+        }
+
         const orderedTagIds = new Set([
             ...(!SpaceStore.instance.isHomeSpace ? [DefaultTagID.Untagged] : []),
             ...OrderedDefaultTagIDs,
@@ -438,7 +452,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         });
     };
 
-    private onSpaceTagsUpdate = (spaceTags) => {
+    private updateSpaceTags = (spaceTags) => {
         this.setState({
             spaceTags,
         });
