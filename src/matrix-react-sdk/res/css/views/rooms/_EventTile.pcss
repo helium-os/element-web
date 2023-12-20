@@ -226,7 +226,15 @@ $group_line-padding-horizontal: 16px;
 
         &.mx_EventTile_isReplying {
             background-color: rgba($background-primary-color3, 0.1)!important;
-            border-left: 2px solid $background-primary3-secondary-color1;
+            &:after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 2px;
+                background: $background-primary3-secondary-color1;
+            }
         }
 
         &.mx_EventTile_info {
