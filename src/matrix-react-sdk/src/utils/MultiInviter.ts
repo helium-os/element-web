@@ -148,7 +148,7 @@ export default class MultiInviter {
         return this.errors[addr]?.errorText ?? null;
     }
 
-    private async inviteToRoom(roomId: string, addr: string, ignoreProfile = false): Promise<{}> {
+    private async inviteToRoom(roomId: string, addr: string, ignoreProfile = false): Promise<{} | void> {
         const addrType = getAddressType(addr);
 
         if (addrType === AddressType.Email) {
@@ -157,7 +157,11 @@ export default class MultiInviter {
             const room = this.matrixClient.getRoom(roomId);
             if (!room) throw new Error("Room not found");
 
-            // const member = room.getMember(addr);
+            // 已加入或者已发送邀请的用户当做邀请成功处理
+            const member = room.getMember(addr);
+            if (["invite", "join"].includes(member?.membership)) {
+                return Promise.resolve();
+            }
             // if (member?.membership === "join") {
             //     throw new MatrixError({
             //         errcode: USER_ALREADY_JOINED,

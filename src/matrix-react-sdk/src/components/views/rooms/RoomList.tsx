@@ -44,9 +44,9 @@ import {
     ISuggestedRoom,
     MetaSpace,
     SpaceKey,
+    UPDATE_FILTERED_SUGGESTED_ROOMS,
     UPDATE_SELECTED_SPACE,
     UPDATE_SPACE_TAGS,
-    UPDATE_SUGGESTED_ROOMS,
 } from "../../../stores/spaces";
 import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { arrayFastClone, arrayHasDiff } from "../../../utils/arrays";
@@ -382,7 +382,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
 
         this.state = {
             sublists: {},
-            suggestedRooms: SpaceStore.instance.suggestedRooms,
+            suggestedRooms: SpaceStore.instance.filteredSuggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
             spaceTags: [],
             spaceTagIds: [],
@@ -395,7 +395,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     public componentDidMount(): void {
         this.dispatcherRef = defaultDispatcher.register(this.onAction);
         SdkContextClass.instance.roomViewStore.on(UPDATE_EVENT, this.onRoomViewStoreUpdate);
-        SpaceStore.instance.on(UPDATE_SUGGESTED_ROOMS, this.updateSuggestedRooms);
+        SpaceStore.instance.on(UPDATE_FILTERED_SUGGESTED_ROOMS, this.updateSuggestedRooms);
         RoomListStore.instance.on(LISTS_UPDATE_EVENT, this.updateLists);
         this.favouriteMessageWatcher = SettingsStore.watchSetting(
             "feature_favourite_messages",
@@ -421,7 +421,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     }
 
     public componentWillUnmount(): void {
-        SpaceStore.instance.off(UPDATE_SUGGESTED_ROOMS, this.updateSuggestedRooms);
+        SpaceStore.instance.off(UPDATE_FILTERED_SUGGESTED_ROOMS, this.updateSuggestedRooms);
         RoomListStore.instance.off(LISTS_UPDATE_EVENT, this.updateLists);
         SettingsStore.unwatchSetting(this.favouriteMessageWatcher);
         if (this.dispatcherRef) defaultDispatcher.unregister(this.dispatcherRef);
@@ -530,8 +530,8 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         return room;
     };
 
-    private updateSuggestedRooms = (suggestedRooms: ISuggestedRoom[]): void => {
-        this.setState({ suggestedRooms });
+    private updateSuggestedRooms = (filteredSuggestedRooms: ISuggestedRoom[]): void => {
+        this.setState({ suggestedRooms: filteredSuggestedRooms });
     };
 
     private updateLists = (): void => {

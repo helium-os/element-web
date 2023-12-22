@@ -66,7 +66,7 @@ import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { getTopic } from "../../hooks/room/useTopic";
 import { getDisplayAliasForAliasSet } from "../../Rooms";
 import SettingsStore from "../../settings/SettingsStore";
-import { UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
+import { ISuggestedRoom, UPDATE_FILTERED_SUGGESTED_ROOMS, UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
 import { DefaultTagID } from "matrix-react-sdk/src/stores/room-list/models";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
@@ -506,8 +506,14 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
 
     const [spaceTags, setSpaceTags] = useState(SpaceStore.instance.spaceTags);
 
+    // 过滤后的建议的频道（未加入的频道）
+    const [suggestedRooms, setSuggestedRooms] = useState<ISuggestedRoom[]>(
+        () => SpaceStore.instance.filteredSuggestedRooms,
+    );
+
     const [hierarchyList, setHierarchyList] = useState([]);
 
+    // 订阅分组变化
     useEffect(() => {
         const updateSpaceTags = (tags) => {
             setSpaceTags(tags);
@@ -516,6 +522,18 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
         SpaceStore.instance.on(UPDATE_SPACE_TAGS, updateSpaceTags);
         return () => {
             SpaceStore.instance.off(UPDATE_SPACE_TAGS, updateSpaceTags);
+        };
+    }, []);
+
+    // 订阅建议的频道变化
+    useEffect(() => {
+        const updateSuggestedRooms = (filteredSuggestedRooms: ISuggestedRoom[]): void => {
+            setSuggestedRooms(filteredSuggestedRooms);
+        };
+
+        SpaceStore.instance.on(UPDATE_FILTERED_SUGGESTED_ROOMS, updateSuggestedRooms);
+        return () => {
+            SpaceStore.instance.off(UPDATE_FILTERED_SUGGESTED_ROOMS, updateSuggestedRooms);
         };
     }, []);
 
@@ -538,9 +556,10 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
         const suggestedTagHierarchy = {
             tagId: DefaultTagID.Suggested,
             tagName: _t("Suggested Rooms"),
-            children: [],
+            children: suggestedRooms,
         };
 
+        // 默认分组频道
         const defaultTagHierarchy = {
             tagId: DefaultTagID.Untagged,
             tagName: _t("channel"),
@@ -549,15 +568,14 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
 
         for (const room of childRooms) {
             const roomInfo = cli.getRoom(room.room_id);
-            if (!roomInfo) {
-                suggestedTagHierarchy.children.push(room);
-                continue;
-            }
+            if (!roomInfo) continue;
+
             const roomTags = roomInfo.getRoomTags();
             if (!roomTags || !roomTags.length) {
                 defaultTagHierarchy.children.push(room);
                 continue;
             }
+
             for (const roomTagItem of roomTags) {
                 const index = newHierarchyList.findIndex((item) => item.tagId === roomTagItem.tagId);
                 if (index !== -1) {
@@ -565,8 +583,9 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
                 }
             }
         }
+
         setHierarchyList([suggestedTagHierarchy, defaultTagHierarchy, ...newHierarchyList]);
-    }, [cli, spaceTags, childRooms]);
+    }, [cli, spaceTags, childRooms, suggestedRooms]);
 
     const newParents = new Set(parents).add(root.room_id);
 

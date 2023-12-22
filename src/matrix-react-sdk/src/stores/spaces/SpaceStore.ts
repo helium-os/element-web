@@ -20,7 +20,7 @@ import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { ClientEvent } from "matrix-js-sdk/src/client";
 import { logger } from "matrix-js-sdk/src/logger";
-import { RoomMember } from "matrix-js-sdk/src/models/room-member";
+import { RoomMember, RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 
@@ -44,6 +44,7 @@ import {
     ISuggestedRoom,
     MetaSpace,
     SpaceKey,
+    UPDATE_FILTERED_SUGGESTED_ROOMS,
     UPDATE_HOME_BEHAVIOUR,
     UPDATE_INVITED_SPACES,
     UPDATE_SELECTED_SPACE,
@@ -65,6 +66,8 @@ import { ViewHomePagePayload } from "../../dispatcher/payloads/ViewHomePagePaylo
 import { SwitchSpacePayload } from "../../dispatcher/payloads/SwitchSpacePayload";
 import { AfterLeaveRoomPayload } from "../../dispatcher/payloads/AfterLeaveRoomPayload";
 import { SdkContextClass } from "../../contexts/SDKContext";
+import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 interface IState {}
 
@@ -143,6 +146,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     // The space currently selected in the Space Panel
     private _activeSpace: SpaceKey; // set properly by onReady
     private _suggestedRooms: ISuggestedRoom[] = [];
+    private _filteredSuggestedRooms: ISuggestedRoom[] = []; // 经过过滤的建议的频道列表
     private _invitedSpaces = new Set<Room>();
     private spaceOrderLocalEchoMap = new Map<string, string>();
     // The following properties are set by onReady as they live in account_data
@@ -189,6 +193,23 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     public get suggestedRooms(): ISuggestedRoom[] {
         return this._suggestedRooms;
+    }
+
+    // 经过过滤的建议的频道列表
+    public get filteredSuggestedRooms(): ISuggestedRoom[] {
+        return this._filteredSuggestedRooms;
+    }
+
+    public setFilteredSuggestedRooms(suggestedRooms = this.suggestedRooms) {
+        this._filteredSuggestedRooms = this.filterSuggestedRooms(suggestedRooms);
+        this.emit(UPDATE_FILTERED_SUGGESTED_ROOMS, this._filteredSuggestedRooms);
+    }
+
+    // 判断当前用户是否是社区的特权用户（管理员或者协管员）
+    public get isSpacePrivilegedUser(): boolean {
+        const myUserId = MatrixClientPeg.get().getUserId()!;
+        const me = this.activeSpaceRoom?.getMember(myUserId);
+        return me?.isAdmin() || me?.isModerator();
     }
 
     public get allRoomsInHome(): boolean {
@@ -354,6 +375,13 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             logger.error(e);
         }
         return [];
+    };
+
+    // 过滤建议的频道（只有社区管理员和协管员展示入口）
+    public filterSuggestedRooms = (suggestedRooms = this.suggestedRooms): ISuggestedRoom[] => {
+        return this.isSpacePrivilegedUser
+            ? suggestedRooms
+            : suggestedRooms.filter((item) => !isPrivateRoom(item.join_rule));
     };
 
     public addRoomToSpace(space: Room, roomId: string, via: string[], suggested = false): Promise<ISendEventResponse> {
@@ -1040,6 +1068,10 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         }
     };
 
+    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
+        this.setFilteredSuggestedRooms();
+    };
+
     // listening for m.room.member events in onRoomState above doesn't work as the Member object isn't updated by then
     private onRoomStateMembers = (ev: MatrixEvent): void => {
         const room = this.matrixClient.getRoom(ev.getRoomId());
@@ -1148,12 +1180,14 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             this.matrixClient.removeListener(RoomEvent.MyMembership, this.onRoom);
             this.matrixClient.removeListener(RoomEvent.AccountData, this.onRoomAccountData);
             this.matrixClient.removeListener(RoomStateEvent.Events, this.onRoomState);
+            this.matrixClient.removeListener(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
             this.matrixClient.removeListener(RoomStateEvent.Members, this.onRoomStateMembers);
             this.matrixClient.removeListener(ClientEvent.AccountData, this.onAccountData);
         }
         await this.reset();
 
         this.off(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
+        this.off(UPDATE_SUGGESTED_ROOMS, this.setFilteredSuggestedRooms);
     }
 
     protected async onReady(): Promise<void> {
@@ -1161,10 +1195,12 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.matrixClient.on(RoomEvent.MyMembership, this.onRoom);
         this.matrixClient.on(RoomEvent.AccountData, this.onRoomAccountData);
         this.matrixClient.on(RoomStateEvent.Events, this.onRoomState);
+        this.matrixClient.on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.matrixClient.on(RoomStateEvent.Members, this.onRoomStateMembers);
         this.matrixClient.on(ClientEvent.AccountData, this.onAccountData);
 
         this.on(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
+        this.on(UPDATE_SUGGESTED_ROOMS, this.setFilteredSuggestedRooms);
 
         const oldMetaSpaces = this._enabledMetaSpaces;
         const enabledMetaSpaces = SettingsStore.getValue("Spaces.enabledMetaSpaces");
