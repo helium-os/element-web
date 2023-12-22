@@ -146,7 +146,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
             title={_t("Create a room", {
                 roomType: _t("channel"),
             })}
-            description={"让我们为每一个主题创建一个频道吧。稍后你可以添加更多频道。"}
+            description={`请为社区创建一些频道，或"跳过"稍后再创建`}
             footer={footer}
         >
             <form>
