@@ -538,7 +538,7 @@ export const SETTINGS: { [setting: string]: ISetting } = {
         supportedLevels: LEVELS_DEVICE_ONLY_SETTINGS_WITH_CONFIG,
         displayName: _td("Hide notification dot (only display counters badges)"),
         labsGroup: LabGroup.Rooms,
-        default: true,
+        default: false,
     },
     // MSC3952 intentional mentions support.
     feature_intentional_mentions: {

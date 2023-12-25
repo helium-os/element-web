@@ -53,7 +53,7 @@ export function StatelessNotificationBadge({ symbol, count, color, ...props }: P
         mx_NotificationBadge: true,
         mx_NotificationBadge_visible: isEmptyBadge ? true : hasUnreadCount,
         mx_NotificationBadge_highlighted: color >= NotificationColor.Red,
-        // mx_NotificationBadge_dot: isEmptyBadge,
+        mx_NotificationBadge_dot: isEmptyBadge,
         mx_NotificationBadge_2char: symbol && symbol.length > 0 && symbol.length < 3,
         mx_NotificationBadge_3char: symbol && symbol.length > 2,
     });
