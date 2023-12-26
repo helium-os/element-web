@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { RoomState, RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
@@ -11,10 +11,10 @@ import { Room } from "matrix-js-sdk/src/models/room";
 export default function useIsSpaceChannel(roomId): [boolean, Room[]] {
     const [parents, setParents] = useState<Room[]>([]);
 
-    const setChannelParents = (roomId) => {
-        const parents = SpaceStore.instance.getParents(roomId);
+    const setChannelParents = useCallback((roomId) => {
+        const parents = SpaceStore.instance.getParents(roomId, false, false);
         setParents(parents);
-    };
+    }, []);
 
     useEffect(() => {
         if (!roomId) return;
@@ -28,7 +28,7 @@ export default function useIsSpaceChannel(roomId): [boolean, Room[]] {
         return () => {
             MatrixClientPeg.get().off(RoomStateEvent.Update, onRoomState);
         };
-    }, [roomId]);
+    }, [roomId, setChannelParents]);
 
     return [parents.length > 0, parents];
 }

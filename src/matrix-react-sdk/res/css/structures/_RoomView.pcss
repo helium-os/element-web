@@ -150,7 +150,6 @@ limitations under the License.
 }
 
 .mx_RoomView_messageListWrapper {
-    min-height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -184,7 +183,6 @@ limitations under the License.
     box-sizing: border-box;
     list-style-type: none;
     margin: 0;
-    padding-top: 40px;
     /* needed as min-height is set to clientHeight in ScrollPanel
     to prevent shrinking when WhoIsTypingTile is hidden */
 }
@@ -198,7 +196,6 @@ limitations under the License.
 }
 
 li.mx_RoomView_myReadMarker_container {
-    display: none;
     height: 0;
     margin: 0;
     padding: 0;
@@ -215,7 +212,7 @@ hr.mx_RoomView_myReadMarker {
     will-change: width;
     transition: width 400ms easeinsine 1s, opacity 400ms easeinsine 1s;
     width: 99%;
-    opacity: 1;
+    opacity: 0!important;
 }
 
 /* Rooms with immersive content */

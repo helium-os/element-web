@@ -42,6 +42,7 @@ import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/components/views/ro
 import AutoHideScrollbar from "matrix-react-sdk/src/components/structures/AutoHideScrollbar";
 import DropdownButton from "matrix-react-sdk/src/components/views/elements/DropdownButton";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
+import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 
 interface IEventShowOpts {
     isState?: boolean;
@@ -205,7 +206,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
         }
     }
 
-    private onUserPowerLevelChanged = (value: number, powerLevelKey: string): void => {
+    private changeUserPowerLevel = (value: number, powerLevelKey: string): Promise<ISendEventResponse> => {
         const client = MatrixClientPeg.get();
         const room = client.getRoom(this.props.roomId);
         const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
@@ -218,17 +219,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
         if (!plContent["users"]) plContent["users"] = {};
         plContent["users"][powerLevelKey] = value;
 
-        client.sendStateEvent(this.props.roomId, EventType.RoomPowerLevels, plContent).catch((e) => {
-            logger.error(e);
-
-            Modal.createDialog(ErrorDialog, {
-                title: _t("Error changing power level"),
-                description: _t(
-                    "An error occurred changing the user's power level. Ensure you have sufficient " +
-                        "permissions and try again.",
-                ),
-            });
-        });
+        return client.sendStateEvent(this.props.roomId, EventType.RoomPowerLevels, plContent);
     };
 
     private onRemoveMember = (userId: string) => {
@@ -267,7 +258,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
     private makeMemberTiles = (members: Array<RoomMember>): JSX.Element[] => {
         return members
             .sort((a, b) => b.getPowerLevel() - a.getPowerLevel())
-            .map((m, index) => {
+            .map((m) => {
                 const client = MatrixClientPeg.get();
                 const room = client.getRoom(this.props.roomId);
 
@@ -294,7 +285,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                 const isSelected = this.state.selectedMember?.userId === m.userId;
 
                 return (
-                    <div key={index} className={`mx_MemberItem ${isSelected ? "mx_MemberItem_active" : ""}`}>
+                    <div key={m.userId} className={`mx_MemberItem ${isSelected ? "mx_MemberItem_active" : ""}`}>
                         <MemberTile member={m} avatarSize={24} showPresence={false} />
                         <ul className="mx_RoleSettings_memberItem_actions">
                             {canChange && (
@@ -316,10 +307,24 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
             });
     };
 
-    private onChangeMemberPower(powerLevel: number) {
+    private async onChangeMemberPower(powerLevel: number, e: ButtonEvent) {
         if (!this.state.selectedMember) return;
 
-        this.onUserPowerLevelChanged(powerLevel, this.state.selectedMember.userId);
+        e.stopPropagation();
+
+        try {
+            await this.changeUserPowerLevel(powerLevel, this.state.selectedMember.userId);
+        } catch (error) {
+            Modal.createDialog(ErrorDialog, {
+                title: _t("Error changing power level"),
+                description: _t(
+                    "An error occurred changing the user's power level. Ensure you have sufficient " +
+                        "permissions and try again.",
+                ),
+            });
+        } finally {
+            this.onCloseMenu();
+        }
     }
 
     private renderContextMenu = () => {
@@ -337,7 +342,9 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                             <IconizedContextMenuOption
                                 key={powerLevel}
                                 label={`${isMatch ? "取消" : "设置成"}${_t(PowerLabel[powerLevel])}`}
-                                onClick={() => this.onChangeMemberPower(isMatch ? PowerLevel.Default : powerLevel)}
+                                onClick={(e: ButtonEvent) =>
+                                    this.onChangeMemberPower(isMatch ? PowerLevel.Default : powerLevel, e)
+                                }
                             />
                         );
                     })}

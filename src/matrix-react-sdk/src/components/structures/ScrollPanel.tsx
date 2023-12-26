@@ -706,7 +706,7 @@ export default class ScrollPanel extends React.Component<IProps> {
                 scrollState.bottomOffset = newBottomOffset;
                 const newHeight = `${this.getListHeight()}px`;
                 if (itemlist.style.height !== newHeight) {
-                    // itemlist.style.height = newHeight;
+                    itemlist.style.height = newHeight;
                 }
                 debuglog("balancing height because messages below viewport grew by", bottomDiff);
             }
@@ -756,7 +756,7 @@ export default class ScrollPanel extends React.Component<IProps> {
         const scrollState = this.scrollState;
         if (scrollState.stuckAtBottom) {
             if (itemlist.style.height !== newHeight) {
-                // itemlist.style.height = newHeight;
+                itemlist.style.height = newHeight;
             }
             if (sn.scrollTop !== sn.scrollHeight) {
                 sn.scrollTop = sn.scrollHeight;
@@ -771,7 +771,7 @@ export default class ScrollPanel extends React.Component<IProps> {
             if (trackedNode) {
                 const oldTop = trackedNode.offsetTop;
                 if (itemlist.style.height !== newHeight) {
-                    // itemlist.style.height = newHeight;
+                    itemlist.style.height = newHeight;
                 }
                 const newTop = trackedNode.offsetTop;
                 const topDiff = newTop - oldTop;
@@ -827,7 +827,7 @@ export default class ScrollPanel extends React.Component<IProps> {
         const lastNodeBottom = lastNode ? lastNode.offsetTop + lastNode.clientHeight : 0;
         const firstNodeTop = itemlist.firstElementChild ? (itemlist.firstElementChild as HTMLElement).offsetTop : 0;
         // 18 is itemlist padding
-        return lastNodeBottom - firstNodeTop + 18 * 2;
+        return lastNodeBottom - firstNodeTop;
     }
 
     private topFromBottom(node: HTMLElement): number {
