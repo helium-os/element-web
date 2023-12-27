@@ -145,6 +145,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     };
     // The space currently selected in the Space Panel
     private _activeSpace: SpaceKey; // set properly by onReady
+    private _suggestedRoomsNextBatch: string;
     private _suggestedRooms: ISuggestedRoom[] = [];
     private _filteredSuggestedRooms: ISuggestedRoom[] = []; // 经过过滤的建议的频道列表
     private _invitedSpaces = new Set<Room>();
@@ -338,16 +339,45 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     }
 
     private async loadSuggestedRooms(space: Room): Promise<void> {
-        const suggestedRooms = await this.fetchSuggestedRooms(space);
         if (this._activeSpace === space.roomId) {
-            this._suggestedRooms = suggestedRooms;
+            const suggestedRooms = await this.fetchSuggestedRooms(
+                space,
+                MAX_SUGGESTED_ROOMS,
+                this._suggestedRoomsNextBatch,
+            );
+
+            // 做去重处理
+            const newSuggestedRooms = [];
+            for (const room of suggestedRooms) {
+                if (!this._suggestedRooms.find((item) => item.room_id === room.room_id)) {
+                    newSuggestedRooms.push(room);
+                }
+            }
+            this._suggestedRooms = [...this._suggestedRooms, ...newSuggestedRooms];
+
             this.emit(UPDATE_SUGGESTED_ROOMS, this._suggestedRooms);
+
+            if (this._suggestedRoomsNextBatch) {
+                this.loadSuggestedRooms(space);
+            }
         }
     }
 
-    public fetchSuggestedRooms = async (space: Room, limit = MAX_SUGGESTED_ROOMS): Promise<ISuggestedRoom[]> => {
+    public fetchSuggestedRooms = async (
+        space: Room,
+        limit = MAX_SUGGESTED_ROOMS,
+        fromToken?: string,
+    ): Promise<ISuggestedRoom[]> => {
         try {
-            const { rooms } = await this.matrixClient.getRoomHierarchy(space.roomId, limit, 1, false);
+            const { rooms, next_batch } = await this.matrixClient.getRoomHierarchy(
+                space.roomId,
+                limit,
+                1,
+                false,
+                fromToken,
+            );
+
+            this._suggestedRoomsNextBatch = next_batch;
 
             const viaMap = new EnhancedMap<string, Set<string>>();
             rooms.forEach((room) => {
@@ -1041,8 +1071,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
                 if (
                     room.roomId === this.activeSpace && // current space
-                    target?.getMyMembership() !== "join" && // target not joined
-                    ev.getPrevContent().suggested !== ev.getContent().suggested // suggested flag changed
+                    target?.getMyMembership() !== "join" // target not joined
+                    // && ev.getPrevContent().suggested !== ev.getContent().suggested // suggested flag changed
                 ) {
                     this.loadSuggestedRooms(room);
                 }
