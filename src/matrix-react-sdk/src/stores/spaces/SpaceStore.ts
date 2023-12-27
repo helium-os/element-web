@@ -428,7 +428,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         return this.getChildren(spaceId).filter((r) => r.isSpaceRoom() && r.getMyMembership() === "join");
     }
 
-    public getParents(roomId: string, canonicalOnly = false): Room[] {
+    public getParents(roomId: string, canonicalOnly = false, requiredValidatePermission = true): Room[] {
         if (!this.matrixClient) return [];
         const userId = this.matrixClient.getSafeUserId();
         const room = this.matrixClient.getRoom(roomId);
@@ -446,7 +446,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                 const parent = this.matrixClient.getRoom(ev.getStateKey());
                 const relation = parent?.currentState.getStateEvents(EventType.SpaceChild, roomId);
                 if (
-                    !parent?.currentState.maySendStateEvent(EventType.SpaceChild, userId) ||
+                    (requiredValidatePermission &&
+                        !parent?.currentState.maySendStateEvent(EventType.SpaceChild, userId)) ||
                     // also skip this relation if the parent had this child added but then since removed it
                     (relation && !Array.isArray(relation.getContent().via))
                 ) {

@@ -21,9 +21,9 @@ export enum NotificationColor {
     None, // nothing special
     // TODO: Remove bold with notifications: https://github.com/vector-im/element-web/issues/14227
     Bold, // no badge, show as unread
-    Grey, // unread notified messages
-    Red, // unread pings
-    Unsent, // some messages failed to send
+    Grey, // 有未读消息
+    Red, // 有未读的被@的消息
+    Unsent, // 有发送失败的消息
 }
 
 export function humanReadableNotificationColor(color: NotificationColor): string {

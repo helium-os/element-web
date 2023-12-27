@@ -121,8 +121,8 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
     };
 
     private makeMemberTiles = (members: Array<RoomMember>): JSX.Element[] => {
-        return members.map((m, index) => (
-            <div className="mx_MemberItem" data-uid={m.userId} key={index}>
+        return members.map((m) => (
+            <div className="mx_MemberItem" data-uid={m.userId} key={m.userId}>
                 <MemberTile
                     key={m.userId}
                     member={m}

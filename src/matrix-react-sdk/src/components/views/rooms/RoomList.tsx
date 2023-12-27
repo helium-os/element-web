@@ -15,7 +15,17 @@ limitations under the License.
 */
 
 import { Room } from "matrix-js-sdk/src/models/room";
-import React, { ComponentType, createRef, ReactComponentElement, RefObject, SyntheticEvent, useContext } from "react";
+import React, {
+    ComponentType,
+    createRef,
+    ReactComponentElement,
+    RefObject,
+    SyntheticEvent,
+    useContext,
+    useEffect,
+    useState,
+    useCallback,
+} from "react";
 
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import type { DropResult } from "react-beautiful-dnd";
@@ -69,6 +79,7 @@ import SpaceAddChanelContextMenu, {
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
 import { EventType } from "matrix-js-sdk/src/@types/event";
+import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -215,16 +226,32 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
 
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
-    const hasPermissionToAddSpaceChild = activeSpace?.currentState.maySendStateEvent(EventType.SpaceChild, userId);
-    const canAddRooms =
-        activeSpace?.getMyMembership() === "join" &&
-        hasPermissionToAddSpaceChild &&
-        shouldShowComponent(UIComponent.CreateRooms);
-    const showCreateRoom = activeSpace ? canAddRooms : shouldShowComponent(UIComponent.CreateRooms);
 
     const showExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
 
-    const createRoomLabel = _t("Create room", { roomType: _t(activeSpace ? "channel" : "room") });
+    const shouldShowCreateRoom = useCallback(
+        () =>
+            activeSpace
+                ? activeSpace?.getMyMembership() === "join" &&
+                  activeSpace?.currentState.maySendStateEvent(EventType.SpaceChild, userId) &&
+                  shouldShowComponent(UIComponent.CreateRooms)
+                : shouldShowComponent(UIComponent.CreateRooms),
+        [activeSpace, userId],
+    );
+
+    const [showCreateRoom, setShowCreateRoom] = useState<boolean>(() => shouldShowCreateRoom()); // 是否展示创建频道 | 私聊 | 群聊按钮
+
+    // 成员角色改变后重新判断是否展示创建频道按钮
+    useEffect(() => {
+        const onRoomMemberPowerLevel = () => {
+            setShowCreateRoom(shouldShowCreateRoom());
+        };
+
+        cli.on(RoomMemberEvent.PowerLevel, onRoomMemberPowerLevel);
+        return () => {
+            cli.off(RoomMemberEvent.PowerLevel, onRoomMemberPowerLevel);
+        };
+    }, [cli, shouldShowCreateRoom]);
 
     let tags;
     if (tagId) tags = [{ tagId }];
@@ -299,6 +326,7 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
             </>
         );
     } else if (showCreateRoom) {
+        const createRoomLabel = _t("Create room", { roomType: _t(activeSpace ? "channel" : "room") });
         return (
             <AccessibleTooltipButton
                 tabIndex={tabIndex}

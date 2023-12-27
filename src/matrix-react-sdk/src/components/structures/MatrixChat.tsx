@@ -1193,7 +1193,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         const isRoomAdmin = myMember.isAdmin();
 
         const isSpace = roomToLeave?.isSpaceRoom();
-        const isSpaceChannel = SpaceStore.instance.getParents(roomId).length > 0;
+        const isSpaceChannel = SpaceStore.instance.getParents(roomId, false, false).length > 0;
         const isGroupChatRoom = !isSpace && !isSpaceChannel && !roomToLeave?.isPeopleRoom(); // 是否是群聊
 
         const roomType = roomToLeave.getRoomTypeLabel();
