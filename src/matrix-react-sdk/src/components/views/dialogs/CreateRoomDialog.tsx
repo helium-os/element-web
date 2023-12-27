@@ -17,7 +17,7 @@ limitations under the License.
 
 import React, { useState, useRef, memo, ChangeEvent } from "react";
 import { RoomType } from "matrix-js-sdk/src/@types/event";
-import { JoinRule } from "matrix-js-sdk/src/@types/partials";
+import { HistoryVisibility, JoinRule } from "matrix-js-sdk/src/@types/partials";
 
 import { _t } from "../../../languageHandler";
 import { IOpts } from "../../../createRoom";
@@ -99,6 +99,7 @@ const CreateRoomDialog: React.FC<IProps> = ({
         onFinished(true, {
             roomType: type,
             joinRule: JoinRule.Invite,
+            historyVisibility: HistoryVisibility.Invited,
             avatar,
             createOpts: {
                 name,
