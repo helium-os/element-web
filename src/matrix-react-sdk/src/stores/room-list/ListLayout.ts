@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 import { TagID } from "./models";
+import { SpaceKey } from "matrix-react-sdk/src/stores/spaces";
 
 const TILE_HEIGHT_PX = 44;
 
@@ -29,7 +30,10 @@ export class ListLayout {
     private _previews = false;
     private _collapsed = false;
 
-    public constructor(public readonly tagId: TagID) {
+    public constructor(
+        public readonly spaceId: SpaceKey,
+        public readonly tagId: TagID,
+    ) {
         const serialized = localStorage.getItem(this.key);
         if (serialized) {
             // We don't use the setters as they cause writes.
@@ -63,7 +67,7 @@ export class ListLayout {
     }
 
     private get key(): string {
-        return `mx_sublist_layout_${this.tagId}_boxed`;
+        return `mx_sublist_layout${this.spaceId ? `_${this.spaceId}` : ""}_${this.tagId}_boxed`;
     }
 
     public get visibleTiles(): number {

@@ -21,13 +21,14 @@ import { ListLayout } from "./ListLayout";
 import { AsyncStoreWithClient } from "../AsyncStoreWithClient";
 import defaultDispatcher from "../../dispatcher/dispatcher";
 import { ActionPayload } from "../../dispatcher/payloads";
+import { SpaceKey } from "matrix-react-sdk/src/stores/spaces";
 
 interface IState {}
 
 export default class RoomListLayoutStore extends AsyncStoreWithClient<IState> {
     private static internalInstance: RoomListLayoutStore;
 
-    private readonly layoutMap = new Map<TagID, ListLayout>();
+    private readonly layoutMap = new Map<SpaceKey, Map<TagID, ListLayout>>();
 
     public constructor() {
         super(defaultDispatcher);
@@ -41,17 +42,22 @@ export default class RoomListLayoutStore extends AsyncStoreWithClient<IState> {
         return RoomListLayoutStore.internalInstance;
     }
 
-    public ensureLayoutExists(tagId: TagID): void {
-        if (!this.layoutMap.has(tagId)) {
-            this.layoutMap.set(tagId, new ListLayout(tagId));
+    public ensureLayoutExists(spaceId: SpaceKey, tagId: TagID): void {
+        if (!spaceId) return;
+
+        if (!this.layoutMap.has(spaceId)) {
+            this.layoutMap.set(spaceId, new Map<TagID, ListLayout>());
+        }
+
+        const spaceMap = this.layoutMap.get(spaceId)!;
+        if (!spaceMap.has(tagId)) {
+            spaceMap.set(tagId, new ListLayout(spaceId, tagId));
         }
     }
 
-    public getLayoutFor(tagId: TagID): ListLayout {
-        if (!this.layoutMap.has(tagId)) {
-            this.layoutMap.set(tagId, new ListLayout(tagId));
-        }
-        return this.layoutMap.get(tagId)!;
+    public getLayoutFor(spaceId: SpaceKey, tagId: TagID): ListLayout {
+        this.ensureLayoutExists(spaceId, tagId);
+        return this.layoutMap.get(spaceId)?.get(tagId) || new ListLayout(spaceId, tagId);
     }
 
     // Note: this primarily exists for debugging, and isn't really intended to be used by anything.

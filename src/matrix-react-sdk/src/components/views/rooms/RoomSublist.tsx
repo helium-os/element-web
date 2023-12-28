@@ -127,7 +127,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         // when this setting is toggled it restarts the app so it's safe to not watch this.
         this.slidingSyncMode = SettingsStore.getValue("feature_sliding_sync");
 
-        this.layout = RoomListLayoutStore.instance.getLayoutFor(this.props.tagId);
+        this.layout = RoomListLayoutStore.instance.getLayoutFor(SpaceStore.instance.activeSpace, this.props.tagId);
         this.heightAtStart = 0;
         this.notificationState = RoomNotificationStateStore.instance.getListState(this.props.tagId);
         this.state = {

@@ -17,8 +17,9 @@ limitations under the License.
 import type { Room } from "matrix-js-sdk/src/models/room";
 import type { EventEmitter } from "events";
 import { ITagMap, ListAlgorithm, SortAlgorithm } from "./algorithms/models";
-import { RoomUpdateCause, TagID } from "./models";
+import { RoomUpdateCause, Tag, TagID } from "./models";
 import { IFilterCondition } from "./filters/IFilterCondition";
+import { SpaceKey } from "matrix-react-sdk/src/stores/spaces";
 
 export enum RoomListStoreEvent {
     // The event/channel which is called when the room lists have been changed.
@@ -81,7 +82,7 @@ export interface RoomListStore extends EventEmitter {
      * @param params.trigger Set to false to prevent a list update from being sent. Should only
      * be used if the calling code will manually trigger the update.
      */
-    regenerateAllLists(params: { trigger: boolean }): void;
+    regenerateAllLists(params: { trigger: boolean; space?: SpaceKey; spaceTags?: Tag[] }): void;
 
     /**
      * Adds a filter condition to the room list store. Filters may be applied async,
