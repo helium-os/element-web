@@ -226,8 +226,8 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
                     errorText = _t("This homeserver does not support login using email address.");
                 } else if (error.errcode === "M_RESOURCE_LIMIT_EXCEEDED") {
                     const errorTop = messageForResourceLimitError(error.data.limit_type, error.data.admin_contact, {
-                        "monthly_active_user": _td("This homeserver has hit its Monthly Active User limit."),
-                        "hs_blocked": _td("This homeserver has been blocked by its administrator."),
+                        monthly_active_user: _td("This homeserver has hit its Monthly Active User limit."),
+                        hs_blocked: _td("This homeserver has been blocked by its administrator."),
                         "": _td("This homeserver has exceeded one of its resource limits."),
                     });
                     const errorDetail = messageForResourceLimitError(error.data.limit_type, error.data.admin_contact, {
@@ -372,7 +372,9 @@ export default class LoginComponent extends React.PureComponent<IProps, IState> 
     // };
 
     private onLoginViaJwt = (): void => {
+        console.log("init bugfix enter onLoginViaJwt");
         this.loginLogic.loginViaJwt().then(async (data) => {
+            console.log("init bugfix loginViaJwt request success", data);
             this.setState({ serverIsAlive: true });
             this.props.onChangeTokenLogin(true);
             this.props.onLoggedIn(data, "");

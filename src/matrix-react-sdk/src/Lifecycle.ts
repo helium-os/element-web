@@ -119,6 +119,7 @@ interface ILoadSessionOpts {
  *     failed.
  */
 export async function loadSession(opts: ILoadSessionOpts = {}): Promise<boolean> {
+    console.log("---init bugfix enter Lifecycle loadedSession");
     try {
         let enableGuest = opts.enableGuest || false;
         const guestHsUrl = opts.guestHsUrl;
@@ -147,6 +148,7 @@ export async function loadSession(opts: ILoadSessionOpts = {}): Promise<boolean>
         const success = await restoreFromLocalStorage({
             ignoreGuest: Boolean(opts.ignoreGuest),
         });
+        console.log("init bugfix restoreFromLocalStorage success", success);
         if (success) {
             return true;
         }
@@ -196,6 +198,7 @@ export function attemptTokenLogin(
     defaultDeviceDisplayName?: string,
     fragmentAfterLogin?: string,
 ): Promise<boolean> {
+    console.log("---init bugfix enter attemptTokenLogin");
     if (!queryParams.loginToken) {
         return Promise.resolve(false);
     }
@@ -345,16 +348,19 @@ export interface IStoredSession {
  * @returns {Object} Information about the session - see implementation for variables.
  */
 export async function getStoredSessionVars(): Promise<IStoredSession> {
+    console.log("---init bugfix enter getStoredSessionVars");
     const hsUrl = localStorage.getItem(HOMESERVER_URL_KEY);
     const isUrl = localStorage.getItem(ID_SERVER_URL_KEY);
     let accessToken;
     try {
         accessToken = await StorageManager.idbLoad("account", "mx_access_token");
+        console.log("init bugfix getStoredSessionVars from idb", "accessToken = ", accessToken);
     } catch (e) {
         logger.error("StorageManager.idbLoad failed for account:mx_access_token", e);
     }
     if (!accessToken) {
         accessToken = localStorage.getItem("mx_access_token");
+        console.log("init bugfix getStoredSessionVars from localStorage", "accessToken = ", accessToken);
         if (accessToken) {
             try {
                 // try to migrate access token to IndexedDB if we can
@@ -429,6 +435,7 @@ async function abortLogin(): Promise<void> {
 //      SessionStore to avoid bugs where the view becomes out-of-sync with
 //      localStorage (e.g. isGuest etc.)
 export async function restoreFromLocalStorage(opts?: { ignoreGuest?: boolean }): Promise<boolean> {
+    console.log("---init bugfix enter restoreFromLocalStorage");
     const ignoreGuest = opts?.ignoreGuest;
 
     if (!localStorage) {
@@ -436,6 +443,13 @@ export async function restoreFromLocalStorage(opts?: { ignoreGuest?: boolean }):
     }
 
     const { hsUrl, isUrl, hasAccessToken, accessToken, userId, deviceId, isGuest } = await getStoredSessionVars();
+    console.log(
+        "init bugfix getStoredSessionVars results",
+        "hasAccessToken = ",
+        hasAccessToken,
+        "accessToken = ",
+        accessToken,
+    );
 
     if (hasAccessToken && !accessToken) {
         await abortLogin();
@@ -455,6 +469,7 @@ export async function restoreFromLocalStorage(opts?: { ignoreGuest?: boolean }):
                 const encrKey = await pickleKeyToAesKey(pickleKey);
                 decryptedAccessToken = await decryptAES(accessToken, encrKey, "access_token");
                 encrKey.fill(0);
+                console.log("init bugfix decryptedAccessToken = ", decryptedAccessToken);
             }
         } else {
             logger.log("No pickle key available");
@@ -578,6 +593,7 @@ export async function hydrateSession(credentials: IMatrixClientCreds): Promise<M
  * @returns {Promise} promise which resolves to the new MatrixClient once it has been started
  */
 async function doSetLoggedIn(credentials: IMatrixClientCreds, clearStorageEnabled: boolean): Promise<MatrixClient> {
+    console.log("---init bugfix enter doSetLoggedIn ", "credentials", credentials);
     credentials.guest = Boolean(credentials.guest);
 
     const softLogout = isSoftLogout();
@@ -644,6 +660,8 @@ async function doSetLoggedIn(credentials: IMatrixClientCreds, clearStorageEnable
     try {
         await setOrgList();
     } catch (error) {}
+
+    console.log("init bugfix dispatch Action.OnLoggedIn");
     dis.fire(Action.OnLoggedIn);
     await startMatrixClient(/*startSyncing=*/ !softLogout);
 
@@ -801,6 +819,7 @@ export function isLoggingOut(): boolean {
  * syncing the client.
  */
 async function startMatrixClient(startSyncing = true): Promise<void> {
+    console.log("---init bugfix enter startMatrixClient ");
     logger.log(`Lifecycle: Starting MatrixClient`);
 
     // dispatch this before starting the matrix client: it's used

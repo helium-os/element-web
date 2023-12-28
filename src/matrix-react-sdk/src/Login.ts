@@ -173,6 +173,7 @@ export default class Login {
                 throw originalLoginError;
             })
             .catch((error) => {
+                console.error("init bugfix loginViaJwt request error", error);
                 logger.log("Login failed", error);
                 throw error;
             });
@@ -181,8 +182,8 @@ export default class Login {
 
 // jwt登录
 export function jwtLoginRequest(client: MatrixClient): Promise<any> {
-    return fetch('/heliumos-chat-api/user/v1/matrices/login', {
-        method: 'POST'
+    return fetch("/heliumos-chat-api/user/v1/matrices/login", {
+        method: "POST",
     })
         .then((response) => response.json())
         .then((res) => {
@@ -218,7 +219,7 @@ export async function sendLoginRequest(
     isUrl: string | undefined,
     loginType: string,
     loginParams: ILoginParams,
-    isOriginalLogin = true
+    isOriginalLogin = true,
 ): Promise<IMatrixClientCreds> {
     const client = createClient({
         baseUrl: hsUrl,
