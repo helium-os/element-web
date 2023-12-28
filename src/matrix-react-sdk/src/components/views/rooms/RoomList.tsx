@@ -692,7 +692,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             // of keeping it in the DOM and hiding it when it is not required
             return (
                 <RoomSublist
-                    key={`sublist-${orderedTagId}`}
+                    key={`sublist-${this.props.activeSpace}-${orderedTagId}`}
                     index={this.state.spaceTagIds.indexOf(orderedTagId)}
                     tagId={orderedTagId}
                     forRooms={true}

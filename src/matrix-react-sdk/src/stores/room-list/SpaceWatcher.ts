@@ -68,6 +68,7 @@ export class SpaceWatcher {
 
     private onSpaceTagsUpdate = (spaceTags) => {
         this.store.regenerateAllLists({
+            space: this.activeSpace,
             spaceTags,
             trigger: true,
         });
