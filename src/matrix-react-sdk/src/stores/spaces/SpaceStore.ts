@@ -146,6 +146,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     // The space currently selected in the Space Panel
     private _activeSpace: SpaceKey; // set properly by onReady
     private _suggestedRoomsNextBatch: string;
+    private _requestedSuggestedRoomsBatchList: string[] = []; // 已经发出请求的batch
     private _suggestedRooms: ISuggestedRoom[] = [];
     private _filteredSuggestedRooms: ISuggestedRoom[] = []; // 经过过滤的建议的频道列表
     private _invitedSpaces = new Set<Room>();
@@ -324,6 +325,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.emit(UPDATE_SUGGESTED_ROOMS, (this._suggestedRooms = []));
 
         if (cliSpace) {
+            this._requestedSuggestedRoomsBatchList = []; // 切换space时，重置已经发起请求的batchList
             this.loadSuggestedRooms(cliSpace);
 
             // Load all members for the selected space and its subspaces,
@@ -368,6 +370,14 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         limit = MAX_SUGGESTED_ROOMS,
         fromToken?: string,
     ): Promise<ISuggestedRoom[]> => {
+        if (this._requestedSuggestedRoomsBatchList.includes(fromToken)) return;
+
+        if (fromToken) {
+            this._requestedSuggestedRoomsBatchList = [
+                ...new Set([...this._requestedSuggestedRoomsBatchList, fromToken]),
+            ];
+        }
+
         try {
             const { rooms, next_batch } = await this.matrixClient.getRoomHierarchy(
                 space.roomId,
@@ -403,6 +413,12 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                 }));
         } catch (e) {
             logger.error(e);
+
+            // 请求失败时从已请求batch里移除当前token
+            const index = this._requestedSuggestedRoomsBatchList.indexOf(fromToken);
+            if (index !== -1) {
+                this._requestedSuggestedRoomsBatchList.splice(index, 1);
+            }
         }
         return [];
     };
