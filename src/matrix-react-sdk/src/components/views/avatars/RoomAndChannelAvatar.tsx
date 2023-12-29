@@ -20,16 +20,28 @@ import DecoratedRoomAvatar, {
 } from "matrix-react-sdk/src/components/views/avatars/DecoratedRoomAvatar";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import useIsSpaceChannel from "matrix-react-sdk/src/hooks/useIsSpaceChannel";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { EventType, RoomStateEvent } from "matrix-js-sdk/src/matrix";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 
 interface IProps extends DecoratedRoomAvatarProps {}
 
 const RoomAndChannelAvatar: React.FC<IProps> = ({ room, ...decoratedRoomAvatarProps }) => {
     const [isSpaceChannel] = useIsSpaceChannel(room.roomId);
 
-    const [isPrivate, setIsPrivate] = useState<boolean>(true);
+    const [isPrivate, setIsPrivate] = useState<boolean>(() => room.isPrivateRoom());
 
     useEffect(() => {
-        setIsPrivate(room.isPrivateRoom());
+        const onRoomStateEvents = (ev: MatrixEvent) => {
+            if (ev.getType() !== EventType.RoomJoinRules) return;
+
+            setIsPrivate(room.isPrivateRoom());
+        };
+
+        MatrixClientPeg.get().on(RoomStateEvent.Events, onRoomStateEvents);
+        return () => {
+            MatrixClientPeg.get().off(RoomStateEvent.Events, onRoomStateEvents);
+        };
     }, [room]);
 
     return (

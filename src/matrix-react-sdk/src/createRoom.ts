@@ -48,6 +48,7 @@ import { waitForMember } from "./utils/membership";
 import { PreferredRoomVersions } from "./utils/PreferredRoomVersions";
 import SettingsStore from "./settings/SettingsStore";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
+import { getDefaultEventPowerLevels, getDefaultPowerLevels } from "matrix-react-sdk/src/powerLevel";
 
 // we define a number of interfaces which take their names from the js-sdk
 /* eslint-disable camelcase */
@@ -142,9 +143,12 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
             ...createOpts.creation_content,
             [RoomCreateTypeField]: opts.roomType,
         };
+    }
 
-        // Video rooms require custom power levels
-        if (opts.roomType === RoomType.ElementVideo) {
+    // powerLevel
+    switch (opts.roomType) {
+        case RoomType.ElementVideo:
+            // Video rooms require custom power levels
             createOpts.power_level_content_override = {
                 events: {
                     ...DEFAULT_EVENT_POWER_LEVELS,
@@ -158,7 +162,8 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
                     [client.getUserId()!]: 200,
                 },
             };
-        } else if (opts.roomType === RoomType.UnstableCall) {
+            break;
+        case RoomType.UnstableCall:
             createOpts.power_level_content_override = {
                 events: {
                     ...DEFAULT_EVENT_POWER_LEVELS,
@@ -172,8 +177,23 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
                     [client.getUserId()!]: 200,
                 },
             };
+            break;
+        case RoomType.Space:
+        default: {
+            const { events, users, ...restPowerLevels } = createOpts.power_level_content_override ?? {};
+            createOpts.power_level_content_override = {
+                ...getDefaultPowerLevels(opts.roomType, opts.joinRule),
+                ...restPowerLevels,
+                events: {
+                    ...getDefaultEventPowerLevels(opts.roomType),
+                    ...events,
+                },
+                users,
+            };
+            break;
         }
-    } else if (SettingsStore.getValue("feature_group_calls")) {
+    }
+    if (!opts.roomType && SettingsStore.getValue("feature_group_calls")) {
         createOpts.power_level_content_override = {
             events: {
                 ...DEFAULT_EVENT_POWER_LEVELS,

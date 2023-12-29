@@ -28,7 +28,7 @@ import React, {
 import classNames from "classnames";
 import { RoomType } from "matrix-js-sdk/src/@types/event";
 import { ICreateRoomOpts } from "matrix-js-sdk/src/@types/requests";
-import { HistoryVisibility, Preset, Visibility } from "matrix-js-sdk/src/@types/partials";
+import { HistoryVisibility, JoinRule, Preset, Visibility } from "matrix-js-sdk/src/@types/partials";
 import { logger } from "matrix-js-sdk/src/logger";
 
 import { _t } from "../../../languageHandler";
@@ -67,15 +67,11 @@ export const createSpace = async (
                 isPublic && (await MatrixClientPeg.get().doesServerSupportUnstableFeature("org.matrix.msc3827.stable"))
                     ? Visibility.Public
                     : Visibility.Private,
-            power_level_content_override: {
-                // Only allow Admins to write to the timeline to prevent hidden sync spam
-                events_default: 100,
-                invite: isPublic ? 0 : 50,
-            },
             room_alias_name: isPublic && alias ? alias.substring(1, alias.indexOf(":")) : undefined,
             topic,
             ...createOpts,
         },
+        joinRule: isPublic ? JoinRule.Public : JoinRule.Invite,
         avatar,
         roomType: RoomType.Space,
         historyVisibility: HistoryVisibility.WorldReadable,

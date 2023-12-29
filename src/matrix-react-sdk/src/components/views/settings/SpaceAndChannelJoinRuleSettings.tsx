@@ -17,13 +17,15 @@ limitations under the License.
 import React, { memo } from "react";
 import { IJoinRuleEventContent, JoinRule, RestrictedAllowType } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { EventType } from "matrix-js-sdk/src/@types/event";
+import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 
 import StyledRadioGroup, { IDefinition } from "../elements/StyledRadioGroup";
 import { _t } from "../../../languageHandler";
 import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { useLocalEcho } from "../../../hooks/useLocalEcho";
 import { doesRoomVersionSupport, PreferredRoomVersions } from "../../../utils/PreferredRoomVersions";
+import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
+import { getDefaultEventPowerLevels, getDefaultPowerLevels } from "matrix-react-sdk/src/powerLevel";
 
 interface IProps {
     room: Room;
@@ -40,7 +42,11 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
 
     const [content, setContent] = useLocalEcho<IJoinRuleEventContent>(
         () => room.currentState.getStateEvents(EventType.RoomJoinRules, "")?.getContent(),
-        (content) => cli.sendStateEvent(room.roomId, EventType.RoomJoinRules, content, ""),
+        async (content) => {
+            await cli.sendStateEvent(room.roomId, EventType.RoomJoinRules, content, "");
+            // 修改room可见性后，同时修改room权限
+            await changeRoomPowerLevel(room, content.join_rule);
+        },
         onError,
     );
 
@@ -71,6 +77,28 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
             label: _t("Private"),
         },
     ];
+
+    const changeRoomPowerLevel = (room, joinRule): Promise<ISendEventResponse> => {
+        const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+
+        let roomType;
+        if (room.isSpaceRoom()) {
+            roomType = RoomType.Space;
+        }
+
+        const { events, users, ...restPowerLevels } = plEvent?.getContent() ?? {};
+        const plContent = {
+            ...restPowerLevels,
+            ...getDefaultPowerLevels(roomType, joinRule),
+            events: {
+                ...events,
+                ...getDefaultEventPowerLevels(roomType),
+            },
+            users,
+        };
+
+        return cli.sendStateEvent(room.roomId, EventType.RoomPowerLevels, plContent);
+    };
 
     const onChange = async (joinRule: JoinRule): Promise<void> => {
         const beforeJoinRule = content.join_rule;

@@ -20,21 +20,11 @@ import React from "react";
 import classNames from "classnames";
 
 import AccessibleButton, { ButtonEvent } from "../elements/AccessibleButton";
-import { _t, _td } from "../../../languageHandler";
+import { _t } from "../../../languageHandler";
 import E2EIcon, { E2EState } from "./E2EIcon";
 import BaseAvatar from "../avatars/BaseAvatar";
 import PresenceLabel from "./PresenceLabel";
-export enum PowerLevel {
-    Admin = 100,
-    Moderator = 50,
-    Default = 0,
-}
-
-export const PowerLabel: Record<PowerLevel, string> = {
-    [PowerLevel.Admin]: _td("Admin"),
-    [PowerLevel.Moderator]: _td("Mod"),
-    [PowerLevel.Default]: _td("Default"),
-};
+import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/powerLevel";
 
 export type PresenceState = "offline" | "online" | "unavailable";
 

@@ -38,7 +38,7 @@ import IconizedContextMenu, {
     IconizedContextMenuOption,
 } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 import { aboveLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
-import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/components/views/rooms/EntityTile";
+import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/powerLevel";
 import AutoHideScrollbar from "matrix-react-sdk/src/components/structures/AutoHideScrollbar";
 import DropdownButton from "matrix-react-sdk/src/components/views/elements/DropdownButton";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
