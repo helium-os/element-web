@@ -51,7 +51,8 @@ import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 import {
     getDefaultEventPowerLevels,
     getDefaultPowerLevels,
-    getEventsDefaultByEnableDefaultUserSendMsg,
+    getPowerLevelByEnableDefaultUserMemberList,
+    getPowerLevelByEnableDefaultUserSendMsg,
     isSpaceRoom,
 } from "matrix-react-sdk/src/powerLevel";
 import { AdditionalEventType } from "matrix-react-sdk/src/hooks/room/useRoomState";
@@ -75,6 +76,7 @@ export interface IOpts {
     suggested?: boolean;
     joinRule?: JoinRule;
     enableDefaultUserSendMsg?: boolean; // 是否允许普通用户发送消息
+    enableDefaultUserMemberList?: boolean; // 是否允许普通用户展示成员列表
     tags?: Tag[];
 }
 
@@ -114,6 +116,7 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     if (opts.guestAccess === undefined) opts.guestAccess = true;
     if (opts.encryption === undefined) opts.encryption = false;
     opts.enableDefaultUserSendMsg = opts.enableDefaultUserSendMsg ?? true;
+    opts.enableDefaultUserMemberList = opts.enableDefaultUserMemberList ?? true;
 
     const client = MatrixClientPeg.get();
     if (client.isGuest()) {
@@ -194,9 +197,8 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
             createOpts.power_level_content_override = {
                 ...getDefaultPowerLevels(opts.roomType, opts.joinRule),
                 ...restPowerLevels,
-                ...(!isSpace
-                    ? { events_default: getEventsDefaultByEnableDefaultUserSendMsg(opts.enableDefaultUserSendMsg) }
-                    : {}),
+                ...(!isSpace ? getPowerLevelByEnableDefaultUserSendMsg(opts.enableDefaultUserSendMsg) : {}),
+                ...getPowerLevelByEnableDefaultUserMemberList(opts.enableDefaultUserMemberList),
                 events: {
                     ...getDefaultEventPowerLevels(opts.roomType),
                     ...events,
@@ -224,6 +226,12 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     }
 
     createOpts.initial_state = createOpts.initial_state || [];
+
+    // 是否允许普通用户展示成员列表
+    createOpts.initial_state.push({
+        type: AdditionalEventType.RoomEnableDefaultUserMemberList,
+        content: { enable: opts.enableDefaultUserMemberList },
+    });
 
     // 是否允许普通用户发送消息
     if (!isSpace) {

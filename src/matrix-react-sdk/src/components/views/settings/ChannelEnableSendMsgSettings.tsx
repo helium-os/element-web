@@ -21,7 +21,7 @@ import LabelledToggleSwitch from "matrix-react-sdk/src/components/views/elements
 import { IEnableDefaultUserSendMsgEventContent } from "matrix-js-sdk/src/@types/partials";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
-import { getEventsDefaultByEnableDefaultUserSendMsg } from "matrix-react-sdk/src/powerLevel";
+import { getPowerLevelByEnableDefaultUserSendMsg } from "matrix-react-sdk/src/powerLevel";
 import { AdditionalEventType, useRoomState } from "matrix-react-sdk/src/hooks/room/useRoomState";
 
 interface IProps {
@@ -60,7 +60,7 @@ const ChannelEnableSendMsgSettings: React.FC<IProps> = ({ room, onError }) => {
         const { events, users, ...statePowerLevels } = plEvent?.getContent() ?? {};
         const plContent = {
             ...statePowerLevels,
-            events_default: getEventsDefaultByEnableDefaultUserSendMsg(enable),
+            ...getPowerLevelByEnableDefaultUserSendMsg(enable),
             events,
             users,
         };

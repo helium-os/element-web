@@ -21,6 +21,7 @@ import RoomTopicSetting from "matrix-react-sdk/src/components/views/room_setting
 import SpaceAndChannelJoinRuleSettings from "matrix-react-sdk/src/components/views/settings/SpaceAndChannelJoinRuleSettings";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import ChannelEnableSendMsgSettings from "matrix-react-sdk/src/components/views/settings/ChannelEnableSendMsgSettings";
+import ChannelEnableMemberListSettings from "matrix-react-sdk/src/components/views/settings/ChannelEnableMemberListSettings";
 
 interface IProps {
     room: Room;
@@ -40,6 +41,9 @@ const GeneralRoomSettingsTab: React.FC<IProps> = ({ room }) => {
             </div>
             <div className="mx_SettingsTab_section">
                 <ChannelEnableSendMsgSettings room={room} />
+            </div>
+            <div className="mx_SettingsTab_section">
+                <ChannelEnableMemberListSettings room={room} />
             </div>
         </>
     );

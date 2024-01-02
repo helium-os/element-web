@@ -46,6 +46,10 @@ import { EchoChamber } from "matrix-react-sdk/src/stores/local-echo/EchoChamber"
 import { CachedRoomKey, RoomEchoChamber } from "matrix-react-sdk/src/stores/local-echo/RoomEchoChamber";
 import { PROPERTY_UPDATED } from "matrix-react-sdk/src/stores/local-echo/GenericEchoChamber";
 import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -89,12 +93,15 @@ interface IProps {
 interface IState {
     notificationState: RoomNotifState;
     showRoomNotificationContextMenu: boolean;
+    displayMemberList: boolean;
 }
 
 export default class RoomHeaderButtons extends HeaderButtons<IProps> {
     private notificationBtnRef = createRef<HTMLDivElement>();
     private static readonly THREAD_PHASES = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView];
     private echoChamber: RoomEchoChamber;
+    private cli: MatrixClient = MatrixClientPeg.get();
+    private myUserId = this.cli.getUserId();
     // private state: IState;
 
     public constructor(props: IProps) {
@@ -103,11 +110,13 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.state = {
             notificationState: this.echoChamber?.notificationVolume,
             showRoomNotificationContextMenu: false,
+            displayMemberList: false, // 是否展示成员列表
         };
     }
 
     public componentDidMount(): void {
         super.componentDidMount();
+        this.updatePermissions(this.props.room);
         // Notification badge may change if the notification counts from the
         // server change, if a new thread is created or updated, or if a
         // receipt is sent in the thread.
@@ -121,6 +130,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.props.room?.on(ThreadEvent.Update, this.onNotificationUpdate);
         this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
         this.onNotificationUpdate();
+        this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
     }
 
     public componentWillUnmount(): void {
@@ -134,6 +144,25 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.props.room?.off(ThreadEvent.New, this.onNotificationUpdate);
         this.props.room?.off(ThreadEvent.Update, this.onNotificationUpdate);
         this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
+        this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
+    }
+
+    private onRoomStateEvents = (ev: MatrixEvent) => {
+        switch (ev.getType()) {
+            case EventType.RoomPowerLevels:
+                this.updatePermissions(this.props.room);
+                break;
+        }
+    };
+
+    // 更新当前用户权限
+    private updatePermissions(room: Room): void {
+        if (!room) return;
+
+        const displayMemberList = room.displayMemberList(this.myUserId);
+        this.setState({
+            displayMemberList,
+        });
     }
 
     private onRoomPropertyUpdate = (property: CachedRoomKey): void => {
@@ -145,6 +174,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
             threadNotificationColor: this.notificationColor,
             notificationState: this.echoChamber?.notificationVolume,
         });
+        this.updatePermissions(this.props.room);
     };
 
     private get notificationColor(): NotificationColor {
@@ -359,16 +389,17 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                     />,
                 );
 
-            rightPanelPhaseButtons.set(
-                RightPanelPhases.RoomMemberList,
-                <HeaderButton
-                    key="roomMembersButton"
-                    name="roomMembersButton"
-                    title={"成员列表"}
-                    isHighlighted={this.isPhase(RightPanelPhases.RoomMemberList)}
-                    onClick={this.onRoomMemberListClicked}
-                />,
-            );
+            this.state.displayMemberList &&
+                rightPanelPhaseButtons.set(
+                    RightPanelPhases.RoomMemberList,
+                    <HeaderButton
+                        key="roomMembersButton"
+                        name="roomMembersButton"
+                        title={"成员列表"}
+                        isHighlighted={this.isPhase(RightPanelPhases.RoomMemberList)}
+                        onClick={this.onRoomMemberListClicked}
+                    />,
+                );
 
             !isHomeSpace &&
                 rightPanelPhaseButtons.set(

@@ -55,8 +55,9 @@ import { getEventDisplayInfo } from "../../utils/EventRenderingUtils";
 import { IReadReceiptInfo } from "../views/rooms/ReadReceiptMarker";
 import { haveRendererForEvent } from "../../events/EventTileFactory";
 import { editorRoomKey } from "../../Editing";
-import { displayEventType, hasThreadSummary } from "../../utils/EventUtils";
+import { displayEventType, hasThreadSummary, hiddenEventTypeIfNotDisplayMemberList } from "../../utils/EventUtils";
 import { VoiceBroadcastInfoEventType } from "../../voice-broadcast";
+import { MatrixClient } from "matrix-js-sdk/src/client";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -202,6 +203,8 @@ interface IState {
     ghostReadMarkers: string[];
     showTypingNotifications: boolean;
     hideSender: boolean;
+    displayEventType: EventType[];
+    displayMemberList: boolean;
 }
 
 interface IReadReceiptForUser {
@@ -269,6 +272,9 @@ export default class MessagePanel extends React.Component<IProps, IState> {
     // A map to allow groupers to maintain consistent keys even if their first event is uprooted due to back-pagination.
     public grouperKeyMap = new WeakMap<MatrixEvent, string>();
 
+    private cli: MatrixClient = MatrixClientPeg.get();
+    private myUserId = this.cli.getUserId();
+
     public constructor(props: IProps, context: React.ContextType<typeof RoomContext>) {
         super(props, context);
 
@@ -278,6 +284,8 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             ghostReadMarkers: [],
             showTypingNotifications: SettingsStore.getValue("showTypingNotifications"),
             hideSender: this.shouldHideSender(),
+            displayMemberList: this.props.room.displayMemberList(this.myUserId), // 是否展示成员列表
+            displayEventType,
         };
 
         // Cache these settings on mount since Settings is expensive to query,
@@ -294,13 +302,16 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
     public componentDidMount(): void {
         this.calculateRoomMembersCount();
+        this.generateDisplayEventType(this.state.displayMemberList);
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
+        this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
         this.isMounted = true;
     }
 
     public componentWillUnmount(): void {
         this.isMounted = false;
         this.props.room?.currentState.off(RoomStateEvent.Update, this.calculateRoomMembersCount);
+        this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
         SettingsStore.unwatchSetting(this.showTypingNotificationsWatcherRef);
     }
 
@@ -326,6 +337,43 @@ export default class MessagePanel extends React.Component<IProps, IState> {
                 timelineRenderingType: this.context.timelineRenderingType,
             });
         }
+
+        if (this.state.displayMemberList !== prevState.displayMemberList) {
+            this.generateDisplayEventType(this.state.displayMemberList);
+        }
+    }
+
+    private generateDisplayEventType = (displayMemberList: boolean) => {
+        const newDisplayEventType = [...displayEventType];
+        if (!displayMemberList) {
+            hiddenEventTypeIfNotDisplayMemberList.forEach((eventType) => {
+                const index = newDisplayEventType.indexOf(eventType);
+                if (index !== -1) {
+                    newDisplayEventType.splice(index, 1);
+                }
+            });
+        }
+        this.setState({
+            displayEventType: newDisplayEventType,
+        });
+    };
+
+    private onRoomStateEvents = (ev: MatrixEvent) => {
+        switch (ev.getType()) {
+            case EventType.RoomPowerLevels:
+                this.updatePermissions(this.props.room);
+                break;
+        }
+    };
+
+    // 更新当前用户权限
+    private updatePermissions(room: Room): void {
+        if (!room) return;
+
+        const displayMemberList = room.displayMemberList(this.myUserId);
+        this.setState({
+            displayMemberList,
+        });
     }
 
     private shouldHideSender(): boolean {
@@ -779,7 +827,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
         const callEventGrouper = this.props.callEventGroupers.get(mxEv.getContent().call_id);
         // use txnId as key if available so that we don't remount during sending
-        if (displayEventType.includes(mxEv.getType() as EventType)) {
+        if (this.state.displayEventType.includes(mxEv.getType() as EventType)) {
             ret.push(
                 <EventTile
                     key={mxEv.getTxnId() || eventId}

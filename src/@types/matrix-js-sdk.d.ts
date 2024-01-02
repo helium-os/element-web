@@ -6,6 +6,10 @@ declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableDefaultUserSendMsgEventContent {
         enable: boolean;
     }
+
+    interface IEnableDefaultUserMemberListContent {
+        enable: boolean;
+    }
 }
 
 declare module "matrix-js-sdk/src/client" {
@@ -35,6 +39,7 @@ declare module "matrix-js-sdk/src/models/room" {
         isRestrictedRoom(): boolean;
         isPrivateRoom(): boolean;
         canRemoveUser(userId: string): boolean;
+        displayMemberList(userId: string): boolean;
         canOperateTag(userId: string): boolean;
     }
 }

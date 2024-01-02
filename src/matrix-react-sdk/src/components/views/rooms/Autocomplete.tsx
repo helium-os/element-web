@@ -23,6 +23,11 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import Autocompleter, { ICompletion, ISelectionRange, IProviderCompletions } from "../../../autocomplete/Autocompleter";
 import SettingsStore from "../../../settings/SettingsStore";
 import RoomContext from "../../../contexts/RoomContext";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 const MAX_PROVIDER_MATCHES = 20;
 
@@ -47,6 +52,7 @@ interface IState {
     shouldShowCompletions: boolean;
     hide: boolean;
     forceComplete: boolean;
+    displayMemberList: boolean;
 }
 
 export default class Autocomplete extends React.PureComponent<IProps, IState> {
@@ -56,6 +62,9 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     private containerRef = createRef<HTMLDivElement>();
 
     public static contextType = RoomContext;
+
+    private cli: MatrixClient = MatrixClientPeg.get();
+    private myUserId = this.cli.getUserId();
 
     public constructor(props: IProps) {
         super(props);
@@ -76,12 +85,16 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
             hide: false,
 
             forceComplete: false,
+
+            displayMemberList: false, // 是否展示成员列表
         };
     }
 
     public componentDidMount(): void {
         this.autocompleter = new Autocompleter(this.props.room, this.context.timelineRenderingType);
         this.applyNewProps();
+        this.updatePermissions(this.props.room);
+        this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
     }
 
     private applyNewProps(oldQuery?: string, oldRoom?: Room): void {
@@ -95,13 +108,32 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
             return;
         }
 
-        if (this.props.room.isPeopleRoom()) return; // 私聊没有@功能
+        if (this.props.room.isPeopleRoom() || !this.state.displayMemberList) return; // 私聊没有@功能；不展示成员列表时没有@功能
 
         this.complete(this.props.query, this.props.selection);
     }
 
     public componentWillUnmount(): void {
         this.autocompleter.destroy();
+        this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
+    }
+
+    private onRoomStateEvents = (ev: MatrixEvent) => {
+        switch (ev.getType()) {
+            case EventType.RoomPowerLevels:
+                this.updatePermissions(this.props.room);
+                break;
+        }
+    };
+
+    // 更新当前用户权限
+    private updatePermissions(room: Room): void {
+        if (!room) return;
+
+        const displayMemberList = room.displayMemberList(this.myUserId);
+        this.setState({
+            displayMemberList,
+        });
     }
 
     private complete(query: string, selection: ISelectionRange): Promise<void> {

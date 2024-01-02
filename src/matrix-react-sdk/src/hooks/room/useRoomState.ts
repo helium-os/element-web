@@ -11,6 +11,7 @@ import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 export enum AdditionalEventType {
     // Room state events
     RoomEnableDefaultUserSendMsg = "m.room.enable_default_user_send_message", // 是否允许普通用户发送消息
+    RoomEnableDefaultUserMemberList = "m.room.enable_default_user_member_list", // 是否允许普通用户展示成员列表
 }
 
 interface RoomStateResult<T> {
@@ -26,7 +27,7 @@ const hasPermission = (room: Room, eventType: EventType | AdditionalEventType, c
 };
 
 // 获取eventType对应配置项的内容
-function getRoomStateContent<T>(room: Room, eventType: EventType | AdditionalEventType): T | null {
+export function getRoomStateContent<T>(room: Room, eventType: EventType | AdditionalEventType): T | null {
     const event = room.currentState.getStateEvents(eventType, "");
     return event?.getContent() ?? null;
 }

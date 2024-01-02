@@ -61,6 +61,7 @@ export function getDefaultPowerLevels(roomType: RoomType | string, joinRule: Joi
         kick: PowerLevel.Moderator,
         ban: PowerLevel.Moderator,
         redact: PowerLevel.Moderator,
+        display_member_list: PowerLevel.Default, // 哪些角色可以展示成员列表
         // "notifications.room": PowerLevel.Moderator,
     };
 }
@@ -89,6 +90,9 @@ export function getPowerLevelOpts(eventType: string): PowerLevelOpts | PowerLeve
         },
         "notifications.room": {
             label: _t("Notify everyone"),
+        },
+        display_member_list: {
+            label: "展示成员列表",
         },
     };
 
@@ -205,7 +209,16 @@ export function getEventPowerLevelsDescriptors(roomType: RoomType | string): Eve
     return eventPowerLevelsDescriptors;
 }
 
-// 通过是否允许普通用户发送信息来计算events_default的值
-export function getEventsDefaultByEnableDefaultUserSendMsg(enableDefaultUserSendMsg: boolean): PowerLevel {
-    return enableDefaultUserSendMsg ? PowerLevel.Default : PowerLevel.Moderator;
+// 通过是否允许普通用户发送信息来计算events_default（是否可以发送消息）的值
+export function getPowerLevelByEnableDefaultUserSendMsg(enableDefaultUserSendMsg: boolean): PowerLevelsMap {
+    return {
+        events_default: enableDefaultUserSendMsg ? PowerLevel.Default : PowerLevel.Moderator,
+    };
+}
+
+// 通过是否允许普通用户展示成员列表信息来计算display_member_list（是否展示成员列表）的值
+export function getPowerLevelByEnableDefaultUserMemberList(enableDefaultUserMemberList: boolean): PowerLevelsMap {
+    return {
+        display_member_list: enableDefaultUserMemberList ? PowerLevel.Default : PowerLevel.Moderator,
+    };
 }
