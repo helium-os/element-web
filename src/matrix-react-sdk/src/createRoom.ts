@@ -48,7 +48,13 @@ import { waitForMember } from "./utils/membership";
 import { PreferredRoomVersions } from "./utils/PreferredRoomVersions";
 import SettingsStore from "./settings/SettingsStore";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
-import { getDefaultEventPowerLevels, getDefaultPowerLevels } from "matrix-react-sdk/src/powerLevel";
+import {
+    getDefaultEventPowerLevels,
+    getDefaultPowerLevels,
+    getEventsDefaultByEnableDefaultUserSendMsg,
+    isSpaceRoom,
+} from "matrix-react-sdk/src/powerLevel";
+import { AdditionalEventType } from "matrix-react-sdk/src/hooks/room/useRoomState";
 
 // we define a number of interfaces which take their names from the js-sdk
 /* eslint-disable camelcase */
@@ -68,6 +74,7 @@ export interface IOpts {
     // contextually only makes sense if parentSpace is specified, if true then will be added to parentSpace as suggested
     suggested?: boolean;
     joinRule?: JoinRule;
+    enableDefaultUserSendMsg?: boolean; // 是否允许普通用户发送消息
     tags?: Tag[];
 }
 
@@ -106,12 +113,15 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     if (opts.spinner === undefined) opts.spinner = true;
     if (opts.guestAccess === undefined) opts.guestAccess = true;
     if (opts.encryption === undefined) opts.encryption = false;
+    opts.enableDefaultUserSendMsg = opts.enableDefaultUserSendMsg ?? true;
 
     const client = MatrixClientPeg.get();
     if (client.isGuest()) {
         dis.dispatch({ action: "require_registration" });
         return null;
     }
+
+    const isSpace = isSpaceRoom(opts.roomType);
 
     const defaultPreset = opts.dmUserId ? Preset.TrustedPrivateChat : Preset.PrivateChat;
 
@@ -184,6 +194,9 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
             createOpts.power_level_content_override = {
                 ...getDefaultPowerLevels(opts.roomType, opts.joinRule),
                 ...restPowerLevels,
+                ...(!isSpace
+                    ? { events_default: getEventsDefaultByEnableDefaultUserSendMsg(opts.enableDefaultUserSendMsg) }
+                    : {}),
                 events: {
                     ...getDefaultEventPowerLevels(opts.roomType),
                     ...events,
@@ -211,6 +224,14 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     }
 
     createOpts.initial_state = createOpts.initial_state || [];
+
+    // 是否允许普通用户发送消息
+    if (!isSpace) {
+        createOpts.initial_state.push({
+            type: AdditionalEventType.RoomEnableDefaultUserSendMsg,
+            content: { enable: opts.enableDefaultUserSendMsg },
+        });
+    }
 
     // Allow guests by default since the room is private and they'd
     // need an invite. This means clicking on a 3pid invite email can

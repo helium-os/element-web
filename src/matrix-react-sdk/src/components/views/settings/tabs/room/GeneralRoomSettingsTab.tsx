@@ -14,43 +14,34 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { ContextType } from "react";
-import MatrixClientContext from "../../../../../contexts/MatrixClientContext";
+import React, { memo } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 import RoomNameSetting from "matrix-react-sdk/src/components/views/room_settings/RoomNameSetting";
 import RoomTopicSetting from "matrix-react-sdk/src/components/views/room_settings/RoomTopicSetting";
 import SpaceAndChannelJoinRuleSettings from "matrix-react-sdk/src/components/views/settings/SpaceAndChannelJoinRuleSettings";
 import { _t } from "matrix-react-sdk/src/languageHandler";
+import ChannelEnableSendMsgSettings from "matrix-react-sdk/src/components/views/settings/ChannelEnableSendMsgSettings";
 
 interface IProps {
     room: Room;
 }
 
-interface IState {}
-
-export default class GeneralRoomSettingsTab extends React.Component<IProps, IState> {
-    public static contextType = MatrixClientContext;
-    public context: ContextType<typeof MatrixClientContext>;
-
-    public constructor(props: IProps, context: ContextType<typeof MatrixClientContext>) {
-        super(props, context);
-
-        this.state = {};
-    }
-
-    public render(): React.ReactNode {
-        return (
-            <>
-                <div className="mx_SettingsTab_section">
-                    <RoomNameSetting room={this.props.room} />
-                    <hr />
-                    <RoomTopicSetting room={this.props.room} />
-                </div>
-                <div className="mx_SettingsTab_section">
-                    <p className="mx_SettingsTab_subTitle">{_t("Visibility")}</p>
-                    <SpaceAndChannelJoinRuleSettings room={this.props.room} />
-                </div>
-            </>
-        );
-    }
-}
+const GeneralRoomSettingsTab: React.FC<IProps> = ({ room }) => {
+    return (
+        <>
+            <div className="mx_SettingsTab_section">
+                <RoomNameSetting room={room} />
+                <hr />
+                <RoomTopicSetting room={room} />
+            </div>
+            <div className="mx_SettingsTab_section">
+                <p className="mx_SettingsTab_subTitle">{_t("Visibility")}</p>
+                <SpaceAndChannelJoinRuleSettings room={room} />
+            </div>
+            <div className="mx_SettingsTab_section">
+                <ChannelEnableSendMsgSettings room={room} />
+            </div>
+        </>
+    );
+};
+export default memo(GeneralRoomSettingsTab);

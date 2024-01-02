@@ -46,14 +46,18 @@ interface EventPowerLevelDescriptorsMap {
     [eventType: string]: EventPowerLevelDescriptorItem;
 }
 
+export function isSpaceRoom(roomType: RoomType | string): boolean {
+    return roomType === RoomType.Space;
+}
+
 // state powerLevel
 export function getDefaultPowerLevels(roomType: RoomType | string, joinRule: JoinRule): PowerLevelsMap {
-    const isSpaceRoom = roomType === RoomType.Space;
+    const isSpace = isSpaceRoom(roomType);
     return {
         users_default: PowerLevel.Default,
         state_default: PowerLevel.Moderator,
-        events_default: isSpaceRoom ? PowerLevel.Admin : PowerLevel.Default, // 哪些角色可以发送消息
-        invite: isSpaceRoom && isPrivateRoom(joinRule) ? PowerLevel.Moderator : PowerLevel.Default, // 私密社区协管员及以上权限才可以邀请
+        events_default: isSpace ? PowerLevel.Admin : PowerLevel.Default, // 哪些角色可以发送消息
+        invite: isSpace && isPrivateRoom(joinRule) ? PowerLevel.Moderator : PowerLevel.Default, // 私密社区协管员及以上权限才可以邀请
         kick: PowerLevel.Moderator,
         ban: PowerLevel.Moderator,
         redact: PowerLevel.Moderator,
@@ -104,7 +108,7 @@ export function getPowerLevelsDescriptors(roomType: RoomType | string, joinRule)
 
 // event powerLevel
 export function getDefaultEventPowerLevels(roomType: RoomType | string): PowerLevelsMap {
-    const isSpaceRoom = roomType === RoomType.Space;
+    const isSpace = isSpaceRoom(roomType);
 
     return {
         [EventType.RoomAvatar]: PowerLevel.Moderator,
@@ -118,8 +122,8 @@ export function getDefaultEventPowerLevels(roomType: RoomType | string): PowerLe
         [EventType.RoomTombstone]: PowerLevel.Admin,
         [EventType.RoomEncryption]: PowerLevel.Admin,
         [EventType.RoomServerAcl]: PowerLevel.Admin,
-        [EventType.Reaction]: isSpaceRoom ? PowerLevel.Admin : PowerLevel.Default,
-        [EventType.RoomRedaction]: isSpaceRoom ? PowerLevel.Admin : PowerLevel.Default,
+        [EventType.Reaction]: isSpace ? PowerLevel.Admin : PowerLevel.Default,
+        [EventType.RoomRedaction]: isSpace ? PowerLevel.Admin : PowerLevel.Default,
 
         // MSC3401: Native Group VoIP signaling
         [ElementCall.CALL_EVENT_TYPE.name]: PowerLevel.Moderator,
@@ -134,17 +138,17 @@ export function getEventPowerLevelOpts(
     eventType: string,
     roomType: RoomType | string,
 ): EventPowerLevelOpts | EventPowerLevelOptsMap {
-    const isSpaceRoom = roomType === RoomType.Space;
+    const isSpace = isSpaceRoom(roomType);
 
     const eventPowerLevelLabels: EventPowerLevelOptsMap = {
         [EventType.RoomAvatar]: {
-            label: isSpaceRoom ? _t("Change space avatar") : _t("Change room avatar"),
+            label: isSpace ? _t("Change space avatar") : _t("Change room avatar"),
         },
         [EventType.RoomName]: {
-            label: isSpaceRoom ? _t("Change space name") : _t("Change room name"),
+            label: isSpace ? _t("Change space name") : _t("Change room name"),
         },
         [EventType.RoomCanonicalAlias]: {
-            label: isSpaceRoom ? _t("Change main address for the space") : _t("Change main address for the room"),
+            label: isSpace ? _t("Change main address for the space") : _t("Change main address for the room"),
         },
         [EventType.SpaceChild]: {
             label: _t("Manage rooms in this space"),
@@ -156,7 +160,7 @@ export function getEventPowerLevelOpts(
             label: _t("Change permissions"),
         },
         [EventType.RoomTopic]: {
-            label: isSpaceRoom ? _t("Change description") : _t("Change topic"),
+            label: isSpace ? _t("Change description") : _t("Change topic"),
         },
         [EventType.RoomTombstone]: {
             label: _t("Upgrade the room"),
@@ -180,7 +184,7 @@ export function getEventPowerLevelOpts(
 
         // TODO: Enable support for m.widget event type (https://github.com/vector-im/element-web/issues/13111)
         "im.vector.modular.widgets": {
-            label: isSpaceRoom ? null : _t("Modify widgets"),
+            label: isSpace ? null : _t("Modify widgets"),
         },
         [VoiceBroadcastInfoEventType]: {
             label: _t("Voice broadcasts"),
@@ -199,4 +203,9 @@ export function getEventPowerLevelsDescriptors(roomType: RoomType | string): Eve
         };
     });
     return eventPowerLevelsDescriptors;
+}
+
+// 通过是否允许普通用户发送信息来计算events_default的值
+export function getEventsDefaultByEnableDefaultUserSendMsg(enableDefaultUserSendMsg: boolean): PowerLevel {
+    return enableDefaultUserSendMsg ? PowerLevel.Default : PowerLevel.Moderator;
 }

@@ -2,6 +2,12 @@ import { RoomType } from "../vector/rewrite-js-sdk/room";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 
+declare module "matrix-js-sdk/src/@types/partials" {
+    interface IEnableDefaultUserSendMsgEventContent {
+        enable: boolean;
+    }
+}
+
 declare module "matrix-js-sdk/src/client" {
     interface MatrixClient {
         setRoomOnlyTags(roomId: string, tags: Tag[]): Promise<ISendEventResponse>;
@@ -16,7 +22,7 @@ declare module "matrix-js-sdk/src/models/room-state" {
 }
 
 declare module "matrix-js-sdk/src/models/room" {
-    export interface Room {
+    interface Room {
         isAdminLeft(): boolean;
         isPeopleRoom(): boolean;
         getRoomType(): RoomType;
