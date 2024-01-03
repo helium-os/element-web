@@ -68,6 +68,7 @@ import { AfterLeaveRoomPayload } from "../../dispatcher/payloads/AfterLeaveRoomP
 import { SdkContextClass } from "../../contexts/SDKContext";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { DefaultPowerLevelToManageSpacePrivateChannel } from "matrix-react-sdk/src/powerLevel";
 
 interface IState {}
 
@@ -207,11 +208,22 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.emit(UPDATE_FILTERED_SUGGESTED_ROOMS, this._filteredSuggestedRooms);
     }
 
-    // 判断当前用户是否是社区的特权用户（管理员或者协管员）
-    public get isSpacePrivilegedUser(): boolean {
+    // 判断当前用户是否有权限管理社区私密频道
+    public get canManageSpacePrivateChannel(): boolean {
+        if (!this.activeSpaceRoom || this.activeSpaceRoom.getMyMembership() !== "join") {
+            return false;
+        }
+
         const myUserId = MatrixClientPeg.get().getUserId()!;
-        const me = this.activeSpaceRoom?.getMember(myUserId);
-        return me?.isAdmin() || me?.isModerator();
+        const me = this.activeSpaceRoom.getMember(myUserId);
+        if (!me) {
+            return false;
+        }
+
+        const powerLevelsEvent = this.activeSpaceRoom.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+        const { manage_space_private_channel = DefaultPowerLevelToManageSpacePrivateChannel } =
+            powerLevelsEvent?.getContent() ?? {};
+        return me.powerLevel >= manage_space_private_channel;
     }
 
     public get allRoomsInHome(): boolean {
@@ -423,9 +435,9 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         return [];
     };
 
-    // 过滤建议的频道（只有社区管理员和协管员展示入口）
+    // 过滤建议的频道（只有社区特权用户展示私密频道入口；非社区特权用户建议的频道里过滤掉私密频道）
     public filterSuggestedRooms = (suggestedRooms = this.suggestedRooms): ISuggestedRoom[] => {
-        return this.isSpacePrivilegedUser
+        return this.canManageSpacePrivateChannel
             ? suggestedRooms
             : suggestedRooms.filter((item) => !isPrivateRoom(item.join_rule));
     };
@@ -1110,6 +1122,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             case EventType.RoomPowerLevels:
                 if (room.isSpaceRoom()) {
                     this.onRoomsUpdate();
+                    this.setFilteredSuggestedRooms();
                 }
                 break;
         }

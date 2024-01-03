@@ -121,7 +121,7 @@ export function inviteUsersToRoom(
     return inviteMultipleToRoom(roomId, userIds, sendSharedHistoryKeys, progressCallback)
         .then((result) => {
             const room = MatrixClientPeg.get().getRoom(roomId)!;
-            showAnyInviteErrors(result.states, room, result.inviter);
+            showInviteResult(result.states, room, result.inviter);
         })
         .catch((err) => {
             logger.error(err.stack);

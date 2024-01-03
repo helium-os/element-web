@@ -113,7 +113,7 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
 
     // 私密频道特权用户展示邀请成员按钮
     let inviteOption;
-    if (SpaceStore.instance.isSpacePrivilegedUser && room.isPrivateRoom()) {
+    if (SpaceStore.instance.canManageSpacePrivateChannel && room.isPrivateRoom()) {
         inviteOption = <IconizedContextMenuOption onClick={onInvitePeople} label={_t("Invite people")} />;
     }
 

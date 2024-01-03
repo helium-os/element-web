@@ -56,6 +56,8 @@ export function isSpaceRoom(roomType: RoomType | string): boolean {
     return roomType === RoomType.Space;
 }
 
+export const DefaultPowerLevelToManageSpacePrivateChannel = PowerLevel.Moderator;
+
 // state powerLevel
 export function getDefaultStatePowerLevels(roomType: RoomType | string, joinRule: JoinRule): PowerLevelsMap {
     const isSpace = isSpaceRoom(roomType);
@@ -68,6 +70,7 @@ export function getDefaultStatePowerLevels(roomType: RoomType | string, joinRule
         ban: PowerLevel.Moderator,
         redact: PowerLevel.Moderator,
         display_member_list: isSpace ? PowerLevel.Moderator : PowerLevel.Default, // 哪些角色可以展示成员列表
+        ...(isSpace ? { manage_space_private_channel: DefaultPowerLevelToManageSpacePrivateChannel } : {}), // 哪些角色可以管理社区内的私密频道
         // "notifications.room": PowerLevel.Moderator,
     };
 }
