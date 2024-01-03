@@ -16,6 +16,12 @@ export const PowerLabel: Record<PowerLevel, string> = {
     [PowerLevel.Default]: _td("Default"),
 };
 
+interface InitPowerLevelsParams {
+    isSpace?: boolean;
+    enableDefaultUserSendMsg?: boolean;
+    enableDefaultUserMemberList?: boolean;
+}
+
 interface PowerLevelsMap {
     [type: string]: PowerLevel;
 }
@@ -210,15 +216,31 @@ export function getEventPowerLevelsDescriptors(roomType: RoomType | string): Eve
 }
 
 // 通过是否允许普通用户发送信息来计算events_default（是否可以发送消息）的值
-export function getPowerLevelByEnableDefaultUserSendMsg(enableDefaultUserSendMsg: boolean): PowerLevelsMap {
-    return {
-        events_default: enableDefaultUserSendMsg ? PowerLevel.Default : PowerLevel.Moderator,
-    };
+export function getPowerLevelByEnableDefaultUserSendMsg(enable: boolean, isSpace = false): PowerLevelsMap {
+    return !isSpace
+        ? {
+              events_default: enable ? PowerLevel.Default : PowerLevel.Moderator,
+          }
+        : {};
 }
 
 // 通过是否允许普通用户展示成员列表信息来计算display_member_list（是否展示成员列表）的值
-export function getPowerLevelByEnableDefaultUserMemberList(enableDefaultUserMemberList: boolean): PowerLevelsMap {
+export function getPowerLevelByEnableDefaultUserMemberList(enable: boolean, isSpace = false): PowerLevelsMap {
+    return !isSpace
+        ? {
+              display_member_list: enable ? PowerLevel.Default : PowerLevel.Moderator,
+          }
+        : {};
+}
+
+// 获取初始化powerLevels
+export function getInitStatePowerLevels({
+    isSpace = false,
+    enableDefaultUserSendMsg,
+    enableDefaultUserMemberList,
+}: InitPowerLevelsParams): PowerLevelsMap {
     return {
-        display_member_list: enableDefaultUserMemberList ? PowerLevel.Default : PowerLevel.Moderator,
+        ...getPowerLevelByEnableDefaultUserSendMsg(enableDefaultUserSendMsg, isSpace),
+        ...getPowerLevelByEnableDefaultUserMemberList(enableDefaultUserMemberList, isSpace),
     };
 }

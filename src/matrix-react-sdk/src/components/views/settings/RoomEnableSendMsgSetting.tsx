@@ -14,45 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useContext, useState, useEffect, memo } from "react";
+import React, { useContext, memo } from "react";
 import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { Room } from "matrix-js-sdk/src/models/room";
 import LabelledToggleSwitch from "matrix-react-sdk/src/components/views/elements/LabelledToggleSwitch";
-import { IEnableDefaultUserSendMsgEventContent } from "matrix-js-sdk/src/@types/partials";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 import { getPowerLevelByEnableDefaultUserSendMsg } from "matrix-react-sdk/src/powerLevel";
-import { AdditionalEventType, useRoomState } from "matrix-react-sdk/src/hooks/room/useRoomState";
+import { useRoomEnableSendMsg } from "matrix-react-sdk/src/hooks/room/useRoomEnableSendMsg";
 
 interface IProps {
     room: Room;
     onError?(error: Error): void;
 }
 
-// 获取"是否允许普通用户发送消息"该配置项的值
-function getRoomEnableDefaultUserSendMsg(content: IEnableDefaultUserSendMsgEventContent): boolean {
-    const { enable = true } = content ?? {};
-    return enable;
-}
-
-const ChannelEnableSendMsgSettings: React.FC<IProps> = ({ room, onError }) => {
+const RoomEnableSendMsgSetting: React.FC<IProps> = ({ room, onError }) => {
     const cli = useContext(MatrixClientContext);
 
-    const { disabled, content, setContent, sendStateEvent } = useRoomState<IEnableDefaultUserSendMsgEventContent>(
+    const { disabled, value, setValue } = useRoomEnableSendMsg(
         cli,
         room,
-        AdditionalEventType.RoomEnableDefaultUserSendMsg,
-        async (newContent) => {
-            await sendStateEvent(newContent); // 修改配置项
-            await changeRoomPowerLevels(room, newContent.enable); // 修改配置后，同时修改powerLevel events_default一项，控制谁可以发送消息
+        (newContent) => {
+            changeRoomPowerLevels(room, newContent.enable); // 修改配置后，同时修改powerLevel events_default一项，控制谁可以发送消息
         },
         onError,
     );
-
-    const [value, setValue] = useState<boolean>(true);
-    useEffect(() => {
-        setValue(getRoomEnableDefaultUserSendMsg(content));
-    }, [content]);
 
     const changeRoomPowerLevels = (room: Room, enable: boolean): Promise<ISendEventResponse> => {
         const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
@@ -69,10 +55,7 @@ const ChannelEnableSendMsgSettings: React.FC<IProps> = ({ room, onError }) => {
     };
 
     const onToggleSendMsgEnable = (checked: boolean) => {
-        const newContent: IEnableDefaultUserSendMsgEventContent = {
-            enable: checked,
-        };
-        setContent(newContent);
+        setValue(checked);
     };
 
     return (
@@ -86,4 +69,4 @@ const ChannelEnableSendMsgSettings: React.FC<IProps> = ({ room, onError }) => {
         </>
     );
 };
-export default memo(ChannelEnableSendMsgSettings);
+export default memo(RoomEnableSendMsgSetting);

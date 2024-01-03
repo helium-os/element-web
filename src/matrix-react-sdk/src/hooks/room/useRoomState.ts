@@ -23,12 +23,12 @@ interface RoomStateResult<T> {
 
 // 是否有权限修改eventType对应的配置项
 const hasPermission = (room: Room, eventType: EventType | AdditionalEventType, cli: MatrixClient): boolean => {
-    return room.currentState.mayClientSendStateEvent(eventType, cli);
+    return cli && room?.currentState.mayClientSendStateEvent(eventType, cli);
 };
 
 // 获取eventType对应配置项的内容
 export function getRoomStateContent<T>(room: Room, eventType: EventType | AdditionalEventType): T | null {
-    const event = room.currentState.getStateEvents(eventType, "");
+    const event = room?.currentState.getStateEvents(eventType, "");
     return event?.getContent() ?? null;
 }
 

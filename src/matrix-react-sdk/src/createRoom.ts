@@ -51,8 +51,7 @@ import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 import {
     getDefaultEventPowerLevels,
     getDefaultStatePowerLevels,
-    getPowerLevelByEnableDefaultUserMemberList,
-    getPowerLevelByEnableDefaultUserSendMsg,
+    getInitStatePowerLevels,
     isSpaceRoom,
 } from "matrix-react-sdk/src/powerLevel";
 import { AdditionalEventType } from "matrix-react-sdk/src/hooks/room/useRoomState";
@@ -197,12 +196,11 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
             createOpts.power_level_content_override = {
                 ...getDefaultStatePowerLevels(opts.roomType, opts.joinRule),
                 ...statePowerLevels,
-                ...(!isSpace
-                    ? {
-                          ...getPowerLevelByEnableDefaultUserSendMsg(opts.enableDefaultUserSendMsg),
-                          ...getPowerLevelByEnableDefaultUserMemberList(opts.enableDefaultUserMemberList),
-                      }
-                    : {}),
+                ...getInitStatePowerLevels({
+                    isSpace,
+                    enableDefaultUserSendMsg: opts.enableDefaultUserSendMsg,
+                    enableDefaultUserMemberList: opts.enableDefaultUserMemberList,
+                }),
                 events: {
                     ...getDefaultEventPowerLevels(opts.roomType),
                     ...events,

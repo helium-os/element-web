@@ -25,8 +25,14 @@ import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { useLocalEcho } from "../../../hooks/useLocalEcho";
 import { doesRoomVersionSupport, PreferredRoomVersions } from "../../../utils/PreferredRoomVersions";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
-import { getDefaultEventPowerLevels, getDefaultStatePowerLevels } from "matrix-react-sdk/src/powerLevel";
+import {
+    getDefaultEventPowerLevels,
+    getDefaultStatePowerLevels,
+    getInitStatePowerLevels,
+} from "matrix-react-sdk/src/powerLevel";
 import { MatrixClient } from "matrix-js-sdk/src/client";
+import { useRoomEnableMemberList } from "matrix-react-sdk/src/hooks/room/useRoomEnableMemberList";
+import { useRoomEnableSendMsg } from "matrix-react-sdk/src/hooks/room/useRoomEnableSendMsg";
 
 interface IProps {
     room: Room;
@@ -44,7 +50,12 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
         setIsSpaceRoom(room?.isSpaceRoom());
     }, [room]);
 
-    const disabled = !room.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli) || room.isAdminLeft();
+    const [disabled, setDisabled] = useState<boolean>(true);
+    useEffect(() => {
+        setDisabled(
+            !(cli && room?.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli)) || room.isAdminLeft(),
+        );
+    }, [cli, room]);
 
     const [content, setContent] = useLocalEcho<IJoinRuleEventContent>(
         () => room.currentState.getStateEvents(EventType.RoomJoinRules, "")?.getContent(),
@@ -61,6 +72,9 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
         joinRule === JoinRule.Restricted
             ? content.allow?.filter((o) => o.type === RestrictedAllowType.RoomMembership).map((o) => o.room_id)
             : undefined;
+
+    const { value: enableDefaultUserMemberList } = useRoomEnableMemberList(cli, room); // 是否允许普通用户展示成员列表
+    const { value: enableDefaultUserSendMsg } = useRoomEnableSendMsg(cli, room); // 是否允许普通用户发送消息
 
     const definitions: IDefinition<JoinRule>[] = [
         ...(room.isSpaceRoom()
@@ -96,6 +110,11 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
         const plContent = {
             ...statePowerLevels,
             ...getDefaultStatePowerLevels(roomType, joinRule),
+            ...getInitStatePowerLevels({
+                isSpace: isSpaceRoom,
+                enableDefaultUserSendMsg,
+                enableDefaultUserMemberList,
+            }),
             events: {
                 ...events,
                 ...getDefaultEventPowerLevels(roomType),

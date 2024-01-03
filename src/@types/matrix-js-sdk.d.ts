@@ -3,11 +3,11 @@ import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 
 declare module "matrix-js-sdk/src/@types/partials" {
-    interface IEnableDefaultUserSendMsgEventContent {
+    interface IEnableSendMsgEventContent {
         enable: boolean;
     }
 
-    interface IEnableDefaultUserMemberListContent {
+    interface IEnableMemberListContent {
         enable: boolean;
     }
 }
