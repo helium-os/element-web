@@ -44,6 +44,12 @@ export function useRoomState<T>(
     useEffect(() => {
         setDisabled(!hasPermission(room, eventType, cli));
     }, [room, eventType, cli]);
+    // 订阅room powerLevels更改
+    useTypedEventEmitter(room.currentState, RoomStateEvent.Events, (ev: MatrixEvent) => {
+        if (ev.getType() !== EventType.RoomPowerLevels) return;
+        setDisabled(!hasPermission(room, eventType, cli));
+    });
+    // 订阅用户powerLevel值更改
     useTypedEventEmitter(cli, RoomMemberEvent.PowerLevel, (ev: MatrixEvent) => {
         setDisabled(!hasPermission(room, eventType, cli));
     });
@@ -53,6 +59,7 @@ export function useRoomState<T>(
     useEffect(() => {
         setContent(getRoomStateContent(room, eventType));
     }, [room, eventType]);
+    // 订阅eventType state更改
     useTypedEventEmitter(room.currentState, RoomStateEvent.Events, (ev: MatrixEvent) => {
         if (ev.getType() !== eventType) return;
         setContent(getRoomStateContent(room, eventType));
