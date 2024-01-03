@@ -51,7 +51,7 @@ export function isSpaceRoom(roomType: RoomType | string): boolean {
 }
 
 // state powerLevel
-export function getDefaultPowerLevels(roomType: RoomType | string, joinRule: JoinRule): PowerLevelsMap {
+export function getDefaultStatePowerLevels(roomType: RoomType | string, joinRule: JoinRule): PowerLevelsMap {
     const isSpace = isSpaceRoom(roomType);
     return {
         users_default: PowerLevel.Default,
@@ -61,7 +61,7 @@ export function getDefaultPowerLevels(roomType: RoomType | string, joinRule: Joi
         kick: PowerLevel.Moderator,
         ban: PowerLevel.Moderator,
         redact: PowerLevel.Moderator,
-        display_member_list: PowerLevel.Default, // 哪些角色可以展示成员列表
+        display_member_list: isSpace ? PowerLevel.Moderator : PowerLevel.Default, // 哪些角色可以展示成员列表
         // "notifications.room": PowerLevel.Moderator,
     };
 }
@@ -99,7 +99,7 @@ export function getPowerLevelOpts(eventType: string): PowerLevelOpts | PowerLeve
     return eventType ? eventPowerLevelLabels[eventType] : eventPowerLevelLabels;
 }
 export function getPowerLevelsDescriptors(roomType: RoomType | string, joinRule): PowerLevelDescriptorMap {
-    const powerLevels = getDefaultPowerLevels(roomType, joinRule);
+    const powerLevels = getDefaultStatePowerLevels(roomType, joinRule);
     const eventPowerLevelsDescriptors = {};
     Object.keys(powerLevels).forEach((eventType) => {
         eventPowerLevelsDescriptors[eventType] = {

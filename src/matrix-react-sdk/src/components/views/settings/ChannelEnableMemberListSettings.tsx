@@ -14,9 +14,9 @@ interface IProps {
 }
 
 // 获取"是否允许普通用户展示成员列表"该配置项的值
-function getRoomEnableDefaultUserSendMsg(content: IEnableDefaultUserMemberListContent): boolean {
-    const { enable: enableDefaultUserSendMsg = true } = content ?? {};
-    return enableDefaultUserSendMsg;
+function getRoomEnableDefaultUserMemberList(content: IEnableDefaultUserMemberListContent): boolean {
+    const { enable = true } = content ?? {};
+    return enable;
 }
 
 const ChannelEnableMemberListSettings: React.FC<IProps> = ({ room, onError }) => {
@@ -35,7 +35,7 @@ const ChannelEnableMemberListSettings: React.FC<IProps> = ({ room, onError }) =>
 
     const [value, setValue] = useState<boolean>(true);
     useEffect(() => {
-        setValue(getRoomEnableDefaultUserSendMsg(content));
+        setValue(getRoomEnableDefaultUserMemberList(content));
     }, [content]);
 
     const changeRoomPowerLevels = (room: Room, enable: boolean): Promise<ISendEventResponse> => {

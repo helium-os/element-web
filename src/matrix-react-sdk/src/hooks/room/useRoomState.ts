@@ -36,8 +36,8 @@ export function useRoomState<T>(
     cli: MatrixClient,
     room: Room,
     eventType: EventType | AdditionalEventType,
-    setterFn,
-    errorFn,
+    setterFn?: (newContent: T) => Promise<void>,
+    errorFn?: (error: Error) => void,
 ): RoomStateResult<T> {
     // 判断权限
     const [disabled, setDisabled] = useState(() => !hasPermission(room, eventType, cli));
@@ -64,7 +64,7 @@ export function useRoomState<T>(
         [cli, room, eventType],
     );
 
-    const handleChange = async (newContent: T) => {
+    const onContentChange = async (newContent: T) => {
         setContent(newContent);
         try {
             await setterFn?.(newContent);
@@ -77,7 +77,7 @@ export function useRoomState<T>(
     return {
         disabled,
         content,
-        setContent: handleChange,
+        setContent: onContentChange,
         sendStateEvent,
     };
 }

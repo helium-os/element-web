@@ -31,8 +31,8 @@ interface IProps {
 
 // 获取"是否允许普通用户发送消息"该配置项的值
 function getRoomEnableDefaultUserSendMsg(content: IEnableDefaultUserSendMsgEventContent): boolean {
-    const { enable: enableDefaultUserSendMsg = true } = content ?? {};
-    return enableDefaultUserSendMsg;
+    const { enable = true } = content ?? {};
+    return enable;
 }
 
 const ChannelEnableSendMsgSettings: React.FC<IProps> = ({ room, onError }) => {

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { memo } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { IJoinRuleEventContent, JoinRule, RestrictedAllowType } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
 import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
@@ -25,7 +25,8 @@ import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { useLocalEcho } from "../../../hooks/useLocalEcho";
 import { doesRoomVersionSupport, PreferredRoomVersions } from "../../../utils/PreferredRoomVersions";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
-import { getDefaultEventPowerLevels, getDefaultPowerLevels } from "matrix-react-sdk/src/powerLevel";
+import { getDefaultEventPowerLevels, getDefaultStatePowerLevels } from "matrix-react-sdk/src/powerLevel";
+import { MatrixClient } from "matrix-js-sdk/src/client";
 
 interface IProps {
     room: Room;
@@ -34,9 +35,14 @@ interface IProps {
 }
 
 const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, beforeChange }) => {
-    const cli = room.client;
-
     const roomSupportsRestricted = doesRoomVersionSupport(room.getVersion(), PreferredRoomVersions.RestrictedRooms);
+
+    const [cli, setCli] = useState<MatrixClient | null>(null);
+    const [isSpaceRoom, setIsSpaceRoom] = useState<boolean>(false);
+    useEffect(() => {
+        setCli(room?.client);
+        setIsSpaceRoom(room?.isSpaceRoom());
+    }, [room]);
 
     const disabled = !room.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli) || room.isAdminLeft();
 
@@ -78,18 +84,18 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
         },
     ];
 
-    const changeRoomPowerLevel = (room, joinRule): Promise<ISendEventResponse> => {
+    const changeRoomPowerLevel = (room: Room, joinRule: JoinRule): Promise<ISendEventResponse> => {
         const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
 
         let roomType;
-        if (room.isSpaceRoom()) {
+        if (isSpaceRoom) {
             roomType = RoomType.Space;
         }
 
-        const { events, users, ...restPowerLevels } = plEvent?.getContent() ?? {};
+        const { events, users, ...statePowerLevels } = plEvent?.getContent() ?? {};
         const plContent = {
-            ...restPowerLevels,
-            ...getDefaultPowerLevels(roomType, joinRule),
+            ...statePowerLevels,
+            ...getDefaultStatePowerLevels(roomType, joinRule),
             events: {
                 ...events,
                 ...getDefaultEventPowerLevels(roomType),
