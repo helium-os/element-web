@@ -92,12 +92,12 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
 
     public componentDidMount(): void {
         this.autocompleter = new Autocompleter(this.props.room, this.context.timelineRenderingType);
-        this.applyNewProps();
-        this.updatePermissions(this.props.room);
+        const displayMemberList = this.setDisplayMemberList(this.props.room);
+        this.applyNewProps(displayMemberList);
         this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
     }
 
-    private applyNewProps(oldQuery?: string, oldRoom?: Room): void {
+    private applyNewProps(displayMemberList: boolean, oldQuery?: string, oldRoom?: Room): void {
         if (oldRoom && this.props.room.roomId !== oldRoom.roomId) {
             this.autocompleter.destroy();
             this.autocompleter = new Autocompleter(this.props.room);
@@ -108,7 +108,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
             return;
         }
 
-        if (this.props.room.isPeopleRoom() || !this.state.displayMemberList) return; // 私聊没有@功能；不展示成员列表时没有@功能
+        if (this.props.room.isPeopleRoom() || !displayMemberList) return; // 私聊没有@功能；不展示成员列表时没有@功能
 
         this.complete(this.props.query, this.props.selection);
     }
@@ -121,19 +121,20 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     private onRoomStateEvents = (ev: MatrixEvent) => {
         switch (ev.getType()) {
             case EventType.RoomPowerLevels:
-                this.updatePermissions(this.props.room);
+                // 权限更新
+                this.setDisplayMemberList(this.props.room);
                 break;
         }
     };
 
-    // 更新当前用户权限
-    private updatePermissions(room: Room): void {
+    private setDisplayMemberList(room: Room): boolean {
         if (!room) return;
 
         const displayMemberList = room.displayMemberList(this.myUserId);
         this.setState({
             displayMemberList,
         });
+        return displayMemberList;
     }
 
     private complete(query: string, selection: ISelectionRange): Promise<void> {
@@ -300,7 +301,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     }
 
     public componentDidUpdate(prevProps: IProps): void {
-        this.applyNewProps(prevProps.query, prevProps.room);
+        this.applyNewProps(this.state.displayMemberList, prevProps.query, prevProps.room);
         // this is the selected completion, so scroll it into view if needed
         const selectedCompletion = this.refs[`completion${this.state.selectionOffset}`] as HTMLElement;
 
