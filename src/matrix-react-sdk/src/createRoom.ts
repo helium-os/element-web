@@ -268,8 +268,6 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     if (opts.parentSpace) {
         createOpts.initial_state.push(makeSpaceParentEvent(opts.parentSpace, true));
         if (!opts.historyVisibility) {
-            // opts.historyVisibility =
-            //     createOpts.preset === Preset.PublicChat ? HistoryVisibility.WorldReadable : HistoryVisibility.Invited;
             opts.historyVisibility = HistoryVisibility.WorldReadable; // 社区内的频道历史消息可读
         }
 

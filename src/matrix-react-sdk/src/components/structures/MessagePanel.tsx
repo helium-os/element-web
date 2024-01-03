@@ -58,6 +58,7 @@ import { editorRoomKey } from "../../Editing";
 import { displayEventType, hasThreadSummary, hiddenEventTypeIfNotDisplayMemberList } from "../../utils/EventUtils";
 import { VoiceBroadcastInfoEventType } from "../../voice-broadcast";
 import { MatrixClient } from "matrix-js-sdk/src/client";
+import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -305,6 +306,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         const displayMemberList = this.setDisplayMemberList(this.props.room);
         this.generateDisplayEventType(displayMemberList);
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
+        MatrixClientPeg.get().on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
         this.isMounted = true;
     }
@@ -312,6 +314,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
     public componentWillUnmount(): void {
         this.isMounted = false;
         this.props.room?.currentState.off(RoomStateEvent.Update, this.calculateRoomMembersCount);
+        MatrixClientPeg.get().off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
         SettingsStore.unwatchSetting(this.showTypingNotificationsWatcherRef);
     }
@@ -367,6 +370,11 @@ export default class MessagePanel extends React.Component<IProps, IState> {
                 this.setDisplayMemberList(this.props.room);
                 break;
         }
+    };
+
+    // 用户角色（powerLevel）更新
+    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
+        this.setDisplayMemberList(this.props.room);
     };
 
     private setDisplayMemberList(room: Room): boolean {

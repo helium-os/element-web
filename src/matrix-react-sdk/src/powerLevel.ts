@@ -218,7 +218,7 @@ export function getEventPowerLevelsDescriptors(roomType: RoomType | string): Eve
     return eventPowerLevelsDescriptors;
 }
 
-// 通过是否允许普通用户发送信息来计算events_default（是否可以发送消息）的值
+// 通过启用|禁用允许普通用户发送消息来计算events_default（是否可以发送消息）的powerLevel值
 export function getPowerLevelByEnableDefaultUserSendMsg(enable: boolean, isSpace = false): PowerLevelsMap {
     return !isSpace
         ? {
@@ -227,7 +227,7 @@ export function getPowerLevelByEnableDefaultUserSendMsg(enable: boolean, isSpace
         : {};
 }
 
-// 通过是否允许普通用户展示成员列表信息来计算display_member_list（是否展示成员列表）的值
+// 通过启用|禁用允许普通用户展示成员列表来计算display_member_list（是否展示成员列表）的powerLevel值
 export function getPowerLevelByEnableDefaultUserMemberList(enable: boolean, isSpace = false): PowerLevelsMap {
     return !isSpace
         ? {

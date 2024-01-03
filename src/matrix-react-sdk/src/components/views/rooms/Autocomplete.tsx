@@ -28,6 +28,7 @@ import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { EventType } from "matrix-js-sdk/src/@types/event";
+import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 
 const MAX_PROVIDER_MATCHES = 20;
 
@@ -95,6 +96,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
         const displayMemberList = this.setDisplayMemberList(this.props.room);
         this.applyNewProps(displayMemberList);
         this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
+        this.cli.on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
     }
 
     private applyNewProps(displayMemberList: boolean, oldQuery?: string, oldRoom?: Room): void {
@@ -116,6 +118,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     public componentWillUnmount(): void {
         this.autocompleter.destroy();
         this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
+        this.cli.off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
     }
 
     private onRoomStateEvents = (ev: MatrixEvent) => {
@@ -125,6 +128,11 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
                 this.setDisplayMemberList(this.props.room);
                 break;
         }
+    };
+
+    // 用户角色（powerLevel）更新
+    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
+        this.setDisplayMemberList(this.props.room);
     };
 
     private setDisplayMemberList(room: Room): boolean {

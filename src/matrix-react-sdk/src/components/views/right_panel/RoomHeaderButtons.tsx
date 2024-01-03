@@ -50,6 +50,7 @@ import { MatrixClient } from "matrix-js-sdk/src/client";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { EventType } from "matrix-js-sdk/src/@types/event";
+import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -120,6 +121,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         // Notification badge may change if the notification counts from the
         // server change, if a new thread is created or updated, or if a
         // receipt is sent in the thread.
+        this.cli.on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.on(RoomEvent.UnreadNotifications, this.onNotificationUpdate);
         this.props.room?.on(RoomEvent.Receipt, this.onNotificationUpdate);
         this.props.room?.on(RoomEvent.Timeline, this.onNotificationUpdate);
@@ -135,6 +137,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
 
     public componentWillUnmount(): void {
         super.componentWillUnmount();
+        this.cli.off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.off(RoomEvent.UnreadNotifications, this.onNotificationUpdate);
         this.props.room?.off(RoomEvent.Receipt, this.onNotificationUpdate);
         this.props.room?.off(RoomEvent.Timeline, this.onNotificationUpdate);
@@ -154,6 +157,11 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                 this.setDisplayMemberList(this.props.room);
                 break;
         }
+    };
+
+    // 用户角色（powerLevel）更新
+    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
+        this.setDisplayMemberList(this.props.room);
     };
 
     private setDisplayMemberList(room: Room): boolean {
