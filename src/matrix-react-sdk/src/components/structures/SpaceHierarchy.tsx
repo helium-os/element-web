@@ -14,425 +14,85 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, {
-    KeyboardEvent,
-    KeyboardEventHandler,
-    ReactElement,
-    ReactNode,
-    useCallback,
-    useContext,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-} from "react";
-import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import React, { KeyboardEvent, ReactNode, useCallback, useContext, useEffect, useState, useMemo } from "react";
+import { Room } from "matrix-js-sdk/src/models/room";
 import { RoomHierarchy } from "matrix-js-sdk/src/room-hierarchy";
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
-import { IHierarchyRelation, IHierarchyRoom } from "matrix-js-sdk/src/@types/spaces";
-import { MatrixClient, MatrixError } from "matrix-js-sdk/src/matrix";
-import classNames from "classnames";
-import { sortBy } from "lodash";
+import { EventType } from "matrix-js-sdk/src/@types/event";
+import { IHierarchyRoom } from "matrix-js-sdk/src/@types/spaces";
+import { MatrixClient } from "matrix-js-sdk/src/matrix";
 import { GuestAccess, HistoryVisibility } from "matrix-js-sdk/src/@types/partials";
-import { logger } from "matrix-js-sdk/src/logger";
 
 import defaultDispatcher from "../../dispatcher/dispatcher";
 import { _t } from "../../languageHandler";
-import AccessibleButton, { ButtonEvent } from "../views/elements/AccessibleButton";
-import Spinner from "../views/elements/Spinner";
 import SearchBox from "./SearchBox";
-import RoomAvatar from "../views/avatars/RoomAvatar";
-import StyledCheckbox from "../views/elements/StyledCheckbox";
-import BaseAvatar from "../views/avatars/BaseAvatar";
-import { getHttpUrlFromMxc } from "../../customisations/Media";
-import InfoTooltip from "../views/elements/InfoTooltip";
-import TextWithTooltip from "../views/elements/TextWithTooltip";
-import { useStateToggle } from "../../hooks/useStateToggle";
-import SpaceStore, { getChildOrder } from "../../stores/spaces/SpaceStore";
-import AccessibleTooltipButton from "../views/elements/AccessibleTooltipButton";
-import { Linkify, topicToHtml } from "../../HtmlUtils";
+import SpaceStore from "../../stores/spaces/SpaceStore";
 import { useDispatcher } from "../../hooks/useDispatcher";
 import { Action } from "../../dispatcher/actions";
-import { IState, RovingTabIndexProvider, useRovingTabIndex } from "../../accessibility/RovingTabIndex";
+import { IState, RovingTabIndexProvider } from "../../accessibility/RovingTabIndex";
 import MatrixClientContext from "../../contexts/MatrixClientContext";
-import { SdkContextClass } from "../../contexts/SDKContext";
-import { useTypedEventEmitterState } from "../../hooks/useEventEmitter";
-import { IOOBData } from "../../stores/ThreepidInviteStore";
-import { awaitRoomDownSync } from "../../utils/RoomUpgrade";
 import { ViewRoomPayload } from "../../dispatcher/payloads/ViewRoomPayload";
-import { JoinRoomReadyPayload } from "../../dispatcher/payloads/JoinRoomReadyPayload";
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../KeyBindingsManager";
-import { getTopic } from "../../hooks/room/useTopic";
 import { getDisplayAliasForAliasSet } from "../../Rooms";
 import SettingsStore from "../../settings/SettingsStore";
-import { UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
+import { ISuggestedRoom, UPDATE_FILTERED_SUGGESTED_ROOMS, UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
 import { DefaultTagID } from "matrix-react-sdk/src/stores/room-list/models";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
+import RoomListStore, { LISTS_UPDATE_EVENT } from "matrix-react-sdk/src/stores/room-list/RoomListStore";
 
 interface IProps {
     space: Room;
     initialText?: string;
     additionalButtons?: ReactNode;
-    showRoom(cli: MatrixClient, hierarchy: RoomHierarchy, roomId: string, roomType?: RoomType): void;
+    showRoom(cli: MatrixClient, room: IHierarchyRoom | Room): void;
 }
 
-interface ITileProps {
-    room: IHierarchyRoom;
-    suggested?: boolean;
-    selected?: boolean;
-    numChildRooms?: number;
-    hasPermissions?: boolean;
-    children?: ReactNode;
-    onViewRoomClick(): void;
-    onJoinRoomClick(): Promise<unknown>;
-    onToggleClick?(): void;
-}
-
-const Tile: React.FC<ITileProps> = ({
-    room,
-    suggested,
-    selected,
-    hasPermissions,
-    onToggleClick,
-    onViewRoomClick,
-    onJoinRoomClick,
-    numChildRooms,
-    children,
-}) => {
-    const cli = useContext(MatrixClientContext);
-    const [joinedRoom, setJoinedRoom] = useState<Room | undefined>(() => {
-        const cliRoom = cli.getRoom(room.room_id);
-        return cliRoom?.getMyMembership() === "join" ? cliRoom : undefined;
+// 预览已加入的频道
+export const showJoinedRoom = (room: Room, clearSearch, metricsTrigger, metricsViaKeyboard = false) => {
+    defaultDispatcher.dispatch<ViewRoomPayload>({
+        action: Action.ViewRoom,
+        show_room_tile: true, // make sure the room is visible in the list
+        room_id: room.roomId,
+        clear_search: clearSearch,
+        metricsTrigger,
+        metricsViaKeyboard,
     });
-    const joinedRoomName = useTypedEventEmitterState(joinedRoom, RoomEvent.Name, (room) => room?.name);
-    const name =
-        joinedRoomName ||
-        room.name ||
-        room.canonical_alias ||
-        room.aliases?.[0] ||
-        (room.room_type === RoomType.Space ? _t("Unnamed Space") : _t("Unnamed Room"));
-
-    const [showChildren, toggleShowChildren] = useStateToggle(true);
-    const [onFocus, isActive, ref] = useRovingTabIndex();
-    const [busy, setBusy] = useState(false);
-
-    const onPreviewClick = (ev: ButtonEvent): void => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        onViewRoomClick();
-    };
-    const onJoinClick = async (ev: ButtonEvent): Promise<void> => {
-        setBusy(true);
-        ev.preventDefault();
-        ev.stopPropagation();
-        onJoinRoomClick()
-            .then(() => awaitRoomDownSync(cli, room.room_id))
-            .then(setJoinedRoom)
-            .finally(() => {
-                setBusy(false);
-            });
-    };
-
-    let button: ReactElement;
-    if (busy) {
-        button = (
-            <AccessibleTooltipButton
-                disabled={true}
-                onClick={onJoinClick}
-                kind="primary_outline"
-                onFocus={onFocus}
-                tabIndex={isActive ? 0 : -1}
-                title={_t("Joining")}
-            >
-                <Spinner w={24} h={24} />
-            </AccessibleTooltipButton>
-        );
-    } else if (joinedRoom) {
-        button = (
-            <AccessibleButton
-                onClick={onPreviewClick}
-                kind="primary_outline"
-                onFocus={onFocus}
-                tabIndex={isActive ? 0 : -1}
-            >
-                {_t("View")}
-            </AccessibleButton>
-        );
-    } else {
-        button = (
-            <AccessibleButton onClick={onJoinClick} kind="primary" onFocus={onFocus} tabIndex={isActive ? 0 : -1}>
-                {_t("Join")}
-            </AccessibleButton>
-        );
-    }
-
-    let checkbox: ReactElement | undefined;
-    if (onToggleClick) {
-        if (hasPermissions) {
-            checkbox = <StyledCheckbox checked={!!selected} onChange={onToggleClick} tabIndex={isActive ? 0 : -1} />;
-        } else {
-            checkbox = (
-                <TextWithTooltip
-                    tooltip={_t("You don't have permission")}
-                    onClick={(ev) => {
-                        ev.stopPropagation();
-                    }}
-                >
-                    <StyledCheckbox disabled={true} tabIndex={isActive ? 0 : -1} />
-                </TextWithTooltip>
-            );
-        }
-    }
-
-    let avatar: ReactElement;
-    if (joinedRoom) {
-        avatar = <RoomAvatar room={joinedRoom} width={20} height={20} />;
-    } else {
-        avatar = (
-            <BaseAvatar
-                name={name}
-                idName={room.room_id}
-                url={getHttpUrlFromMxc(room.avatar_url, 20)}
-                width={20}
-                height={20}
-            />
-        );
-    }
-
-    let description = _t("%(count)s members", { count: room.num_joined_members ?? 0 });
-    if (numChildRooms !== undefined) {
-        description += " · " + _t("%(count)s rooms", { count: numChildRooms });
-    }
-
-    let topic: ReactNode | string | null;
-    if (joinedRoom) {
-        const topicObj = getTopic(joinedRoom);
-        topic = topicToHtml(topicObj?.text, topicObj?.html);
-    } else {
-        topic = room.topic;
-    }
-
-    let topicSection: ReactNode | undefined;
-    if (topic) {
-        topicSection = (
-            <Linkify
-                options={{
-                    attributes: {
-                        onClick(ev: MouseEvent) {
-                            // prevent clicks on links from bubbling up to the room tile
-                            ev.stopPropagation();
-                        },
-                    },
-                }}
-            >
-                {" · "}
-                {topic}
-            </Linkify>
-        );
-    }
-
-    let joinedSection: ReactElement | undefined;
-    if (joinedRoom) {
-        joinedSection = <div className="mx_SpaceHierarchy_roomTile_joined">{_t("Joined")}</div>;
-    }
-
-    let suggestedSection: ReactElement | undefined;
-    if (suggested && (!joinedRoom || hasPermissions)) {
-        suggestedSection = (
-            <InfoTooltip tooltip={_t("This room is suggested as a good one to join")}>{_t("Suggested")}</InfoTooltip>
-        );
-    }
-
-    const content = (
-        <React.Fragment>
-            <div className="mx_SpaceHierarchy_roomTile_item">
-                <div className="mx_SpaceHierarchy_roomTile_avatar">{avatar}</div>
-                <div className="mx_SpaceHierarchy_roomTile_name">
-                    {name}
-                    {joinedSection}
-                    {suggestedSection}
-                </div>
-                <div className="mx_SpaceHierarchy_roomTile_info">
-                    {description}
-                    {topicSection}
-                </div>
-            </div>
-            <div className="mx_SpaceHierarchy_actions">
-                {button}
-                {checkbox}
-            </div>
-        </React.Fragment>
-    );
-
-    let childToggle: JSX.Element | undefined;
-    let childSection: JSX.Element | undefined;
-    let onKeyDown: KeyboardEventHandler | undefined;
-    if (children) {
-        // the chevron is purposefully a div rather than a button as it should be ignored for a11y
-        childToggle = (
-            <div
-                className={classNames("mx_SpaceHierarchy_subspace_toggle", {
-                    mx_SpaceHierarchy_subspace_toggle_shown: showChildren,
-                })}
-                onClick={(ev) => {
-                    ev.stopPropagation();
-                    toggleShowChildren();
-                }}
-            />
-        );
-
-        if (showChildren) {
-            const onChildrenKeyDown = (e: React.KeyboardEvent): void => {
-                const action = getKeyBindingsManager().getAccessibilityAction(e);
-                switch (action) {
-                    case KeyBindingAction.ArrowLeft:
-                        e.preventDefault();
-                        e.stopPropagation();
-                        ref.current?.focus();
-                        break;
-                }
-            };
-
-            childSection = (
-                <div className="mx_SpaceHierarchy_subspace_children" onKeyDown={onChildrenKeyDown} role="group">
-                    {children}
-                </div>
-            );
-        }
-
-        onKeyDown = (e) => {
-            let handled = false;
-
-            const action = getKeyBindingsManager().getAccessibilityAction(e);
-            switch (action) {
-                case KeyBindingAction.ArrowLeft:
-                    if (showChildren) {
-                        handled = true;
-                        toggleShowChildren();
-                    }
-                    break;
-
-                case KeyBindingAction.ArrowRight:
-                    handled = true;
-                    if (showChildren) {
-                        const childSection = ref.current?.nextElementSibling;
-                        childSection?.querySelector<HTMLDivElement>(".mx_SpaceHierarchy_roomTile")?.focus();
-                    } else {
-                        toggleShowChildren();
-                    }
-                    break;
-            }
-
-            if (handled) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
-    }
-
-    return (
-        <li
-            className="mx_SpaceHierarchy_roomTileWrapper"
-            role="treeitem"
-            aria-selected={selected}
-            aria-expanded={children ? showChildren : undefined}
-        >
-            <AccessibleButton
-                className={classNames("mx_SpaceHierarchy_roomTile", {
-                    mx_SpaceHierarchy_subspace: room.room_type === RoomType.Space,
-                    mx_SpaceHierarchy_joining: busy,
-                })}
-                onClick={onPreviewClick}
-                // onClick={hasPermissions && onToggleClick ? onToggleClick : onPreviewClick}
-                onKeyDown={onKeyDown}
-                inputRef={ref}
-                onFocus={onFocus}
-                tabIndex={isActive ? 0 : -1}
-            >
-                {content}
-                {childToggle}
-            </AccessibleButton>
-            {childSection}
-        </li>
-    );
 };
 
-export const showRoom = (cli: MatrixClient, hierarchy: RoomHierarchy, roomId: string, roomType?: RoomType): void => {
-    const room = hierarchy.roomMap.get(roomId);
-
-    // Don't let the user view a room they won't be able to either peek or join:
-    // fail earlier so they don't have to click back to the directory.
-    if (cli.isGuest()) {
-        if (!room?.world_readable && !room?.guest_can_join) {
-            defaultDispatcher.dispatch({ action: "require_registration" });
-            return;
-        }
-    }
-
+// 预览建议的频道（未加入的频道）
+export const showSuggestedRoom = (room: IHierarchyRoom, metricsTrigger, metricsViaKeyboard = false) => {
     const roomAlias = getDisplayAliasForAliasSet(room?.canonical_alias ?? "", room?.aliases ?? []) || undefined;
 
     defaultDispatcher.dispatch<ViewRoomPayload>({
         action: Action.ViewRoom,
         should_peek: true,
         room_alias: roomAlias,
-        room_id: roomId,
-        via_servers: Array.from(hierarchy.viaMap.get(roomId) || []),
+        room_id: room.room_id,
+        via_servers: room.viaServers || [],
         oob_data: {
-            avatarUrl: room?.avatar_url,
-            // XXX: This logic is duplicated from the JS SDK which would normally decide what the name is.
-            name: room?.name || roomAlias || _t("Unnamed room"),
-            roomType,
-        } as IOOBData,
-        metricsTrigger: "RoomDirectory",
+            avatarUrl: room.avatar_url,
+            name: room.name || roomAlias || _t("Unnamed room"),
+            roomType: room?.room_type,
+        },
+        metricsTrigger,
+        metricsViaKeyboard,
     });
 };
 
-export const joinRoom = async (cli: MatrixClient, hierarchy: RoomHierarchy, roomId: string): Promise<unknown> => {
-    // Don't let the user view a room they won't be able to either peek or join:
-    // fail earlier so they don't have to click back to the directory.
-    if (cli.isGuest()) {
-        defaultDispatcher.dispatch({ action: "require_registration" });
+export const showRoom = (cli: MatrixClient, room: Room | IHierarchyRoom): void => {
+    if (cli.getRoom((room as Room).roomId || (room as IHierarchyRoom).room_id)?.getMyMembership() !== "join") {
+        showSuggestedRoom(room as IHierarchyRoom, "RoomDirectory");
         return;
     }
 
-    try {
-        await cli.joinRoom(roomId, {
-            viaServers: Array.from(hierarchy.viaMap.get(roomId) || []),
-        });
-    } catch (err: unknown) {
-        if (err instanceof MatrixError) {
-            SdkContextClass.instance.roomViewStore.showJoinRoomError(err, roomId);
-        } else {
-            logger.warn("Got a non-MatrixError while joining room", err);
-            SdkContextClass.instance.roomViewStore.showJoinRoomError(
-                new MatrixError({
-                    error: _t("Unknown error"),
-                }),
-                roomId,
-            );
-        }
-
-        return;
-    }
-
-    defaultDispatcher.dispatch<JoinRoomReadyPayload>({
-        action: Action.JoinRoomReady,
-        roomId,
-        metricsTrigger: "SpaceHierarchy",
-    });
+    showJoinedRoom(room as Room, false, "RoomDirectory");
 };
 
 interface IHierarchyLevelProps {
-    root: IHierarchyRoom;
-    roomSet: Set<IHierarchyRoom>;
-    hierarchy: RoomHierarchy;
-    parents: Set<string>;
-    selectedMap?: Map<string, Set<string>>;
-    onViewRoomClick(roomId: string, roomType?: RoomType): void;
-    onJoinRoomClick(roomId: string): Promise<unknown>;
-    onToggleClick?(parentId: string, childId: string): void;
+    space: Room;
+    query?: string;
+    onViewRoomClick(room: Room | IHierarchyRoom): void;
 }
 
 export const toLocalRoom = (cli: MatrixClient, room: IHierarchyRoom, hierarchy: RoomHierarchy): IHierarchyRoom => {
@@ -474,40 +134,27 @@ export const toLocalRoom = (cli: MatrixClient, room: IHierarchyRoom, hierarchy: 
     return room;
 };
 
-export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
-    root,
-    roomSet,
-    hierarchy,
-    parents,
-    selectedMap,
-    onViewRoomClick,
-    onJoinRoomClick,
-    onToggleClick,
-}) => {
-    const cli = useContext(MatrixClientContext);
-    const space = cli.getRoom(root.room_id);
-    const hasPermissions = space?.currentState.maySendStateEvent(EventType.SpaceChild, cli.getSafeUserId());
+export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({ space, query = "", onViewRoomClick }) => {
+    const canHiddenGroups = useMemo(() => [DefaultTagID.Suggested, DefaultTagID.Untagged], []); // 没有结果时可以被隐藏的分组
 
-    const [subspaces, childRooms] = useMemo(() => {
-        const sortedChildren = sortBy(root.children_state, (ev) => {
-            return getChildOrder(ev.content.order, ev.origin_server_ts, ev.state_key);
-        });
-        return sortedChildren.reduce(
-            (result, ev: IHierarchyRelation) => {
-                const room = hierarchy.roomMap.get(ev.state_key);
-                if (room && roomSet.has(room)) {
-                    result[room.room_type === RoomType.Space ? 0 : 1].push(toLocalRoom(cli, room, hierarchy));
-                }
-                return result;
-            },
-            [[] as IHierarchyRoom[], [] as IHierarchyRoom[]],
-        );
-    }, [root.children_state, hierarchy, roomSet, cli]);
+    const [orderedLists, setOrderedLists] = useState(RoomListStore.instance.orderedLists);
 
     const [spaceTags, setSpaceTags] = useState(SpaceStore.instance.spaceTags);
 
+    // 过滤后的建议的频道（未加入的频道）
+    const [suggestedRooms, setSuggestedRooms] = useState<ISuggestedRoom[]>(
+        () => SpaceStore.instance.filteredSuggestedRooms,
+    );
+
     const [hierarchyList, setHierarchyList] = useState([]);
 
+    const [isSearch, setIsSearch] = useState<boolean>(false); // 是否是搜索
+
+    useEffect(() => {
+        setIsSearch(!!query.trim());
+    }, [query]);
+
+    // 订阅分组变化
     useEffect(() => {
         const updateSpaceTags = (tags) => {
             setSpaceTags(tags);
@@ -519,18 +166,34 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
         };
     }, []);
 
+    // 订阅建议的频道变化
+    useEffect(() => {
+        const updateSuggestedRooms = (filteredSuggestedRooms: ISuggestedRoom[]): void => {
+            setSuggestedRooms(filteredSuggestedRooms);
+        };
+
+        SpaceStore.instance.on(UPDATE_FILTERED_SUGGESTED_ROOMS, updateSuggestedRooms);
+        return () => {
+            SpaceStore.instance.off(UPDATE_FILTERED_SUGGESTED_ROOMS, updateSuggestedRooms);
+        };
+    }, []);
+
+    // 订阅tagMap改变
+    useEffect(() => {
+        const onListsUpdated = () => {
+            setOrderedLists({ ...RoomListStore.instance.orderedLists });
+        };
+
+        RoomListStore.instance.on(LISTS_UPDATE_EVENT, onListsUpdated);
+        return () => {
+            RoomListStore.instance.off(LISTS_UPDATE_EVENT, onListsUpdated);
+        };
+    }, []);
+
     // 生成分组 & 频道列表
     useEffect(() => {
-        if (!spaceTags) {
+        if (space?.roomId !== SpaceStore.instance.activeSpace) {
             setHierarchyList([]);
-            return;
-        }
-        const newHierarchyList = spaceTags.map((item) => ({
-            ...item,
-            children: [],
-        }));
-        if (!childRooms || !childRooms.length) {
-            setHierarchyList(newHierarchyList);
             return;
         }
 
@@ -538,101 +201,92 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({
         const suggestedTagHierarchy = {
             tagId: DefaultTagID.Suggested,
             tagName: _t("Suggested Rooms"),
-            children: [],
+            children: suggestedRooms,
         };
 
-        const defaultTagHierarchy = {
-            tagId: DefaultTagID.Untagged,
-            tagName: _t("channel"),
-            children: [],
-        };
+        // 已加入的频道
+        const joinedHierarchyList = [
+            {
+                tagId: DefaultTagID.Untagged,
+                tagName: _t("channel"),
+            },
+            ...spaceTags,
+        ].map((tagInfo) => ({
+            ...tagInfo,
+            children: orderedLists[tagInfo.tagId] || [],
+        }));
 
-        for (const room of childRooms) {
-            const roomInfo = cli.getRoom(room.room_id);
-            if (!roomInfo) {
-                suggestedTagHierarchy.children.push(room);
-                continue;
+        // 分组频道列表
+        const newHierarchyList = [suggestedTagHierarchy, ...joinedHierarchyList];
+        const lcQuery = query.toLowerCase().trim();
+        for (let i = newHierarchyList.length - 1; i >= 0; i--) {
+            const item = newHierarchyList[i];
+            item.children = item.children.filter(
+                (room) => room.name?.toLowerCase().includes(lcQuery) || room.topic?.toLowerCase().includes(lcQuery),
+            );
+
+            // 正常展示时，如果建议的频道和默认分组下没有频道，则删除该分组
+            if (!isSearch && !item.children.length && canHiddenGroups.includes(item.tagId as DefaultTagID)) {
+                newHierarchyList.splice(i, 1);
             }
-            const roomTags = roomInfo.getRoomTags();
-            if (!roomTags || !roomTags.length) {
-                defaultTagHierarchy.children.push(room);
-                continue;
-            }
-            for (const roomTagItem of roomTags) {
-                const index = newHierarchyList.findIndex((item) => item.tagId === roomTagItem.tagId);
-                if (index !== -1) {
-                    newHierarchyList[index].children.push(room);
-                }
+
+            // 如果某个分组下没有满足搜索条件的频道，则从搜索结果中删除该分组
+            if (isSearch && !item.children.length) {
+                newHierarchyList.splice(i, 1);
             }
         }
-        setHierarchyList([suggestedTagHierarchy, defaultTagHierarchy, ...newHierarchyList]);
-    }, [cli, spaceTags, childRooms]);
 
-    const newParents = new Set(parents).add(root.room_id);
+        setHierarchyList(newHierarchyList);
+    }, [space, suggestedRooms, spaceTags, orderedLists, query, isSearch, canHiddenGroups]);
 
     return (
         <React.Fragment>
-            {hierarchyList.map((item) => (
-                <div key={item.tagId} className="mx_RoomSublist">
-                    <div className="mx_RoomSublist_headerContainer">
-                        <div className="mx_RoomSublist_stickableContainer">
-                            <div className="mx_RoomSublist_stickable">
-                                <div className="mx_RoomSublist_headerText">{item.tagName}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="mx_RoomSublist_tiles">
-                        {item.children?.map((room) => (
-                            <div
-                                key={room.room_id}
-                                className="mx_RoomTile"
-                                onClick={() => onViewRoomClick(room.room_id, room.room_type as RoomType)}
-                            >
-                                <SpaceChannelAvatar isPrivate={isPrivateRoom(room.join_rule)} />
-                                <div className="mx_RoomTile_titleContainer">
-                                    <div className="mx_RoomTile_title" tabIndex={-1}>
-                                        <span className="mx_RoomTile_title" dir="auto">
-                                            {room.name}
-                                        </span>
+            {hierarchyList.length > 0 ? (
+                <ul className="mx_SpaceHierarchy_list" role="tree" aria-label={_t("Space")}>
+                    {hierarchyList.map((item) => (
+                        <div key={item.tagId} className="mx_RoomSublist">
+                            <div className="mx_RoomSublist_headerContainer">
+                                <div className="mx_RoomSublist_stickableContainer">
+                                    <div className="mx_RoomSublist_stickable">
+                                        <div className="mx_RoomSublist_headerText">{item.tagName}</div>
                                     </div>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                            <div className="mx_RoomSublist_tiles">
+                                {item.children?.map((room) => (
+                                    <div
+                                        key={room.room_id || room.roomId}
+                                        className="mx_RoomTile"
+                                        onClick={() => onViewRoomClick(room)}
+                                    >
+                                        <SpaceChannelAvatar isPrivate={isPrivateRoom(room.join_rule)} />
+                                        <div className="mx_RoomTile_titleContainer">
+                                            <div className="mx_RoomTile_title" tabIndex={-1}>
+                                                <span className="mx_RoomTile_title" dir="auto">
+                                                    {room.name}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </ul>
+            ) : (
+                <div className="mx_SpaceHierarchy_noResults">
+                    {isSearch ? (
+                        <>
+                            <h3>{_t("No results found")}</h3>
+                            <div>{_t("You may want to try a different search or check for typos.")}</div>
+                        </>
+                    ) : (
+                        <>
+                            <h3>暂无频道</h3>
+                        </>
+                    )}
                 </div>
-            ))}
-
-            {subspaces
-                .filter((room) => !newParents.has(room.room_id))
-                .map((space) => (
-                    <Tile
-                        key={space.room_id}
-                        room={space}
-                        numChildRooms={
-                            space.children_state.filter((ev) => {
-                                const room = hierarchy.roomMap.get(ev.state_key);
-                                return room && roomSet.has(room) && !room.room_type;
-                            }).length
-                        }
-                        suggested={hierarchy.isSuggested(root.room_id, space.room_id)}
-                        selected={selectedMap?.get(root.room_id)?.has(space.room_id)}
-                        onViewRoomClick={() => onViewRoomClick(space.room_id, RoomType.Space)}
-                        onJoinRoomClick={() => onJoinRoomClick(space.room_id)}
-                        hasPermissions={hasPermissions}
-                        onToggleClick={onToggleClick ? () => onToggleClick(root.room_id, space.room_id) : undefined}
-                    >
-                        <HierarchyLevel
-                            root={space}
-                            roomSet={roomSet}
-                            hierarchy={hierarchy}
-                            parents={newParents}
-                            selectedMap={selectedMap}
-                            onViewRoomClick={onViewRoomClick}
-                            onJoinRoomClick={onJoinRoomClick}
-                            onToggleClick={onToggleClick}
-                        />
-                    </Tile>
-                ))}
+            )}
         </React.Fragment>
     );
 };
@@ -698,75 +352,9 @@ export const useRoomHierarchy = (
     };
 };
 
-const useIntersectionObserver = (callback: () => void): ((element: HTMLDivElement) => void) => {
-    const handleObserver = (entries: IntersectionObserverEntry[]): void => {
-        const target = entries[0];
-        if (target.isIntersecting) {
-            callback();
-        }
-    };
-
-    const observerRef = useRef<IntersectionObserver>();
-    return (element: HTMLDivElement) => {
-        if (observerRef.current) {
-            observerRef.current.disconnect();
-        } else if (element) {
-            observerRef.current = new IntersectionObserver(handleObserver, {
-                root: element.parentElement,
-                rootMargin: "0px 0px 600px 0px",
-            });
-        }
-
-        if (observerRef.current && element) {
-            observerRef.current.observe(element);
-        }
-    };
-};
-
 const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, additionalButtons }) => {
     const cli = useContext(MatrixClientContext);
     const [query, setQuery] = useState(initialText);
-
-    const [selected, setSelected] = useState(new Map<string, Set<string>>()); // Map<parentId, Set<childId>>
-
-    const { loading, rooms, hierarchy, loadMore, error: hierarchyError } = useRoomHierarchy(space);
-
-    const filteredRoomSet = useMemo<Set<IHierarchyRoom>>(() => {
-        if (!rooms?.length || !hierarchy) return new Set();
-        const lcQuery = query.toLowerCase().trim();
-        if (!lcQuery) return new Set(rooms);
-
-        const directMatches = rooms.filter((r) => {
-            return r.name?.toLowerCase().includes(lcQuery) || r.topic?.toLowerCase().includes(lcQuery);
-        });
-
-        // Walk back up the tree to find all parents of the direct matches to show their place in the hierarchy
-        const visited = new Set<string>();
-        const queue = [...directMatches.map((r) => r.room_id)];
-        while (queue.length) {
-            const roomId = queue.pop()!;
-            visited.add(roomId);
-            hierarchy.backRefs.get(roomId)?.forEach((parentId) => {
-                if (!visited.has(parentId)) {
-                    queue.push(parentId);
-                }
-            });
-        }
-
-        return new Set(rooms.filter((r) => visited.has(r.room_id)));
-    }, [rooms, hierarchy, query]);
-
-    const [error, setError] = useState("");
-    let errorText = error;
-    if (!error && hierarchyError) {
-        errorText = _t("Failed to load list of rooms.");
-    }
-
-    const loaderRef = useIntersectionObserver(loadMore);
-
-    if (!loading && hierarchy!.noSupport) {
-        return <p>{_t("Your server does not support showing space hierarchies.")}</p>;
-    }
 
     const onKeyDown = (ev: KeyboardEvent, state: IState): void => {
         const action = getKeyBindingsManager().getAccessibilityAction(ev);
@@ -775,85 +363,9 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
         }
     };
 
-    const onToggleClick = (parentId: string, childId: string): void => {
-        setError("");
-        if (!selected.has(parentId)) {
-            setSelected(new Map(selected.set(parentId, new Set([childId]))));
-            return;
-        }
-
-        const parentSet = selected.get(parentId)!;
-        if (!parentSet.has(childId)) {
-            setSelected(new Map(selected.set(parentId, new Set([...parentSet, childId]))));
-            return;
-        }
-
-        parentSet.delete(childId);
-        setSelected(new Map(selected.set(parentId, new Set(parentSet))));
-    };
-
     return (
         <RovingTabIndexProvider onKeyDown={onKeyDown} handleHomeEnd handleUpDown>
             {({ onKeyDownHandler }) => {
-                let content: JSX.Element;
-                if (!hierarchy || (loading && !rooms?.length)) {
-                    content = <Spinner />;
-                } else {
-                    const hasPermissions =
-                        space?.getMyMembership() === "join" &&
-                        space.currentState.maySendStateEvent(EventType.SpaceChild, cli.getSafeUserId());
-
-                    const root = hierarchy.roomMap.get(space.roomId);
-                    let results: JSX.Element | undefined;
-                    if (filteredRoomSet.size && root) {
-                        results = (
-                            <>
-                                <HierarchyLevel
-                                    root={root}
-                                    roomSet={filteredRoomSet}
-                                    hierarchy={hierarchy}
-                                    parents={new Set()}
-                                    selectedMap={selected}
-                                    onToggleClick={hasPermissions ? onToggleClick : undefined}
-                                    onViewRoomClick={(roomId, roomType) => showRoom(cli, hierarchy, roomId, roomType)}
-                                    onJoinRoomClick={(roomId) => joinRoom(cli, hierarchy, roomId)}
-                                />
-                            </>
-                        );
-                    } else if (!hierarchy.canLoadMore) {
-                        results = (
-                            <div className="mx_SpaceHierarchy_noResults">
-                                <h3>{_t("No results found")}</h3>
-                                <div>{_t("You may want to try a different search or check for typos.")}</div>
-                            </div>
-                        );
-                    }
-
-                    let loader: JSX.Element | undefined;
-                    if (hierarchy.canLoadMore) {
-                        loader = (
-                            <div ref={loaderRef}>
-                                <Spinner />
-                            </div>
-                        );
-                    }
-
-                    content = (
-                        <>
-                            {errorText && <div className="mx_SpaceHierarchy_error">{errorText}</div>}
-                            <ul
-                                className="mx_SpaceHierarchy_list"
-                                onKeyDown={onKeyDownHandler}
-                                role="tree"
-                                aria-label={_t("Space")}
-                            >
-                                {results}
-                            </ul>
-                            {loader}
-                        </>
-                    );
-                }
-
                 return (
                     <div className="mx_SpaceHierarchy_page">
                         <div className="mx_SpaceHierarchy_header">
@@ -872,7 +384,13 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
                                 />
                             </div>
                         </div>
-                        {content}
+                        <div className="mx_SpaceHierarchy_content">
+                            <HierarchyLevel
+                                space={space}
+                                query={query}
+                                onViewRoomClick={(room) => showRoom(cli, room)}
+                            />
+                        </div>
                     </div>
                 );
             }}

@@ -18,7 +18,7 @@ limitations under the License.
 import React, { ChangeEvent, createRef } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 import { RoomType } from "matrix-js-sdk/src/@types/event";
-import { HistoryVisibility, JoinRule, Preset, Visibility } from "matrix-js-sdk/src/@types/partials";
+import { JoinRule, Preset, Visibility } from "matrix-js-sdk/src/@types/partials";
 
 import SdkConfig from "../../../SdkConfig";
 import withValidation, { IFieldState, IValidationResult } from "../elements/Validation";
@@ -124,8 +124,6 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
         if (this.props.parentSpace && this.state.joinRule === JoinRule.Restricted) {
             opts.joinRule = JoinRule.Restricted;
         }
-
-        opts.historyVisibility = HistoryVisibility.WorldReadable;
 
         return opts;
     }

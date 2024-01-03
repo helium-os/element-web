@@ -23,6 +23,7 @@ import SpaceStore from "../../spaces/SpaceStore";
 import { isMetaSpace, MetaSpace, SpaceKey } from "../../spaces";
 import { setHasDiff } from "../../../utils/sets";
 import SettingsStore from "../../../settings/SettingsStore";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 /**
  * A filter condition for the room list which reveals rooms which
@@ -37,7 +38,15 @@ export class SpaceFilterCondition extends EventEmitter implements IFilterConditi
     private space: SpaceKey = MetaSpace.Home;
 
     public isVisible(room: Room): boolean {
-        return SpaceStore.instance.isRoomInSpace(this.space, room.roomId);
+        const romeInSpace = SpaceStore.instance.isRoomInSpace(this.space, room.roomId);
+
+        if (!isMetaSpace(this.space)) return romeInSpace;
+
+        // 个人主页隐藏社区内的频道（社区内的频道只展示在对应的社区下）
+        if (!romeInSpace) return false;
+
+        const ev = room.currentState.getStateEvents(EventType.RoomCreate, "");
+        return !ev.getContent()?.has_parent;
     }
 
     private onStoreUpdate = async (forceUpdate = false): Promise<void> => {

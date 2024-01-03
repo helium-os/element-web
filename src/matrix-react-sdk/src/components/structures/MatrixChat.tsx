@@ -302,6 +302,8 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
         RoomNotificationStateStore.instance.on(UPDATE_STATUS_INDICATOR, this.onUpdateStatusIndicator);
 
+        console.log("init bugfix isSoftLogout", Lifecycle.isSoftLogout());
+
         // Force users to go through the soft logout page if they're soft logged out
         if (Lifecycle.isSoftLogout()) {
             // When the session loads it'll be detected as soft logged out and a dispatch
@@ -331,6 +333,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 this.props.defaultDeviceDisplayName,
                 this.getFragmentAfterLogin(),
             ).then(async (loggedIn): Promise<boolean | void> => {
+                console.log("init bugfix loggedIn", loggedIn);
                 if (this.props.realQueryParams?.loginToken) {
                     // remove the loginToken from the URL regardless
                     this.props.onTokenLoginCompleted();
@@ -351,6 +354,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 const firstScreen = this.screenAfterLogin ? this.screenAfterLogin.screen : null;
 
                 const restoreSuccess = await this.loadSession();
+                console.log("init bugfix restoreSuccess", restoreSuccess);
                 if (restoreSuccess) {
                     return true;
                 }
@@ -367,6 +371,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private async postLoginSetup(): Promise<void> {
+        console.log("---init bugfix enter postLoginSetup");
         const cli = MatrixClientPeg.get();
         const cryptoEnabled = cli.isCryptoEnabled();
         if (!cryptoEnabled) {
@@ -382,6 +387,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             promisesList.push(
                 (async (): Promise<void> => {
                     crossSigningIsSetUp = await cli.userHasCrossSigningKeys();
+                    console.log("init bugfix crossSigningIsSetUp");
                 })(),
             );
         }
@@ -390,7 +396,11 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         // than for the login to finish.
         this.setState({ pendingInitialSync: true });
 
+        console.log("init bugfix await promisesList", promisesList);
+
         await Promise.all(promisesList);
+
+        console.log("init bugfix promisesList resolved");
 
         if (!cryptoEnabled) {
             this.setState({ pendingInitialSync: false });
@@ -398,6 +408,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         }
 
         if (crossSigningIsSetUp) {
+            console.log("nit bugfix postLoginSetup 1 crossSigningIsSetUp");
             // if the user has previously set up cross-signing, verify this device so we can fetch the
             // private keys.
             if (SecurityCustomisations.SHOW_ENCRYPTION_SETUP_UI === false) {
@@ -406,9 +417,11 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 this.setStateForNewView({ view: Views.COMPLETE_SECURITY });
             }
         } else if (await cli.doesServerSupportUnstableFeature("org.matrix.e2e_cross_signing")) {
+            console.log("init bugfix postLoginSetup 2");
             // if cross-signing is not yet set up, do so now if possible.
             this.setStateForNewView({ view: Views.E2E_SETUP });
         } else {
+            console.log("init bugfix postLoginSetup 3");
             this.onLoggedIn();
         }
         this.setState({ pendingInitialSync: false });
@@ -514,6 +527,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private loadSession(): Promise<boolean> {
+        console.log("---init bugfix enter Matrix loadedSession");
         // the extra Promise.resolve() ensures that synchronous exceptions hit the same codepath as
         // asynchronous ones.
         return Promise.resolve()
@@ -527,11 +541,13 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 });
             })
             .then((loadedSession) => {
+                console.log("init bugfix loadedSession", loadedSession);
                 if (!loadedSession) {
                     // fall back to showing the welcome screen... unless we have a 3pid invite pending
                     if (ThreepidInviteStore.instance.pickBestInvite()) {
                         dis.dispatch({ action: "start_registration" });
                     } else {
+                        console.log("init bugfix dispatch view_welcome_page");
                         dis.dispatch({ action: "view_welcome_page" });
                     }
                 }
@@ -770,9 +786,11 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 break;
             }
             case "view_welcome_page":
+                console.log("init bugfix 订阅到 view_welcome_page");
                 this.viewWelcome();
                 break;
             case Action.ViewHomePage:
+                console.log("init bugfix 订阅到 Action.ViewHomePage");
                 this.viewHome(payload.justRegistered);
                 break;
             case Action.ViewStartChatOrReuse:
@@ -824,6 +842,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 Modal.createDialog(DialPadModal, {}, "mx_Dialog_dialPadWrapper");
                 break;
             case Action.OnLoggedIn:
+                console.log("init bugfix 订阅到 Action.OnLoggedIn");
                 this.stores.client = MatrixClientPeg.get();
                 if (
                     // Skip this handling for token login as that always calls onLoggedIn itself
@@ -1034,6 +1053,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private viewWelcome(): void {
+        console.log("init bugfix enter viewWelcome");
         if (shouldUseLoginForWelcome(SdkConfig.get())) {
             return this.viewLogin();
         }
@@ -1046,6 +1066,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private viewLogin(otherState?: any): void {
+        console.log("init bugfix enter viewLogin");
         this.setStateForNewView({
             view: Views.LOGIN,
             ...otherState,
@@ -1331,6 +1352,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
      * Called when a new logged in session has started
      */
     private async onLoggedIn(): Promise<void> {
+        console.log("---init bugfix enter onLoggedIn");
         ThemeController.isLogin = false;
         this.themeWatcher.recheck();
         StorageManager.tryPersistStorage();
@@ -1362,6 +1384,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private async onShowPostLoginScreen(useCase?: UseCase): Promise<void> {
+        console.log("---init bugfix enter onShowPostLoginScreen");
         if (useCase) {
             PosthogAnalytics.instance.setProperty("ftueUseCaseSelection", useCase);
             SettingsStore.setValue("FTUE.useCaseSelection", null, SettingLevel.ACCOUNT, useCase);
@@ -1371,9 +1394,11 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         // If a specific screen is set to be shown after login, show that above
         // all else, as it probably means the user clicked on something already.
         if (this.screenAfterLogin?.screen) {
+            console.log("---init bugfix onShowPostLoginScreen 1");
             this.showScreen(this.screenAfterLogin.screen, this.screenAfterLogin.params);
             this.screenAfterLogin = undefined;
         } else if (MatrixClientPeg.currentUserIsJustRegistered()) {
+            console.log("---init bugfix onShowPostLoginScreen 2");
             MatrixClientPeg.setJustRegisteredUserId(null);
 
             const snakedConfig = new SnakedObject<IConfigOptions>(this.props.config);
@@ -1398,6 +1423,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage, justRegistered: true });
             }
         } else {
+            console.log("---init bugfix onShowPostLoginScreen 3");
             this.showScreenAfterLogin();
         }
 
@@ -1458,18 +1484,23 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     private showScreenAfterLogin(): void {
+        console.log("---init bugfix enter showScreenAfterLogin");
         // If screenAfterLogin is set, use that, then null it so that a second login will
         // result in view_home_page, _user_settings or _room_directory
         if (this.screenAfterLogin && this.screenAfterLogin.screen) {
+            console.log("---init bugfix showScreenAfterLogin 1");
             this.showScreen(this.screenAfterLogin.screen, this.screenAfterLogin.params);
             this.screenAfterLogin = undefined;
         } else if (localStorage && localStorage.getItem("mx_last_room_id")) {
+            console.log("---init bugfix showScreenAfterLogin 2");
             // Before defaulting to directory, show the last viewed room
             this.viewLastRoom();
         } else {
             if (MatrixClientPeg.get().isGuest()) {
+                console.log("---init bugfix showScreenAfterLogin 3");
                 dis.dispatch({ action: "view_welcome_page" });
             } else {
+                console.log("---init bugfix showScreenAfterLogin 4, dispatch Action.ViewHomePage");
                 dis.dispatch({ action: Action.ViewHomePage });
             }
         }
@@ -1778,6 +1809,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     }
 
     public showScreen(screen: string, params?: { [key: string]: any }): void {
+        console.log("---init bugfix enter showScreen", "screen", screen, "params", params);
         const cli = MatrixClientPeg.get();
         const isLoggedOutOrGuest = !cli || cli.isGuest();
         if (!isLoggedOutOrGuest && AUTH_SCREENS.includes(screen)) {
@@ -2066,10 +2098,12 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
      * this, as they instead jump straight into the app after `attemptTokenLogin`.
      */
     private onUserCompletedLoginFlow = async (credentials: IMatrixClientCreds, password: string): Promise<void> => {
+        console.log("---init bugfix enter onUserCompletedLoginFlow");
         this.stores.accountPasswordStore.setPassword(password);
 
         // Create and start the client
         await Lifecycle.setLoggedIn(credentials);
+        console.log("init bugfix setLoggedIn success");
         await this.postLoginSetup();
 
         PerformanceMonitor.instance.stop(PerformanceEntryNames.LOGIN);
