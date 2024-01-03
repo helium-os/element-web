@@ -121,7 +121,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     private onRoomStateEvents = (ev: MatrixEvent) => {
         switch (ev.getType()) {
             case EventType.RoomPowerLevels:
-                // 权限更新
+                // powerLevel更新
                 this.setDisplayMemberList(this.props.room);
                 break;
         }

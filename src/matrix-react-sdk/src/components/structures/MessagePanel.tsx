@@ -284,7 +284,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             ghostReadMarkers: [],
             showTypingNotifications: SettingsStore.getValue("showTypingNotifications"),
             hideSender: this.shouldHideSender(),
-            displayMemberList: this.props.room.displayMemberList(this.myUserId), // 是否展示成员列表
+            displayMemberList: false, // 是否展示成员列表
             displayEventType,
         };
 
@@ -302,7 +302,8 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
     public componentDidMount(): void {
         this.calculateRoomMembersCount();
-        this.generateDisplayEventType(this.state.displayMemberList);
+        const displayMemberList = this.setDisplayMemberList(this.props.room);
+        this.generateDisplayEventType(displayMemberList);
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
         this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
         this.isMounted = true;
@@ -338,6 +339,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             });
         }
 
+        // 成员列表展示状态更新后，重新生成需要展示的eventType列表
         if (this.state.displayMemberList !== prevState.displayMemberList) {
             this.generateDisplayEventType(this.state.displayMemberList);
         }
@@ -361,19 +363,20 @@ export default class MessagePanel extends React.Component<IProps, IState> {
     private onRoomStateEvents = (ev: MatrixEvent) => {
         switch (ev.getType()) {
             case EventType.RoomPowerLevels:
-                this.updatePermissions(this.props.room);
+                // powerLevel更新
+                this.setDisplayMemberList(this.props.room);
                 break;
         }
     };
 
-    // 更新当前用户权限
-    private updatePermissions(room: Room): void {
+    private setDisplayMemberList(room: Room): boolean {
         if (!room) return;
 
         const displayMemberList = room.displayMemberList(this.myUserId);
         this.setState({
             displayMemberList,
         });
+        return displayMemberList;
     }
 
     private shouldHideSender(): boolean {

@@ -116,7 +116,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
 
     public componentDidMount(): void {
         super.componentDidMount();
-        this.updatePermissions(this.props.room);
+        this.setDisplayMemberList(this.props.room);
         // Notification badge may change if the notification counts from the
         // server change, if a new thread is created or updated, or if a
         // receipt is sent in the thread.
@@ -125,7 +125,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.props.room?.on(RoomEvent.Timeline, this.onNotificationUpdate);
         this.props.room?.on(RoomEvent.Redaction, this.onNotificationUpdate);
         this.props.room?.on(RoomEvent.LocalEchoUpdated, this.onNotificationUpdate);
-        this.props.room?.on(RoomEvent.MyMembership, this.onNotificationUpdate);
+        this.props.room?.on(RoomEvent.MyMembership, this.onMyMembership);
         this.props.room?.on(ThreadEvent.New, this.onNotificationUpdate);
         this.props.room?.on(ThreadEvent.Update, this.onNotificationUpdate);
         this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
@@ -150,23 +150,30 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
     private onRoomStateEvents = (ev: MatrixEvent) => {
         switch (ev.getType()) {
             case EventType.RoomPowerLevels:
-                this.updatePermissions(this.props.room);
+                // powerLevel更新
+                this.setDisplayMemberList(this.props.room);
                 break;
         }
     };
 
-    // 更新当前用户权限
-    private updatePermissions(room: Room): void {
+    private setDisplayMemberList(room: Room): boolean {
         if (!room) return;
 
         const displayMemberList = room.displayMemberList(this.myUserId);
         this.setState({
             displayMemberList,
         });
+
+        return displayMemberList;
     }
 
     private onRoomPropertyUpdate = (property: CachedRoomKey): void => {
         if (property === CachedRoomKey.NotificationVolume) this.onNotificationUpdate();
+    };
+
+    private onMyMembership = () => {
+        this.onNotificationUpdate();
+        this.setDisplayMemberList(this.props.room);
     };
 
     private onNotificationUpdate = (): void => {
@@ -174,7 +181,6 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
             threadNotificationColor: this.notificationColor,
             notificationState: this.echoChamber?.notificationVolume,
         });
-        this.updatePermissions(this.props.room);
     };
 
     private get notificationColor(): NotificationColor {
