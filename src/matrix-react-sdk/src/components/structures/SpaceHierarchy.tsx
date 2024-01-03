@@ -36,7 +36,7 @@ import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { getDisplayAliasForAliasSet } from "../../Rooms";
 import SettingsStore from "../../settings/SettingsStore";
 import { ISuggestedRoom, UPDATE_FILTERED_SUGGESTED_ROOMS, UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
-import { DefaultTagID } from "matrix-react-sdk/src/stores/room-list/models";
+import { DefaultTagID, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "matrix-react-sdk/src/stores/room-list/RoomListStore";
@@ -46,6 +46,12 @@ interface IProps {
     initialText?: string;
     additionalButtons?: ReactNode;
     showRoom(cli: MatrixClient, room: IHierarchyRoom | Room): void;
+}
+
+interface hierarchyItem {
+    tagId: TagID;
+    tagName?: string;
+    children?: Room[] | ISuggestedRoom[];
 }
 
 // 预览已加入的频道
@@ -146,7 +152,7 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({ space, query = 
         () => SpaceStore.instance.filteredSuggestedRooms,
     );
 
-    const [hierarchyList, setHierarchyList] = useState([]);
+    const [hierarchyList, setHierarchyList] = useState<hierarchyItem[]>([]);
 
     const [isSearch, setIsSearch] = useState<boolean>(false); // 是否是搜索
 
@@ -259,7 +265,13 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({ space, query = 
                                         className="mx_RoomTile"
                                         onClick={() => onViewRoomClick(room)}
                                     >
-                                        <SpaceChannelAvatar isPrivate={isPrivateRoom(room.join_rule)} />
+                                        <SpaceChannelAvatar
+                                            isPrivate={
+                                                room instanceof Room
+                                                    ? room.isPrivateRoom()
+                                                    : isPrivateRoom(room.join_rule)
+                                            }
+                                        />
                                         <div className="mx_RoomTile_titleContainer">
                                             <div className="mx_RoomTile_title" tabIndex={-1}>
                                                 <span className="mx_RoomTile_title" dir="auto">
