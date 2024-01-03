@@ -82,12 +82,14 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
                   {
                       value: JoinRule.Public, // 用于公开社区
                       label: _t("Public"),
+                      description: "允许普通用户邀请其他用户加入到当前社区",
                   },
               ]
             : [
                   {
                       value: JoinRule.Restricted, // 用于社区内公开频道（对社区内成员可见）
                       label: _t("Public"),
+                      description: "社区内所有用户可访问当前频道",
                       // if there are 0 allowed spaces then render it as invite only instead
                       checked: joinRule === JoinRule.Restricted && !!restrictedAllowRoomIds?.length,
                   },
@@ -95,6 +97,9 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
         {
             value: JoinRule.Invite, // 用于私密社区 || 私密频道
             label: _t("Private"),
+            description: room.isSpaceRoom()
+                ? "仅管理员和协管员可邀请用户到当前社区"
+                : "仅社区管理员和协管员可邀请用户到当前频道",
         },
     ];
 
