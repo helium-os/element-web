@@ -30,6 +30,10 @@ export function isPrivateRoom(joinRule: JoinRule) {
     return joinRule === JoinRule.Invite;
 }
 
+export function getRoomParents(roomId: string) {
+    return SpaceStore.instance.getParents(roomId, false, false);
+}
+
 // 判断管理员是否已离开房间
 Room.prototype.isAdminLeft = function (): boolean {
     return this.currentState.isAdminLeft();
@@ -146,4 +150,14 @@ Room.prototype.canOperateTag = function (userId: string) {
     }
 
     return this.currentState.maySendStateEvent(EventType.Tag, userId);
+};
+
+// 获取当前room的parents room
+Room.prototype.getParents = function () {
+    return getRoomParents(this.roomId);
+};
+
+// 判断当前room是否是社区内的频道
+Room.prototype.isSpaceChannel = function () {
+    return this.getParents().length > 0;
 };

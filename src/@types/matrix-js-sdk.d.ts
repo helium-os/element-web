@@ -41,6 +41,8 @@ declare module "matrix-js-sdk/src/models/room" {
         canRemoveUser(userId: string): boolean;
         displayMemberList(userId: string): boolean;
         canOperateTag(userId: string): boolean;
+        getParents(): Room[];
+        isSpaceChannel(): boolean;
     }
 }
 

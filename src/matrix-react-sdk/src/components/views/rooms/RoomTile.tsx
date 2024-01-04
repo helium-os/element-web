@@ -302,13 +302,23 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
         name = name.replace(":", ":\u200b"); // add a zero-width space to allow linewrapping after the colon
 
         let badge: React.ReactNode;
+        let mentionsBadge: React.ReactNode;
 
-        if (
-            !this.props.isMinimized &&
-            this.notificationState &&
-            (SpaceStore.instance.isHomeSpace || this.notificationState.hasMentions) // 私聊 & 群聊有未读消息时展示小红点；社区频道只有被@时才展示小红点
-        ) {
-            // aria-hidden because we summarise the unread count/highlight status in a manual aria-label below
+        if (!this.props.isMinimized && this.notificationState) {
+            /**
+             * "@我"小红点
+             * 群聊里有人@时展示"@我"标识（邀请分组下不展示该标识）
+             * 社区频道内有人@时不展示（社区内有人@时展示为未读消息数小红点）
+             */
+            if (SpaceStore.instance.isHomeSpace && this.props.tag !== DefaultTagID.Invite) {
+                mentionsBadge = (
+                    <div className="mx_RoomTile_mentionsBadgeContainer">
+                        <MentionsNotificationBadge notification={this.notificationState} />
+                    </div>
+                );
+            }
+
+            // 未读消息数小红点
             badge = (
                 <div className="mx_RoomTile_badgeContainer" aria-hidden="true">
                     <NotificationBadge
@@ -316,24 +326,6 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
                         forceCount={false}
                         roomId={this.props.room.roomId}
                     />
-                </div>
-            );
-        }
-
-        let mentionsBadge;
-        /**
-         * 群聊里有人@时展示"@我"标识（邀请分组下不展示标识）
-         * 社区频道内有人@时不展示
-         */
-        if (
-            !this.props.isMinimized &&
-            SpaceStore.instance.isHomeSpace &&
-            this.props.tag !== DefaultTagID.Invite &&
-            this.notificationState
-        ) {
-            mentionsBadge = (
-                <div className="mx_RoomTile_mentionsBadgeContainer">
-                    <MentionsNotificationBadge notification={this.notificationState} />
                 </div>
             );
         }

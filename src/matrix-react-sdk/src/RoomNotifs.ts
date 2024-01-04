@@ -225,12 +225,15 @@ export function determineUnreadState(
     const greyNotifs = getUnreadNotificationCount(room, NotificationCountType.Total, threadId);
 
     const trueCount = greyNotifs || redNotifs;
-    if (redNotifs > 0) {
-        return { symbol: null, count: trueCount, color: NotificationColor.Red };
-    }
 
-    if (greyNotifs > 0) {
-        return { symbol: null, count: trueCount, color: NotificationColor.Grey };
+    const isSpaceChannel = room?.isSpaceChannel();
+
+    if (trueCount > 0) {
+        return {
+            symbol: null,
+            count: isSpaceChannel ? redNotifs : trueCount, // 社区下的频道，只展示被@的消息数（只有被@的未读消息才算作未读消息）；个人主页下的room展示所有消息数（所有未读消息都算作未读消息）
+            color: redNotifs > 0 ? NotificationColor.Red : NotificationColor.Grey,
+        };
     }
 
     // We don't have any notified messages, but we might have unread messages. Let's
