@@ -6,6 +6,7 @@ import { EventType } from "matrix-js-sdk/src/@types/event";
 import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomVersions";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { AddEventType } from "./event";
 
 export enum RoomType {
     People = "people", // 私聊
@@ -66,7 +67,7 @@ Room.prototype.getMemberEmail = function (userId: string): string {
 
 // 获取只打在room上的tag
 Room.prototype.getRoomTags = function () {
-    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent().tags || [];
+    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent()?.tags ?? [];
 };
 
 // 获取当前用户打在room上的tag（获取打在user + room上的tag）
@@ -88,6 +89,11 @@ Room.prototype.getAllTags = function () {
     } catch (error) {
         return this.getUserTags();
     }
+};
+
+// 获取只打在room上的tag
+Room.prototype.getRoomOrder = function () {
+    return this.currentState.getStateEvents(AddEventType.RoomOrder, "")?.getContent()?.order;
 };
 
 /**

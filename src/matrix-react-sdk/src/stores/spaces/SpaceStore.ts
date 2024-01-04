@@ -87,7 +87,7 @@ const partitionSpacesAndRooms = (arr: Room[]): [Room[], Room[]] => {
     );
 };
 
-const validOrder = (order?: string): string | undefined => {
+export const validOrder = (order?: string): string | undefined => {
     if (
         typeof order === "string" &&
         order.length <= 50 &&

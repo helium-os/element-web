@@ -35,6 +35,8 @@ import { OrderingAlgorithm } from "./list-ordering/OrderingAlgorithm";
 import { getListAlgorithmInstance } from "./list-ordering";
 import { VisibilityProvider } from "../filters/VisibilityProvider";
 import { CallStore, CallStoreEvent } from "../../CallStore";
+import { sortBy } from "lodash";
+import { validOrder } from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 /**
  * Fired when the Algorithm has determined a list has been updated.
@@ -457,6 +459,14 @@ export class Algorithm extends EventEmitter {
         return this.cachedRooms;
     }
 
+    private getRoomOrder(room: Room): string | undefined {
+        return validOrder(room.getRoomOrder());
+    }
+
+    private sortKnownRooms(rooms: Room[]): Room[] {
+        return sortBy(rooms, [this.getRoomOrder, "roomId"]);
+    }
+
     /**
      * Seeds the Algorithm with a set of rooms. The algorithm will discard all
      * previously known information and instead use these rooms instead.
@@ -524,6 +534,11 @@ export class Algorithm extends EventEmitter {
                     newTags[DefaultTagID.Untagged].push(room);
                 }
             }
+        }
+
+        // 对room进行排序
+        for (const [tagId, rooms] of Object.entries(newTags)) {
+            newTags[tagId] = this.sortKnownRooms(rooms);
         }
 
         this.generateFreshTags(newTags);

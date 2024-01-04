@@ -80,6 +80,7 @@ import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/Sp
 import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
+import { reorderLexicographically } from "matrix-react-sdk/src/utils/stringOrderField";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -398,6 +399,7 @@ function generateTagAesthetics(isHomeSpace): TagAestheticsMap {
 }
 
 export default class RoomList extends React.PureComponent<IProps, IState> {
+    private cli: MatrixClientPeg = MatrixClientPeg.get();
     private dispatcherRef?: string;
     private treeRef = createRef<HTMLDivElement>();
     private favouriteMessageWatcher: string;
@@ -718,30 +720,52 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         [...treeItems].find((e) => e.offsetParent !== null)?.focus();
     }
 
-    private async onDragEnd(result: DropResult): Promise<void> {
+    private moveRoom(fromTagId, fromIndex: number, toTagId, toIndex: number): void {
+        console.log("moveRoom fromIndex", fromIndex, "toIndex", toIndex);
+        const fromTagRoomList = RoomListStore.instance.orderedLists[fromTagId];
+        const toTagRoomList = RoomListStore.instance.orderedLists[toTagId];
+        const currentOrders = fromTagRoomList.map((room) => room.getRoomOrder());
+        console.log("moveRoom currentOrders", currentOrders);
+        const changes = reorderLexicographically(currentOrders, fromIndex, toIndex);
+        console.log("moveRoom changes", changes);
+
+        changes.forEach(({ index, order }) => {
+            this.cli.setRoomOrder(fromTagRoomList[index]?.roomId, order);
+        });
+    }
+
+    private onDragEnd = async (result: DropResult): Promise<void> => {
         console.log("拖拽结束", result);
-        if (!result.destination) return;
+        const { source, destination, type, draggableId } = result;
+        if (!destination) return;
 
-        const { droppableId } = result.destination;
+        const { index: originalIndex, droppableId: originalDroppableId } = source;
 
-        // 拖拽修改频道所属分组
-        if (result.type === DragType.Channel) {
-            const roomId = result.draggableId;
-            const tagId = droppableId;
-            try {
-                await MatrixClientPeg.get().setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
-            } catch (error) {
-                alert(error.message);
+        const { index: targetIndex, droppableId: targetDroppableId } = destination;
+
+        // 拖拽修改频道所属分组 & 频道排序
+        if (type === DragType.Channel) {
+            if (targetDroppableId === originalDroppableId && targetIndex === originalIndex) return;
+
+            const roomId = draggableId;
+            const tagId = targetDroppableId;
+
+            this.moveRoom(originalDroppableId, originalIndex, targetDroppableId, targetIndex);
+
+            if (targetDroppableId !== originalDroppableId) {
+                // 拖拽频道到不同分组下，修改当前room tag，改变其所属分组
+                try {
+                    await this.cli.setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
+                } catch (error) {
+                    alert(error.message);
+                }
             }
+
             return;
         }
 
         // 拖拽修改社区分组顺序
-        const { index: targetIndex } = result.destination;
-        if (targetIndex === -1) return; // 为-1时，表示拖拽到了默认分组之前，不做任何处理
-
-        const { index: originalIndex } = result.source;
-        if (targetIndex === originalIndex) return;
+        if (targetIndex === -1 || targetIndex === originalIndex) return; // 为-1时，表示拖拽到了默认分组之前，不做任何处理
 
         const tags = Array.from(SpaceStore.instance.spaceTags);
         const [removed] = tags.splice(originalIndex, 1);
@@ -751,7 +775,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         } catch (error) {
             alert(error.message);
         }
-    }
+    };
 
     public render(): React.ReactNode {
         const sublists = this.renderSublists();
