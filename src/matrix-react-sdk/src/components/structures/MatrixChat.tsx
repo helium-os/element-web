@@ -150,7 +150,6 @@ import * as languageHandler from "../../../src/languageHandler";
 import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
-import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -1193,7 +1192,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         const isRoomAdmin = myMember.isAdmin();
 
         const isSpace = roomToLeave?.isSpaceRoom();
-        const isSpaceChannel = SpaceStore.instance.getParents(roomId, false, false).length > 0;
+        const isSpaceChannel = roomToLeave.isSpaceChannel();
         const isGroupChatRoom = !isSpace && !isSpaceChannel && !roomToLeave?.isPeopleRoom(); // 是否是群聊
 
         const roomType = roomToLeave.getRoomTypeLabel();
