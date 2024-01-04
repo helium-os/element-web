@@ -14,16 +14,25 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { memo } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { IJoinRuleEventContent, JoinRule, RestrictedAllowType } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { EventType } from "matrix-js-sdk/src/@types/event";
+import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
 
 import StyledRadioGroup, { IDefinition } from "../elements/StyledRadioGroup";
 import { _t } from "../../../languageHandler";
 import SpaceStore from "../../../stores/spaces/SpaceStore";
 import { useLocalEcho } from "../../../hooks/useLocalEcho";
 import { doesRoomVersionSupport, PreferredRoomVersions } from "../../../utils/PreferredRoomVersions";
+import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
+import {
+    getDefaultEventPowerLevels,
+    getDefaultStatePowerLevels,
+    getInitStatePowerLevels,
+} from "matrix-react-sdk/src/powerLevel";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import { useRoomEnableMemberList } from "matrix-react-sdk/src/hooks/room/useRoomEnableMemberList";
+import { useRoomEnableSendMsg } from "matrix-react-sdk/src/hooks/room/useRoomEnableSendMsg";
 
 interface IProps {
     room: Room;
@@ -32,15 +41,29 @@ interface IProps {
 }
 
 const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, beforeChange }) => {
-    const cli = room.client;
-
     const roomSupportsRestricted = doesRoomVersionSupport(room.getVersion(), PreferredRoomVersions.RestrictedRooms);
 
-    const disabled = !room.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli) || room.isAdminLeft();
+    const [cli, setCli] = useState<MatrixClient | null>(null);
+    const [isSpaceRoom, setIsSpaceRoom] = useState<boolean>(false);
+    useEffect(() => {
+        setCli(room?.client);
+        setIsSpaceRoom(room?.isSpaceRoom());
+    }, [room]);
+
+    const [disabled, setDisabled] = useState<boolean>(true);
+    useEffect(() => {
+        setDisabled(
+            !(cli && room?.currentState.mayClientSendStateEvent(EventType.RoomJoinRules, cli)) || room.isAdminLeft(),
+        );
+    }, [cli, room]);
 
     const [content, setContent] = useLocalEcho<IJoinRuleEventContent>(
         () => room.currentState.getStateEvents(EventType.RoomJoinRules, "")?.getContent(),
-        (content) => cli.sendStateEvent(room.roomId, EventType.RoomJoinRules, content, ""),
+        async (content) => {
+            await cli.sendStateEvent(room.roomId, EventType.RoomJoinRules, content, "");
+            // 修改room可见性后，同时修改room权限
+            await changeRoomPowerLevel(room, content.join_rule);
+        },
         onError,
     );
 
@@ -50,18 +73,23 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
             ? content.allow?.filter((o) => o.type === RestrictedAllowType.RoomMembership).map((o) => o.room_id)
             : undefined;
 
+    const { value: enableDefaultUserMemberList } = useRoomEnableMemberList(cli, room); // 是否允许普通用户展示成员列表
+    const { value: enableDefaultUserSendMsg } = useRoomEnableSendMsg(cli, room); // 是否允许普通用户发送消息
+
     const definitions: IDefinition<JoinRule>[] = [
         ...(room.isSpaceRoom()
             ? [
                   {
                       value: JoinRule.Public, // 用于公开社区
                       label: _t("Public"),
+                      description: "允许普通用户邀请其他用户加入到当前社区",
                   },
               ]
             : [
                   {
                       value: JoinRule.Restricted, // 用于社区内公开频道（对社区内成员可见）
                       label: _t("Public"),
+                      description: "社区内所有用户可访问当前频道",
                       // if there are 0 allowed spaces then render it as invite only instead
                       checked: joinRule === JoinRule.Restricted && !!restrictedAllowRoomIds?.length,
                   },
@@ -69,8 +97,38 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
         {
             value: JoinRule.Invite, // 用于私密社区 || 私密频道
             label: _t("Private"),
+            description: room.isSpaceRoom()
+                ? "仅管理员和协管员可邀请用户到当前社区"
+                : "仅社区管理员和协管员可邀请用户到当前频道",
         },
     ];
+
+    const changeRoomPowerLevel = (room: Room, joinRule: JoinRule): Promise<ISendEventResponse> => {
+        const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+
+        let roomType;
+        if (isSpaceRoom) {
+            roomType = RoomType.Space;
+        }
+
+        const { events, users, ...statePowerLevels } = plEvent?.getContent() ?? {};
+        const plContent = {
+            ...statePowerLevels,
+            ...getDefaultStatePowerLevels(roomType, joinRule),
+            ...getInitStatePowerLevels({
+                isSpace: isSpaceRoom,
+                enableDefaultUserSendMsg,
+                enableDefaultUserMemberList,
+            }),
+            events: {
+                ...events,
+                ...getDefaultEventPowerLevels(roomType),
+            },
+            users,
+        };
+
+        return cli.sendStateEvent(room.roomId, EventType.RoomPowerLevels, plContent);
+    };
 
     const onChange = async (joinRule: JoinRule): Promise<void> => {
         const beforeJoinRule = content.join_rule;

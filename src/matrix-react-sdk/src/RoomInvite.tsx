@@ -78,7 +78,7 @@ export function showStartChatInviteDialog(initialText = ""): void {
     );
 }
 
-export function showRoomInviteDialog(roomId: string, initialText = ""): void {
+export function showRoomInviteDialog(roomId: string, initialText = "", inviteToSpace: boolean = false): void {
     // This dialog handles the room creation internally - we don't need to worry about it.
     Modal.createDialog(
         InviteDialog,
@@ -86,6 +86,7 @@ export function showRoomInviteDialog(roomId: string, initialText = ""): void {
             kind: InviteKind.Invite,
             initialText,
             roomId,
+            inviteToSpace,
         } as Omit<ComponentProps<typeof InviteDialog>, "onFinished">,
         /*className=*/ "mx_InviteDialog_flexWrapper",
         /*isPriority=*/ false,
@@ -120,7 +121,7 @@ export function inviteUsersToRoom(
     return inviteMultipleToRoom(roomId, userIds, sendSharedHistoryKeys, progressCallback)
         .then((result) => {
             const room = MatrixClientPeg.get().getRoom(roomId)!;
-            showAnyInviteErrors(result.states, room, result.inviter);
+            showInviteResult(result.states, room, result.inviter);
         })
         .catch((err) => {
             logger.error(err.stack);

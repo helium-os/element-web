@@ -120,7 +120,6 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
                     inlineErrors: true,
                     parentSpace: spaceRoom,
                     joinRule: JoinRule.Restricted, // 创建对社区内可见频道
-                    suggested: true,
                 });
             }),
         );

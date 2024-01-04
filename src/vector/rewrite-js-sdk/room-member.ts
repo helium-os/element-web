@@ -3,7 +3,7 @@ import { removeDirectionOverrideChars, removeHiddenChars } from "matrix-js-sdk/s
 import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { RoomState } from "matrix-js-sdk/src/models/room-state";
-import { PowerLevel } from "../../matrix-react-sdk/src/components/views/rooms/EntityTile";
+import { PowerLevel } from "matrix-react-sdk/src/powerLevel";
 
 const powerLevels = [PowerLevel.Admin, PowerLevel.Moderator];
 
