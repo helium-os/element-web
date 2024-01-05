@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { IEnableSendMsgEventContent } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { AdditionalEventType, useRoomState } from "matrix-react-sdk/src/hooks/room/useRoomState";
+import { useRoomState } from "matrix-react-sdk/src/hooks/room/useRoomState";
+import { AdditionalEventType } from "../../../../vector/rewrite-js-sdk/event";
 
 interface RoomStateResult {
     disabled: boolean;

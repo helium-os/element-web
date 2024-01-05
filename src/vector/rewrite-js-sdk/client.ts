@@ -1,7 +1,7 @@
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
-import { AddEventType } from "./event";
+import { AdditionalEventType } from "./event";
 
 /**
  * setRoomOnlyTags -设置room tag（tag只打在room上）
@@ -20,12 +20,12 @@ MatrixClient.prototype.getRoomOnlyTags = function (roomId: string) {
 
 // 设置room order
 MatrixClient.prototype.setRoomOrder = function (roomId: string, order: string) {
-    return this.sendStateEvent(roomId, AddEventType.RoomOrder, {
+    return this.sendStateEvent(roomId, AdditionalEventType.RoomOrder, {
         order,
     });
 };
 
 // 获取room order
 MatrixClient.prototype.getRoomOrder = function (roomId: string) {
-    return this.getStateEvent(roomId, AddEventType.RoomOrder, "");
+    return this.getStateEvent(roomId, AdditionalEventType.RoomOrder, "");
 };
