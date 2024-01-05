@@ -6,6 +6,7 @@ import { EventType } from "matrix-js-sdk/src/@types/event";
 import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomVersions";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { PowerLevel } from "matrix-react-sdk/src/powerLevel";
 import { AddEventType } from "./event";
 
 export enum RoomType {
@@ -28,6 +29,10 @@ export function getRoomTypeLabel(roomId: string) {
 
 export function isPrivateRoom(joinRule: JoinRule) {
     return joinRule === JoinRule.Invite;
+}
+
+export function getRoomParents(roomId: string) {
+    return SpaceStore.instance.getParents(roomId, false, false);
 }
 
 // 判断管理员是否已离开房间
@@ -131,6 +136,19 @@ Room.prototype.canRemoveUser = function (userId: string) {
     return powerLevels && me && me.powerLevel >= powerLevels.kick;
 };
 
+// 判断是否展示成员列表
+Room.prototype.displayMemberList = function (userId: string) {
+    if (this.getMyMembership() !== "join") {
+        return false;
+    }
+
+    const powerLevelsEvent = this.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+    const powerLevelContent = powerLevelsEvent && powerLevelsEvent.getContent();
+    const { display_member_list = PowerLevel.Default } = powerLevelContent ?? {};
+    const me = this.getMember(userId);
+    return me && me.powerLevel >= display_member_list;
+};
+
 // 判断是否可以增删改Tag
 Room.prototype.canOperateTag = function (userId: string) {
     if (this.getMyMembership() !== "join") {
@@ -138,4 +156,14 @@ Room.prototype.canOperateTag = function (userId: string) {
     }
 
     return this.currentState.maySendStateEvent(EventType.Tag, userId);
+};
+
+// 获取当前room的parents room
+Room.prototype.getParents = function () {
+    return getRoomParents(this.roomId);
+};
+
+// 判断当前room是否是社区内的频道
+Room.prototype.isSpaceChannel = function () {
+    return this.getParents().length > 0;
 };

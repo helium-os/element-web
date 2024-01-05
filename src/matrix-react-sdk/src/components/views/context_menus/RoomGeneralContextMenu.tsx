@@ -34,6 +34,8 @@ import IconizedContextMenu, {
     IconizedContextMenuOptionList,
 } from "../context_menus/IconizedContextMenu";
 import { ButtonEvent } from "../elements/AccessibleButton";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
 
 export interface RoomGeneralContextMenuProps extends IContextMenuProps {
     room: Room;
@@ -105,10 +107,21 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
             />
         ) : null;
 
+    const onInvitePeople = () => {
+        showRoomInviteDialog(room.roomId, "", true);
+    };
+
+    // 私密频道特权用户展示邀请成员按钮
+    let inviteOption;
+    if (SpaceStore.instance.canManageSpacePrivateChannel && room.isPrivateRoom()) {
+        inviteOption = <IconizedContextMenuOption onClick={onInvitePeople} label={_t("Invite people")} />;
+    }
+
     return (
         <IconizedContextMenu {...props} onFinished={onFinished} className="mx_RoomGeneralContextMenu" compact>
             <IconizedContextMenuOptionList>
                 {/*{markAsReadOption}*/}
+                {inviteOption}
                 {!roomTags.includes(DefaultTagID.Archived) && !isAdminLeft && <>{settingsOption}</>}
             </IconizedContextMenuOptionList>
         </IconizedContextMenu>

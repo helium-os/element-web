@@ -55,6 +55,7 @@ import { AddressType, getAddressType } from "../../../../UserAddress";
 import User from "../../../../utils/User";
 import DialogButtons, { DialogButtonProps } from "matrix-react-sdk/src/components/views/elements/DialogButtons";
 import ContextMenu, { ChevronFace } from "matrix-react-sdk/src/components/structures/ContextMenu";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // we have a number of types defined from the Matrix spec which can't reasonably be altered here.
 /* eslint-disable camelcase */
@@ -204,6 +205,8 @@ interface BaseProps {
     initialText?: string;
     defaultMembers?: Member[]; // 默认需要邀请的用户
     inviteLimit?: number; // 最多邀请几人
+
+    inviteToSpace?: boolean; // 是否需要邀请到社区
 
     dialogProps?: Partial<DialogProps>;
     dialogButtonsProps?: Partial<DialogButtonProps>;
@@ -852,6 +855,7 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
     public static defaultProps: Partial<Props> = {
         kind: InviteKind.Dm,
         initialText: "",
+        inviteToSpace: false,
     };
 
     private numberEntryFieldRef: React.RefObject<Field> = createRef();
@@ -916,7 +920,20 @@ export default class InviteDialog extends React.PureComponent<Props, IInviteDial
             return;
         }
 
+        if (this.props.inviteToSpace && !SpaceStore.instance.activeSpaceRoom) {
+            this.setState({
+                busy: false,
+                errorText: "社区不存在",
+            });
+            return;
+        }
+
         try {
+            // 判断是否需要将用户邀请到社区
+            if (this.props.inviteToSpace) {
+                await inviteMultipleToRoom(SpaceStore.instance.activeSpaceRoom?.roomId, targetIds, true);
+            }
+
             const result = await inviteMultipleToRoom(this.props.roomId, targetIds, true);
             this.props.onFinished(true);
             this.shouldAbortAfterInviteError(result, room);

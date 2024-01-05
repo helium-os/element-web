@@ -48,6 +48,13 @@ import { waitForMember } from "./utils/membership";
 import { PreferredRoomVersions } from "./utils/PreferredRoomVersions";
 import SettingsStore from "./settings/SettingsStore";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
+import {
+    getDefaultEventPowerLevels,
+    getDefaultStatePowerLevels,
+    getInitStatePowerLevels,
+    isSpaceRoom,
+} from "matrix-react-sdk/src/powerLevel";
+import { AdditionalEventType } from "matrix-react-sdk/src/hooks/room/useRoomState";
 
 // we define a number of interfaces which take their names from the js-sdk
 /* eslint-disable camelcase */
@@ -67,6 +74,8 @@ export interface IOpts {
     // contextually only makes sense if parentSpace is specified, if true then will be added to parentSpace as suggested
     suggested?: boolean;
     joinRule?: JoinRule;
+    enableDefaultUserSendMsg?: boolean; // 是否允许普通用户发送消息
+    enableDefaultUserMemberList?: boolean; // 是否允许普通用户展示成员列表
     tags?: Tag[];
 }
 
@@ -105,12 +114,16 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     if (opts.spinner === undefined) opts.spinner = true;
     if (opts.guestAccess === undefined) opts.guestAccess = true;
     if (opts.encryption === undefined) opts.encryption = false;
+    opts.enableDefaultUserSendMsg = opts.enableDefaultUserSendMsg ?? true;
+    opts.enableDefaultUserMemberList = opts.enableDefaultUserMemberList ?? true;
 
     const client = MatrixClientPeg.get();
     if (client.isGuest()) {
         dis.dispatch({ action: "require_registration" });
         return null;
     }
+
+    const isSpace = isSpaceRoom(opts.roomType);
 
     const defaultPreset = opts.dmUserId ? Preset.TrustedPrivateChat : Preset.PrivateChat;
 
@@ -142,9 +155,12 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
             ...createOpts.creation_content,
             [RoomCreateTypeField]: opts.roomType,
         };
+    }
 
-        // Video rooms require custom power levels
-        if (opts.roomType === RoomType.ElementVideo) {
+    // powerLevel
+    switch (opts.roomType) {
+        case RoomType.ElementVideo:
+            // Video rooms require custom power levels
             createOpts.power_level_content_override = {
                 events: {
                     ...DEFAULT_EVENT_POWER_LEVELS,
@@ -158,7 +174,8 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
                     [client.getUserId()!]: 200,
                 },
             };
-        } else if (opts.roomType === RoomType.UnstableCall) {
+            break;
+        case RoomType.UnstableCall:
             createOpts.power_level_content_override = {
                 events: {
                     ...DEFAULT_EVENT_POWER_LEVELS,
@@ -172,8 +189,28 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
                     [client.getUserId()!]: 200,
                 },
             };
+            break;
+        case RoomType.Space:
+        default: {
+            const { events, users, ...statePowerLevels } = createOpts.power_level_content_override ?? {};
+            createOpts.power_level_content_override = {
+                ...getDefaultStatePowerLevels(opts.roomType, opts.joinRule),
+                ...statePowerLevels,
+                ...getInitStatePowerLevels({
+                    isSpace,
+                    enableDefaultUserSendMsg: opts.enableDefaultUserSendMsg,
+                    enableDefaultUserMemberList: opts.enableDefaultUserMemberList,
+                }),
+                events: {
+                    ...getDefaultEventPowerLevels(opts.roomType),
+                    ...events,
+                },
+                users,
+            };
+            break;
         }
-    } else if (SettingsStore.getValue("feature_group_calls")) {
+    }
+    if (!opts.roomType && SettingsStore.getValue("feature_group_calls")) {
         createOpts.power_level_content_override = {
             events: {
                 ...DEFAULT_EVENT_POWER_LEVELS,
@@ -191,6 +228,19 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     }
 
     createOpts.initial_state = createOpts.initial_state || [];
+
+    if (!isSpace) {
+        // 是否允许普通用户展示成员列表
+        createOpts.initial_state.push({
+            type: AdditionalEventType.RoomEnableDefaultUserMemberList,
+            content: { enable: opts.enableDefaultUserMemberList },
+        });
+        // 是否允许普通用户发送消息
+        createOpts.initial_state.push({
+            type: AdditionalEventType.RoomEnableDefaultUserSendMsg,
+            content: { enable: opts.enableDefaultUserSendMsg },
+        });
+    }
 
     // Allow guests by default since the room is private and they'd
     // need an invite. This means clicking on a 3pid invite email can
@@ -218,8 +268,7 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
     if (opts.parentSpace) {
         createOpts.initial_state.push(makeSpaceParentEvent(opts.parentSpace, true));
         if (!opts.historyVisibility) {
-            opts.historyVisibility =
-                createOpts.preset === Preset.PublicChat ? HistoryVisibility.WorldReadable : HistoryVisibility.Invited;
+            opts.historyVisibility = HistoryVisibility.WorldReadable; // 社区内的频道历史消息可读
         }
 
         if (opts.joinRule === JoinRule.Restricted) {

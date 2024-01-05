@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React from "react";
+import React, { memo } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 import RoomAvatarSettings from "matrix-react-sdk/src/components/views/room_settings/RoomAvatarSetting";
 import RoomNameSetting from "matrix-react-sdk/src/components/views/room_settings/RoomNameSetting";
@@ -44,4 +44,4 @@ const SpaceSettingsGeneralTab: React.FC<IProps> = ({ space }) => {
     );
 };
 
-export default SpaceSettingsGeneralTab;
+export default memo(SpaceSettingsGeneralTab);

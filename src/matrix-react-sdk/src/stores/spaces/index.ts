@@ -28,6 +28,8 @@ export const UPDATE_SELECTED_SPACE = Symbol("selected-space");
 export const UPDATE_HOME_BEHAVIOUR = Symbol("home-behaviour");
 export const UPDATE_SUGGESTED_ROOMS = Symbol("suggested-rooms");
 
+export const UPDATE_FILTERED_SUGGESTED_ROOMS = Symbol("filtered-suggested-rooms");
+
 export const UPDATE_SPACE_TAGS = Symbol("space-tags");
 // Space Key will be emitted when a Space's children change
 
@@ -52,10 +54,9 @@ export const getMetaSpaceName = (spaceKey: MetaSpace, allRoomsInHome = false): s
 };
 
 export type SpaceKey = MetaSpace | Room["roomId"];
-
 export interface ISuggestedRoom extends IHierarchyRoom {
     viaServers: string[];
-    join_rule: JoinRule;
+    join_rule?: JoinRule;
 }
 
 export function isMetaSpace(spaceKey?: SpaceKey): boolean {

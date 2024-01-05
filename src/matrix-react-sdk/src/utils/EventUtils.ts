@@ -45,6 +45,8 @@ export const displayEventType = [
     EventType.RoomMessage,
 ];
 
+export const hiddenEventTypeIfNotDisplayMemberList = [EventType.RoomMember]; // 不展示成员列表时需要隐藏的事件类型
+
 /**
  * Returns whether an event should allow actions like reply, reactions, edit, etc.
  * which effectively checks whether it's a regular message that has been sent and that we

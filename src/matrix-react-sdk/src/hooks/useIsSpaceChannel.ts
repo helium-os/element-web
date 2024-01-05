@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { RoomState, RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { Room } from "matrix-js-sdk/src/models/room";
+import { getRoomParents } from "../../../vector/rewrite-js-sdk/room";
 
 /**
  * 判断是否是社区内频道
@@ -12,7 +12,7 @@ export default function useIsSpaceChannel(roomId): [boolean, Room[]] {
     const [parents, setParents] = useState<Room[]>([]);
 
     const setChannelParents = useCallback((roomId) => {
-        const parents = SpaceStore.instance.getParents(roomId, false, false);
+        const parents = getRoomParents(roomId);
         setParents(parents);
     }, []);
 
