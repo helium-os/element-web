@@ -6,6 +6,7 @@ import Field from "matrix-react-sdk/src/components/views/elements/Field";
 import { JoinRule, Preset } from "matrix-js-sdk/src/@types/partials";
 import createRoom from "matrix-react-sdk/src/createRoom";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 
 interface IProps {
     stepIndex: number;
@@ -107,8 +108,9 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
 
         const spaceRoom = MatrixClientPeg.get().getRoom(spaceId);
 
+        const firstOrder = RoomListActions.generateNewRoomOrderInUntaggedTag();
         return Promise.all(
-            filteredRoomNames.map((name) => {
+            filteredRoomNames.map((name, index) => {
                 return createRoom({
                     createOpts: {
                         preset: Preset.PrivateChat,
@@ -120,6 +122,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
                     inlineErrors: true,
                     parentSpace: spaceRoom,
                     joinRule: JoinRule.Restricted, // 创建对社区内可见频道
+                    tags: [{ order: +firstOrder + index + "" }],
                 });
             }),
         );

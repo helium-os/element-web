@@ -80,7 +80,9 @@ import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/Sp
 import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
-import { reorderLexicographically } from "matrix-react-sdk/src/utils/stringOrderField";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
+import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -254,8 +256,11 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
         };
     }, [cli, shouldShowCreateRoom]);
 
-    let tags;
-    if (tagId) tags = [{ tagId }];
+    const onCreate = () => {
+        let tags;
+        if (tagId) tags = [{ tagId }];
+        onCreateRoom(activeSpace, undefined, tags);
+    };
 
     let contextMenuContent: JSX.Element | undefined;
     if (menuDisplayed && activeSpace) {
@@ -331,7 +336,7 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
         return (
             <AccessibleTooltipButton
                 tabIndex={tabIndex}
-                onClick={() => onCreateRoom(activeSpace, undefined, tags)}
+                onClick={onCreate}
                 className="mx_RoomSublist_auxButton"
                 tooltipClassName="mx_RoomSublist_addRoomTooltip"
                 aria-label={createRoomLabel}
@@ -399,7 +404,7 @@ function generateTagAesthetics(isHomeSpace): TagAestheticsMap {
 }
 
 export default class RoomList extends React.PureComponent<IProps, IState> {
-    private cli: MatrixClientPeg = MatrixClientPeg.get();
+    private cli: MatrixClient = MatrixClientPeg.get();
     private dispatcherRef?: string;
     private treeRef = createRef<HTMLDivElement>();
     private favouriteMessageWatcher: string;
@@ -720,47 +725,30 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         [...treeItems].find((e) => e.offsetParent !== null)?.focus();
     }
 
-    private moveRoom(fromTagId, fromIndex: number, toTagId, toIndex: number): void {
-        console.log("moveRoom fromIndex", fromIndex, "toIndex", toIndex);
-        const fromTagRoomList = RoomListStore.instance.orderedLists[fromTagId];
-        const toTagRoomList = RoomListStore.instance.orderedLists[toTagId];
-        const currentOrders = fromTagRoomList.map((room) => room.getRoomOrder());
-        console.log("moveRoom currentOrders", currentOrders);
-        const changes = reorderLexicographically(currentOrders, fromIndex, toIndex);
-        console.log("moveRoom changes", changes);
-
-        changes.forEach(({ index, order }) => {
-            this.cli.setRoomOrder(fromTagRoomList[index]?.roomId, order);
-        });
-    }
-
     private onDragEnd = async (result: DropResult): Promise<void> => {
         console.log("拖拽结束", result);
         const { source, destination, type, draggableId } = result;
         if (!destination) return;
 
         const { index: originalIndex, droppableId: originalDroppableId } = source;
-
         const { index: targetIndex, droppableId: targetDroppableId } = destination;
 
         // 拖拽修改频道所属分组 & 频道排序
         if (type === DragType.Channel) {
             if (targetDroppableId === originalDroppableId && targetIndex === originalIndex) return;
 
-            const roomId = draggableId;
-            const tagId = targetDroppableId;
-
-            this.moveRoom(originalDroppableId, originalIndex, targetDroppableId, targetIndex);
-
-            if (targetDroppableId !== originalDroppableId) {
-                // 拖拽频道到不同分组下，修改当前room tag，改变其所属分组
-                try {
-                    await this.cli.setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
-                } catch (error) {
-                    alert(error.message);
-                }
-            }
-
+            // 修改room tag
+            const room = this.cli.getRoom(draggableId); // draggableId为roomId
+            dis.dispatch(
+                RoomListActions.tagRoom(
+                    this.cli,
+                    room,
+                    originalDroppableId,
+                    targetDroppableId,
+                    originalIndex,
+                    targetIndex,
+                ),
+            );
             return;
         }
 
