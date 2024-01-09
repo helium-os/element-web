@@ -153,6 +153,9 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
                 logger.warn(`${activeRoomId} is current in RVS but missing from client - clearing sticky room`);
                 this.algorithm.setStickyRoom(null);
             } else if (activeRoom !== this.algorithm.stickyRoom) {
+                /**
+                 * tips: 此处逻辑会导致新创建的room，在cachedOrderedRooms里被删除，所以先注释掉
+                 */
                 // this.algorithm.setStickyRoom(activeRoom);
             }
         }

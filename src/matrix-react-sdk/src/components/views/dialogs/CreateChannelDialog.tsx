@@ -100,8 +100,9 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
         const opts: IOpts = {};
         const createOpts: IOpts["createOpts"] = (opts.createOpts = {});
         opts.roomType = this.props.type;
-        if (this.props.tags) {
-            opts.tags = this.props.tags?.map((item) => ({
+        if (this.props.tags?.length > 0) {
+            // 创建的频道为某个分组下的频道
+            opts.tags = this.props.tags.map((item) => ({
                 ...item,
                 order: RoomListActions.generateNewRoomOrderInTag(item.tagId),
             }));

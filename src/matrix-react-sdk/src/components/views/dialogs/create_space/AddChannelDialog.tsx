@@ -108,7 +108,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
 
         const spaceRoom = MatrixClientPeg.get().getRoom(spaceId);
 
-        const firstOrder = RoomListActions.generateNewRoomOrderInUntaggedTag();
+        const firstChannelOrder = RoomListActions.generateNewRoomOrderInUntaggedTag();
         return Promise.all(
             filteredRoomNames.map((name, index) => {
                 return createRoom({
@@ -122,7 +122,7 @@ const AddChannelDialog: React.FC<IProps> = ({ stepIndex, onStepChange, spaceId, 
                     inlineErrors: true,
                     parentSpace: spaceRoom,
                     joinRule: JoinRule.Restricted, // 创建对社区内可见频道
-                    tags: [{ order: +firstOrder + index + "" }],
+                    tags: [{ order: +firstChannelOrder + index + "" }],
                 });
             }),
         );

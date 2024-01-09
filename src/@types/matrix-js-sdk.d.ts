@@ -16,8 +16,6 @@ declare module "matrix-js-sdk/src/client" {
     interface MatrixClient {
         setRoomOnlyTags(roomId: string, tags: Tag[]): Promise<ISendEventResponse>;
         getRoomOnlyTags(roomId: string): Promise<Record<string, any>>;
-        setRoomOrder(roomId: string, order: string): Promise<ISendEventResponse>;
-        getRoomOrder(roomId: string): Promise<Record<string, any>>;
     }
 }
 
