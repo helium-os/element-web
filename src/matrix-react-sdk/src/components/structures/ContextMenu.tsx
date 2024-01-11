@@ -314,12 +314,14 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
                 position.top = Math.min(position.top, maxTop);
                 // Adjust the chevron if necessary
                 if (chevronOffset.top !== undefined) {
-                    chevronOffset.top = propsChevronOffset! + top! - position.top;
+                    chevronOffset.top = verticalCenter ? position.top : propsChevronOffset! + top! - position.top;
                 }
             } else if (position.bottom !== undefined) {
                 position.bottom = Math.min(position.bottom, windowHeight - contextMenuRect.height - WINDOW_PADDING);
                 if (chevronOffset.top !== undefined) {
-                    chevronOffset.top = propsChevronOffset! + position.bottom - bottom!;
+                    chevronOffset.top = verticalCenter
+                        ? position.bottom
+                        : propsChevronOffset! + position.bottom - bottom!;
                 }
             }
             if (position.left !== undefined) {
@@ -327,12 +329,14 @@ export default class ContextMenu extends React.PureComponent<React.PropsWithChil
                 if (!rightAligned) {
                     maxLeft -= contextMenuRect.width;
                 }
-                position.left = Math.min(position.left, maxLeft);
+                position.left = horizontalCenter ? position.left : Math.min(position.left, maxLeft);
                 if (chevronOffset.left !== undefined) {
                     chevronOffset.left = propsChevronOffset! + left! - position.left;
                 }
             } else if (position.right !== undefined) {
-                position.right = Math.min(position.right, windowWidth - contextMenuRect.width - WINDOW_PADDING);
+                position.right = horizontalCenter
+                    ? position.right
+                    : Math.min(position.right, windowWidth - contextMenuRect.width - WINDOW_PADDING);
                 if (chevronOffset.left !== undefined) {
                     chevronOffset.left = propsChevronOffset! + position.right - right!;
                 }

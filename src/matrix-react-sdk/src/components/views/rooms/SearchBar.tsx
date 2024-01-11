@@ -15,128 +15,184 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { createRef, RefObject } from "react";
-import classNames from "classnames";
-
-import AccessibleButton from "../elements/AccessibleButton";
-import { _t } from "../../../languageHandler";
-import { PosthogScreenTracker } from "../../../PosthogTrackers";
-import { getKeyBindingsManager } from "../../../KeyBindingsManager";
-import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
-import SearchWarning, { WarningKind } from "../elements/SearchWarning";
-
-interface IProps {
-    onCancelClick: () => void;
-    onSearch: (query: string, scope: string) => void;
-    searchInProgress?: boolean;
-    isRoomEncrypted?: boolean;
-}
-
-interface IState {
-    scope: SearchScope;
-}
+import React, { useState, useEffect, memo, useContext } from "react";
+import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
+import { SearchRoomId } from "matrix-react-sdk/src/Searching";
+import Field, { SelectedUserOrRoomTile } from "matrix-react-sdk/src/components/views/elements/Field";
+import { SearchFilter } from "matrix-react-sdk/src/components/views/toolbar/MessageSearch";
+import RoomListStore from "matrix-react-sdk/src/stores/room-list/RoomListStore";
+import { Room } from "matrix-js-sdk/src/models/room";
+import MatrixClientContext from "matrix-react-sdk/src/contexts/MatrixClientContext";
+import { SDKContext, SdkContextClass } from "matrix-react-sdk/src/contexts/SDKContext";
+import { UPDATE_EVENT } from "matrix-react-sdk/src/stores/AsyncStore";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { UPDATE_SELECTED_SPACE } from "matrix-react-sdk/src/stores/spaces";
+import useFnRef from "matrix-react-sdk/src/hooks/useFnRef";
+import { RoomType } from "matrix-js-sdk/src/@types/event";
+import { MatrixClient } from "matrix-js-sdk/src/client";
 
 export enum SearchScope {
-    Room = "Room",
     All = "All",
+    Space = "Space",
+    Room = "Room",
 }
 
-export default class SearchBar extends React.Component<IProps, IState> {
-    private searchTerm: RefObject<HTMLInputElement> = createRef();
+type FilterChangeFn = (filter: SearchFilter) => void;
 
-    public constructor(props: IProps) {
-        super(props);
-        this.state = {
-            scope: SearchScope.Room,
+interface IProps {
+    searchInProgress?: boolean;
+    onFilterChange: FilterChangeFn;
+}
+
+const getActiveRoom = (cli: MatrixClient, context: SdkContextClass) => {
+    const roomId = context.roomViewStore.getRoomId();
+    const room = cli.getRoom(roomId);
+
+    if (room.getType() === RoomType.Space) return;
+
+    return room;
+};
+
+const SearchBar: React.FC<IProps> = ({ searchInProgress, onFilterChange }) => {
+    const cli = useContext(MatrixClientContext);
+    const context = useContext(SDKContext);
+
+    const onFilterChangeRef = useFnRef<FilterChangeFn>(onFilterChange);
+
+    const [filterText, setFilterText] = useState<string>("");
+
+    const [scope, setScope] = useState<SearchScope>(SearchScope.All);
+
+    const [activeSpace, setActiveSpace] = useState<Room>(() => SpaceStore.instance.activeSpaceRoom); // 当前的社区
+    const [activeRoom, setActiveRoom] = useState<Room>(() => getActiveRoom(cli, context)); // 当前的room
+
+    const [selectedRoom, setSelectedRoom] = useState<Room>(null); // 选中的搜索room
+
+    const [roomIds, setRoomIds] = useState<SearchRoomId>(); // 需要搜索的roomId列表
+
+    // 订阅社区切换
+    useEffect(() => {
+        const onSelectedSpaceChange = () => {
+            setActiveSpace(SpaceStore.instance.activeSpaceRoom);
         };
-    }
 
-    private onThisRoomClick = (): void => {
-        this.setState({ scope: SearchScope.Room }, () => this.searchIfQuery());
-    };
+        SpaceStore.instance.on(UPDATE_SELECTED_SPACE, onSelectedSpaceChange);
 
-    private onAllRoomsClick = (): void => {
-        this.setState({ scope: SearchScope.All }, () => this.searchIfQuery());
-    };
+        return () => {
+            SpaceStore.instance.off(UPDATE_SELECTED_SPACE, onSelectedSpaceChange);
+        };
+    }, []);
 
-    private onSearchChange = (e: React.KeyboardEvent): void => {
-        const action = getKeyBindingsManager().getAccessibilityAction(e);
-        switch (action) {
-            case KeyBindingAction.Enter:
-                this.onSearch();
+    // 订阅room切换
+    useEffect(() => {
+        const onRoomViewStoreUpdate = () => {
+            const room = getActiveRoom(cli, context);
+            setActiveRoom(room);
+        };
+
+        context.roomViewStore.on(UPDATE_EVENT, onRoomViewStoreUpdate);
+
+        return () => {
+            context.roomViewStore.off(UPDATE_EVENT, onRoomViewStoreUpdate);
+        };
+    }, [cli, context, activeRoom]);
+
+    // scope改变后，修改当前选中的搜索room，并重新生成要搜索的roomId
+    useEffect(() => {
+        let selectedRoom = null,
+            roomId;
+        switch (scope) {
+            case SearchScope.Space:
+                // 选中社区时，从当前社区下的所有room进行搜索
+                selectedRoom = activeSpace;
+                roomId = RoomListStore.instance.getPlausibleRooms().map((item) => item.roomId);
                 break;
-            case KeyBindingAction.Escape:
-                this.props.onCancelClick();
+            case SearchScope.Room:
+                // 选中room时，只搜索当前room
+                selectedRoom = activeRoom;
+                roomId = activeRoom?.roomId;
                 break;
         }
+        setRoomIds(roomId);
+        setSelectedRoom(selectedRoom);
+    }, [scope, activeSpace, activeRoom]);
+
+    // 搜索条件改变
+    useEffect(() => {
+        onFilterChangeRef.current?.({
+            query: filterText,
+            scope,
+            roomIds,
+        });
+    }, [filterText, scope, roomIds]);
+
+    const updateFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFilterText(e.target.value);
     };
 
-    private searchIfQuery(): void {
-        if (this.searchTerm.current?.value) {
-            this.onSearch();
-        }
-    }
-
-    private onSearch = (): void => {
-        if (!this.searchTerm.current?.value.trim()) return;
-        this.props.onSearch(this.searchTerm.current.value, this.state.scope);
+    const onAllRoomsClick = (): void => {
+        setScope(SearchScope.All);
     };
 
-    public render(): React.ReactNode {
-        const searchButtonClasses = classNames("mx_SearchBar_searchButton", {
-            mx_SearchBar_searching: this.props.searchInProgress,
-        });
-        const thisRoomClasses = classNames("mx_SearchBar_button", {
-            mx_SearchBar_unselected: this.state.scope !== SearchScope.Room,
-        });
-        const allRoomsClasses = classNames("mx_SearchBar_button", {
-            mx_SearchBar_unselected: this.state.scope !== SearchScope.All,
-        });
+    const onThisSpaceClick = (): void => {
+        setScope(SearchScope.Space);
+    };
+
+    const onThisRoomClick = (): void => {
+        setScope(SearchScope.Room);
+    };
+
+    const onDeleteSelectedRoom = () => {
+        onAllRoomsClick();
+    };
+
+    const getSelectedRoomComponent = () => {
+        if (!selectedRoom) return null;
 
         return (
-            <>
-                <PosthogScreenTracker screenName="RoomSearch" />
-                <div className="mx_SearchBar">
-                    <div className="mx_SearchBar_buttons" role="radiogroup">
-                        <AccessibleButton
-                            className={thisRoomClasses}
-                            onClick={this.onThisRoomClick}
-                            aria-checked={this.state.scope === SearchScope.Room}
-                            role="radio"
-                        >
-                            {_t("This Room")}
-                        </AccessibleButton>
-                        <AccessibleButton
-                            className={allRoomsClasses}
-                            onClick={this.onAllRoomsClick}
-                            aria-checked={this.state.scope === SearchScope.All}
-                            role="radio"
-                        >
-                            {_t("All Rooms")}
-                        </AccessibleButton>
-                    </div>
-                    <div className="mx_SearchBar_input mx_textinput">
-                        <input
-                            ref={this.searchTerm}
-                            type="text"
-                            autoFocus={true}
-                            placeholder={_t("Search…")}
-                            onKeyDown={this.onSearchChange}
-                        />
-                        <AccessibleButton
-                            className={searchButtonClasses}
-                            onClick={this.onSearch}
-                            aria-label={_t("Search")}
-                        />
-                    </div>
-                    <AccessibleButton
-                        className="mx_SearchBar_cancel"
-                        onClick={this.props.onCancelClick}
-                        aria-label={_t("Cancel")}
+            <SelectedUserOrRoomTile
+                avatar={<RoomAndChannelAvatar room={selectedRoom} avatarSize={16} />}
+                name={selectedRoom.name}
+                onRemove={() => onDeleteSelectedRoom()}
+            />
+        );
+    };
+
+    return (
+        <>
+            <div className="mx_SearchBar_wrap">
+                <div className="mx_SearchBar_input">
+                    <Field
+                        type="text"
+                        usePlaceholderAsHint={!selectedRoom}
+                        placeholder={"在所有社区中搜索"}
+                        autoFocus={true}
+                        autoComplete="off"
+                        // disabled={searchInProgress}
+                        prefixComponent={getSelectedRoomComponent()}
+                        hasPrefixContainer={false}
+                        clearEnable={false}
+                        value={filterText}
+                        onChange={updateFilter}
                     />
                 </div>
-                <SearchWarning isRoomEncrypted={this.props.isRoomEncrypted} kind={WarningKind.Search} />
-            </>
-        );
-    }
-}
+                <ul className="mx_SearchBar_buttons" role="radiogroup">
+                    {[activeSpace, activeRoom].map((room) => {
+                        return room && room.roomId !== selectedRoom?.roomId ? (
+                            <li onClick={room.getType() === RoomType.Space ? onThisSpaceClick : onThisRoomClick}>
+                                <span className="mx_SearchBar_button_icon" />在
+                                <label className="mx_MessageSearch_divider">
+                                    <RoomAndChannelAvatar room={room} avatarSize={20} />
+                                    {room.name}
+                                </label>
+                                中搜索
+                            </li>
+                        ) : null;
+                    })}
+                </ul>
+            </div>
+        </>
+    );
+};
+
+export default memo(SearchBar);

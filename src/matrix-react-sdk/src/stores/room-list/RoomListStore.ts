@@ -525,7 +525,7 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         this.updateFn.trigger();
     };
 
-    private getPlausibleRooms(): Room[] {
+    public getPlausibleRooms(): Room[] {
         if (!this.matrixClient) return [];
 
         let rooms = this.matrixClient.getVisibleRooms(this.msc3946ProcessDynamicPredecessor);

@@ -83,16 +83,12 @@ $group_line-padding-horizontal: 16px;
     }
 
     .mx_EventTile_searchHighlight {
-        background-color: $accent;
-        color: $accent-fg-color;
-        border-radius: 5px;
+        background-color: $background-primary3-secondary-color2;
+        border-radius: 2px;
         padding-inline: 2px;
+        font-weight: 500;
+        color: $text-secondary-color1;
         cursor: pointer;
-
-        a {
-            background-color: $accent;
-            color: $accent-fg-color;
-        }
     }
 
     .mx_EventTileBubble {
@@ -134,12 +130,6 @@ $group_line-padding-horizontal: 16px;
         .mx_EventTile_collapsedCodeBlock {
             /* !important needed due to .mx_ReplyTile .mx_EventTile_content .mx_EventTile_pre_container > pre */
             display: block !important;
-        }
-    }
-
-    .mx_RoomView_searchResultsPanel & {
-        &.mx_EventTile_contextual {
-            opacity: 0.4;
         }
     }
 

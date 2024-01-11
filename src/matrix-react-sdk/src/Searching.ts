@@ -30,11 +30,13 @@ import { ISearchArgs } from "./indexing/BaseEventIndexManager";
 import EventIndexPeg from "./indexing/EventIndexPeg";
 import { MatrixClientPeg } from "./MatrixClientPeg";
 
+export type SearchRoomId = string | string[];
+
 const SEARCH_LIMIT = 10;
 
 async function serverSideSearch(
     term: string,
-    roomId?: string,
+    roomId?: string | string[],
     abortSignal?: AbortSignal,
 ): Promise<{ response: ISearchResponse; query: ISearchRequestBody }> {
     const client = MatrixClientPeg.get();
@@ -43,7 +45,7 @@ async function serverSideSearch(
         limit: SEARCH_LIMIT,
     };
 
-    if (roomId !== undefined) filter.rooms = [roomId];
+    if (roomId) filter.rooms = Array.isArray(roomId) && roomId.length > 0 ? roomId : [roomId as string];
 
     const body: ISearchRequestBody = {
         search_categories: {
@@ -52,8 +54,8 @@ async function serverSideSearch(
                 filter: filter,
                 order_by: SearchOrderBy.Recent,
                 event_context: {
-                    before_limit: 1,
-                    after_limit: 1,
+                    before_limit: 0,
+                    after_limit: 0,
                     include_profile: true,
                 },
             },
@@ -67,7 +69,7 @@ async function serverSideSearch(
 
 async function serverSideSearchProcess(
     term: string,
-    roomId?: string,
+    roomId?: string | string[],
     abortSignal?: AbortSignal,
 ): Promise<ISearchResults> {
     const client = MatrixClientPeg.get();
@@ -639,12 +641,16 @@ export function searchPagination(searchResult: ISearchResults): Promise<ISearchR
     else return eventIndexSearchPagination(searchResult);
 }
 
-export default function eventSearch(term: string, roomId?: string, abortSignal?: AbortSignal): Promise<ISearchResults> {
+export default function eventSearch(
+    term: string,
+    roomId?: string | string[],
+    abortSignal?: AbortSignal,
+): Promise<ISearchResults> {
     const eventIndex = EventIndexPeg.get();
 
     if (eventIndex === null) {
         return serverSideSearchProcess(term, roomId, abortSignal);
     } else {
-        return eventIndexSearch(term, roomId, abortSignal);
+        return eventIndexSearch(term, roomId as string, abortSignal);
     }
 }

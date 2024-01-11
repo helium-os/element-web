@@ -21,7 +21,6 @@ import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import RoomContext, { TimelineRenderingType } from "../../../contexts/RoomContext";
 import SettingsStore from "../../../settings/SettingsStore";
 import { RoomPermalinkCreator } from "../../../utils/permalinks/Permalinks";
-import DateSeparator from "../messages/DateSeparator";
 import EventTile from "./EventTile";
 import { shouldFormContinuation } from "../../structures/MessagePanel";
 import { wantsDateSeparator } from "../../../DateUtils";
@@ -29,6 +28,7 @@ import LegacyCallEventGrouper, { buildLegacyCallEventGroupers } from "../../stru
 import { haveRendererForEvent } from "../../../events/EventTileFactory";
 
 interface IProps {
+    header?: JSX.Element;
     // a list of strings to be highlighted in the results
     searchHighlights?: string[];
     // href for the highlights in this result
@@ -63,8 +63,9 @@ export default class SearchResultTile extends React.Component<IProps> {
         const resultEvent = timeline[this.props.ourEventsIndexes[0]];
         const eventId = resultEvent.getId();
 
-        const ts1 = resultEvent.getTs();
-        const ret = [<DateSeparator key={ts1 + "-search"} roomId={resultEvent.getRoomId()} ts={ts1} />];
+        // const ts1 = resultEvent.getTs();
+        // const ret = [<DateSeparator key={ts1 + "-search"} roomId={resultEvent.getRoomId()} ts={ts1} />];
+        const ret = [this.props.header];
         const layout = SettingsStore.getValue("layout");
         const isTwelveHour = SettingsStore.getValue("showTwelveHourTimestamps");
         const alwaysShowTimestamps = SettingsStore.getValue("alwaysShowTimestamps");
@@ -125,7 +126,7 @@ export default class SearchResultTile extends React.Component<IProps> {
         }
 
         return (
-            <li data-scroll-tokens={eventId}>
+            <li className="mx_SearchResultTile_box" data-scroll-tokens={eventId}>
                 <ol>{ret}</ol>
             </li>
         );
