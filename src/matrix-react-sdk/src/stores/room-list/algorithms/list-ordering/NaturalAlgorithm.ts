@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 import { Room } from "matrix-js-sdk/src/models/room";
-import { logger } from "matrix-js-sdk/src/logger";
 
 import { SortAlgorithm } from "../models";
 import { sortRoomsWithAlgorithm } from "../tag-sorting";
@@ -36,21 +35,42 @@ export class NaturalAlgorithm extends OrderingAlgorithm {
     }
 
     public handleRoomUpdate(room: Room, cause: RoomUpdateCause): boolean {
-        const isSplice = cause === RoomUpdateCause.NewRoom || cause === RoomUpdateCause.RoomRemoved;
+        const isSplice = [
+            RoomUpdateCause.NewRoom,
+            RoomUpdateCause.RoomRemoved,
+            RoomUpdateCause.RoomOrderInTagChange,
+        ].includes(cause);
         const isInPlace = cause === RoomUpdateCause.Timeline || cause === RoomUpdateCause.ReadReceipt;
         if (!isSplice && !isInPlace) {
             throw new Error(`Unsupported update cause: ${cause}`);
         }
 
-        if (cause === RoomUpdateCause.NewRoom) {
-            this.cachedOrderedRooms.push(room);
-        } else if (cause === RoomUpdateCause.RoomRemoved) {
-            const idx = this.getRoomIndex(room);
-            if (idx >= 0) {
-                this.cachedOrderedRooms.splice(idx, 1);
-            } else {
-                logger.warn(`Tried to remove unknown room from ${this.tagId}: ${room.roomId}`);
-            }
+        switch (cause) {
+            case RoomUpdateCause.NewRoom:
+                {
+                    this.cachedOrderedRooms.push(room);
+                }
+                break;
+            case RoomUpdateCause.RoomRemoved:
+                {
+                    const idx = this.getRoomIndex(room);
+                    if (idx >= 0) {
+                        this.cachedOrderedRooms.splice(idx, 1);
+                    } else {
+                        console.warn(`Tried to remove unknown room from ${this.tagId}: ${room.roomId}`);
+                    }
+                }
+                break;
+            case RoomUpdateCause.RoomOrderInTagChange:
+                {
+                    const idx = this.getRoomIndex(room);
+                    if (idx >= 0) {
+                        this.cachedOrderedRooms.splice(idx, 1, room);
+                    } else {
+                        console.warn(`Tried to change unknown room from ${this.tagId}: ${room.roomId}`);
+                    }
+                }
+                break;
         }
 
         // TODO: Optimize this to avoid useless operations: https://github.com/vector-im/element-web/issues/14457

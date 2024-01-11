@@ -41,8 +41,9 @@ export const OrderedDefaultTagIDs = [
 export type TagID = string | DefaultTagID;
 
 export type Tag = {
-    tagId: TagID;
+    tagId?: TagID;
     tagName?: string;
+    order?: string;
     [key: string]: any;
 };
 
@@ -53,6 +54,7 @@ export type TagMap = {
 export enum RoomUpdateCause {
     Timeline = "TIMELINE",
     PossibleTagChange = "POSSIBLE_TAG_CHANGE",
+    RoomOrderInTagChange = "ROOM_ORDER_IN_TAG_CHANGE",
     ReadReceipt = "READ_RECEIPT",
     NewRoom = "NEW_ROOM",
     RoomRemoved = "ROOM_REMOVED",

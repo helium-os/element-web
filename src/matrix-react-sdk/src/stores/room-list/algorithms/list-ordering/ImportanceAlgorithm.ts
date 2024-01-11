@@ -137,22 +137,57 @@ export class ImportanceAlgorithm extends OrderingAlgorithm {
     }
 
     private handleSplice(room: Room, cause: RoomUpdateCause): boolean {
-        if (cause === RoomUpdateCause.NewRoom) {
-            const category = this.getRoomCategory(room);
-            this.alterCategoryPositionBy(category, 1, this.indices);
-            this.cachedOrderedRooms.splice(this.getCategoryIndex(category), 0, room); // splice in the new room (pre-adjusted)
-            this.sortCategory(category);
-        } else if (cause === RoomUpdateCause.RoomRemoved) {
-            const roomIdx = this.getRoomIndex(room);
-            if (roomIdx === -1) {
-                logger.warn(`Tried to remove unknown room from ${this.tagId}: ${room.roomId}`);
-                return false; // no change
+        const roomIdx = this.getRoomIndex(room);
+        switch (cause) {
+            case RoomUpdateCause.NewRoom:
+            case RoomUpdateCause.RoomOrderInTagChange:
+                {
+                    let category;
+                    let spliceIndex;
+                    if (this.sortingAlgorithm === SortAlgorithm.Manual) {
+                        if (cause === RoomUpdateCause.RoomOrderInTagChange && roomIdx === -1) {
+                            return false;
+                        }
+                        spliceIndex = Math.max(0, roomIdx);
+                    } else {
+                        category = this.getRoomCategory(room);
+                        this.alterCategoryPositionBy(category, 1, this.indices);
+                        spliceIndex = this.getCategoryIndex(category);
+                    }
+
+                    this.cachedOrderedRooms.splice(spliceIndex, cause === RoomUpdateCause.NewRoom ? 0 : 1, room); // splice in the new room (pre-adjusted)
+
+                    // 排序
+                    if (this.sortingAlgorithm === SortAlgorithm.Manual) {
+                        this.cachedOrderedRooms = sortRoomsWithAlgorithm(
+                            this.cachedOrderedRooms,
+                            this.tagId,
+                            this.sortingAlgorithm,
+                        );
+                    } else {
+                        this.sortCategory(category);
+                    }
+                }
+                break;
+            case RoomUpdateCause.RoomRemoved:
+                {
+                    if (roomIdx === -1) {
+                        logger.warn(`Tried to remove unknown room from ${this.tagId}: ${room.roomId}`);
+                        return false; // no change
+                    }
+
+                    if (this.sortingAlgorithm !== SortAlgorithm.Manual) {
+                        const oldCategory = this.getCategoryFromIndices(roomIdx, this.indices);
+                        this.alterCategoryPositionBy(oldCategory, -1, this.indices);
+                    }
+
+                    this.cachedOrderedRooms.splice(roomIdx, 1); // remove the room
+                }
+
+                break;
+            default: {
+                throw new Error(`Unhandled splice: ${cause}`);
             }
-            const oldCategory = this.getCategoryFromIndices(roomIdx, this.indices);
-            this.alterCategoryPositionBy(oldCategory, -1, this.indices);
-            this.cachedOrderedRooms.splice(roomIdx, 1); // remove the room
-        } else {
-            throw new Error(`Unhandled splice: ${cause}`);
         }
 
         // changes have been made if we made it here, so say so
@@ -160,7 +195,11 @@ export class ImportanceAlgorithm extends OrderingAlgorithm {
     }
 
     public handleRoomUpdate(room: Room, cause: RoomUpdateCause): boolean {
-        if (cause === RoomUpdateCause.NewRoom || cause === RoomUpdateCause.RoomRemoved) {
+        if (
+            cause === RoomUpdateCause.NewRoom ||
+            cause === RoomUpdateCause.RoomRemoved ||
+            cause === RoomUpdateCause.RoomOrderInTagChange
+        ) {
             return this.handleSplice(room, cause);
         }
 
@@ -168,7 +207,6 @@ export class ImportanceAlgorithm extends OrderingAlgorithm {
             throw new Error(`Unsupported update cause: ${cause}`);
         }
 
-        const category = this.getRoomCategory(room);
         if (this.sortingAlgorithm === SortAlgorithm.Manual) {
             return false; // Nothing to do here.
         }
@@ -180,6 +218,7 @@ export class ImportanceAlgorithm extends OrderingAlgorithm {
 
         // Try to avoid doing array operations if we don't have to: only move rooms within
         // the categories if we're jumping categories
+        const category = this.getRoomCategory(room);
         const oldCategory = this.getCategoryFromIndices(roomIdx, this.indices);
         if (oldCategory !== category) {
             // Move the room and update the indices

@@ -7,12 +7,7 @@ import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { useTypedEventEmitter } from "../useEventEmitter";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
-
-export enum AdditionalEventType {
-    // Room state events
-    RoomEnableDefaultUserSendMsg = "m.room.enable_default_user_send_message", // 启用|禁用普通用户发送消息
-    RoomEnableDefaultUserMemberList = "m.room.enable_default_user_member_list", // 启用|禁用普通用户展示成员列表
-}
+import { AdditionalEventType } from "../../../../vector/rewrite-js-sdk/event";
 
 interface RoomStateResult<T> {
     disabled: boolean;

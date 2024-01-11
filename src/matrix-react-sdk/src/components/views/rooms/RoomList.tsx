@@ -80,6 +80,9 @@ import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/Sp
 import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
+import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -253,8 +256,11 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
         };
     }, [cli, shouldShowCreateRoom]);
 
-    let tags;
-    if (tagId) tags = [{ tagId }];
+    const onCreate = () => {
+        let tags;
+        if (tagId) tags = [{ tagId }];
+        onCreateRoom(activeSpace, undefined, tags);
+    };
 
     let contextMenuContent: JSX.Element | undefined;
     if (menuDisplayed && activeSpace) {
@@ -330,7 +336,7 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
         return (
             <AccessibleTooltipButton
                 tabIndex={tabIndex}
-                onClick={() => onCreateRoom(activeSpace, undefined, tags)}
+                onClick={onCreate}
                 className="mx_RoomSublist_auxButton"
                 tooltipClassName="mx_RoomSublist_addRoomTooltip"
                 aria-label={createRoomLabel}
@@ -398,6 +404,7 @@ function generateTagAesthetics(isHomeSpace): TagAestheticsMap {
 }
 
 export default class RoomList extends React.PureComponent<IProps, IState> {
+    private cli: MatrixClient = MatrixClientPeg.get();
     private dispatcherRef?: string;
     private treeRef = createRef<HTMLDivElement>();
     private favouriteMessageWatcher: string;
@@ -718,30 +725,35 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         [...treeItems].find((e) => e.offsetParent !== null)?.focus();
     }
 
-    private async onDragEnd(result: DropResult): Promise<void> {
+    private onDragEnd = async (result: DropResult): Promise<void> => {
         console.log("拖拽结束", result);
-        if (!result.destination) return;
+        const { source, destination, type, draggableId } = result;
+        if (!destination) return;
 
-        const { droppableId } = result.destination;
+        const { index: originalIndex, droppableId: originalDroppableId } = source;
+        const { index: targetIndex, droppableId: targetDroppableId } = destination;
 
-        // 拖拽修改频道所属分组
-        if (result.type === DragType.Channel) {
-            const roomId = result.draggableId;
-            const tagId = droppableId;
-            try {
-                await MatrixClientPeg.get().setRoomOnlyTags(roomId, tagId === DefaultTagID.Untagged ? [] : [{ tagId }]);
-            } catch (error) {
-                alert(error.message);
-            }
+        // 拖拽修改频道所属分组 & 频道排序
+        if (type === DragType.Channel) {
+            if (targetDroppableId === originalDroppableId && targetIndex === originalIndex) return;
+
+            // 修改room tag
+            const room = this.cli.getRoom(draggableId); // draggableId为roomId
+            dis.dispatch(
+                RoomListActions.tagRoom(
+                    this.cli,
+                    room,
+                    originalDroppableId,
+                    targetDroppableId,
+                    originalIndex,
+                    targetIndex,
+                ),
+            );
             return;
         }
 
         // 拖拽修改社区分组顺序
-        const { index: targetIndex } = result.destination;
-        if (targetIndex === -1) return; // 为-1时，表示拖拽到了默认分组之前，不做任何处理
-
-        const { index: originalIndex } = result.source;
-        if (targetIndex === originalIndex) return;
+        if (targetIndex === -1 || targetIndex === originalIndex) return; // 为-1时，表示拖拽到了默认分组之前，不做任何处理
 
         const tags = Array.from(SpaceStore.instance.spaceTags);
         const [removed] = tags.splice(originalIndex, 1);
@@ -751,7 +763,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         } catch (error) {
             alert(error.message);
         }
-    }
+    };
 
     public render(): React.ReactNode {
         const sublists = this.renderSublists();

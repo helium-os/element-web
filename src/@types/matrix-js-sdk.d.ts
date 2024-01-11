@@ -1,6 +1,6 @@
 import { RoomType } from "../vector/rewrite-js-sdk/room";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
-import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
+import { Tag, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 
 declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableSendMsgEventContent {
@@ -36,6 +36,7 @@ declare module "matrix-js-sdk/src/models/room" {
         getRoomTags(): Tag[];
         getUserTags(): Tag[];
         getAllTags(): Tag[];
+        getRoomOrderInTag(tagId: TagID): number | undefined;
         isRestrictedRoom(): boolean;
         isPrivateRoom(): boolean;
         canRemoveUser(userId: string): boolean;

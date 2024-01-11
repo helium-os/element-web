@@ -153,7 +153,10 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
                 logger.warn(`${activeRoomId} is current in RVS but missing from client - clearing sticky room`);
                 this.algorithm.setStickyRoom(null);
             } else if (activeRoom !== this.algorithm.stickyRoom) {
-                this.algorithm.setStickyRoom(activeRoom);
+                /**
+                 * tips: 此处逻辑会导致新创建的room，在cachedOrderedRooms里被删除，所以先注释掉
+                 */
+                // this.algorithm.setStickyRoom(activeRoom);
             }
         }
 
@@ -430,22 +433,30 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         return <SortAlgorithm>localStorage.getItem(`mx_tagSort_${tagId}`);
     }
 
-    // logic must match calculateListOrder
+    /**
+     *  logic must match calculateListOrder
+     * @param tagId
+     *
+     * 个人主页下的分组默认为活动排序；社区下的分组默认为手动排序；
+     */
     private calculateTagSorting(tagId: TagID): SortAlgorithm {
-        const definedSort = this.getTagSorting(tagId);
-        const storedSort = this.getStoredTagSorting(tagId);
+        return SpaceStore.instance.isHomeSpace ? SortAlgorithm.Recent : SortAlgorithm.Manual;
 
-        // We use the following order to determine which of the 4 flags to use:
-        // Stored > Settings > Defined > Default
-
-        let tagSort = SortAlgorithm.Recent;
-        if (storedSort) {
-            tagSort = storedSort;
-        } else if (definedSort) {
-            tagSort = definedSort;
-        } // else default (already set)
-
-        return tagSort;
+        // const defaultSort = SortAlgorithm.Recent;
+        // const definedSort = this.getTagSorting(tagId);
+        // const storedSort = this.getStoredTagSorting(tagId);
+        //
+        // // We use the following order to determine which of the 4 flags to use:
+        // // Stored > Settings > Defined > Default
+        //
+        // let tagSort = defaultSort;
+        // if (storedSort) {
+        //     tagSort = storedSort;
+        // } else if (definedSort) {
+        //     tagSort = definedSort;
+        // } // else default (already set)
+        //
+        // return tagSort;
     }
 
     public setListOrder(tagId: TagID, order: ListAlgorithm): void {
@@ -469,26 +480,37 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         return <ListAlgorithm>localStorage.getItem(`mx_listOrder_${tagId}`);
     }
 
-    // logic must match calculateTagSorting
+    /**
+     * logic must match calculateTagSorting
+     * @param tagId
+     *
+     * 标签排序为手动排序时，默认使用自然标记算法；
+     * 标签排序为活动排序或者字典排序时，默认使用"重要性"算法；
+     */
     private calculateListOrder(tagId: TagID): ListAlgorithm {
-        const defaultOrder = ListAlgorithm.Importance;
-        const definedOrder = this.getListOrder(tagId);
-        const storedOrder = this.getStoredListOrder(tagId);
+        return this.calculateTagSorting(tagId) === SortAlgorithm.Manual
+            ? ListAlgorithm.Natural
+            : ListAlgorithm.Importance;
 
-        // We use the following order to determine which of the 4 flags to use:
-        // Stored > Settings > Defined > Default
-
-        let listOrder = defaultOrder;
-        if (storedOrder) {
-            listOrder = storedOrder;
-        } else if (definedOrder) {
-            listOrder = definedOrder;
-        } // else default (already set)
-
-        return listOrder;
+        // const defaultOrder = ListAlgorithm.Importance;
+        // const definedOrder = this.getListOrder(tagId);
+        // const storedOrder = this.getStoredListOrder(tagId);
+        //
+        // // We use the following order to determine which of the 4 flags to use:
+        // // Stored > Settings > Defined > Default
+        //
+        // let listOrder = defaultOrder;
+        // if (storedOrder) {
+        //     listOrder = storedOrder;
+        // } else if (definedOrder) {
+        //     listOrder = definedOrder;
+        // } // else default (already set)
+        //
+        // return listOrder;
     }
 
-    private updateAlgorithmInstances(): void {
+    public updateAlgorithmInstances(): void {
+        console.log("updateAlgorithmInstances");
         // We'll require an update, so mark for one. Marking now also prevents the calls
         // to setTagSorting and setListOrder from causing triggers.
         this.updateFn.mark();
