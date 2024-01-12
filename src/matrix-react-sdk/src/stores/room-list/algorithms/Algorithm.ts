@@ -526,6 +526,7 @@ export class Algorithm extends EventEmitter {
             }
         }
 
+        // 对room进行排序
         this.generateFreshTags(newTags);
 
         this.cachedRooms = newTags; // this recalculates the filtered rooms for us
@@ -566,7 +567,7 @@ export class Algorithm extends EventEmitter {
 
     private getTagsOfJoinedRoom(room: Room): TagID[] {
         const roomTags = room.getAllTags();
-        let tagIds: TagID[] = roomTags.map((item) => item.tagId);
+        let tagIds: TagID[] = roomTags.map((item) => item.tagId).filter((tagId) => !!tagId);
 
         if (tagIds.length === 0) {
             // Check to see if it's a DM if it isn't anything else
@@ -681,6 +682,7 @@ export class Algorithm extends EventEmitter {
             const newTags = this.getTagsForRoom(room);
             const diff = arrayDiff(oldTags, newTags);
             if (diff.removed.length > 0 || diff.added.length > 0) {
+                // room移除tag
                 for (const rmTag of diff.removed) {
                     const algorithm: OrderingAlgorithm = this.algorithms[rmTag];
                     if (!algorithm) throw new Error(`No algorithm for ${rmTag}`);
@@ -690,6 +692,7 @@ export class Algorithm extends EventEmitter {
                     this.recalculateStickyRoom(rmTag); // update sticky room to make sure it moves if needed
                     this.recalculateActiveCallRooms(rmTag);
                 }
+                // room新增tag
                 for (const addTag of diff.added) {
                     const algorithm: OrderingAlgorithm = this.algorithms[addTag];
                     if (!algorithm) throw new Error(`No algorithm for ${addTag}`);
@@ -698,15 +701,26 @@ export class Algorithm extends EventEmitter {
                     this._cachedRooms[addTag] = algorithm.orderedRooms;
                 }
 
-                // Update the tag map so we don't regen it in a moment
-                this.roomIdsToTags[room.roomId] = newTags;
-
                 cause = RoomUpdateCause.Timeline;
                 didTagChange = true;
             } else {
-                // This is a tag change update and no tags were changed, nothing to do!
-                return false;
+                // order in tag change
+                for (const tag of newTags) {
+                    const algorithm: OrderingAlgorithm = this.algorithms[tag];
+                    if (!algorithm) throw new Error(`No algorithm for ${tag}`);
+
+                    if (this.getTagSorting(tag) !== SortAlgorithm.Manual) continue; // 非手动排序不做处理
+
+                    algorithm.handleRoomUpdate(room, RoomUpdateCause.RoomOrderInTagChange);
+                    this._cachedRooms[tag] = algorithm.orderedRooms;
+
+                    cause = RoomUpdateCause.Timeline;
+                    didTagChange = true;
+                }
             }
+
+            // Update the tag map so we don't regen it in a moment
+            this.roomIdsToTags[room.roomId] = newTags;
 
             if (didTagChange && isSticky) {
                 // Manually update the tag for the sticky room without triggering a sticky room

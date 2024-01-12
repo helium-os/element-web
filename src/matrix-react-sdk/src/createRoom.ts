@@ -54,7 +54,7 @@ import {
     getInitStatePowerLevels,
     isSpaceRoom,
 } from "matrix-react-sdk/src/powerLevel";
-import { AdditionalEventType } from "matrix-react-sdk/src/hooks/room/useRoomState";
+import { AdditionalEventType } from "../../vector/rewrite-js-sdk/event";
 
 // we define a number of interfaces which take their names from the js-sdk
 /* eslint-disable camelcase */

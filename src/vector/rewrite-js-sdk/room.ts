@@ -7,6 +7,8 @@ import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomV
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { PowerLevel } from "matrix-react-sdk/src/powerLevel";
+import { DefaultTagID, TagID } from "matrix-react-sdk/src/stores/room-list/models";
+import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 
 export enum RoomType {
     People = "people", // 私聊
@@ -71,7 +73,7 @@ Room.prototype.getMemberEmail = function (userId: string): string {
 
 // 获取只打在room上的tag
 Room.prototype.getRoomTags = function () {
-    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent().tags || [];
+    return this.currentState.getStateEvents(EventType.Tag, "")?.getContent()?.tags ?? [];
 };
 
 // 获取当前用户打在room上的tag（获取打在user + room上的tag）
@@ -93,6 +95,21 @@ Room.prototype.getAllTags = function () {
     } catch (error) {
         return this.getUserTags();
     }
+};
+
+/**
+ * 获取room在某个分组下的排序
+ * @param tagId
+ *
+ * 这里的order表示在某个分组（tag）下room的排序，而不是该分组自身的排序
+ * 这样设计是为了兼容一个room归属于多个分组的情况
+ */
+Room.prototype.getRoomOrderInTag = function (tagId: TagID) {
+    const allTags = this.getAllTags();
+    const roomTagInfo = allTags.find(
+        (item) => item.tagId === tagId || (!item.tagId && tagId === DefaultTagID.Untagged),
+    );
+    return +(roomTagInfo?.order || RoomListActions.defaultOrder);
 };
 
 /**

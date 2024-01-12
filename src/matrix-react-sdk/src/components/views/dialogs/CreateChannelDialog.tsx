@@ -31,6 +31,7 @@ import DialogButtons from "../elements/DialogButtons";
 import BaseDialog from "../dialogs/BaseDialog";
 import { privateShouldBeEncrypted } from "../../../utils/rooms";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
+import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 
 interface IProps {
     type?: RoomType;
@@ -99,7 +100,16 @@ export default class CreateChannelDialog extends React.Component<IProps, IState>
         const opts: IOpts = {};
         const createOpts: IOpts["createOpts"] = (opts.createOpts = {});
         opts.roomType = this.props.type;
-        opts.tags = this.props.tags;
+        if (this.props.tags?.length > 0) {
+            // 创建的频道为某个分组下的频道
+            opts.tags = this.props.tags.map((item) => ({
+                ...item,
+                order: RoomListActions.generateNewRoomOrderInTag(item.tagId),
+            }));
+        } else {
+            // 创建的频道为默认分组下的频道
+            opts.tags = [{ order: RoomListActions.generateNewRoomOrderInUntaggedTag() }];
+        }
         createOpts.name = this.state.name;
 
         if (this.state.joinRule === JoinRule.Public) {
