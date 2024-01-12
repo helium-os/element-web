@@ -19,12 +19,19 @@ limitations under the License.
     .mx_SearchBox {
         height: 22px;
         border-radius: 4px;
+        //border-color: rgba($text-primary-color1, 0.06);
+        //background: rgba($background, 0.50);
+        input {
+            cursor: pointer;
+        }
     }
 }
 
 
 .mx_MessageSearch_wrap {
-    padding: 18px 18px 30px;
+    display: flex;
+    flex-direction: column;
+    padding: 18px 18px 0;
     .mx_MessageSearch_divider {
         padding: 0 4px;
     }
@@ -38,8 +45,67 @@ limitations under the License.
 
 
 .mx_SearchBar_input {
+    .mx_Field {
+        padding: 6px 0;
+        &:after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 36px;
+            height: 36px;
+            mask:  url("$(res)/img/feather-customised/search.svg") no-repeat center;
+            mask-size: 15px 15px;
+            background: rgba($text-primary-color1, 0.6);
+        }
+    }
+    .mx_Field_wrap {
+        padding-left: 36px;
+        padding-right: 0;
+    }
     .mx_Field_inner {
         display: flex;
+    }
+    .mx_SelectedUserOrRoomTile_box {
+        margin: 0;
+        & + input {
+            padding-left: 10px;
+        }
+    }
+    .mx_SelectedUserOrRoomTile_pill {
+        border-radius: 2px;
+        background: rgba($text-primary-color1, 0.14);
+        .mx_DecoratedRoomAvatar {
+            margin-left: 4px;
+        }
+    }
+    .mx_SelectedUserOrRoomTile_name {
+        padding-left: 2px;
+        padding-right: 0;
+        font-size: 14px;
+    }
+    .mx_SelectedUserOrRoomTile_remove {
+        padding-right: 0;
+    }
+    .mx_SelectedUserOrRoomTile_remove_icon {
+        background: transparent;
+        &:before {
+            width: 8px;
+            height: 8px;
+            background: rgba($text-primary-color1, 0.5);
+        }
+    }
+
+    .mx_Field_clearBox {
+        width: 36px;
+    }
+    .mx_Field_clearBtn {
+        background: transparent;
+        &:before {
+            width: 11px;
+            height: 11px;
+            background: rgba($text-primary-color1, 0.5);
+        }
     }
 }
 .mx_SearchBar_buttons {
@@ -48,6 +114,7 @@ limitations under the License.
         display: flex;
         align-items: center;
         padding: 4px 0;
+        border-radius: 4px;
         color: rgba($text-primary-color1, 0.90);
         font-size: 14px;
         line-height: 20px;
@@ -76,18 +143,24 @@ limitations under the License.
 }
 
 .mx_searchResultsPanel_wrap {
+    flex: 1;
+    padding: 0 18px 30px;
     margin: 0 -18px;
-    padding: 0 18px;
     .mx_RoomView_MessageList {
         justify-content: flex-start;
     }
     a {
         color: $text-primary-color3;
     }
+    .mx_searchResultsPanel_inner {
+        & > li {
+            margin-top: 10px;
+        }
+    }
     .mx_SearchResultTile_box {
-        margin-top: 10px;
         padding: 6px 0 16px;
         @mixin HalfPxBorder rgba($text-primary-color1, 0.30), 8px;
+        cursor: pointer;
         &:hover {
             background: rgba($text-primary-color1, 0.05);
             .mx_EventTile {
@@ -117,5 +190,13 @@ limitations under the License.
             line-height: 16px;
             color: rgba($text-primary-color1, 0.50);
         }
+    }
+    .mx_SearchResult_noMore {
+        padding: 4px 0;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 20px;
+        color: $text-secondary-color6;
     }
 }

@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback, useRef } from "react";
+import React, { memo, useState, useEffect, useCallback, useRef } from "react";
 import SearchBar, { SearchScope } from "matrix-react-sdk/src/components/views/rooms/SearchBar";
 import { SearchRoomId } from "matrix-react-sdk/src/Searching";
 import { RoomSearchView } from "matrix-react-sdk/src/components/structures/RoomSearchView";
@@ -10,6 +10,8 @@ import ContextMenu, {
     MenuProps,
 } from "matrix-react-sdk/src/components/structures/ContextMenu";
 import UIStore from "matrix-react-sdk/src/stores/UIStore";
+import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
+import { ActionPayload } from "matrix-react-sdk/src/dispatcher/payloads";
 
 interface IProps {}
 
@@ -23,6 +25,7 @@ export interface SearchFilter {
     roomIds: SearchRoomId;
 }
 const MessageSearch: React.FC<IProps> = () => {
+    const dispatcherRef = useRef(null);
     const searchBtn = useRef(null);
 
     const contextMenuHorizontalCenter = true;
@@ -33,6 +36,22 @@ const MessageSearch: React.FC<IProps> = () => {
     });
 
     const [searchFilter, setSearchFilter] = useState<SearchFilter>({} as SearchFilter);
+
+    const onAction = (payload: ActionPayload) => {
+        switch (payload.action) {
+            case "focus_search":
+                showSearchArea();
+                break;
+        }
+    };
+
+    useEffect(() => {
+        dispatcherRef.current = dis.register(onAction);
+
+        return () => {
+            dispatcherRef.current && dis.unregister(dispatcherRef.current);
+        };
+    }, []);
 
     const showSearchArea = () => {
         const searchBtnRect = searchBtn.current.getBoundingClientRect();
@@ -59,7 +78,7 @@ const MessageSearch: React.FC<IProps> = () => {
     return (
         <>
             <div className="mx_MessageSearch_btn" ref={searchBtn} onClick={showSearchArea}>
-                <SearchBox ref={searchBtn} placeholder={_t("Search")} autoFocus={false} />
+                <SearchBox placeholder={_t("Search")} autoFocus={false} />
             </div>
             {searchArea.show && searchArea.position && (
                 <ContextMenu
@@ -67,18 +86,16 @@ const MessageSearch: React.FC<IProps> = () => {
                     horizontalCenter={contextMenuHorizontalCenter}
                     onFinished={closeSearchArea}
                 >
-                    <div className="mx_MessageSearch_wrap">
-                        <SearchBar
-                            // searchInProgress={searchInfo?.inProgress}
-                            onFilterChange={onFilterChange}
-                        />
+                    <div className="mx_MessageSearch_wrap" style={{ maxHeight: UIStore.instance.windowHeight * 0.5 }}>
+                        <SearchBar onFilterChange={onFilterChange} />
                         <RoomSearchView
                             query={searchFilter.query}
                             scope={searchFilter.scope}
                             roomIds={searchFilter.roomIds}
-                            // onUpdate={onSearchUpdate}
+                            onFinished={closeSearchArea}
                         />
                     </div>
+                    <div className="mx_MessageSearch_actionTips"></div>
                 </ContextMenu>
             )}
         </>

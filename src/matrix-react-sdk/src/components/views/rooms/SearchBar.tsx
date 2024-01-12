@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, useEffect, memo, useContext } from "react";
+import React, { useState, useEffect, useRef, memo, useContext } from "react";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 import { SearchRoomId } from "matrix-react-sdk/src/Searching";
 import Field, { SelectedUserOrRoomTile } from "matrix-react-sdk/src/components/views/elements/Field";
@@ -40,7 +40,6 @@ export enum SearchScope {
 type FilterChangeFn = (filter: SearchFilter) => void;
 
 interface IProps {
-    searchInProgress?: boolean;
     onFilterChange: FilterChangeFn;
 }
 
@@ -48,14 +47,16 @@ const getActiveRoom = (cli: MatrixClient, context: SdkContextClass) => {
     const roomId = context.roomViewStore.getRoomId();
     const room = cli.getRoom(roomId);
 
-    if (room.getType() === RoomType.Space) return;
+    if (room?.getType() === RoomType.Space) return;
 
     return room;
 };
 
-const SearchBar: React.FC<IProps> = ({ searchInProgress, onFilterChange }) => {
+const SearchBar: React.FC<IProps> = ({ onFilterChange }) => {
     const cli = useContext(MatrixClientContext);
     const context = useContext(SDKContext);
+
+    const inputRef = useRef(null);
 
     const onFilterChangeRef = useFnRef<FilterChangeFn>(onFilterChange);
 
@@ -120,7 +121,7 @@ const SearchBar: React.FC<IProps> = ({ searchInProgress, onFilterChange }) => {
     // 搜索条件改变
     useEffect(() => {
         onFilterChangeRef.current?.({
-            query: filterText,
+            query: filterText.trim(),
             scope,
             roomIds,
         });
@@ -130,20 +131,13 @@ const SearchBar: React.FC<IProps> = ({ searchInProgress, onFilterChange }) => {
         setFilterText(e.target.value);
     };
 
-    const onAllRoomsClick = (): void => {
-        setScope(SearchScope.All);
-    };
-
-    const onThisSpaceClick = (): void => {
-        setScope(SearchScope.Space);
-    };
-
-    const onThisRoomClick = (): void => {
-        setScope(SearchScope.Room);
+    const onScopeBtnClick = (scope: SearchScope, inputFocus: boolean = true) => {
+        setScope(scope);
+        inputFocus && inputRef.current?.focus();
     };
 
     const onDeleteSelectedRoom = () => {
-        onAllRoomsClick();
+        onScopeBtnClick(SearchScope.All);
     };
 
     const getSelectedRoomComponent = () => {
@@ -160,37 +154,41 @@ const SearchBar: React.FC<IProps> = ({ searchInProgress, onFilterChange }) => {
 
     return (
         <>
-            <div className="mx_SearchBar_wrap">
-                <div className="mx_SearchBar_input">
-                    <Field
-                        type="text"
-                        usePlaceholderAsHint={!selectedRoom}
-                        placeholder={"在所有社区中搜索"}
-                        autoFocus={true}
-                        autoComplete="off"
-                        // disabled={searchInProgress}
-                        prefixComponent={getSelectedRoomComponent()}
-                        hasPrefixContainer={false}
-                        clearEnable={false}
-                        value={filterText}
-                        onChange={updateFilter}
-                    />
-                </div>
-                <ul className="mx_SearchBar_buttons" role="radiogroup">
-                    {[activeSpace, activeRoom].map((room) => {
-                        return room && room.roomId !== selectedRoom?.roomId ? (
-                            <li onClick={room.getType() === RoomType.Space ? onThisSpaceClick : onThisRoomClick}>
-                                <span className="mx_SearchBar_button_icon" />在
-                                <label className="mx_MessageSearch_divider">
-                                    <RoomAndChannelAvatar room={room} avatarSize={20} />
-                                    {room.name}
-                                </label>
-                                中搜索
-                            </li>
-                        ) : null;
-                    })}
-                </ul>
+            <div className="mx_SearchBar_input">
+                <Field
+                    type="text"
+                    inputRef={inputRef}
+                    usePlaceholderAsHint={!selectedRoom}
+                    placeholder={"在所有社区中搜索"}
+                    autoFocus={true}
+                    autoComplete="off"
+                    prefixComponent={getSelectedRoomComponent()}
+                    hasPrefixContainer={false}
+                    clearEnable={true}
+                    value={filterText}
+                    onChange={updateFilter}
+                />
             </div>
+            <ul className="mx_SearchBar_buttons" role="radiogroup">
+                {[activeSpace, activeRoom].map((room) => {
+                    return room && room.roomId !== selectedRoom?.roomId ? (
+                        <li
+                            onClick={() =>
+                                onScopeBtnClick(
+                                    room.getType() === RoomType.Space ? SearchScope.Space : SearchScope.Room,
+                                )
+                            }
+                        >
+                            <span className="mx_SearchBar_button_icon" />在
+                            <label className="mx_MessageSearch_divider">
+                                <RoomAndChannelAvatar room={room} avatarSize={20} />
+                                {room.name}
+                            </label>
+                            中搜索
+                        </li>
+                    ) : null;
+                })}
+            </ul>
         </>
     );
 };

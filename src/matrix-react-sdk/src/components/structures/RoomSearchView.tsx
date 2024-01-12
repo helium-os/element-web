@@ -19,7 +19,6 @@ import { ISearchResults } from "matrix-js-sdk/src/@types/search";
 import { IThreadBundledRelationship, MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { THREAD_RELATION_TYPE } from "matrix-js-sdk/src/models/thread";
 
-import ScrollPanel from "./ScrollPanel";
 import { SearchScope } from "../views/rooms/SearchBar";
 import Spinner from "../views/elements/Spinner";
 import { _t } from "../../languageHandler";
@@ -41,22 +40,23 @@ interface IProps {
     query: string;
     scope: SearchScope;
     roomIds: SearchRoomId;
-    onUpdate?(inProgress: boolean, results: ISearchResults | null): void;
+    onFinished?: () => void;
 }
 
 const permalinkCreators: Record<string, RoomPermalinkCreator> = {};
 
-export const RoomSearchView = ({ query, scope, roomIds, onUpdate }: IProps) => {
+export const RoomSearchView = ({ query, scope, roomIds, onFinished }: IProps) => {
     const client = useContext(MatrixClientContext);
     const roomContext = useContext(RoomContext);
 
-    const scrollPanelRef = useRef(null);
     const debounceTimer = useRef<number>();
+
+    const abortControllerRef = useRef<AbortController>(null);
+    const aborted = useRef(false);
 
     const [inProgress, setInProgress] = useState(false);
     const [highlights, setHighlights] = useState<string[] | null>(null);
     const [results, setResults] = useState<ISearchResults | null>(null);
-    const aborted = useRef(false);
 
     useEffect(() => {
         return () => {
@@ -65,31 +65,34 @@ export const RoomSearchView = ({ query, scope, roomIds, onUpdate }: IProps) => {
     }, []);
 
     useEffect(() => {
+        if (!query?.trim()) {
+            setResults(null);
+        }
+    }, [query]);
+
+    useEffect(() => {
+        const onSearch = (query: string, scope: SearchScope, roomIds: SearchRoomId): void => {
+            if (!query || (scope !== SearchScope.All && !roomIds)) return;
+
+            setResults(null);
+            abortControllerRef.current = new AbortController();
+            const promise = eventSearch(query, roomIds, abortControllerRef.current.signal);
+            aborted.current = false;
+            handleSearchResult(promise);
+        };
+
         if (debounceTimer.current) {
             clearTimeout(debounceTimer.current);
         }
         debounceTimer.current = window.setTimeout(() => {
             onSearch(query, scope, roomIds);
-        }, 500); // 500ms debounce (human reaction time + some)
-    }, [query, scope, roomIds]);
+        }, 500);
 
-    // Mount & unmount effect
-    useEffect(() => {
-        aborted.current = false;
         return () => {
             aborted.current = true;
-            // abortController?.abort();
+            abortControllerRef.current?.abort();
         };
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const onSearch = (query: string, scope: SearchScope, roomIds: SearchRoomId): void => {
-        if (!query || (scope !== SearchScope.All && !roomIds)) return;
-
-        const abortController = new AbortController();
-
-        const promise = eventSearch(query, roomIds, abortController.signal);
-        handleSearchResult(promise);
-    };
+    }, [query, scope, roomIds]);
 
     const loadMore = async (): Promise<boolean> => {
         if (!results.next_batch) {
@@ -171,21 +174,10 @@ export const RoomSearchView = ({ query, scope, roomIds, onUpdate }: IProps) => {
         }
     };
 
-    // once dynamic content in the search results load, make the scrollPanel check
-    // the scroll offsets.
-    const onHeightChanged = (): void => {
-        scrollPanelRef.current?.checkScroll();
+    const onJumpToEvent = (resultLink: string) => {
+        window.location.href = resultLink;
+        onFinished?.();
     };
-
-    // show searching spinner
-    if (results?.count === undefined) {
-        return (
-            <div
-                className="mx_RoomView_messagePanel mx_RoomView_messagePanelSearchSpinner"
-                data-testid="messagePanelSearchSpinner"
-            />
-        );
-    }
 
     const getContent = () => {
         const ret: JSX.Element[] = [];
@@ -278,7 +270,7 @@ export const RoomSearchView = ({ query, scope, roomIds, onUpdate }: IProps) => {
                     searchHighlights={highlights ?? []}
                     resultLink={resultLink}
                     permalinkCreator={getPermalinkCreatorForRoom(room)}
-                    onHeightChanged={onHeightChanged}
+                    onClick={() => onJumpToEvent(resultLink)}
                 />,
             );
 
@@ -286,28 +278,12 @@ export const RoomSearchView = ({ query, scope, roomIds, onUpdate }: IProps) => {
             mergedTimeline = [];
         }
 
-        if (inProgress) {
+        if (!results?.next_batch) {
             ret.push(
-                <li key="search-spinner">
-                    <Spinner />
+                <li className="mx_SearchResult_noMore">
+                    {!results?.results?.length ? "没有与您的查询相匹配的结果" : _t("No more results")}
                 </li>,
             );
-        }
-
-        if (!results.next_batch) {
-            if (!results?.results?.length) {
-                ret.push(
-                    <li key="search-top-marker">
-                        <h2 className="mx_RoomView_topMarker">没有与您的查询相匹配的结果</h2>
-                    </li>,
-                );
-            } else {
-                ret.push(
-                    <li key="search-top-marker">
-                        <h2 className="mx_RoomView_topMarker">{_t("No more results")}</h2>
-                    </li>,
-                );
-            }
         }
 
         return ret;
@@ -315,12 +291,15 @@ export const RoomSearchView = ({ query, scope, roomIds, onUpdate }: IProps) => {
 
     return (
         <>
-            <ScrollLoader
-                className="mx_searchResultsPanel_wrap"
-                style={{ maxHeight: UIStore.instance.windowHeight * 0.5 }}
-                loadMore={loadMore}
-            >
-                <div className="mx_searchResultsPanel_inner">{getContent()}</div>
+            <ScrollLoader className="mx_searchResultsPanel_wrap" loadMore={loadMore}>
+                <ul className="mx_searchResultsPanel_inner">
+                    {results && getContent()}
+                    {inProgress && (
+                        <li>
+                            <Spinner />
+                        </li>
+                    )}
+                </ul>
             </ScrollLoader>
         </>
     );

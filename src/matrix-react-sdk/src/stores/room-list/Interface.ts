@@ -84,6 +84,8 @@ export interface RoomListStore extends EventEmitter {
      */
     regenerateAllLists(params: { trigger: boolean; space?: SpaceKey; spaceTags?: Tag[] }): void;
 
+    getPlausibleRooms?(): Room[];
+
     /**
      * Adds a filter condition to the room list store. Filters may be applied async,
      * and thus might not cause an update to the store immediately.

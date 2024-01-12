@@ -39,6 +39,7 @@ interface IProps {
     ourEventsIndexes: number[];
     onHeightChanged?: () => void;
     permalinkCreator?: RoomPermalinkCreator;
+    onClick?: () => void;
 }
 
 export default class SearchResultTile extends React.Component<IProps> {
@@ -120,13 +121,15 @@ export default class SearchResultTile extends React.Component<IProps> {
                         lastInSection={lastInSection}
                         continuation={continuation}
                         callEventGrouper={this.callEventGroupers.get(mxEv.getContent().call_id)}
+                        timelineRenderingType={TimelineRenderingType.Search}
+                        showMessageContextMenu={false}
                     />,
                 );
             }
         }
 
         return (
-            <li className="mx_SearchResultTile_box" data-scroll-tokens={eventId}>
+            <li className="mx_SearchResultTile_box" data-scroll-tokens={eventId} onClick={this.props.onClick}>
                 <ol>{ret}</ol>
             </li>
         );

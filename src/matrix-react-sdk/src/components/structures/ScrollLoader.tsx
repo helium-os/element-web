@@ -1,10 +1,10 @@
 import React, { useRef, memo } from "react";
 
 interface IProps {
-    className: string;
-    style: object;
+    className?: string;
+    style?: object;
     children: React.ReactNode;
-    loadMore: () => any;
+    loadMore?: () => any;
 }
 
 const ScrollLoader: React.FC<IProps> = ({ className, style, children, loadMore }) => {
