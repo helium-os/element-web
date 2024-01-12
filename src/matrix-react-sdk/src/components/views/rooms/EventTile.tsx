@@ -221,7 +221,7 @@ export interface EventTileProps {
 
     showMessageContextMenu?: boolean;
 
-    timelineRenderingType: TimelineRenderingType;
+    timelineRenderingType?: TimelineRenderingType;
 }
 
 interface IState {
@@ -865,7 +865,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
     }
 
     private renderContextMenu(): ReactNode {
-        if (!this.props.showMessageContextMenu || !this.state.contextMenu) return null;
+        if (!this.state.contextMenu) return null;
 
         const tile = this.getTile();
         const replyChain = this.getReplyChain();
@@ -1050,7 +1050,6 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         }
 
         if (needsSenderProfile && this.props.hideSender !== true) {
-            console.log("this.timelineRenderingType", this.timelineRenderingType);
             if (
                 this.timelineRenderingType === TimelineRenderingType.Room ||
                 this.timelineRenderingType === TimelineRenderingType.Pinned ||

@@ -44,6 +44,8 @@ interface IProps {
 }
 
 const getActiveRoom = (cli: MatrixClient, context: SdkContextClass) => {
+    if (!cli || !context) return;
+
     const roomId = context.roomViewStore.getRoomId();
     const room = cli.getRoom(roomId);
 

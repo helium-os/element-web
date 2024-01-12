@@ -86,7 +86,7 @@ const MessageSearch: React.FC<IProps> = () => {
                     horizontalCenter={contextMenuHorizontalCenter}
                     onFinished={closeSearchArea}
                 >
-                    <div className="mx_MessageSearch_wrap" style={{ maxHeight: UIStore.instance.windowHeight * 0.5 }}>
+                    <div className="mx_MessageSearch_wrap" style={{ maxHeight: UIStore.instance.windowHeight * 0.6 }}>
                         <SearchBar onFilterChange={onFilterChange} />
                         <RoomSearchView
                             query={searchFilter.query}
@@ -95,7 +95,6 @@ const MessageSearch: React.FC<IProps> = () => {
                             onFinished={closeSearchArea}
                         />
                     </div>
-                    <div className="mx_MessageSearch_actionTips"></div>
                 </ContextMenu>
             )}
         </>

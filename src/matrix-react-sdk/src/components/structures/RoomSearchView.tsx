@@ -31,7 +31,6 @@ import MatrixClientContext from "../../contexts/MatrixClientContext";
 import { RoomPermalinkCreator } from "../../utils/permalinks/Permalinks";
 import RoomContext from "../../contexts/RoomContext";
 import { Room } from "matrix-js-sdk/src/models/room";
-import UIStore from "matrix-react-sdk/src/stores/UIStore";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 import MessageTimestamp from "matrix-react-sdk/src/components/views/messages/MessageTimestamp";
 import ScrollLoader from "matrix-react-sdk/src/components/structures/ScrollLoader";
@@ -94,13 +93,11 @@ export const RoomSearchView = ({ query, scope, roomIds, onFinished }: IProps) =>
         };
     }, [query, scope, roomIds]);
 
-    const loadMore = async (): Promise<boolean> => {
-        if (!results.next_batch) {
-            return false;
-        }
+    const loadMore = (): void => {
+        if (!results.next_batch) return;
 
         const searchPromise = searchPagination(results);
-        return handleSearchResult(searchPromise);
+        handleSearchResult(searchPromise);
     };
 
     const handleSearchResult = useCallback(
@@ -175,7 +172,9 @@ export const RoomSearchView = ({ query, scope, roomIds, onFinished }: IProps) =>
     };
 
     const onJumpToEvent = (resultLink: string) => {
-        window.location.href = resultLink;
+        if (resultLink) {
+            window.location.href = resultLink;
+        }
         onFinished?.();
     };
 
