@@ -69,37 +69,6 @@ export const RoomSearchView = ({ query, scope, roomIds, onFinished }: IProps) =>
         }
     }, [query]);
 
-    useEffect(() => {
-        const onSearch = (query: string, scope: SearchScope, roomIds: SearchRoomId): void => {
-            if (!query || (scope !== SearchScope.All && !roomIds)) return;
-
-            setResults(null);
-            abortControllerRef.current = new AbortController();
-            const promise = eventSearch(query, roomIds, abortControllerRef.current.signal);
-            aborted.current = false;
-            handleSearchResult(promise);
-        };
-
-        if (debounceTimer.current) {
-            clearTimeout(debounceTimer.current);
-        }
-        debounceTimer.current = window.setTimeout(() => {
-            onSearch(query, scope, roomIds);
-        }, 500);
-
-        return () => {
-            aborted.current = true;
-            abortControllerRef.current?.abort();
-        };
-    }, [query, scope, roomIds]);
-
-    const loadMore = (): void => {
-        if (!results.next_batch) return;
-
-        const searchPromise = searchPagination(results);
-        handleSearchResult(searchPromise);
-    };
-
     const handleSearchResult = useCallback(
         (searchPromise: Promise<ISearchResults>): Promise<boolean> => {
             setInProgress(true);
@@ -155,6 +124,37 @@ export const RoomSearchView = ({ query, scope, roomIds, onFinished }: IProps) =>
         },
         [client, query],
     );
+
+    useEffect(() => {
+        const onSearch = (query: string, scope: SearchScope, roomIds: SearchRoomId): void => {
+            if (!query || (scope !== SearchScope.All && !roomIds)) return;
+
+            setResults(null);
+            abortControllerRef.current = new AbortController();
+            const promise = eventSearch(query, roomIds, abortControllerRef.current.signal);
+            aborted.current = false;
+            handleSearchResult(promise);
+        };
+
+        if (debounceTimer.current) {
+            clearTimeout(debounceTimer.current);
+        }
+        debounceTimer.current = window.setTimeout(() => {
+            onSearch(query, scope, roomIds);
+        }, 500);
+
+        return () => {
+            aborted.current = true;
+            abortControllerRef.current?.abort();
+        };
+    }, [query, scope, roomIds, handleSearchResult]);
+
+    const loadMore = (): void => {
+        if (!results.next_batch) return;
+
+        const searchPromise = searchPagination(results);
+        handleSearchResult(searchPromise);
+    };
 
     const getPermalinkCreatorForRoom = (room: Room): RoomPermalinkCreator => {
         if (permalinkCreators[room.roomId]) return permalinkCreators[room.roomId];
