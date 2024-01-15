@@ -124,7 +124,7 @@ import { DoAfterSyncPreparedPayload } from "../../dispatcher/payloads/DoAfterSyn
 import { ViewStartChatOrReusePayload } from "../../dispatcher/payloads/ViewStartChatOrReusePayload";
 import { IConfigOptions } from "../../IConfigOptions";
 import { SnakedObject } from "../../utils/SnakedObject";
-import { leaveRoomBehaviour } from "../../utils/leave-behaviour";
+import { deleteRoomBehaviour, leaveRoomBehaviour } from "../../utils/leave-behaviour";
 import { CallStore } from "../../stores/CallStore";
 import { IRoomStateEventsActionPayload } from "../../actions/MatrixActionCreators";
 import { ShowThreadPayload } from "../../dispatcher/payloads/ShowThreadPayload";
@@ -677,6 +677,9 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             case "leave_room":
                 this.leaveRoom(payload.room_id);
                 break;
+            case "delete_room":
+                this.deleteRoom(payload.room_id);
+                break;
             case "forget_room":
                 this.forgetRoom(payload.room_id);
                 break;
@@ -1206,7 +1209,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
     private leaveRoom(roomId: string): void {
         const cli = MatrixClientPeg.get();
         const roomToLeave = cli.getRoom(roomId);
-        const warnings = this.leaveRoomWarnings(roomId);
 
         const myUserId = cli.getSafeUserId();
         const myMember = roomToLeave.getMember(myUserId);
@@ -1247,13 +1249,46 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                               roomType,
                               roomName: roomToLeave?.name ?? _t("Unnamed Room"),
                           })}
-                    {/*{warnings}*/}
                 </>
             ),
             button: actionType,
             onFinished: (shouldLeave) => {
                 if (shouldLeave) {
                     leaveRoomBehaviour(roomId);
+
+                    dis.dispatch<AfterLeaveRoomPayload>({
+                        action: Action.AfterLeaveRoom,
+                        room_id: roomId,
+                    });
+                }
+            },
+        });
+    }
+
+    private deleteRoom(roomId: string): void {
+        const cli = MatrixClientPeg.get();
+        const roomToDelete = cli.getRoom(roomId);
+
+        const roomType = roomToDelete.getRoomTypeLabel();
+
+        const actionType = _t("Delete");
+
+        Modal.createDialog(QuestionDialog, {
+            fixedWidth: false,
+            className: "mx_Dialog_DeleteRoomConfirmDialog",
+            title: _t("Delete room", {
+                roomType,
+            }),
+            danger: true,
+            description: _t("Are you sure you want to leave the room?", {
+                actionType: _t("Delete"),
+                roomType,
+                roomName: roomToDelete?.name ?? _t("Unnamed Room"),
+            }),
+            button: actionType,
+            onFinished: async (shouldDelete) => {
+                if (shouldDelete) {
+                    await deleteRoomBehaviour(roomId);
 
                     dis.dispatch<AfterLeaveRoomPayload>({
                         action: Action.AfterLeaveRoom,

@@ -32,7 +32,7 @@ const EditSpaceTagContextMenu: React.FC<IProps> = ({ tagId }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission = activeSpaceRoom?.canOperateTag(userId);
+    const hasTagPermission = activeSpaceRoom?.canManageTag(userId);
 
     // 编辑分组名称
     const onChangeTagName = (tagId: TagID): void => {

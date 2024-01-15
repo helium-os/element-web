@@ -1,6 +1,8 @@
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
+import * as utils from "matrix-js-sdk/src/utils";
+import { ClientPrefix, Method } from "matrix-js-sdk/src/http-api";
 
 /**
  * setRoomOnlyTags -设置room tag（tag只打在room上）
@@ -15,4 +17,12 @@ MatrixClient.prototype.setRoomOnlyTags = function (roomId: string, tags: Tag[]) 
 // 获取只打在room上的tag
 MatrixClient.prototype.getRoomOnlyTags = function (roomId: string) {
     return this.getStateEvent(roomId, EventType.Tag, "");
+};
+
+// 删除room
+MatrixClient.prototype.deleteRoom = function (roomId: string) {
+    const path = utils.encodeUri("/rooms/$roomId", {
+        $roomId: roomId,
+    });
+    return this.http.authedRequest(Method.Delete, path, undefined, undefined, { prefix: ClientPrefix.V3 });
 };

@@ -32,7 +32,7 @@ const SpaceDeleteTagContextMenu: React.FC<IProps> = ({ tagId }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission = activeSpaceRoom?.canOperateTag(userId);
+    const hasTagPermission = activeSpaceRoom?.canManageTag(userId);
 
     // 删除分组
     const onDeleteSpaceTag = (tagId: TagID): void => {

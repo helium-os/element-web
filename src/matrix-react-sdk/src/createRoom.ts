@@ -52,7 +52,6 @@ import {
     getDefaultEventPowerLevels,
     getDefaultStatePowerLevels,
     getInitStatePowerLevels,
-    isSpaceRoom,
 } from "matrix-react-sdk/src/powerLevel";
 import { AdditionalEventType } from "../../vector/rewrite-js-sdk/event";
 
@@ -123,7 +122,7 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
         return null;
     }
 
-    const isSpace = isSpaceRoom(opts.roomType);
+    const isSpace = opts.roomType === RoomType.Space;
 
     const defaultPreset = opts.dmUserId ? Preset.TrustedPrivateChat : Preset.PrivateChat;
 
@@ -194,7 +193,7 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
         default: {
             const { events, users, ...statePowerLevels } = createOpts.power_level_content_override ?? {};
             createOpts.power_level_content_override = {
-                ...getDefaultStatePowerLevels(opts.roomType, opts.joinRule),
+                ...getDefaultStatePowerLevels(isSpace, opts.joinRule),
                 ...statePowerLevels,
                 ...getInitStatePowerLevels({
                     isSpace,
@@ -202,7 +201,7 @@ export default async function createRoom(opts: IOpts): Promise<string | null> {
                     enableDefaultUserMemberList: opts.enableDefaultUserMemberList,
                 }),
                 events: {
-                    ...getDefaultEventPowerLevels(opts.roomType),
+                    ...getDefaultEventPowerLevels(isSpace),
                     ...events,
                 },
                 users,

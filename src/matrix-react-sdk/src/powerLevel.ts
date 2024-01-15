@@ -1,9 +1,11 @@
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import { isPrivateRoom } from "../../vector/rewrite-js-sdk/room";
 import { _t, _td } from "matrix-react-sdk/src/languageHandler";
 import { ElementCall } from "matrix-react-sdk/src/models/Call";
 import { VoiceBroadcastInfoEventType } from "matrix-react-sdk/src/voice-broadcast";
+import { Room } from "matrix-js-sdk/src/models/room";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 export enum PowerLevel {
     Admin = 100, // 管理员
@@ -52,77 +54,146 @@ interface EventPowerLevelDescriptorsMap {
     [eventType: string]: EventPowerLevelDescriptorItem;
 }
 
-export function isSpaceRoom(roomType: RoomType | string): boolean {
-    return roomType === RoomType.Space;
+export enum StateEvent {
+    UsersDefault = "users_default",
+    EventsDefault = "events_default",
+    StateDefault = "state_default",
+    Invite = "invite",
+    Kick = "kick",
+    Ban = "ban",
+    Redact = "redact",
+    Delete = "delete",
+    DisplayMemberList = "display_member_list",
+    ManagePrivateChannel = "manage_space_private_channel",
+    NotificationRooms = "notifications.room",
 }
 
-export const DefaultPowerLevelToManageSpacePrivateChannel = PowerLevel.Moderator;
-
-// state powerLevel
-export function getDefaultStatePowerLevels(roomType: RoomType | string, joinRule: JoinRule): PowerLevelsMap {
-    const isSpace = isSpaceRoom(roomType);
+/** ------------------------------- state powerLevel  -------------------------------**/
+export function getDefaultStatePowerLevels(isSpace: boolean, joinRule: JoinRule): PowerLevelsMap {
     return {
-        users_default: PowerLevel.Default,
-        state_default: PowerLevel.Moderator,
-        events_default: isSpace ? PowerLevel.Admin : PowerLevel.Default, // 哪些角色可以发送消息
-        invite: isSpace && isPrivateRoom(joinRule) ? PowerLevel.Moderator : PowerLevel.Default, // 私密社区协管员及以上权限才可以邀请
-        kick: PowerLevel.Moderator,
-        ban: PowerLevel.Moderator,
-        redact: PowerLevel.Moderator,
-        display_member_list: isSpace ? PowerLevel.Moderator : PowerLevel.Default, // 哪些角色可以展示成员列表
-        ...(isSpace ? { manage_space_private_channel: DefaultPowerLevelToManageSpacePrivateChannel } : {}), // 哪些角色可以管理社区内的私密频道
-        // "notifications.room": PowerLevel.Moderator,
+        [StateEvent.UsersDefault]: PowerLevel.Default,
+        [StateEvent.StateDefault]: PowerLevel.Moderator,
+        [StateEvent.EventsDefault]: isSpace ? PowerLevel.Admin : PowerLevel.Default, // 哪些角色可以发送消息
+        [StateEvent.Invite]: isSpace && isPrivateRoom(joinRule) ? PowerLevel.Moderator : PowerLevel.Default, // 私密社区协管员及以上权限才可以邀请
+        [StateEvent.Kick]: PowerLevel.Moderator,
+        [StateEvent.Ban]: PowerLevel.Moderator,
+        [StateEvent.Redact]: PowerLevel.Moderator,
+        [StateEvent.DisplayMemberList]: isSpace ? PowerLevel.Moderator : PowerLevel.Default, // 哪些角色可以展示成员列表
+        ...(isSpace ? { [StateEvent.ManagePrivateChannel]: PowerLevel.Moderator } : {}), // 哪些角色可以管理社区内的私密频道
+        [StateEvent.Delete]: isSpace ? PowerLevel.Admin : PowerLevel.Moderator, // 哪些角色可以删除room（只有管理员可以删除社区；管理员和协管员可以删除频道）
+        // [StateEvent.NotificationRooms]: PowerLevel.Moderator,
     };
 }
-export function getPowerLevelOpts(eventType: string): PowerLevelOpts | PowerLevelOptsMap {
+
+// 通过启用|禁用允许普通用户发送消息来计算events_default（是否可以发送消息）的powerLevel值
+export function getPowerLevelByEnableDefaultUserSendMsg(enable: boolean, isSpace = false): PowerLevelsMap {
+    return !isSpace
+        ? {
+              events_default: enable ? PowerLevel.Default : PowerLevel.Moderator,
+          }
+        : {};
+}
+
+// 通过启用|禁用允许普通用户展示成员列表来计算display_member_list（是否展示成员列表）的powerLevel值
+export function getPowerLevelByEnableDefaultUserMemberList(enable: boolean, isSpace = false): PowerLevelsMap {
+    return !isSpace
+        ? {
+              display_member_list: enable ? PowerLevel.Default : PowerLevel.Moderator,
+          }
+        : {};
+}
+
+// 获取初始化powerLevels
+export function getInitStatePowerLevels({
+    isSpace = false,
+    enableDefaultUserSendMsg,
+    enableDefaultUserMemberList,
+}: InitPowerLevelsParams): PowerLevelsMap {
+    return {
+        ...getPowerLevelByEnableDefaultUserSendMsg(enableDefaultUserSendMsg, isSpace),
+        ...getPowerLevelByEnableDefaultUserMemberList(enableDefaultUserMemberList, isSpace),
+    };
+}
+
+// 判断用户是否有某些state event的权限
+export function hasStateEventPermission(room: Room, key: string, userId?: string): boolean {
+    if (room.getMyMembership() !== "join") {
+        return false;
+    }
+
+    if (!userId) userId = MatrixClientPeg.get().getUserId()!;
+    const me = room.getMember(userId);
+    if (!me) {
+        return false;
+    }
+
+    const powerLevelsEvent = room.currentState.getStateEvents(EventType.RoomPowerLevels, "");
+    const powerLevels = powerLevelsEvent?.getContent() ?? {};
+
+    let requiredLevel = powerLevels[key];
+    if (!requiredLevel) {
+        const isSpace = room.isSpaceRoom();
+        const joinRule = room.getJoinRule();
+        requiredLevel = getDefaultStatePowerLevels(isSpace, joinRule)?.[key];
+    }
+
+    return me.powerLevel >= requiredLevel;
+}
+
+export function getStatePowerLevelOpts(eventType: string, isSpace: boolean): PowerLevelOpts | PowerLevelOptsMap {
     const eventPowerLevelLabels: PowerLevelOptsMap = {
-        users_default: {
+        [StateEvent.UsersDefault]: {
             label: _t("Default role"),
         },
-        events_default: {
+        [StateEvent.EventsDefault]: {
             label: _t("Send messages"),
         },
-        invite: {
-            label: _t("Invite users"),
-        },
-        state_default: {
+        [StateEvent.StateDefault]: {
             label: _t("Change settings"),
         },
-        kick: {
+        [StateEvent.Invite]: {
+            label: _t("Invite users"),
+        },
+        [StateEvent.Kick]: {
             label: _t("Remove users"),
         },
-        ban: {
+        [StateEvent.Ban]: {
             label: _t("Ban users"),
         },
-        redact: {
+        [StateEvent.Redact]: {
             label: _t("Remove messages sent by others"),
         },
-        "notifications.room": {
+        [StateEvent.NotificationRooms]: {
             label: _t("Notify everyone"),
         },
-        display_member_list: {
+        [StateEvent.DisplayMemberList]: {
             label: "展示成员列表",
+        },
+        [StateEvent.Delete]: {
+            label: isSpace
+                ? _t("Delete Space")
+                : _t("Delete room", {
+                      roomType: _t("channel"),
+                  }),
         },
     };
 
     return eventType ? eventPowerLevelLabels[eventType] : eventPowerLevelLabels;
 }
-export function getPowerLevelsDescriptors(roomType: RoomType | string, joinRule): PowerLevelDescriptorMap {
-    const powerLevels = getDefaultStatePowerLevels(roomType, joinRule);
+export function getStatePowerLevelsDescriptors(isSpace: boolean, joinRule): PowerLevelDescriptorMap {
+    const powerLevels = getDefaultStatePowerLevels(isSpace, joinRule);
     const eventPowerLevelsDescriptors = {};
     Object.keys(powerLevels).forEach((eventType) => {
         eventPowerLevelsDescriptors[eventType] = {
-            ...getPowerLevelOpts(eventType),
+            ...getStatePowerLevelOpts(eventType, isSpace),
             defaultValue: powerLevels[eventType],
         };
     });
     return eventPowerLevelsDescriptors;
 }
 
-// event powerLevel
-export function getDefaultEventPowerLevels(roomType: RoomType | string): PowerLevelsMap {
-    const isSpace = isSpaceRoom(roomType);
-
+/** ------------------------------- event powerLevel  -------------------------------**/
+export function getDefaultEventPowerLevels(isSpace: boolean): PowerLevelsMap {
     return {
         [EventType.RoomAvatar]: PowerLevel.Moderator,
         [EventType.RoomTopic]: PowerLevel.Moderator,
@@ -149,10 +220,8 @@ export function getDefaultEventPowerLevels(roomType: RoomType | string): PowerLe
 }
 export function getEventPowerLevelOpts(
     eventType: string,
-    roomType: RoomType | string,
+    isSpace: boolean,
 ): EventPowerLevelOpts | EventPowerLevelOptsMap {
-    const isSpace = isSpaceRoom(roomType);
-
     const eventPowerLevelLabels: EventPowerLevelOptsMap = {
         [EventType.RoomAvatar]: {
             label: isSpace ? _t("Change space avatar") : _t("Change room avatar"),
@@ -206,44 +275,14 @@ export function getEventPowerLevelOpts(
 
     return eventType ? eventPowerLevelLabels[eventType] : eventPowerLevelLabels;
 }
-export function getEventPowerLevelsDescriptors(roomType: RoomType | string): EventPowerLevelDescriptorsMap {
-    const eventPowerLevels = getDefaultEventPowerLevels(roomType);
+export function getEventPowerLevelsDescriptors(isSpace: boolean): EventPowerLevelDescriptorsMap {
+    const eventPowerLevels = getDefaultEventPowerLevels(isSpace);
     const eventPowerLevelsDescriptors = {};
     Object.keys(eventPowerLevels).forEach((eventType) => {
         eventPowerLevelsDescriptors[eventType] = {
-            label: getEventPowerLevelOpts(eventType, roomType),
+            label: getEventPowerLevelOpts(eventType, isSpace),
             defaultValue: eventPowerLevels[eventType],
         };
     });
     return eventPowerLevelsDescriptors;
-}
-
-// 通过启用|禁用允许普通用户发送消息来计算events_default（是否可以发送消息）的powerLevel值
-export function getPowerLevelByEnableDefaultUserSendMsg(enable: boolean, isSpace = false): PowerLevelsMap {
-    return !isSpace
-        ? {
-              events_default: enable ? PowerLevel.Default : PowerLevel.Moderator,
-          }
-        : {};
-}
-
-// 通过启用|禁用允许普通用户展示成员列表来计算display_member_list（是否展示成员列表）的powerLevel值
-export function getPowerLevelByEnableDefaultUserMemberList(enable: boolean, isSpace = false): PowerLevelsMap {
-    return !isSpace
-        ? {
-              display_member_list: enable ? PowerLevel.Default : PowerLevel.Moderator,
-          }
-        : {};
-}
-
-// 获取初始化powerLevels
-export function getInitStatePowerLevels({
-    isSpace = false,
-    enableDefaultUserSendMsg,
-    enableDefaultUserMemberList,
-}: InitPowerLevelsParams): PowerLevelsMap {
-    return {
-        ...getPowerLevelByEnableDefaultUserSendMsg(enableDefaultUserSendMsg, isSpace),
-        ...getPowerLevelByEnableDefaultUserMemberList(enableDefaultUserMemberList, isSpace),
-    };
 }

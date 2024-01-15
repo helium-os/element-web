@@ -16,6 +16,7 @@ declare module "matrix-js-sdk/src/client" {
     interface MatrixClient {
         setRoomOnlyTags(roomId: string, tags: Tag[]): Promise<ISendEventResponse>;
         getRoomOnlyTags(roomId: string): Promise<Record<string, any>>;
+        deleteRoom(roomId: string): Promise<{}>;
     }
 }
 
@@ -39,9 +40,10 @@ declare module "matrix-js-sdk/src/models/room" {
         getRoomOrderInTag(tagId: TagID): number | undefined;
         isRestrictedRoom(): boolean;
         isPrivateRoom(): boolean;
-        canRemoveUser(userId: string): boolean;
-        displayMemberList(userId: string): boolean;
-        canOperateTag(userId: string): boolean;
+        canRemoveUser(userId?: string): boolean;
+        displayMemberList(userId?: string): boolean;
+        canDeleteRoom(userId?: string): boolean;
+        canManageTag(userId: string): boolean;
         getParents(): Room[];
         isSpaceChannel(): boolean;
     }

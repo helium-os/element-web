@@ -17,7 +17,7 @@ limitations under the License.
 import React, { useState, useEffect, memo } from "react";
 import { IJoinRuleEventContent, JoinRule, RestrictedAllowType } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
+import { EventType } from "matrix-js-sdk/src/@types/event";
 
 import StyledRadioGroup, { IDefinition } from "../elements/StyledRadioGroup";
 import { _t } from "../../../languageHandler";
@@ -106,15 +106,10 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
     const changeRoomPowerLevel = (room: Room, joinRule: JoinRule): Promise<ISendEventResponse> => {
         const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
 
-        let roomType;
-        if (isSpaceRoom) {
-            roomType = RoomType.Space;
-        }
-
         const { events, users, ...statePowerLevels } = plEvent?.getContent() ?? {};
         const plContent = {
             ...statePowerLevels,
-            ...getDefaultStatePowerLevels(roomType, joinRule),
+            ...getDefaultStatePowerLevels(isSpaceRoom, joinRule),
             ...getInitStatePowerLevels({
                 isSpace: isSpaceRoom,
                 enableDefaultUserSendMsg,
@@ -122,7 +117,7 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
             }),
             events: {
                 ...events,
-                ...getDefaultEventPowerLevels(roomType),
+                ...getDefaultEventPowerLevels(isSpaceRoom),
             },
             users,
         };

@@ -1,4 +1,6 @@
 .mx_btn {
+    display: inline-flex;
+    align-items: center;
     box-sizing: border-box;
     background: none;
     border: none;
@@ -54,5 +56,11 @@
     &[disabled] {
         opacity: 0.3;
         cursor: not-allowed;
+    }
+
+    &.mx-btn-danger {
+        .mx_icon {
+            background: $button-danger-color;
+        }
     }
 }

@@ -154,7 +154,7 @@ export default class TabbedView extends React.Component<IProps, IState> {
                         </div>
                     )}
                     <div className="mx_TabbedView_tabLabels">{labels}</div>
-                    {this.props.footer}
+                    <div className="mx_TabbedView_footer">{this.props.footer}</div>
                 </div>
                 {panel}
             </div>
