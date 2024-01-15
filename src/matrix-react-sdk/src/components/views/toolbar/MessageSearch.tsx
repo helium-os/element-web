@@ -12,6 +12,7 @@ import ContextMenu, {
 import UIStore from "matrix-react-sdk/src/stores/UIStore";
 import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 import { ActionPayload } from "matrix-react-sdk/src/dispatcher/payloads";
+import { debounce } from "lodash";
 
 interface IProps {}
 
@@ -24,11 +25,12 @@ export interface SearchFilter {
     scope: SearchScope;
     roomIds: SearchRoomId;
 }
+
+const contextMenuHorizontalCenter = true;
+
 const MessageSearch: React.FC<IProps> = () => {
     const dispatcherRef = useRef(null);
     const searchBtn = useRef(null);
-
-    const contextMenuHorizontalCenter = true;
 
     const [searchArea, setSearchArea] = useState<SearchArea>({
         show: false,
@@ -37,32 +39,28 @@ const MessageSearch: React.FC<IProps> = () => {
 
     const [searchFilter, setSearchFilter] = useState<SearchFilter>({} as SearchFilter);
 
-    const onAction = (payload: ActionPayload) => {
-        switch (payload.action) {
-            case "focus_search":
-                showSearchArea();
-                break;
-        }
-    };
-
-    useEffect(() => {
-        dispatcherRef.current = dis.register(onAction);
-
-        return () => {
-            dispatcherRef.current && dis.unregister(dispatcherRef.current);
+    // 计算搜索弹窗位置
+    const calcSearchAreaPosition = useCallback(() => {
+        const searchBtnRect = searchBtn.current.getBoundingClientRect();
+        return {
+            ...aboveRightOf(searchBtnRect, ChevronFace.None, -searchBtnRect.height, contextMenuHorizontalCenter),
+            menuWidth: UIStore.instance.windowWidth * 0.65,
         };
     }, []);
 
-    const showSearchArea = () => {
-        const searchBtnRect = searchBtn.current.getBoundingClientRect();
+    const setSearchAreaPosition = useCallback(() => {
+        setSearchArea((prevState) => ({
+            ...prevState,
+            position: calcSearchAreaPosition(),
+        }));
+    }, [calcSearchAreaPosition]);
+
+    const showSearchArea = useCallback(() => {
         setSearchArea({
             show: true,
-            position: {
-                ...aboveRightOf(searchBtnRect, ChevronFace.None, -searchBtnRect.height, contextMenuHorizontalCenter),
-                menuWidth: UIStore.instance.windowWidth * 0.65,
-            },
+            position: calcSearchAreaPosition(),
         });
-    };
+    }, [calcSearchAreaPosition]);
 
     const closeSearchArea = () => {
         setSearchArea({
@@ -70,6 +68,30 @@ const MessageSearch: React.FC<IProps> = () => {
             position: null,
         });
     };
+
+    useEffect(() => {
+        const onAction = (payload: ActionPayload) => {
+            switch (payload.action) {
+                case "focus_search":
+                    showSearchArea();
+                    break;
+            }
+        };
+
+        dispatcherRef.current = dis.register(onAction);
+        return () => {
+            dispatcherRef.current && dis.unregister(dispatcherRef.current);
+        };
+    }, [showSearchArea]);
+
+    useEffect(() => {
+        const debounceSetSearchAreaPosition = debounce(setSearchAreaPosition, 100);
+
+        window.addEventListener("resize", debounceSetSearchAreaPosition, false);
+        return () => {
+            window.removeEventListener("resize", debounceSetSearchAreaPosition, false);
+        };
+    }, [setSearchAreaPosition]);
 
     const onFilterChange = useCallback((filter: SearchFilter) => {
         setSearchFilter(filter);
