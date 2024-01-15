@@ -34,6 +34,7 @@ interface IProps extends HTMLProps<HTMLInputElement> {
     autoFocus?: boolean;
     initialValue?: string;
     collapsed?: boolean;
+    inputRequired?: boolean; // 是否需要渲染input按钮
 }
 
 interface IState {
@@ -42,6 +43,10 @@ interface IState {
 }
 
 export default class SearchBox extends React.Component<IProps, IState> {
+    public static defaultProps = {
+        inputRequired: true,
+    };
+
     private search = createRef<HTMLInputElement>();
 
     public constructor(props: IProps) {
@@ -131,21 +136,27 @@ export default class SearchBox extends React.Component<IProps, IState> {
         return (
             <div className={classNames("mx_SearchBox", { mx_SearchBox_blurred: this.state.blurred }, className)}>
                 <span className="mx_SearchBox_searchIcon" />
-                <input
-                    {...props}
-                    key="searchfield"
-                    type="text"
-                    ref={this.search}
-                    value={this.state.searchTerm}
-                    onFocus={this.onFocus}
-                    onChange={this.onChange}
-                    onKeyDown={this.onKeyDown}
-                    onBlur={this.onBlur}
-                    placeholder={this.state.blurred ? blurredPlaceholder || placeholder : placeholder}
-                    autoComplete="off"
-                    autoFocus={this.props.autoFocus}
-                    data-testid="searchbox-input"
-                />
+                {this.props.inputRequired ? (
+                    <input
+                        {...props}
+                        key="searchfield"
+                        type="text"
+                        ref={this.search}
+                        value={this.state.searchTerm}
+                        onFocus={this.onFocus}
+                        onChange={this.onChange}
+                        onKeyDown={this.onKeyDown}
+                        onBlur={this.onBlur}
+                        placeholder={this.state.blurred ? blurredPlaceholder || placeholder : placeholder}
+                        autoComplete="off"
+                        autoFocus={this.props.autoFocus}
+                        data-testid="searchbox-input"
+                    />
+                ) : (
+                    <div className="mx_SearchBox_virtualInput" {...props}>
+                        {blurredPlaceholder || placeholder}
+                    </div>
+                )}
             </div>
         );
     }

@@ -100,7 +100,7 @@ const MessageSearch: React.FC<IProps> = () => {
     return (
         <>
             <div className="mx_MessageSearch_btn" ref={searchBtn} onClick={showSearchArea}>
-                <SearchBox placeholder={_t("Search")} autoFocus={false} />
+                <SearchBox placeholder={_t("Search")} autoFocus={false} inputRequired={false} />
             </div>
             {searchArea.show && searchArea.position && (
                 <ContextMenu
