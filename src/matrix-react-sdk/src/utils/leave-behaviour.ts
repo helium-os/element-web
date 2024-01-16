@@ -46,10 +46,10 @@ export function disActionAfterLeaveRoom(roomId: string) {
         // notifications, switch to a neutral ground such as the home page or
         // space landing page.
         if (isMetaSpace(SpaceStore.instance.activeSpace)) {
-            // 删除的是个人主页下的room
+            // 离开的是个人主页下的room
             dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
         } else if (SpaceStore.instance.activeSpace === roomId) {
-            // 删除的是社区
+            // 离开的是社区
             const parent = SpaceStore.instance.getCanonicalParent(roomId);
             if (parent !== null) {
                 dis.dispatch<ViewRoomPayload>({
@@ -61,7 +61,7 @@ export function disActionAfterLeaveRoom(roomId: string) {
                 dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
             }
         } else {
-            // 删除的是社区内的频道
+            // 离开的是社区内的频道
             dis.dispatch<ViewRoomPayload>({
                 action: Action.ViewRoom,
                 room_id: SpaceStore.instance.activeSpace,
