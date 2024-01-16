@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
-import BaseIcon from "matrix-react-sdk/src/components/views/icon";
+import Icon from "matrix-react-sdk/src/components/views/icon/BaseIcon";
 
 export enum ButtonType {
     Default = "default",
@@ -51,7 +51,7 @@ const Button: React.FC<ButtonProps> = ({
             onClick={(e) => onClick?.(e)}
         >
             {loading && <div className="mx_btn_loading" />}
-            {icon && <BaseIcon icon={icon} className={iconClassName} />}
+            {icon && <Icon icon={icon} className={iconClassName} />}
             {children}
         </button>
     );
