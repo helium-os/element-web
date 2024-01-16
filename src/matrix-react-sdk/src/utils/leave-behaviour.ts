@@ -39,13 +39,14 @@ import { SdkContextClass } from "../contexts/SDKContext";
 import SettingsStore from "../settings/SettingsStore";
 import DeleteSpaceDialog from "matrix-react-sdk/src/components/views/dialogs/DeleteSpaceDialog";
 
-function disActionAfterLeaveRoom(roomId: string) {
+export function disActionAfterLeaveRoom(roomId: string) {
     if (SdkContextClass.instance.roomViewStore.getRoomId() === roomId) {
         // We were viewing the room that was just left. In order to avoid
         // accidentally viewing the next room in the list and clearing its
         // notifications, switch to a neutral ground such as the home page or
         // space landing page.
         if (isMetaSpace(SpaceStore.instance.activeSpace)) {
+            // 删除的是个人主页下的room
             dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
         } else if (SpaceStore.instance.activeSpace === roomId) {
             // 删除的是社区
@@ -60,6 +61,7 @@ function disActionAfterLeaveRoom(roomId: string) {
                 dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
             }
         } else {
+            // 删除的是社区内的频道
             dis.dispatch<ViewRoomPayload>({
                 action: Action.ViewRoom,
                 room_id: SpaceStore.instance.activeSpace,

@@ -119,6 +119,7 @@ import WidgetUtils from "../../utils/WidgetUtils";
 import { shouldEncryptRoomWithSingle3rdPartyInvite } from "../../utils/room/shouldEncryptRoomWithSingle3rdPartyInvite";
 import { WaitingForThirdPartyRoomView } from "./WaitingForThirdPartyRoomView";
 import { ViewHomePagePayload } from "matrix-react-sdk/src/dispatcher/payloads/ViewHomePagePayload";
+import { disActionAfterLeaveRoom } from "matrix-react-sdk/src/utils/leave-behaviour";
 
 const DEBUG = false;
 const PREVENT_MULTIPLE_JITSI_WITHIN = 30_000;
@@ -1474,6 +1475,10 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             this.forceUpdate();
             this.loadMembersIfJoined(room);
             this.updatePermissions(room);
+            // 订阅到用户状态变化后(比如当前用户被移除或者room被删除)，跳转到社区首页或者home页
+            if (membership === "leave" && !!oldMembership && oldMembership !== membership) {
+                disActionAfterLeaveRoom(room.roomId);
+            }
         }
     };
 
@@ -1682,7 +1687,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         });
         this.context.client.leave(this.state.roomId).then(
             () => {
-                dis.dispatch({ action: Action.ViewHomePage });
+                disActionAfterLeaveRoom(this.state.roomId);
                 this.setState({
                     rejecting: false,
                 });
@@ -1717,7 +1722,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             await this.context.client.setIgnoredUsers(ignoredUsers);
 
             await this.context.client.leave(this.state.roomId);
-            dis.dispatch({ action: Action.ViewHomePage });
+            disActionAfterLeaveRoom(this.state.roomId);
             this.setState({
                 rejecting: false,
             });
