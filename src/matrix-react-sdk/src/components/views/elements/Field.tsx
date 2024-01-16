@@ -75,7 +75,7 @@ interface IProps {
     validateOnBlur?: boolean;
     validateOnChange?: boolean;
     // All other props pass through to the <input>.
-    autoComplete?: booolean | string;
+    autoComplete?: boolean | string;
     clearEnable?: boolean; // 是否展示清除按钮
 }
 
@@ -315,7 +315,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
             // If we have a prefix element, leave the label always at the top left and
             // don't animate it, as it looks a bit clunky and would add complexity to do
             // properly.
-            mx_Field_labelShow: prefixComponent || this.state.focused || !!this.props.value,
+            mx_Field_labelShow: this.props.label && (prefixComponent || this.state.focused || !!this.props.value),
             mx_Field_placeholderIsHint: !this.state.focused && usePlaceholderAsHint,
             mx_Field_valid: hasValidationFlag ? forceValidity : onValidate && this.state.valid === true,
             mx_Field_invalid: hasValidationFlag ? !forceValidity : onValidate && this.state.valid === false,
@@ -357,7 +357,7 @@ export default class Field extends React.PureComponent<PropShapes, IState> {
                                 {fieldInput}
                                 {postfixContainer}
                             </div>
-                            {clearEnable && (
+                            {clearEnable && !!this.props.value && (
                                 <div className="mx_Field_clearBox">
                                     <div className="mx_Field_clearBtn" onClick={this.onClear}></div>
                                 </div>

@@ -19,7 +19,6 @@ import React, { FC, useCallback } from "react";
 import classNames from "classnames";
 import { throttle } from "lodash";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
-import { ISearchResults } from "matrix-js-sdk/src/@types/search";
 
 import type { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import type { Room } from "matrix-js-sdk/src/models/room";
@@ -36,7 +35,6 @@ import RoomTopic from "../elements/RoomTopic";
 import RoomName from "../elements/RoomName";
 import { E2EStatus } from "../../../utils/ShieldUtils";
 import { IOOBData } from "../../../stores/ThreepidInviteStore";
-import { SearchScope } from "./SearchBar";
 import { aboveLeftOf, useContextMenu } from "../../structures/ContextMenu";
 import { RoomNotificationStateStore } from "../../../stores/notifications/RoomNotificationStateStore";
 import { RightPanelPhases } from "../../../stores/right-panel/RightPanelStorePhases";
@@ -138,29 +136,15 @@ const CallLayoutSelector: FC<CallLayoutSelectorProps> = ({ call }) => {
     );
 };
 
-export interface ISearchInfo {
-    searchId: number;
-    roomId?: string;
-    term: string;
-    scope: SearchScope;
-    promise: Promise<ISearchResults>;
-    abortController?: AbortController;
-
-    inProgress?: boolean;
-    count?: number;
-}
-
 export interface IProps {
     room: Room;
     oobData?: IOOBData;
     inRoom: boolean;
-    onSearchClick: (() => void) | null;
     onInviteClick: (() => void) | null;
     onForgetClick: (() => void) | null;
     onAppsClick: (() => void) | null;
     e2eStatus: E2EStatus;
     appsShown: boolean;
-    searchInfo?: ISearchInfo;
     excludedRightPanelPhaseButtons?: Array<RightPanelPhases>;
     showButtons?: boolean;
     enableRoomOptionsMenu?: boolean;
@@ -275,19 +259,6 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                     key="apps"
                 />,
             );
-        }
-
-        if (!this.props.viewingCall && this.props.onSearchClick && this.props.inRoom) {
-            // TODO 暂时隐藏搜索功能，等有方案后再继续开发（接入中文分词有难度）
-            // startButtons.push(
-            //     <AccessibleTooltipButton
-            //         className="mx_RoomHeader_button mx_RoomHeader_searchButton"
-            //         onClick={this.props.onSearchClick}
-            //         title={_t("Search")}
-            //         alignment={Alignment.Bottom}
-            //         key="search"
-            //     />,
-            // );
         }
 
         if (this.props.onInviteClick && (!this.props.viewingCall || isVideoRoom) && this.props.inRoom) {
@@ -428,19 +399,6 @@ export default class RoomHeader extends React.Component<IProps, IState> {
             );
         }
 
-        let searchStatus: JSX.Element | null = null;
-
-        // don't display the search count until the search completes and
-        // gives us a valid (possibly zero) searchCount.
-        if (typeof this.props.searchInfo?.count === "number") {
-            searchStatus = (
-                <div className="mx_RoomHeader_searchStatus">
-                    &nbsp;
-                    {_t("(~%(count)s results)", { count: this.props.searchInfo.count })}
-                </div>
-            );
-        }
-
         const topicElement = <RoomTopic room={this.props.room} className="mx_RoomHeader_topic" />;
 
         const viewLabs = (): void =>
@@ -461,7 +419,6 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                     <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
                     {icon}
                     {name}
-                    {searchStatus}
                     {topicElement}
                     {betaPill}
                     {buttons}

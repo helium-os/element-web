@@ -218,6 +218,10 @@ export interface EventTileProps {
     // displayed to the current user either because they're
     // the author or they are a moderator
     isSeeingThroughMessageHiddenForModeration?: boolean;
+
+    showMessageContextMenu?: boolean;
+
+    timelineRenderingType?: TimelineRenderingType;
 }
 
 interface IState {
@@ -257,6 +261,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         onHeightChanged: function () {},
         forExport: false,
         layout: Layout.Group,
+        showMessageContextMenu: true, // 是否展示消息右键菜单
     };
 
     public static contextType = RoomContext;
@@ -293,6 +298,10 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         // to determine if we've already subscribed and use a combination of other flags to find
         // out if we should even be subscribed at all.
         this.isListeningForReceipts = false;
+    }
+
+    private get timelineRenderingType(): TimelineRenderingType {
+        return this.props.timelineRenderingType || this.context.timelineRenderingType;
     }
 
     /**
@@ -490,7 +499,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             );
         }
 
-        if (this.context.timelineRenderingType === TimelineRenderingType.Search && this.props.mxEvent.threadRootId) {
+        if (this.timelineRenderingType === TimelineRenderingType.Search && this.props.mxEvent.threadRootId) {
             if (this.props.highlightLink) {
                 return (
                     <a className="mx_ThreadSummary_icon" href={this.props.highlightLink}>
@@ -668,8 +677,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
     private shouldHighlight(): boolean {
         if (this.props.forExport) return false;
-        if (this.context.timelineRenderingType === TimelineRenderingType.Notification) return false;
-        if (this.context.timelineRenderingType === TimelineRenderingType.ThreadsList) return false;
+        if (this.timelineRenderingType === TimelineRenderingType.Notification) return false;
+        if (this.timelineRenderingType === TimelineRenderingType.ThreadsList) return false;
 
         const actions = MatrixClientPeg.get().getPushActionsForEvent(
             this.props.mxEvent.replacingEvent() || this.props.mxEvent,
@@ -690,7 +699,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         dis.dispatch<ComposerInsertPayload>({
             action: Action.ComposerInsert,
             userId: this.props.mxEvent.getSender(),
-            timelineRenderingType: this.context.timelineRenderingType,
+            timelineRenderingType: this.timelineRenderingType,
         });
     };
 
@@ -703,8 +712,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             event_id: this.props.mxEvent.getId(),
             highlighted: true,
             room_id: this.props.mxEvent.getRoomId(),
-            metricsTrigger:
-                this.context.timelineRenderingType === TimelineRenderingType.Search ? "MessageSearch" : undefined,
+            metricsTrigger: this.timelineRenderingType === TimelineRenderingType.Search ? "MessageSearch" : undefined,
         });
     };
 
@@ -788,7 +796,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         ev.preventDefault();
         ev.stopPropagation();
 
-        if (isInfoMessage) return;
+        if (!this.props.showMessageContextMenu || isInfoMessage) return;
 
         this.showContextMenu(ev);
     };
@@ -928,16 +936,16 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
         let isContinuation = this.props.continuation;
         if (
-            this.context.timelineRenderingType !== TimelineRenderingType.Room &&
-            this.context.timelineRenderingType !== TimelineRenderingType.Search &&
-            this.context.timelineRenderingType !== TimelineRenderingType.Thread &&
+            this.timelineRenderingType !== TimelineRenderingType.Room &&
+            this.timelineRenderingType !== TimelineRenderingType.Search &&
+            this.timelineRenderingType !== TimelineRenderingType.Thread &&
             this.props.layout !== Layout.Bubble
         ) {
             isContinuation = false;
         }
 
-        const isRenderingThread = this.context.timelineRenderingType === TimelineRenderingType.Thread;
-        const isRenderingNotification = this.context.timelineRenderingType === TimelineRenderingType.Notification;
+        const isRenderingThread = this.timelineRenderingType === TimelineRenderingType.Thread;
+        const isRenderingNotification = this.timelineRenderingType === TimelineRenderingType.Notification;
 
         const isEditing = !!this.props.editState;
         const classes = classNames({
@@ -967,7 +975,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             mx_EventTile_emote: msgtype === MsgType.Emote,
             mx_EventTile_noSender: this.props.hideSender,
             mx_EventTile_clamp:
-                this.context.timelineRenderingType === TimelineRenderingType.ThreadsList || isRenderingNotification,
+                this.timelineRenderingType === TimelineRenderingType.ThreadsList || isRenderingNotification,
             mx_EventTile_noBubble: noBubbleEvent,
         });
 
@@ -996,7 +1004,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             // joins/parts/etc
             avatarSize = 0;
             needsSenderProfile = false;
-        } else if (this.context.timelineRenderingType === TimelineRenderingType.ThreadsList) {
+        } else if (this.timelineRenderingType === TimelineRenderingType.ThreadsList) {
             avatarSize = 24;
             needsSenderProfile = true;
         } else if (eventType === EventType.RoomCreate || isBubbleMessage) {
@@ -1026,7 +1034,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             }
             // In the ThreadsList view we use the entire EventTile as a click target to open the thread instead
             const viewUserOnClick = ![TimelineRenderingType.ThreadsList, TimelineRenderingType.Notification].includes(
-                this.context.timelineRenderingType,
+                this.timelineRenderingType,
             );
             avatar = (
                 <div className="mx_EventTile_avatar">
@@ -1043,20 +1051,20 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
         if (needsSenderProfile && this.props.hideSender !== true) {
             if (
-                this.context.timelineRenderingType === TimelineRenderingType.Room ||
-                this.context.timelineRenderingType === TimelineRenderingType.Search ||
-                this.context.timelineRenderingType === TimelineRenderingType.Pinned ||
-                this.context.timelineRenderingType === TimelineRenderingType.Thread
+                this.timelineRenderingType === TimelineRenderingType.Room ||
+                this.timelineRenderingType === TimelineRenderingType.Pinned ||
+                this.timelineRenderingType === TimelineRenderingType.Thread
             ) {
                 sender = <SenderProfile onClick={this.onSenderProfileClick} mxEvent={this.props.mxEvent} />;
-            } else if (this.context.timelineRenderingType === TimelineRenderingType.ThreadsList) {
+            } else if (this.timelineRenderingType === TimelineRenderingType.ThreadsList) {
                 sender = <SenderProfile mxEvent={this.props.mxEvent} withTooltip />;
             } else {
                 sender = <SenderProfile mxEvent={this.props.mxEvent} />;
             }
         }
 
-        const showMessageActionBar = !isEditing && !this.props.forExport && !isInfoMessage; // 提示消息不展示操作按钮
+        const showMessageActionBar =
+            this.props.showMessageContextMenu && !isEditing && !this.props.forExport && !isInfoMessage; // 提示消息不展示操作按钮
         const actionBar = showMessageActionBar ? (
             <MessageActionBar
                 mxEvent={this.props.mxEvent}
@@ -1145,7 +1153,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             );
         }
 
-        switch (this.context.timelineRenderingType) {
+        switch (this.timelineRenderingType) {
             case TimelineRenderingType.Notification: {
                 const room = MatrixClientPeg.get().getRoom(this.props.mxEvent.getRoomId());
                 // tab-index=-1 to allow it to be focusable but do not add tab stop for it, primarily for screen readers
@@ -1159,7 +1167,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "aria-atomic": "true",
                         "data-scroll-tokens": scrollToken,
                         "data-layout": this.props.layout,
-                        "data-shape": this.context.timelineRenderingType,
+                        "data-shape": this.timelineRenderingType,
                         "data-self": isOwnEvent,
                         "data-has-reply": !!replyChain,
                         onMouseEnter: () => this.setState({ hover: true }),
@@ -1168,7 +1176,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             const target = ev.currentTarget as HTMLElement;
                             let index = -1;
                             if (target.parentElement) index = Array.from(target.parentElement.children).indexOf(target);
-                            switch (this.context.timelineRenderingType) {
+                            switch (this.timelineRenderingType) {
                                 case TimelineRenderingType.Notification:
                                     this.viewInRoom(ev);
                                     break;
@@ -1241,7 +1249,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                         "aria-atomic": "true",
                         "data-scroll-tokens": scrollToken,
                         "data-layout": this.props.layout,
-                        "data-shape": this.context.timelineRenderingType,
+                        "data-shape": this.timelineRenderingType,
                         "data-self": isOwnEvent,
                         "data-has-reply": !!replyChain,
                         onMouseEnter: () => this.setState({ hover: true }),
@@ -1250,7 +1258,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             const target = ev.currentTarget as HTMLElement;
                             let index = -1;
                             if (target.parentElement) index = Array.from(target.parentElement.children).indexOf(target);
-                            switch (this.context.timelineRenderingType) {
+                            switch (this.timelineRenderingType) {
                                 case TimelineRenderingType.Notification:
                                     this.viewInRoom(ev);
                                     break;
@@ -1281,7 +1289,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             </div>
                             {msgOption}
                         </div>
-                        {/*{this.context.timelineRenderingType === TimelineRenderingType.ThreadsList && (*/}
+                        {/*{this.timelineRenderingType === TimelineRenderingType.ThreadsList && (*/}
                         {/*    <EventTileThreadToolbar*/}
                         {/*        viewInRoom={this.viewInRoom}*/}
                         {/*        copyLinkToThread={this.copyLinkToThread}*/}
@@ -1380,7 +1388,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                                 {this.renderContextMenu()}
                                 {/*{groupPadlock}*/}
                                 {renderTile(
-                                    this.context.timelineRenderingType,
+                                    this.timelineRenderingType,
                                     {
                                         ...this.props,
 

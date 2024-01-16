@@ -32,7 +32,6 @@ import { ClientEvent } from "matrix-js-sdk/src/client";
 import { CryptoEvent } from "matrix-js-sdk/src/crypto";
 import { THREAD_RELATION_TYPE } from "matrix-js-sdk/src/models/thread";
 import { HistoryVisibility } from "matrix-js-sdk/src/@types/partials";
-import { ISearchResults } from "matrix-js-sdk/src/@types/search";
 import { IRoomTimelineData } from "matrix-js-sdk/src/models/event-timeline-set";
 
 import shouldHideEvent from "../../shouldHideEvent";
@@ -60,11 +59,10 @@ import TimelinePanel from "./TimelinePanel";
 import ErrorBoundary from "../views/elements/ErrorBoundary";
 import RoomPreviewBar from "../views/rooms/RoomPreviewBar";
 import RoomPreviewCard from "../views/rooms/RoomPreviewCard";
-import SearchBar, { SearchScope } from "../views/rooms/SearchBar";
 import RoomUpgradeWarningBar from "../views/rooms/RoomUpgradeWarningBar";
 import { DecryptionFailureBar } from "../views/rooms/DecryptionFailureBar";
 import AuxPanel from "../views/rooms/AuxPanel";
-import RoomHeader, { ISearchInfo } from "../views/rooms/RoomHeader";
+import RoomHeader from "../views/rooms/RoomHeader";
 import { IOOBData, IThreepidInvite } from "../../stores/ThreepidInviteStore";
 import EffectsOverlay from "../views/elements/EffectsOverlay";
 import { containsEmoji } from "../../effects/utils";
@@ -110,8 +108,6 @@ import { isVideoRoom } from "../../utils/video-rooms";
 import { SDKContext } from "../../contexts/SDKContext";
 import { CallStore, CallStoreEvent } from "../../stores/CallStore";
 import { Call } from "../../models/Call";
-import { RoomSearchView } from "./RoomSearchView";
-import eventSearch from "../../Searching";
 import VoipUserMapper from "../../VoipUserMapper";
 import { isCallEvent } from "./LegacyCallEventGrouper";
 import { WidgetType } from "../../widgets/WidgetType";
@@ -173,7 +169,6 @@ export interface IRoomState {
     initialEventScrollIntoView?: boolean;
     replyToEvent?: MatrixEvent;
     numUnreadMessages: number;
-    search?: ISearchInfo;
     callState?: CallState;
     activeCall: Call | null;
     canPeek: boolean;
@@ -301,7 +296,6 @@ function LocalRoomView(props: LocalRoomViewProps): ReactElement {
                     room={context.room}
                     searchInfo={undefined}
                     inRoom={true}
-                    onSearchClick={null}
                     onInviteClick={null}
                     onForgetClick={null}
                     e2eStatus={room.encrypted ? E2EStatus.Normal : undefined}
@@ -351,7 +345,6 @@ function LocalRoomCreateLoader(props: ILocalRoomCreateLoaderProps): ReactElement
                     room={context.room}
                     searchInfo={undefined}
                     inRoom={true}
-                    onSearchClick={null}
                     onInviteClick={null}
                     onForgetClick={null}
                     e2eStatus={props.localRoom.encrypted ? E2EStatus.Normal : undefined}
@@ -379,7 +372,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
     private permalinkCreators: Record<string, RoomPermalinkCreator> = {};
 
     private roomView = createRef<HTMLElement>();
-    private searchResultsPanel = createRef<ScrollPanel>();
     private messagePanel: TimelinePanel | null = null;
     private roomViewBody = createRef<HTMLDivElement>();
 
@@ -757,17 +749,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             }
         }
 
-        // Clear the search results when clicking a search result (which changes the
-        // currently scrolled to event, this.state.initialEventId).
-        if (
-            this.state.timelineRenderingType === TimelineRenderingType.Search &&
-            this.state.initialEventId !== newState.initialEventId
-        ) {
-            newState.timelineRenderingType = TimelineRenderingType.Room;
-            this.state.search?.abortController?.abort();
-            newState.search = undefined;
-        }
-
         this.setState(newState as IRoomState);
         // At this point, newState.roomId could be null (e.g. the alias might not
         // have been resolved yet) so anything called here must handle this case.
@@ -1113,15 +1094,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 });
                 break;
             case "reply_to_event":
-                if (
-                    !this.unmounted &&
-                    this.state.search &&
-                    payload.event?.getRoomId() === this.state.roomId &&
-                    payload.context === TimelineRenderingType.Search
-                ) {
-                    this.onCancelSearchClick();
-                    // we don't need to re-dispatch as RoomViewStore knows to persist with context=Search also
-                }
                 break;
             case "MatrixActions.sync":
                 if (!this.state.matrixClientIsReady) {
@@ -1135,9 +1107,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                         },
                     );
                 }
-                break;
-            case "focus_search":
-                this.onSearchClick();
                 break;
 
             case "local_room_event":
@@ -1162,12 +1131,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 let timelineRenderingType: TimelineRenderingType = payload.timelineRenderingType;
                 // ThreadView handles Action.ComposerInsert itself due to it having its own editState
                 if (timelineRenderingType === TimelineRenderingType.Thread) break;
-                if (
-                    this.state.timelineRenderingType === TimelineRenderingType.Search &&
-                    payload.timelineRenderingType === TimelineRenderingType.Search
-                ) {
-                    // we don't have the composer rendered in this state, so bring it back first
-                    await this.onCancelSearchClick();
+                if (payload.timelineRenderingType === TimelineRenderingType.Search) {
                     timelineRenderingType = TimelineRenderingType.Room;
                 }
 
@@ -1240,7 +1204,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
         if (ev.getSender() !== this.context.client.getSafeUserId()) {
             // update unread count when scrolled up
-            if (!this.state.search && this.state.atEndOfLiveTimeline) {
+            if (this.state.atEndOfLiveTimeline) {
                 // no change
             } else if (!shouldHideEvent(ev, this.state)) {
                 this.setState((state) => {
@@ -1632,36 +1596,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             });
     }
 
-    private onSearch = (term: string, scope: SearchScope): void => {
-        const roomId = scope === SearchScope.Room ? this.state.room.roomId : undefined;
-        debuglog("sending search request");
-        const abortController = new AbortController();
-        const promise = eventSearch(term, roomId, abortController.signal);
-
-        this.setState({
-            search: {
-                // make sure that we don't end up showing results from
-                // an aborted search by keeping a unique id.
-                searchId: new Date().getTime(),
-                roomId,
-                term,
-                scope,
-                promise,
-                abortController,
-            },
-        });
-    };
-
-    private onSearchUpdate = (inProgress: boolean, searchResults: ISearchResults | null): void => {
-        this.setState({
-            search: {
-                ...this.state.search,
-                count: searchResults?.count,
-                inProgress,
-            },
-        });
-    };
-
     private onAppsClick = (): void => {
         dis.dispatch({
             action: "appsDrawer",
@@ -1743,27 +1677,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         // just ignore them.
         // https://github.com/vector-im/vector-web/issues/1134
         dis.fire(Action.ViewRoomDirectory);
-    };
-
-    private onSearchClick = (): void => {
-        this.setState({
-            timelineRenderingType:
-                this.state.timelineRenderingType === TimelineRenderingType.Search
-                    ? TimelineRenderingType.Room
-                    : TimelineRenderingType.Search,
-        });
-    };
-
-    private onCancelSearchClick = (): Promise<void> => {
-        return new Promise<void>((resolve) => {
-            this.setState(
-                {
-                    timelineRenderingType: TimelineRenderingType.Room,
-                    search: undefined,
-                },
-                resolve,
-            );
-        });
     };
 
     // jump down to the bottom of this room, where new events are arriving
@@ -1865,9 +1778,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
      */
     public handleScrollKey = (ev: React.KeyboardEvent | KeyboardEvent): void => {
         let panel: ScrollPanel | TimelinePanel | undefined;
-        if (this.searchResultsPanel.current) {
-            panel = this.searchResultsPanel.current;
-        } else if (this.messagePanel) {
+        if (this.messagePanel) {
             panel = this.messagePanel;
         }
 
@@ -2127,7 +2038,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
         if (ContentMessages.sharedInstance().getCurrentUploads().length > 0) {
             statusBar = <UploadBar room={this.state.room} />;
-        } else if (!this.state.search) {
+        } else {
             isStatusAreaExpanded = this.state.statusBarVisible;
             statusBar = (
                 <RoomStatusBar
@@ -2165,16 +2076,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
         let aux: JSX.Element | undefined;
         let previewBar;
-        if (this.state.timelineRenderingType === TimelineRenderingType.Search) {
-            aux = (
-                <SearchBar
-                    searchInProgress={this.state.search?.inProgress}
-                    onCancelClick={this.onCancelSearchClick}
-                    onSearch={this.onSearch}
-                    isRoomEncrypted={this.context.client.isRoomEncrypted(this.state.room.roomId)}
-                />
-            );
-        } else if (showRoomUpgradeBar) {
+        if (showRoomUpgradeBar) {
             aux = <RoomUpgradeWarningBar room={this.state.room} />;
         } else if (myMembership !== "join") {
             // We do have a room object for this room, but we're not currently in it.
@@ -2254,7 +2156,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         let messageComposer;
         const showComposer =
             // joined and not showing search results
-            myMembership === "join" && !this.state.search && this.state.canSendMessages;
+            myMembership === "join" && this.state.canSendMessages;
 
         if (showComposer) {
             messageComposer = (
@@ -2266,29 +2168,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                     permalinkCreator={this.permalinkCreator}
                 />
             );
-        }
-
-        // if we have search results, we keep the messagepanel (so that it preserves its
-        // scroll state), but hide it.
-        let searchResultsPanel;
-        let hideMessagePanel = false;
-
-        if (this.state.search) {
-            searchResultsPanel = (
-                <RoomSearchView
-                    key={this.state.search.searchId}
-                    ref={this.searchResultsPanel}
-                    term={this.state.search.term}
-                    scope={this.state.search.scope}
-                    promise={this.state.search.promise}
-                    abortController={this.state.search.abortController}
-                    resizeNotifier={this.props.resizeNotifier}
-                    permalinkCreator={this.permalinkCreator}
-                    className={this.messagePanelClassNames}
-                    onUpdate={this.onSearchUpdate}
-                />
-            );
-            hideMessagePanel = true;
         }
 
         let highlightedEventId: string | undefined;
@@ -2306,7 +2185,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 manageReadReceipts={!this.state.isPeeking}
                 sendReadReceiptOnLoad={!this.state.wasContextSwitch}
                 manageReadMarkers={!this.state.isPeeking}
-                hidden={hideMessagePanel}
+                hidden={false}
                 highlightedEventId={highlightedEventId}
                 eventId={this.state.initialEventId}
                 eventScrollIntoView={this.state.initialEventScrollIntoView}
@@ -2328,14 +2207,14 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
         let topUnreadMessagesBar: JSX.Element | undefined;
         // Do not show TopUnreadMessagesBar if we have search results showing, it makes no sense
-        if (this.state.showTopUnreadMessagesBar && !this.state.search) {
+        if (this.state.showTopUnreadMessagesBar) {
             // topUnreadMessagesBar = (
             //     <TopUnreadMessagesBar onScrollUpClick={this.jumpToReadMarker} onCloseClick={this.forgetReadMarker} />
             // );
         }
         let jumpToBottom;
         // Do not show JumpToBottomButton if we have search results showing, it makes no sense
-        if (this.state.showJupToBottomBtn && this.state.atEndOfLiveTimeline === false && !this.state.search) {
+        if (this.state.showJupToBottomBtn && this.state.atEndOfLiveTimeline === false) {
             jumpToBottom = (
                 <JumpToBottomButton
                     highlight={this.state.room.getUnreadNotificationCount(NotificationCountType.Highlight) > 0}
@@ -2384,7 +2263,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                             {topUnreadMessagesBar}
                             {jumpToBottom}
                             {messagePanel}
-                            {searchResultsPanel}
                         </div>
                         {statusBarArea}
                         {previewBar}
@@ -2425,7 +2303,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         let excludedRightPanelPhaseButtons = [RightPanelPhases.Timeline];
         let onAppsClick: (() => void) | null = this.onAppsClick;
         let onForgetClick: (() => void) | null = this.onForgetClick;
-        let onSearchClick: (() => void) | null = this.onSearchClick;
         let onInviteClick: (() => void) | null = null;
         let viewingCall = false;
 
@@ -2435,7 +2312,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 excludedRightPanelPhaseButtons = [RightPanelPhases.ThreadPanel, RightPanelPhases.PinnedMessages];
                 onAppsClick = null;
                 onForgetClick = null;
-                onSearchClick = null;
                 break;
             case MainSplitContentType.Call:
                 excludedRightPanelPhaseButtons = [
@@ -2451,7 +2327,6 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                 }
                 onAppsClick = null;
                 onForgetClick = null;
-                onSearchClick = null;
                 if (this.state.room.canInvite(this.context.client.getSafeUserId())) {
                     onInviteClick = this.onInviteClick;
                 }
@@ -2473,10 +2348,8 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                             >
                                 <RoomHeader
                                     room={this.state.room}
-                                    searchInfo={this.state.search}
                                     oobData={this.props.oobData}
                                     inRoom={myMembership === "join"}
-                                    onSearchClick={onSearchClick}
                                     onInviteClick={onInviteClick}
                                     onForgetClick={myMembership === "leave" ? onForgetClick : null}
                                     e2eStatus={this.state.e2eStatus}
