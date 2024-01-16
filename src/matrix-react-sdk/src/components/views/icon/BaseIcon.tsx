@@ -6,7 +6,12 @@ export interface IconProps {
 }
 
 const BaseIcon: React.FC<IconProps> = ({ icon, className }) => {
-    return <div className={`mx_icon ${className}`} style={{ maskImage: `url("${icon}")` }}></div>;
+    return (
+        <div
+            className={`mx_icon ${className}`}
+            style={{ maskImage: `url("${icon}")`, "-webkit-mask-image": `url("${icon}")` }}
+        ></div>
+    );
 };
 
 export default memo(BaseIcon);
