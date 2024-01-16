@@ -9,7 +9,7 @@ const BaseIcon: React.FC<IconProps> = ({ icon, className }) => {
     return (
         <div
             className={`mx_icon ${className}`}
-            style={{ maskImage: `url("${icon}")`, "-webkit-mask-image": `url("${icon}")` }}
+            style={{ maskImage: `url("${icon}")`, WebkitMaskImage: `url("${icon}")` }}
         ></div>
     );
 };
