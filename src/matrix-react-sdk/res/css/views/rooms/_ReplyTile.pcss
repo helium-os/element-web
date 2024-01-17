@@ -16,6 +16,9 @@ limitations under the License.
 
 
 .mx_ReplyTile {
+    $reply-lines: 1;
+    $line-height: $font-16px;
+
     position: relative;
     display: flex;
     align-items: center;
@@ -45,7 +48,7 @@ limitations under the License.
     .mx_RedactedBody, .mx_EventTile_content {
         font-size: 12px;
         font-weight: 400;
-        line-height: 16px;
+        line-height: $line-height;
     }
 
     /* We do reply size limiting with CSS to avoid duplicating the TextualBody component. */
@@ -53,13 +56,12 @@ limitations under the License.
         flex: 1;
         overflow: hidden;
         grid-area: message;
-        $reply-lines: 1;
-        $line-height: $font-18px;
 
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-box-orient: vertical;
         -webkit-line-clamp: $reply-lines;
+        height: calc($line-height * $reply-lines);
 
         color: $text-primary-color3;
 
@@ -118,6 +120,12 @@ limitations under the License.
             line-height: 14px; // To match size
         }
     }
+}
+
+// 展开引号后
+.mx_ReplyChain--expanded .mx_EventTile_content{
+    -webkit-line-clamp: unset;
+    height: auto;
 }
 
 @media only Percy {
