@@ -27,7 +27,7 @@ import React, {
     useCallback,
 } from "react";
 
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
+import { DragDropContext, DragUpdate, Droppable, ResponderProvided } from "react-beautiful-dnd";
 import type { DropResult } from "react-beautiful-dnd";
 
 import { IState as IRovingTabIndexState, RovingTabIndexProvider } from "../../../accessibility/RovingTabIndex";

@@ -23,7 +23,7 @@ import { Direction } from "re-resizable/lib/resizer";
 import * as React from "react";
 import { ComponentType, createRef, ReactComponentElement, ReactNode } from "react";
 
-import { Droppable, Draggable } from "react-beautiful-dnd";
+import { Droppable, Draggable, DroppableProvided } from "react-beautiful-dnd";
 
 import { polyfillTouchEvent } from "../../../@types/polyfill";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
@@ -766,17 +766,10 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         (e.target as HTMLDivElement).scrollTop = 0;
     }
 
-    public render(): React.ReactElement {
-        const visibleTiles = this.renderVisibleTiles();
-        const hidden = !this.state.rooms.length && !this.props.extraTiles?.length && this.props.alwaysVisible !== true;
-        const classes = classNames({
-            mx_RoomSublist: true,
-            mx_RoomSublist_hasMenuOpen: !!this.state.contextMenuPosition,
-            mx_RoomSublist_minimized: this.props.isMinimized,
-            mx_RoomSublist_hidden: hidden,
-        });
-
+    private getSublist(dropProvided?: DroppableProvided): JSX.Element | undefined {
         let content: JSX.Element | undefined;
+
+        const visibleTiles = this.renderVisibleTiles();
         if (this.state.roomsLoading) {
             content = <div className="mx_RoomSublist_skeletonUI" />;
         } else if (visibleTiles.length > 0 && this.props.forceExpanded) {
@@ -784,6 +777,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 <div className="mx_RoomSublist_resizeBox mx_RoomSublist_resizeBox_forceExpanded">
                     <div className="mx_RoomSublist_tiles" ref={this.tilesRef}>
                         {visibleTiles}
+                        {dropProvided?.placeholder}
                     </div>
                 </div>
             );
@@ -897,6 +891,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     >
                         <div className="mx_RoomSublist_tiles" ref={this.tilesRef}>
                             {visibleTiles}
+                            {dropProvided?.placeholder}
                         </div>
                         {showNButton}
                     </Resizable>
@@ -905,6 +900,18 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         } else if (this.props.showSkeleton && this.state.isExpanded) {
             content = <div className="mx_RoomSublist_skeletonUI" />;
         }
+
+        return content;
+    }
+
+    public render(): React.ReactElement {
+        const hidden = !this.state.rooms.length && !this.props.extraTiles?.length && this.props.alwaysVisible !== true;
+        const classes = classNames({
+            mx_RoomSublist: true,
+            mx_RoomSublist_hasMenuOpen: !!this.state.contextMenuPosition,
+            mx_RoomSublist_minimized: this.props.isMinimized,
+            mx_RoomSublist_hidden: hidden,
+        });
 
         return (
             <Draggable
@@ -945,7 +952,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                                         {(SpaceStore.instance.isHomeSpace ||
                                             this.props.tagId !== DefaultTagID.Untagged) &&
                                             this.renderHeader()}
-                                        {content}
+                                        {this.getSublist(droppableProvided)}
                                     </div>
                                 </div>
                             )}
