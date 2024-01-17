@@ -59,5 +59,6 @@ declare module "matrix-js-sdk/src/models/event" {
     interface MatrixEvent {
         getRoomType(): RoomType;
         getRoomTypeLabel(): string;
+        isRejectInvite(): boolean;
     }
 }

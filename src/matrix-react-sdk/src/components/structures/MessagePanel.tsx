@@ -59,6 +59,9 @@ import { displayEventType, hasThreadSummary, hiddenEventTypeIfNotDisplayMemberLi
 import { VoiceBroadcastInfoEventType } from "../../voice-broadcast";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { EffectiveMembership, getEffectiveMembership } from "matrix-react-sdk/src/utils/membership";
+import { UPDATE_SELECTED_SPACE } from "matrix-react-sdk/src/stores/spaces";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -206,6 +209,7 @@ interface IState {
     hideSender: boolean;
     displayEventType: EventType[];
     displayMemberList: boolean;
+    isHomeSpace: boolean;
 }
 
 interface IReadReceiptForUser {
@@ -287,6 +291,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             hideSender: this.shouldHideSender(),
             displayMemberList: false, // 是否展示成员列表
             displayEventType,
+            isHomeSpace: SpaceStore.instance.isHomeSpace,
         };
 
         // Cache these settings on mount since Settings is expensive to query,
@@ -308,6 +313,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
         MatrixClientPeg.get().on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
+        SpaceStore.instance.on(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
         this.isMounted = true;
     }
 
@@ -316,6 +322,7 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         this.props.room?.currentState.off(RoomStateEvent.Update, this.calculateRoomMembersCount);
         MatrixClientPeg.get().off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
+        SpaceStore.instance.off(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
         SettingsStore.unwatchSetting(this.showTypingNotificationsWatcherRef);
     }
 
@@ -348,8 +355,15 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         }
     }
 
+    private onSelectedSpaceChange = () => {
+        this.setState({
+            isHomeSpace: SpaceStore.instance.isHomeSpace,
+        });
+    };
+
     private generateDisplayEventType = (displayMemberList: boolean) => {
         const newDisplayEventType = [...displayEventType];
+        // 过滤掉不展示成员列表时需要隐藏的事件类型
         if (!displayMemberList) {
             hiddenEventTypeIfNotDisplayMemberList.forEach((eventType) => {
                 const index = newDisplayEventType.indexOf(eventType);
@@ -838,7 +852,11 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
         const callEventGrouper = this.props.callEventGroupers.get(mxEv.getContent().call_id);
         // use txnId as key if available so that we don't remount during sending
-        if (this.state.displayEventType.includes(mxEv.getType() as EventType)) {
+        const isLeaveEvent = getEffectiveMembership(mxEv.getContent().membership) === EffectiveMembership.Leave;
+        if (
+            this.state.displayEventType.includes(mxEv.getType() as EventType) &&
+            (this.state.isHomeSpace || mxEv.getType() !== EventType.RoomMember || isLeaveEvent)
+        ) {
             ret.push(
                 <EventTile
                     key={mxEv.getTxnId() || eventId}
