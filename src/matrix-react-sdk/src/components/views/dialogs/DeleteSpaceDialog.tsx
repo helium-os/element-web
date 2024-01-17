@@ -66,7 +66,7 @@ const DeleteSpaceDialog: React.FC<IProps> = ({ space, onFinished }) => {
             fixedWidth={false}
         >
             <div className="mx_DeleteSpace_confirmName">
-                你确定要删除<b>{space.name}</b>吗？
+                你确定要删除<b>{space.name}</b>吗？此操作无法被撤销。
             </div>
             <Field
                 type="text"
