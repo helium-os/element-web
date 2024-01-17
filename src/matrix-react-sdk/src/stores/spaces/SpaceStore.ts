@@ -68,7 +68,7 @@ import { AfterLeaveRoomPayload } from "../../dispatcher/payloads/AfterLeaveRoomP
 import { SdkContextClass } from "../../contexts/SDKContext";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import { DefaultPowerLevelToManageSpacePrivateChannel } from "matrix-react-sdk/src/powerLevel";
+import { hasStateEventPermission, StateEvent } from "matrix-react-sdk/src/powerLevel";
 
 interface IState {}
 
@@ -210,20 +210,12 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     // 判断当前用户是否有权限管理社区私密频道
     public get canManageSpacePrivateChannel(): boolean {
-        if (!this.activeSpaceRoom || this.activeSpaceRoom.getMyMembership() !== "join") {
+        if (!this.activeSpaceRoom) {
             return false;
         }
 
         const myUserId = MatrixClientPeg.get().getUserId()!;
-        const me = this.activeSpaceRoom.getMember(myUserId);
-        if (!me) {
-            return false;
-        }
-
-        const powerLevelsEvent = this.activeSpaceRoom.currentState.getStateEvents(EventType.RoomPowerLevels, "");
-        const { manage_space_private_channel = DefaultPowerLevelToManageSpacePrivateChannel } =
-            powerLevelsEvent?.getContent() ?? {};
-        return me.powerLevel >= manage_space_private_channel;
+        return hasStateEventPermission(this.activeSpaceRoom, StateEvent.ManagePrivateChannel, myUserId);
     }
 
     public get allRoomsInHome(): boolean {

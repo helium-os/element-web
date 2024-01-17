@@ -1,5 +1,6 @@
 import React, { memo } from "react";
 import { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
+import Icon from "matrix-react-sdk/src/components/views/icon/BaseIcon";
 
 export enum ButtonType {
     Default = "default",
@@ -21,6 +22,8 @@ export interface ButtonProps {
     loading?: boolean;
     className?: string;
     style?: any;
+    icon?: React.ReactNode;
+    iconClassName?: string;
     onClick?: (event: ButtonEvent) => void;
     children?: React.ReactNode;
 }
@@ -34,6 +37,8 @@ const Button: React.FC<ButtonProps> = ({
     disabled = false,
     danger = false,
     loading = false,
+    icon,
+    iconClassName,
     onClick,
 }) => {
     return (
@@ -46,6 +51,7 @@ const Button: React.FC<ButtonProps> = ({
             onClick={(e) => onClick?.(e)}
         >
             {loading && <div className="mx_btn_loading" />}
+            {icon && <Icon icon={icon} className={iconClassName} />}
             {children}
         </button>
     );

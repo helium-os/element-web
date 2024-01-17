@@ -37,6 +37,39 @@ import { AfterLeaveRoomPayload } from "../dispatcher/payloads/AfterLeaveRoomPayl
 import { bulkSpaceBehaviour } from "./space";
 import { SdkContextClass } from "../contexts/SDKContext";
 import SettingsStore from "../settings/SettingsStore";
+import DeleteSpaceDialog from "matrix-react-sdk/src/components/views/dialogs/DeleteSpaceDialog";
+
+export function disActionAfterLeaveRoom(roomId: string) {
+    if (SdkContextClass.instance.roomViewStore.getRoomId() === roomId) {
+        // We were viewing the room that was just left. In order to avoid
+        // accidentally viewing the next room in the list and clearing its
+        // notifications, switch to a neutral ground such as the home page or
+        // space landing page.
+        if (isMetaSpace(SpaceStore.instance.activeSpace)) {
+            // 离开的是个人主页下的room
+            dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
+        } else if (SpaceStore.instance.activeSpace === roomId) {
+            // 离开的是社区
+            const parent = SpaceStore.instance.getCanonicalParent(roomId);
+            if (parent !== null) {
+                dis.dispatch<ViewRoomPayload>({
+                    action: Action.ViewRoom,
+                    room_id: parent.roomId,
+                    metricsTrigger: undefined, // other
+                });
+            } else {
+                dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
+            }
+        } else {
+            // 离开的是社区内的频道
+            dis.dispatch<ViewRoomPayload>({
+                action: Action.ViewRoom,
+                room_id: SpaceStore.instance.activeSpace,
+                metricsTrigger: undefined, // other
+            });
+        }
+    }
+}
 
 export async function leaveRoomBehaviour(roomId: string, retry = true, spinner = true): Promise<void> {
     let spinnerModal: IHandle<any> | undefined;
@@ -150,50 +183,59 @@ export async function leaveRoomBehaviour(roomId: string, retry = true, spinner =
         return;
     }
 
-    if (SdkContextClass.instance.roomViewStore.getRoomId() === roomId) {
-        // We were viewing the room that was just left. In order to avoid
-        // accidentally viewing the next room in the list and clearing its
-        // notifications, switch to a neutral ground such as the home page or
-        // space landing page.
-        if (isMetaSpace(SpaceStore.instance.activeSpace)) {
-            dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
-        } else if (SpaceStore.instance.activeSpace === roomId) {
-            // View the parent space, if there is one
-            const parent = SpaceStore.instance.getCanonicalParent(roomId);
-            if (parent !== null) {
-                dis.dispatch<ViewRoomPayload>({
-                    action: Action.ViewRoom,
-                    room_id: parent.roomId,
-                    metricsTrigger: undefined, // other
-                });
-            } else {
-                dis.dispatch<ViewHomePagePayload>({ action: Action.ViewHomePage });
-            }
-        } else {
-            dis.dispatch<ViewRoomPayload>({
-                action: Action.ViewRoom,
-                room_id: SpaceStore.instance.activeSpace,
-                metricsTrigger: undefined, // other
-            });
-        }
-    }
+    disActionAfterLeaveRoom(roomId);
 }
 
+// 离开社区
 export const leaveSpace = (space: Room): void => {
-    Modal.createDialog(
-        LeaveSpaceDialog,
-        {
-            space,
-            onFinished: async (leave: boolean, rooms: Room[]): Promise<void> => {
-                if (!leave) return;
-                await bulkSpaceBehaviour(space, rooms, (room) => leaveRoomBehaviour(room.roomId));
+    Modal.createDialog(LeaveSpaceDialog, {
+        space,
+        onFinished: async (leave: boolean, rooms: Room[]): Promise<void> => {
+            if (!leave) return;
+            await bulkSpaceBehaviour(space, rooms, (room) => leaveRoomBehaviour(room.roomId));
 
-                dis.dispatch<AfterLeaveRoomPayload>({
-                    action: Action.AfterLeaveRoom,
-                    room_id: space.roomId,
-                });
-            },
+            dis.dispatch<AfterLeaveRoomPayload>({
+                action: Action.AfterLeaveRoom,
+                room_id: space.roomId,
+            });
         },
-        "mx_LeaveSpaceDialog_wrapper",
-    );
+    });
+};
+
+export async function deleteRoomBehaviour(roomId: string, spinner = true): Promise<void> {
+    const cli = MatrixClientPeg.get();
+
+    let spinnerModal: IHandle<any> | undefined;
+    if (spinner) {
+        spinnerModal = Modal.createDialog(Spinner, undefined, "mx_Dialog_spinner");
+    }
+
+    try {
+        await cli.deleteRoom(roomId);
+    } catch (error) {
+        Modal.createDialog(ErrorDialog, {
+            title: _t("Error leaving room"),
+        });
+    }
+
+    spinnerModal?.close();
+
+    disActionAfterLeaveRoom(roomId);
+}
+
+// 删除社区
+export const deleteSpace = (space: Room): void => {
+    Modal.createDialog(DeleteSpaceDialog, {
+        space,
+        onFinished: async (shouldDelete: boolean): Promise<void> => {
+            if (!shouldDelete) return;
+
+            await deleteRoomBehaviour(space.roomId);
+
+            dis.dispatch<AfterLeaveRoomPayload>({
+                action: Action.AfterLeaveRoom,
+                room_id: space.roomId,
+            });
+        },
+    });
 };
