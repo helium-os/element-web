@@ -23,17 +23,18 @@ import { getKeyBindingsManager } from "../../KeyBindingsManager";
 import { KeyBindingAction } from "../../accessibility/KeyboardShortcuts";
 
 interface IProps extends HTMLProps<HTMLInputElement> {
-    onSearch: (query: string) => void;
+    onSearch?: (query: string) => void;
     onCleared?: (source?: string) => void;
     onKeyDown?: (ev: React.KeyboardEvent) => void;
     onFocus?: (ev: React.FocusEvent) => void;
     onBlur?: (ev: React.FocusEvent) => void;
     className?: string;
-    placeholder: string;
+    placeholder?: string;
     blurredPlaceholder?: string;
     autoFocus?: boolean;
     initialValue?: string;
     collapsed?: boolean;
+    inputRequired?: boolean; // 是否需要渲染input按钮
 }
 
 interface IState {
@@ -42,6 +43,10 @@ interface IState {
 }
 
 export default class SearchBox extends React.Component<IProps, IState> {
+    public static defaultProps = {
+        inputRequired: true,
+    };
+
     private search = createRef<HTMLInputElement>();
 
     public constructor(props: IProps) {
@@ -129,24 +134,29 @@ export default class SearchBox extends React.Component<IProps, IState> {
         // this is used for the room filter field that has
         // the explore button next to it when blurred
         return (
-            <div className={classNames("mx_SearchBox", { mx_SearchBox_blurred: this.state.blurred })}>
+            <div className={classNames("mx_SearchBox", { mx_SearchBox_blurred: this.state.blurred }, className)}>
                 <span className="mx_SearchBox_searchIcon" />
-                <input
-                    {...props}
-                    key="searchfield"
-                    type="text"
-                    ref={this.search}
-                    className={"mx_textinput_icon mx_textinput_search " + className}
-                    value={this.state.searchTerm}
-                    onFocus={this.onFocus}
-                    onChange={this.onChange}
-                    onKeyDown={this.onKeyDown}
-                    onBlur={this.onBlur}
-                    placeholder={this.state.blurred ? blurredPlaceholder || placeholder : placeholder}
-                    autoComplete="off"
-                    autoFocus={this.props.autoFocus}
-                    data-testid="searchbox-input"
-                />
+                {this.props.inputRequired ? (
+                    <input
+                        {...props}
+                        key="searchfield"
+                        type="text"
+                        ref={this.search}
+                        value={this.state.searchTerm}
+                        onFocus={this.onFocus}
+                        onChange={this.onChange}
+                        onKeyDown={this.onKeyDown}
+                        onBlur={this.onBlur}
+                        placeholder={this.state.blurred ? blurredPlaceholder || placeholder : placeholder}
+                        autoComplete="off"
+                        autoFocus={this.props.autoFocus}
+                        data-testid="searchbox-input"
+                    />
+                ) : (
+                    <div className="mx_SearchBox_virtualInput" {...props}>
+                        {blurredPlaceholder || placeholder}
+                    </div>
+                )}
             </div>
         );
     }

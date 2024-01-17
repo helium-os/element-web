@@ -73,6 +73,7 @@ import SetupEncryptionDialog from "../views/dialogs/security/SetupEncryptionDial
 import { UIFeature } from "../../settings/UIFeature";
 import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
+import MatrixChatToolbar from "matrix-react-sdk/src/components/structures/MatrixChatToolbar";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -715,7 +716,9 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                     className={wrapperClasses}
                     aria-hidden={this.props.hideToSRUsers}
                 >
-                    <ToastContainer />
+                    <div className="mx_MatrixToolbar">
+                        <MatrixChatToolbar />
+                    </div>
                     <div className={bodyClasses}>
                         <Resizable
                             defaultSize={this.loadSidePanelSize()}
@@ -759,6 +762,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                         <div className="mx_RoomView_wrapper">{pageElement}</div>
                     </div>
                 </div>
+                <ToastContainer />
                 <PipContainer />
                 <NonUrgentToastContainer />
                 {audioFeedArraysForCalls}

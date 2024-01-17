@@ -66,6 +66,13 @@ $textarea-height: calc(3 * $input-height);
     align-items: center;
     width: 24px;
     height: 24px;
+    &:hover {
+        opacity: 1;
+    }
+}
+
+.mx_Field_focused .mx_Field_clearBox {
+    opacity: 1;
 }
 
 .mx_Field_clearBtn {
@@ -75,10 +82,6 @@ $textarea-height: calc(3 * $input-height);
     border-radius: 50%;
     cursor: pointer;
     @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #fff;
-}
-
-.mx_Field_clearShow .mx_Field_clearBox {
-    opacity: 1;
 }
 
 .mx_Field_inner {
@@ -129,8 +132,7 @@ $textarea-height: calc(3 * $input-height);
     pointer-events: none;
 }
 
-.mx_Field.mx_Field_labelShow .mx_Field_inputBox,
-.mx_Field.mx_Field_focused .mx_Field_inputBox {
+.mx_Field.mx_Field_labelShow .mx_Field_inputBox {
     transform: translate(0, $input-transform-space);
     transition: all 0.25s ease-out 0.1s;
 }
@@ -285,49 +287,48 @@ $textarea-height: calc(3 * $input-height);
 .mx_SelectedUserOrRoomTile_box {
     margin: 0 4px 4px 0;
     min-width: max-content; /* prevent manipulation by flexbox */
+}
+.mx_SelectedUserOrRoomTile_pill {
+    display: flex;
+    align-items: center;
+    height: 24px;
+    border-radius: 12px;
+    padding: 0 5px 0 2px;
+    background-color: $background-primary1-secondary-color2;
+    color: $text-primary-color3; /* this is fine without a var because it's for both themes */
 
-    .mx_SelectedUserOrRoomTile_pill {
+    .mx_BaseAvatar {
         display: flex;
         align-items: center;
-        height: 24px;
-        border-radius: 12px;
-        padding: 0 5px 0 2px;
-        background-color: $background-primary1-secondary-color2;
-        color: $text-primary-color3; /* this is fine without a var because it's for both themes */
+    }
 
-        .mx_BaseAvatar {
-            display: flex;
-            align-items: center;
-        }
+    .mx_SelectedUserOrRoomTile_name {
+        max-width: 100px;
+        padding: 0 7px 0 4px;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+        color: $text-primary-color3;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
 
-        .mx_SelectedUserOrRoomTile_name {
-            max-width: 100px;
-            padding: 0 7px 0 4px;
-            font-size: 16px;
-            font-weight: 400;
-            line-height: 1.5;
-            color: $text-primary-color3;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-        }
+    .mx_SelectedUserOrRoomTile_remove {
+        display: none;
+        padding: 2px;
+        cursor: pointer;
+    }
+    .mx_SelectedUserOrRoomTile_remove_icon {
+        margin: 0 auto;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: $text-secondary-color1;
+        @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #FFFFFF;
+    }
 
-        .mx_SelectedUserOrRoomTile_remove {
-            display: none;
-            padding: 2px;
-            cursor: pointer;
-        }
-        .mx_SelectedUserOrRoomTile_remove_icon {
-            margin: 0 auto;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: $text-secondary-color1;
-            @mixin MaskIcon url("$(res)/img/cancel.svg"), 7px, 7px, #FFFFFF;
-        }
-
-        &:hover .mx_SelectedUserOrRoomTile_remove{
-            display: block;
-        }
+    &:hover .mx_SelectedUserOrRoomTile_remove{
+        display: block;
     }
 }

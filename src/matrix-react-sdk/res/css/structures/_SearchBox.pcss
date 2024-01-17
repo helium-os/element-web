@@ -28,7 +28,7 @@ limitations under the License.
         height: 20px;
         @mixin MaskIcon url("$(res)/img/feather-customised/search.svg"), 15px, 15px, $text-secondary-color3;
     }
-    input {
+    input, .mx_SearchBox_virtualInput {
         flex: 1;
         border: none;
         outline: none;
@@ -36,13 +36,21 @@ limitations under the License.
         line-height: 20px;
         font-weight: 400;
         color: $text-primary-color1;
-        &::placeholder {
-            color: $text-secondary-color3;
-        }
     }
 
-    &.mx_SearchBox_blurred:not(:hover) {
-        background-color: transparent;
+    input::placeholder {
+        color: $text-secondary-color3;
+    }
+
+    .mx_SearchBox_virtualInput {
+        cursor: pointer;
+    }
+
+    &.mx_SearchBox_blurred {
+        background-color: $background;
+        .mx_SearchBox_virtualInput {
+            color: $text-secondary-color3;
+        }
     }
 
     .mx_SearchBox_closeButton {

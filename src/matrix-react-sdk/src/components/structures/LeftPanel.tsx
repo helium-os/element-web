@@ -241,12 +241,13 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
                     header.classList.add("mx_RoomSublist_headerContainer_stickyBottom");
                 }
 
-                const offset =
-                    UIStore.instance.windowHeight - (list.parentElement.offsetTop + list.parentElement.offsetHeight);
-                const newBottom = `${offset}px`;
-                if (header.style.bottom !== newBottom) {
-                    header.style.bottom = newBottom;
-                }
+                // const offset =
+                //     UIStore.instance.windowHeight - (list.parentElement.offsetTop + list.parentElement.offsetHeight);
+                // const newBottom = `${offset}px`;
+                // if (header.style.bottom !== newBottom) {
+                //     header.style.bottom = newBottom;
+                // }
+                header.style.bottom = "0";
             } else {
                 if (header.classList.contains("mx_RoomSublist_headerContainer_stickyBottom")) {
                     header.classList.remove("mx_RoomSublist_headerContainer_stickyBottom");
