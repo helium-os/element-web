@@ -16,14 +16,14 @@ limitations under the License.
 */
 
 import React from "react";
-import { RoomEvent } from "matrix-js-sdk/src/models/room";
+import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 
 import TabbedView, { Tab } from "../../structures/TabbedView";
 import { _t } from "../../../languageHandler";
 import AdvancedRoomSettingsTab from "../settings/tabs/room/AdvancedRoomSettingsTab";
 import RolesRoomSettingsTab from "../settings/tabs/room/RolesRoomSettingsTab";
 import GeneralRoomSettingsTab from "../settings/tabs/room/GeneralRoomSettingsTab";
-import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import NotificationSettingsTab from "../settings/tabs/room/NotificationSettingsTab";
 import BridgeSettingsTab from "../settings/tabs/room/BridgeSettingsTab";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
@@ -36,9 +36,8 @@ import { ActionPayload } from "../../../dispatcher/payloads";
 import { NonEmptyArray } from "../../../@types/common";
 import { PollHistoryTab } from "../settings/tabs/room/PollHistoryTab";
 import RoomSettingsBaseDialog from "matrix-react-sdk/src/components/views/dialogs/RoomSettingsBaseDialog";
-import AccessibleButton, { ButtonEvent } from "matrix-react-sdk/src/components/views/elements/AccessibleButton";
-import { leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
-import PosthogTrackers from "matrix-react-sdk/src/PosthogTrackers";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import trashSvg from "matrix-react-sdk/res/img/feather-customised/trash.svg";
 
 export const ROOM_GENERAL_TAB = "ROOM_GENERAL_TAB";
 export const ROOM_VOIP_TAB = "ROOM_VOIP_TAB";
@@ -56,21 +55,36 @@ interface IProps {
 }
 
 interface IState {
+    room: Room;
     roomName: string;
+    canDelete: boolean;
 }
 
 export default class RoomSettingsDialog extends React.Component<IProps, IState> {
     private dispatcherRef: string;
+    private cli: MatrixClient = MatrixClientPeg.get();
 
     public constructor(props: IProps) {
         super(props);
-        this.state = { roomName: "" };
+        this.state = {
+            room: this.getRoom(),
+            roomName: "",
+            canDelete: false,
+        };
     }
 
     public componentDidMount(): void {
         this.dispatcherRef = dis.register(this.onAction);
         MatrixClientPeg.get().on(RoomEvent.Name, this.onRoomName);
+
         this.onRoomName();
+        this.onCanDeleteRoom();
+    }
+
+    public componentDidUpdate(prevProps: IProps, prevState: IState): void {
+        if (this.props.roomId !== prevProps.roomId) {
+            this.onRoom();
+        }
     }
 
     public componentWillUnmount(): void {
@@ -84,20 +98,43 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
     private onAction = (payload: ActionPayload): void => {
         // When view changes below us, close the room settings
         // whilst the modal is open this can only be triggered when someone hits Leave Room
-        if (payload.action === Action.ViewHomePage) {
-            this.props.onFinished(true);
+        switch (payload.action) {
+            case Action.ViewHomePage:
+                this.props.onFinished(true);
+                break;
+            case Action.AfterLeaveRoom:
+                if (payload.room_id === this.props.roomId) {
+                    this.props.onFinished(true);
+                }
+                break;
         }
+    };
+
+    private getRoom = (): Room => {
+        return this.cli.getRoom(this.props.roomId);
+    };
+
+    private onRoom = (): void => {
+        this.setState({
+            room: this.getRoom(),
+        });
     };
 
     private onRoomName = (): void => {
         this.setState({
-            roomName: MatrixClientPeg.get().getRoom(this.props.roomId)?.name ?? "",
+            roomName: this.state.room?.name ?? "",
         });
     };
 
-    private onLeaveClick = (ev: ButtonEvent): void => {
+    private onCanDeleteRoom = (): void => {
+        this.setState({
+            canDelete: this.state.room?.canDeleteRoom(),
+        });
+    };
+
+    private onDeleteClick = async () => {
         dis.dispatch({
-            action: "leave_room",
+            action: "delete_room",
             room_id: this.props.roomId,
         });
     };
@@ -219,8 +256,15 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
     public render(): React.ReactNode {
         const roomName = this.state.roomName;
 
-        const footer = (
-            <Button type={ButtonType.Text} danger onClick={this.onLeaveClick}>
+        const footer = this.state.canDelete && (
+            <Button
+                type={ButtonType.Text}
+                size={ButtonSize.Small}
+                danger
+                icon={trashSvg}
+                iconClassName="mx_DeleteRoom_icon"
+                onClick={this.onDeleteClick}
+            >
                 {"删除频道"}
             </Button>
         );
@@ -229,7 +273,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
             <RoomSettingsBaseDialog onFinished={this.props.onFinished}>
                 <TabbedView
                     title={roomName}
-                    // footer={footer}
+                    footer={footer}
                     tabs={this.getTabs()}
                     initialTabId={this.props.initialTabId}
                     screenName="RoomSettings"

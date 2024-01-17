@@ -529,7 +529,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
             for (const [index, room] of visibleRooms.entries()) {
                 const disabled =
                     (OrderedDefaultTagIDs.includes(this.props.tagId) && this.props.tagId !== DefaultTagID.Untagged) ||
-                    !room.canOperateTag(this.userId);
+                    !room.canManageTag(this.userId);
                 tiles.push(
                     <Draggable
                         key={`channel-${room.roomId}`}
@@ -911,7 +911,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 isDragDisabled={
                     OrderedDefaultTagIDs.includes(this.props.tagId) ||
                     (!SpaceStore.instance.isHomeSpace &&
-                        !SpaceStore.instance.activeSpaceRoom?.canOperateTag(this.userId))
+                        !SpaceStore.instance.activeSpaceRoom?.canManageTag(this.userId))
                 }
                 draggableId={this.props.tagId}
                 index={this.props.index}

@@ -31,8 +31,10 @@ import RolesRoomSettingsTab from "../settings/tabs/room/RolesRoomSettingsTab";
 import { Action } from "../../../dispatcher/actions";
 import { NonEmptyArray } from "../../../@types/common";
 import { useTypedEventEmitter } from "matrix-react-sdk/src/hooks/useEventEmitter";
-import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
-import { leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
+import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
+import { deleteSpace, leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
+import trashSvg from "matrix-react-sdk/res/img/feather-customised/trash.svg";
+import leaveSvg from "matrix-react-sdk/res/img/feather-customised/leave.svg";
 
 export enum SpaceSettingsTab {
     General = "SPACE_GENERAL_TAB",
@@ -59,20 +61,18 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
     }, [space]);
 
     useDispatcher(defaultDispatcher, (payload) => {
-        if (payload.action === Action.AfterLeaveRoom && payload.room_id === space.roomId) {
-            onFinished();
+        switch (payload.action) {
+            case Action.AfterLeaveRoom:
+                if (payload.room_id === space.roomId) {
+                    onFinished();
+                }
+                break;
         }
     });
 
     const tabs = useMemo(() => {
         return [
             new Tab(SpaceSettingsTab.General, _t("General"), null, <SpaceSettingsGeneralTab space={space} />),
-            // new Tab(
-            //     SpaceSettingsTab.Visibility,
-            //     _t("Visibility"),
-            //     null,
-            //     <SpaceSettingsVisibilityTab matrixClient={cli} space={space} closeSettingsFn={onFinished} />,
-            // ),
             new Tab(
                 SpaceSettingsTab.Roles,
                 _t("Roles & Permissions"),
@@ -90,19 +90,39 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
         ].filter(Boolean) as NonEmptyArray<Tab>;
     }, [cli, space, onFinished]);
 
-    const footer = (
-        <Button type={ButtonType.Text} danger onClick={() => leaveSpace(space)}>
-            {_t("Leave Space")}
-        </Button>
-    );
+    const footer = useMemo(() => {
+        const canDelete = space.canDeleteRoom();
+
+        let label, icon, iconClassName, onClick;
+        if (canDelete) {
+            label = _t("Delete Space");
+            icon = trashSvg;
+            iconClassName = "mx_DeleteRoom_icon";
+            onClick = () => deleteSpace(space);
+        } else {
+            label = _t("Leave Space");
+            icon = leaveSvg;
+            iconClassName = "mx_LeaveRoom_icon";
+            onClick = () => leaveSpace(space);
+        }
+
+        return (
+            <Button
+                type={ButtonType.Text}
+                size={ButtonSize.Small}
+                danger
+                onClick={onClick}
+                icon={icon}
+                iconClassName={iconClassName}
+            >
+                {label}
+            </Button>
+        );
+    }, [space]);
 
     return (
         <RoomSettingsBaseDialog onFinished={onFinished}>
-            <TabbedView
-                // footer={footer}
-                title={spaceName || _t("Unnamed Space")}
-                tabs={tabs}
-            />
+            <TabbedView footer={footer} title={spaceName || _t("Unnamed Space")} tabs={tabs} />
         </RoomSettingsBaseDialog>
     );
 };

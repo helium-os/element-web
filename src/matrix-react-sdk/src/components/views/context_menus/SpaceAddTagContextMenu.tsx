@@ -31,7 +31,7 @@ const SpaceAddTagContextMenu: React.FC<IProps> = ({ showIcon = false }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission = activeSpaceRoom?.canOperateTag(userId);
+    const hasTagPermission = activeSpaceRoom?.canManageTag(userId);
 
     // 新增分组
     const onAddSpaceTag = async (): Promise<void> => {
