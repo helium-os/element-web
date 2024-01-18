@@ -119,6 +119,7 @@ export default class SearchBox extends React.Component<IProps, IState> {
             autoFocus,
             initialValue,
             collapsed,
+            inputRequired,
             ...props
         } = this.props;
 
@@ -136,7 +137,7 @@ export default class SearchBox extends React.Component<IProps, IState> {
         return (
             <div className={classNames("mx_SearchBox", { mx_SearchBox_blurred: this.state.blurred }, className)}>
                 <span className="mx_SearchBox_searchIcon" />
-                {this.props.inputRequired ? (
+                {inputRequired ? (
                     <input
                         {...props}
                         key="searchfield"

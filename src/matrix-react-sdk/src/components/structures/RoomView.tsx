@@ -1619,7 +1619,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         this.setState({
             rejecting: true,
         });
-        this.context.client.leave(this.state.roomId).then(
+        this.context.client.batchLeave(this.state.roomId).then(
             () => {
                 disActionAfterLeaveRoom(this.state.roomId);
                 this.setState({

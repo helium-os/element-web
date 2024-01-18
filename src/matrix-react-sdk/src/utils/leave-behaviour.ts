@@ -34,7 +34,6 @@ import { Action } from "../dispatcher/actions";
 import { ViewHomePagePayload } from "../dispatcher/payloads/ViewHomePagePayload";
 import LeaveSpaceDialog from "../components/views/dialogs/LeaveSpaceDialog";
 import { AfterLeaveRoomPayload } from "../dispatcher/payloads/AfterLeaveRoomPayload";
-import { bulkSpaceBehaviour } from "./space";
 import { SdkContextClass } from "../contexts/SDKContext";
 import SettingsStore from "../settings/SettingsStore";
 import DeleteSpaceDialog from "matrix-react-sdk/src/components/views/dialogs/DeleteSpaceDialog";
@@ -186,13 +185,40 @@ export async function leaveRoomBehaviour(roomId: string, retry = true, spinner =
     disActionAfterLeaveRoom(roomId);
 }
 
+/**
+ * 离开room、将成员移出room
+ * @userId 如果不传或者传入的userId等于当前用户id，默认为当前用户离开；如果传入的usrId不等于当前用户id，则为踢用户
+ * 如果是space room，则批量离开space下的所有room & space room
+ * 如果不是space room，只离开当前传入的room
+ */
+export async function batchLeaveRoomBehaviour(roomId: string, userId?: string | undefined, spinner = true) {
+    const cli = MatrixClientPeg.get();
+
+    let spinnerModal: IHandle<any> | undefined;
+    if (spinner) {
+        spinnerModal = Modal.createDialog(Spinner, undefined, "mx_Dialog_spinner");
+    }
+
+    try {
+        await cli.batchLeave(roomId, userId);
+    } catch (error) {
+        Modal.createDialog(ErrorDialog, {
+            title: _t("Error leaving room"),
+        });
+    }
+
+    spinnerModal?.close();
+
+    disActionAfterLeaveRoom(roomId);
+}
+
 // 离开社区
 export const leaveSpace = (space: Room): void => {
     Modal.createDialog(LeaveSpaceDialog, {
         space,
-        onFinished: async (leave: boolean, rooms: Room[]): Promise<void> => {
+        onFinished: async (leave: boolean): Promise<void> => {
             if (!leave) return;
-            await bulkSpaceBehaviour(space, rooms, (room) => leaveRoomBehaviour(room.roomId));
+            await batchLeaveRoomBehaviour(space.roomId);
 
             dis.dispatch<AfterLeaveRoomPayload>({
                 action: Action.AfterLeaveRoom,

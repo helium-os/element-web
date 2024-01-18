@@ -26,3 +26,25 @@ MatrixClient.prototype.deleteRoom = function (roomId: string) {
     });
     return this.http.authedRequest(Method.Delete, path, undefined, undefined, { prefix: ClientPrefix.V3 });
 };
+
+/**
+ * 批量离开room
+ * @param roomId
+ * 如果是space room，则批量离开space下的所有room & space room
+ * 如果不是space room，只离开当前传入的room
+ */
+MatrixClient.prototype.batchLeave = function (roomId: string, userId?: string, reason?: string) {
+    const path = utils.encodeUri("/rooms/$room_id/batch_leave", {
+        $room_id: roomId,
+    });
+    return this.http.authedRequest(
+        Method.Post,
+        path,
+        undefined,
+        {
+            user_id: userId,
+            reason: reason,
+        },
+        { prefix: ClientPrefix.V3 },
+    );
+};

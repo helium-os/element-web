@@ -17,6 +17,7 @@ declare module "matrix-js-sdk/src/client" {
         setRoomOnlyTags(roomId: string, tags: Tag[]): Promise<ISendEventResponse>;
         getRoomOnlyTags(roomId: string): Promise<Record<string, any>>;
         deleteRoom(roomId: string): Promise<{}>;
+        batchLeave(roomId: string, userId?: string, reason?: string): Promise<{}>;
     }
 }
 
