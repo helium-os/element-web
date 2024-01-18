@@ -239,7 +239,7 @@ interface IState {
         position: Pick<DOMRect, "top" | "left" | "bottom">;
         link?: string;
     };
-
+    showQuote: boolean;
     isQuoteExpanded?: boolean;
 
     thread: Thread | null;
@@ -287,6 +287,8 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
             thread,
             hasThread: this.calcHasThread(thread), // 此条消息是否有消息列回复
+
+            showQuote: false, // 是否显示"展开|收起引号"按钮
         };
 
         // don't do RR animations until we are mounted
@@ -846,6 +848,12 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         });
     };
 
+    private setShowQuote = (show: boolean): void => {
+        this.setState({
+            showQuote: show,
+        });
+    };
+
     private setQuoteExpanded = (expanded: boolean): void => {
         this.setState({
             isQuoteExpanded: expanded,
@@ -1073,6 +1081,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 getTile={this.getTile}
                 getReplyChain={this.getReplyChain}
                 onFocusChange={this.onActionBarFocusChange}
+                showQuote={this.state.showQuote}
                 isQuoteExpanded={isQuoteExpanded}
                 toggleThreadExpanded={() => this.setQuoteExpanded(!isQuoteExpanded)}
                 getRelationsForEvent={this.props.getRelationsForEvent}
@@ -1147,6 +1156,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                     layout={this.props.layout}
                     alwaysShowTimestamps={this.props.alwaysShowTimestamps || this.state.hover}
                     isQuoteExpanded={isQuoteExpanded}
+                    setShowQuote={this.setShowQuote}
                     setQuoteExpanded={this.setQuoteExpanded}
                     getRelationsForEvent={this.props.getRelationsForEvent}
                 />

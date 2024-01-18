@@ -297,6 +297,7 @@ interface IMessageActionBarProps {
     permalinkCreator?: RoomPermalinkCreator;
     onFocusChange?: (menuDisplayed: boolean) => void;
     toggleThreadExpanded: () => void;
+    showQuote: boolean;
     isQuoteExpanded?: boolean;
     getRelationsForEvent?: GetRelationsForEvent;
 }
@@ -539,7 +540,7 @@ export default class MessageActionBar extends React.PureComponent<IMessageAction
                 toolbarOpts.push(cancelSendingButton);
             }
 
-            if (this.props.isQuoteExpanded !== undefined && shouldDisplayReply(this.props.mxEvent)) {
+            if (this.props.showQuote && shouldDisplayReply(this.props.mxEvent)) {
                 const expandClassName = classNames({
                     mx_MessageActionBar_iconButton: true,
                     mx_MessageActionBar_expandCollapseMessageButton: true,

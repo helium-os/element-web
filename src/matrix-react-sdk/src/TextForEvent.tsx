@@ -187,7 +187,8 @@ function textForMemberEvent(ev: MatrixEvent, allowJSX: boolean, showHiddenEvents
         case "leave":
             if (ev.getSender() === ev.getStateKey()) {
                 if (prevContent.membership === "invite") {
-                    return () => _t("%(targetName)s rejected the invitation", { targetName });
+                    return () =>
+                        _t("%(targetName)s rejected the invitation", { targetName: () => <label>{targetName}</label> });
                 } else {
                     return () =>
                         reason
