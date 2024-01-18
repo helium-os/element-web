@@ -46,7 +46,7 @@ export class SpaceFilterCondition extends EventEmitter implements IFilterConditi
         if (!romeInSpace) return false;
 
         const ev = room.currentState.getStateEvents(EventType.RoomCreate, "");
-        return !ev.getContent()?.has_parent;
+        return !ev?.getContent()?.has_parent;
     }
 
     private onStoreUpdate = async (forceUpdate = false): Promise<void> => {
