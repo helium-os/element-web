@@ -614,8 +614,8 @@ export const RoomKickButton = ({
                     ? _t("Disinvite from space")
                     : _t("Remove from space")
                 : member.membership === "invite"
-                ? _t("Disinvite from room")
-                : _t("Remove from room"),
+                  ? _t("Disinvite from room")
+                  : _t("Remove from room"),
             title:
                 member.membership === "invite"
                     ? _t("Disinvite from %(roomName)s", { roomName: room.name })
@@ -659,7 +659,7 @@ export const RoomKickButton = ({
 
         startUpdating();
 
-        bulkSpaceBehaviour(room, rooms, (room) => cli.kick(room.roomId, member.userId, reason || undefined))
+        bulkSpaceBehaviour(room, rooms, (room) => cli.batchLeave(room.roomId, member.userId, reason || undefined))
             .then(
                 () => {
                     // NO-OP; rely on the m.room.member event coming down else we could
@@ -684,8 +684,8 @@ export const RoomKickButton = ({
             ? _t("Disinvite from space")
             : _t("Remove from space")
         : member.membership === "invite"
-        ? _t("Disinvite from room")
-        : _t("Remove from room");
+          ? _t("Disinvite from room")
+          : _t("Remove from room");
 
     return (
         <AccessibleButton kind="link" className="mx_UserInfo_field mx_UserInfo_destructive" onClick={onKick}>
@@ -736,8 +736,8 @@ export const BanToggleButton = ({
                     ? _t("Unban from space")
                     : _t("Ban from space")
                 : isBanned
-                ? _t("Unban from room")
-                : _t("Ban from room"),
+                  ? _t("Unban from room")
+                  : _t("Ban from room"),
             title: isBanned
                 ? _t("Unban from %(roomName)s", { roomName: room.name })
                 : _t("Ban from %(roomName)s", { roomName: room.name }),
