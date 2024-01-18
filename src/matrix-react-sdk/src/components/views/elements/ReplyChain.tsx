@@ -35,12 +35,7 @@ import { getParentEventId, shouldDisplayReply } from "../../../utils/Reply";
 import RoomContext from "../../../contexts/RoomContext";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import { GetRelationsForEvent } from "../rooms/EventTile";
-
-/**
- * This number is based on the previous behavior - if we have message of height
- * over 60px then we want to show button that will allow to expand it.
- */
-const SHOW_EXPAND_QUOTE_PIXELS = 60;
+import { debounce } from "lodash";
 
 interface IProps {
     // the latest event in this chain of replies
@@ -53,6 +48,7 @@ interface IProps {
     // Whether to always show a timestamp
     alwaysShowTimestamps?: boolean;
     forExport?: boolean;
+    setShowQuote?: (show: boolean) => void;
     isQuoteExpanded?: boolean;
     setQuoteExpanded: (isExpanded: boolean) => void;
     getRelationsForEvent?: GetRelationsForEvent;
@@ -80,6 +76,8 @@ export default class ReplyChain extends React.Component<IProps, IState> {
     private room: Room;
     private blockquoteRef = React.createRef<HTMLQuoteElement>();
 
+    private debounceSetExpandableQuotes = debounce(() => this.setExpandableQuotes(), 100);
+
     public constructor(props: IProps, context: React.ContextType<typeof RoomContext>) {
         super(props, context);
 
@@ -99,28 +97,35 @@ export default class ReplyChain extends React.Component<IProps, IState> {
 
     public componentDidMount(): void {
         this.initialize();
-        this.trySetExpandableQuotes();
+        this.setExpandableQuotes();
+        window.addEventListener("resize", this.debounceSetExpandableQuotes, false);
     }
 
-    public componentDidUpdate(): void {
+    public componentDidUpdate(prevProps: IProps, prevState: IState): void {
         this.props.onHeightChanged();
-        this.trySetExpandableQuotes();
+        this.setExpandableQuotes();
     }
 
     public componentWillUnmount(): void {
+        window.removeEventListener("resize", this.debounceSetExpandableQuotes, false);
         this.unmounted = true;
     }
 
-    private trySetExpandableQuotes(): void {
-        if (this.props.isQuoteExpanded === undefined && this.blockquoteRef.current) {
-            const el: HTMLElement | null = this.blockquoteRef.current.querySelector(".mx_EventTile_body");
-            if (el) {
-                const code: HTMLElement | null = el.querySelector("code");
-                const isCodeEllipsisShown = code ? code.offsetHeight >= SHOW_EXPAND_QUOTE_PIXELS : false;
-                const isElipsisShown = el.offsetHeight >= SHOW_EXPAND_QUOTE_PIXELS || isCodeEllipsisShown;
-                if (isElipsisShown) {
-                    this.props.setQuoteExpanded(false);
-                }
+    // 判断是否展示引号（根据回复的内容是否超出高度来判断）
+    private setExpandableQuotes(): void {
+        if (!this.blockquoteRef.current) return;
+
+        const wrap: HTMLElement | null = this.blockquoteRef.current.querySelector(".mx_EventTile_content");
+        const el: HTMLElement | null = this.blockquoteRef.current.querySelector(".mx_EventTile_body");
+        if (wrap && el) {
+            const code: HTMLElement | null = el.querySelector("code");
+            const wrapHeight = wrap.offsetHeight + 2; // 允许有2px的高度误差
+            const isCodeEllipsisShown = code ? code.offsetHeight >= wrapHeight : false;
+            const isEllipsisShown = el.offsetHeight >= wrapHeight || isCodeEllipsisShown;
+            if (isEllipsisShown) {
+                this.props.setShowQuote?.(true);
+            } else if (!this.props.isQuoteExpanded) {
+                this.props.setShowQuote?.(false);
             }
         }
     }
