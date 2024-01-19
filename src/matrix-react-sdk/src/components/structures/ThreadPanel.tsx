@@ -217,7 +217,7 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
     /**
      * 订阅新创建的消息列事件，将threadRootEvent添加到threadsTimelines里
      *
-     * bugfix:为了解决其他成员新创建的消息列在当前用户的消息列列表里不展示，只有刷新后才展示的bug
+     * bugfix:为了解决其他成员新创建的消息列在当前用户的消息列列表里不展示，只有该消息列有第二条回复 || 刷新页面后才展示的bug
      *
      * 原因：
      * js-sdk里通过updateThreadRootEvents方法更新threadsTimelines
