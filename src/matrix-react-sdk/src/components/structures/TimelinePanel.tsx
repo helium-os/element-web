@@ -697,7 +697,12 @@ class TimelinePanel extends React.Component<IProps, IState> {
         // updates from pagination will happen when the paginate completes.
         if (toStartOfTimeline || !data || !data.liveEvent) return;
 
-        if (!this.messagePanel.current?.getScrollState()) return;
+        if (!this.messagePanel.current?.getScrollState()) {
+            if (!this.state.events.length) {
+                this.initTimeline(this.props);
+            }
+            return;
+        }
 
         if (!this.messagePanel.current.getScrollState().stuckAtBottom) {
             // we won't load this event now, because we don't want to push any

@@ -212,7 +212,12 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
 
     const timelineSet: Optional<EventTimelineSet> =
         filterOption === ThreadFilterType.My ? room?.threadsTimelineSets[1] : room?.threadsTimelineSets[0];
-    const hasThreads = Boolean(room?.threadsTimelineSets?.[0]?.getLiveTimeline()?.getEvents()?.length);
+
+    const [hasThreads, setHasThreads] = useState<boolean>(false);
+
+    const resetHasThreads = (room: Room) => {
+        setHasThreads(Boolean(room?.threadsTimelineSets?.[0]?.getLiveTimeline()?.getEvents()?.length));
+    };
 
     /**
      * 订阅新创建的消息列事件，将threadRootEvent添加到threadsTimelines里
@@ -237,8 +242,11 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
             if (thread.hasCurrentUserParticipated) {
                 room.updateThreadRootEvent(room.threadsTimelineSets?.[1], thread, toStartOfTimeline, false);
             }
+
+            resetHasThreads(room);
         };
 
+        resetHasThreads(room);
         room.on(ThreadEvent.New, onNewThread);
         return () => {
             room.off(ThreadEvent.New, onNewThread);
