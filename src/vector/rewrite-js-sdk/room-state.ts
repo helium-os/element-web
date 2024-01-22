@@ -1,5 +1,9 @@
-import { RoomState } from "matrix-js-sdk/src/models/room-state";
+import { IEventType, IPowerLevelsContent, RoomState } from "matrix-js-sdk/src/models/room-state";
 import { isPeopleRoom } from "./room";
+import { getDefaultEventPowerLevels, getDefaultStatePowerLevels } from "matrix-react-sdk/src/powerLevel";
+import { EventType } from "matrix-js-sdk/src/@types/event";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { MatrixClient } from "matrix-js-sdk/src/client";
 
 /**
  * 判断管理员是否已离开房间
@@ -20,4 +24,82 @@ RoomState.prototype.isAdminLeft = function (): boolean {
     return isPeopleRoom(this.roomId)
         ? adminMembers.some((item) => item.membership === "leave")
         : !adminMembers.some((item) => item.membership === "join");
+};
+
+RoomState.prototype.getPowerLevels = function (): IPowerLevelsContent {
+    const powerLevelsEvent = this.getStateEvents(EventType.RoomPowerLevels, "");
+    return powerLevelsEvent?.getContent() ?? {};
+};
+
+// 判断用户是否有某个事件类型的权限
+RoomState.prototype.hasEventTypePermission = function (
+    eventType: IEventType,
+    userId: string,
+    state: boolean,
+    cli?: MatrixClient,
+): boolean {
+    if (!cli) cli = MatrixClientPeg.get();
+    if (!userId) userId = cli.getUserId()!;
+
+    const me = this.getMember(userId);
+    if (!me) {
+        return false;
+    }
+
+    if (this.getMember(userId).membership !== "join") {
+        return false;
+    }
+
+    const room = cli.getRoom(this.roomId);
+    if (!room) {
+        return false;
+    }
+
+    const powerLevels = this.getPowerLevels();
+
+    let stateDefault = powerLevels.state_default!;
+    if (!Number.isSafeInteger(stateDefault)) {
+        stateDefault = 50;
+    }
+
+    const eventsDefault = powerLevels.events_default!;
+    if (!Number.isSafeInteger(stateDefault)) {
+        stateDefault = 0;
+    }
+
+    let usersDefault = powerLevels.users_default!;
+    if (!Number.isSafeInteger(usersDefault)) {
+        usersDefault = 0;
+    }
+
+    let userPowerLevel = me.powerLevel;
+    if (!Number.isSafeInteger(userPowerLevel)) {
+        userPowerLevel = usersDefault;
+    }
+
+    const isSpace = room.isSpaceRoom();
+
+    let requiredLevel;
+    if (state) {
+        requiredLevel = powerLevels[eventType];
+        // 如果不存在，取default state powerLevel值
+        if (requiredLevel === undefined) {
+            const joinRule = this.getJoinRule();
+            requiredLevel = getDefaultStatePowerLevels(isSpace, joinRule)[eventType];
+        }
+    } else {
+        const eventsLevels: Record<EventType | string, number> = powerLevels.events || {};
+
+        requiredLevel = eventsLevels[eventType];
+        // 如果不存在，取default event powerLevel值
+        if (requiredLevel === undefined) {
+            requiredLevel = getDefaultEventPowerLevels(isSpace)[eventType];
+        }
+    }
+
+    if (!Number.isSafeInteger(requiredLevel)) {
+        requiredLevel = state ? stateDefault : eventsDefault;
+    }
+
+    return userPowerLevel >= requiredLevel;
 };
