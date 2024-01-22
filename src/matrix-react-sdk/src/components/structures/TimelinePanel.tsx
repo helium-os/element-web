@@ -697,7 +697,19 @@ class TimelinePanel extends React.Component<IProps, IState> {
         // updates from pagination will happen when the paginate completes.
         if (toStartOfTimeline || !data || !data.liveEvent) return;
 
-        if (!this.messagePanel.current?.getScrollState()) return;
+        if (!this.messagePanel.current?.getScrollState()) {
+            /**
+             * 在消息列表为空时，如果订阅到RoomEvent.Timeline事件，并且当前events为空，则尝试更新timeline，来触发视图更新
+             *
+             * events为空时，只加载empty元素，不加载MessagePanel组件，所以会进入该判断
+             * 如果此时有了第一个消息列，底层数据已更新，但是因为没有重新调用getEvents方法重置events state，导致视图渲染时仍然渲染的是empty元素，而不是MessagePanel消息列列表
+             * 所以如果此时events state为空，则调用initTimeline方法尝试更新timeline，来触发视图更新
+             */
+            if (!this.state.events.length) {
+                this.initTimeline(this.props);
+            }
+            return;
+        }
 
         if (!this.messagePanel.current.getScrollState().stuckAtBottom) {
             // we won't load this event now, because we don't want to push any
