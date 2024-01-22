@@ -117,6 +117,8 @@ const getRoomFn: FetchRoomFn = (room: Room) => {
     return RoomNotificationStateStore.instance.getRoomState(room);
 };
 
+const showSuggestedRooms = false; // 是否展示建议的频道列表
+
 type SpaceStoreActions =
     | SettingUpdatedPayload
     | ViewRoomPayload
@@ -345,6 +347,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     }
 
     private async loadSuggestedRooms(space: Room): Promise<void> {
+        if (!showSuggestedRooms) return;
+
         if (this._activeSpace === space.roomId) {
             const suggestedRooms = await this.fetchSuggestedRooms(
                 space,

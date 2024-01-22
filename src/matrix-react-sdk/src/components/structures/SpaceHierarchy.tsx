@@ -223,7 +223,10 @@ export const HierarchyLevel: React.FC<IHierarchyLevelProps> = ({ space, query = 
         }));
 
         // 分组频道列表
-        const newHierarchyList = [suggestedTagHierarchy, ...joinedHierarchyList];
+        const newHierarchyList = [
+            ...(suggestedRooms.length > 0 ? [suggestedTagHierarchy] : []),
+            ...joinedHierarchyList,
+        ];
         const lcQuery = query.toLowerCase().trim();
         for (let i = newHierarchyList.length - 1; i >= 0; i--) {
             const item = newHierarchyList[i];
