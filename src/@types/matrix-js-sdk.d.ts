@@ -1,6 +1,11 @@
 import { RoomType } from "../vector/rewrite-js-sdk/room";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 import { Tag, TagID } from "matrix-react-sdk/src/stores/room-list/models";
+import { IPowerLevelsContent } from "matrix-js-sdk/src/models/room-state";
+import { MatrixClient } from "matrix-js-sdk/src/client";
+import { StateEvent } from "matrix-react-sdk/src/powerLevel";
+import { EventType } from "matrix-js-sdk/src/@types/event";
+import { AdditionalEventType } from "../vector/rewrite-js-sdk/event";
 
 declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableSendMsgEventContent {
@@ -21,8 +26,11 @@ declare module "matrix-js-sdk/src/client" {
 }
 
 declare module "matrix-js-sdk/src/models/room-state" {
+    type IEventType = StateEvent | EventType | AdditionalEventType | string;
     interface RoomState {
         isAdminLeft(): boolean;
+        getPowerLevels(): IPowerLevelsContent;
+        hasEventTypePermission(eventType: IEventType, userId: string, state: boolean, cli?: MatrixClient): boolean;
     }
 }
 
