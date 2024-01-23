@@ -39,7 +39,7 @@ import { IExtendedSanitizeOptions } from "./@types/sanitize-html";
 import SettingsStore from "./settings/SettingsStore";
 import { tryTransformPermalinkToLocalHref } from "./utils/permalinks/Permalinks";
 import { getEmojiFromUnicode } from "./emoji";
-import {getSourceHttpUrlFromMxc} from "./customisations/Media";
+import { getSourceHttpUrlFromMxc } from "./customisations/Media";
 import { stripHTMLReply, stripPlainReply } from "./utils/Reply";
 
 // Anything outside the basic multilingual plane will be a surrogate pair
@@ -148,7 +148,7 @@ export function isUrlPermitted(inputUrl: string): boolean {
 const transformTags: IExtendedSanitizeOptions["transformTags"] = {
     // custom to matrix
     // add blank targets to all hyperlinks except vector URLs
-    "a": function (tagName: string, attribs: sanitizeHtml.Attributes) {
+    a: function (tagName: string, attribs: sanitizeHtml.Attributes) {
         if (attribs.href) {
             attribs.target = "_blank"; // by default
 
@@ -167,7 +167,7 @@ const transformTags: IExtendedSanitizeOptions["transformTags"] = {
         attribs.rel = "noreferrer noopener"; // https://mathiasbynens.github.io/rel-noopener/
         return { tagName, attribs };
     },
-    "img": function (tagName: string, attribs: sanitizeHtml.Attributes) {
+    img: function (tagName: string, attribs: sanitizeHtml.Attributes) {
         let src = attribs.src;
         // Strip out imgs that aren't `mxc` here instead of using allowedSchemesByTag
         // because transformTags is used _before_ we filter by allowedSchemesByTag and
@@ -207,7 +207,7 @@ const transformTags: IExtendedSanitizeOptions["transformTags"] = {
         attribs.src = getSourceHttpUrlFromMxc(src, width, height);
         return { tagName, attribs };
     },
-    "code": function (tagName: string, attribs: sanitizeHtml.Attributes) {
+    code: function (tagName: string, attribs: sanitizeHtml.Attributes) {
         if (typeof attribs.class !== "undefined") {
             // Filter out all classes other than ones starting with language- for syntax highlighting.
             const classes = attribs.class.split(/\s/).filter(function (cl) {
@@ -325,7 +325,7 @@ const sanitizeHtmlParams: IExtendedSanitizeOptions = {
 const composerSanitizeHtmlParams: IExtendedSanitizeOptions = {
     ...sanitizeHtmlParams,
     transformTags: {
-        "code": transformTags["code"],
+        code: transformTags["code"],
         "*": transformTags["*"],
     },
 };
@@ -352,7 +352,10 @@ const topicSanitizeHtmlParams: IExtendedSanitizeOptions = {
 };
 
 abstract class BaseHighlighter<T extends React.ReactNode> {
-    public constructor(public highlightClass: string, public highlightLink?: string) {}
+    public constructor(
+        public highlightClass: string,
+        public highlightLink?: string,
+    ) {}
 
     /**
      * apply the highlights to a section of text
@@ -455,16 +458,21 @@ const emojiToJsxSpan = (emoji: string, key: number): JSX.Element => (
     </span>
 );
 
+export enum ReturnEmojiMsgType {
+    Html,
+    Jsx,
+    Text,
+}
+
 /**
  * Wraps emojis in <span> to style them separately from the rest of message. Consecutive emojis (and modifiers) are wrapped
  * in the same <span>.
  * @param {string} message the text to format
- * @param {boolean} isHtmlMessage whether the message contains HTML
+ * @param {boolean} returnType
  * @returns if isHtmlMessage is true, returns an array of strings, otherwise return an array of React Elements for emojis
  * and plain text for everything else
  */
-function formatEmojis(message: string | undefined, isHtmlMessage: boolean): (JSX.Element | string)[] {
-    const emojiToSpan = isHtmlMessage ? emojiToHtmlSpan : emojiToJsxSpan;
+function formatEmojis(message: string | undefined, returnType: ReturnEmojiMsgType): (JSX.Element | string)[] {
     const result: (JSX.Element | string)[] = [];
     let text = "";
     let key = 0;
@@ -476,7 +484,27 @@ function formatEmojis(message: string | undefined, isHtmlMessage: boolean): (JSX
                 result.push(text);
                 text = "";
             }
-            result.push(emojiToSpan(char, key));
+
+            let emoji;
+            switch (returnType) {
+                case ReturnEmojiMsgType.Html:
+                    {
+                        emoji = emojiToHtmlSpan(char);
+                    }
+                    break;
+                case ReturnEmojiMsgType.Jsx:
+                    {
+                        emoji = emojiToJsxSpan(char, key);
+                    }
+                    break;
+                case ReturnEmojiMsgType.Text:
+                default:
+                    {
+                        emoji = char;
+                    }
+                    break;
+            }
+            result.push(emoji);
             key++;
         } else {
             text += char;
@@ -571,7 +599,10 @@ export function bodyToHtml(content: IContent, highlights: Optional<string[]>, op
                 safeBody = phtml.html();
             }
             if (bodyHasEmoji) {
-                safeBody = formatEmojis(safeBody, true).join("");
+                safeBody = formatEmojis(
+                    safeBody,
+                    opts.returnString ? ReturnEmojiMsgType.Text : ReturnEmojiMsgType.Html,
+                ).join("");
             }
         } else if (highlighter) {
             safeBody = highlighter.applyHighlights(plainBody, safeHighlights!).join("");
@@ -607,14 +638,14 @@ export function bodyToHtml(content: IContent, highlights: Optional<string[]>, op
     }
 
     const className = classNames({
-        "mx_EventTile_body": true,
-        "mx_EventTile_bigEmoji": emojiBody,
+        mx_EventTile_body: true,
+        mx_EventTile_bigEmoji: emojiBody,
         "markdown-body": isHtmlMessage && !emojiBody,
     });
 
     let emojiBodyElements: JSX.Element[] | undefined;
     if (!safeBody && bodyHasEmoji) {
-        emojiBodyElements = formatEmojis(strippedBody, false) as JSX.Element[];
+        emojiBodyElements = formatEmojis(strippedBody, ReturnEmojiMsgType.Jsx) as JSX.Element[];
     }
 
     return safeBody ? (
@@ -660,7 +691,7 @@ export function topicToHtml(
         if (isFormattedTopic) {
             safeTopic = sanitizeHtml(htmlTopic!, allowExtendedHtml ? sanitizeHtmlParams : topicSanitizeHtmlParams);
             if (topicHasEmoji) {
-                safeTopic = formatEmojis(safeTopic, true).join("");
+                safeTopic = formatEmojis(safeTopic, ReturnEmojiMsgType.Html).join("");
             }
         }
     } catch {
@@ -669,7 +700,7 @@ export function topicToHtml(
 
     let emojiBodyElements: ReturnType<typeof formatEmojis> | undefined;
     if (!isFormattedTopic && topicHasEmoji) {
-        emojiBodyElements = formatEmojis(topic, false);
+        emojiBodyElements = formatEmojis(topic, ReturnEmojiMsgType.Jsx);
     }
 
     return isFormattedTopic ? (
@@ -682,6 +713,7 @@ export function topicToHtml(
 }
 
 /* Wrapper around linkify-react merging in our default linkify options */
+// eslint-disable-next-line react/prop-types
 export function Linkify({ as, options, children }: React.ComponentProps<typeof _Linkify>): ReactElement {
     return (
         <_Linkify as={as} options={merge({}, linkifyMatrixOptions, options)}>

@@ -41,7 +41,7 @@ import { hideToast as hideNotificationsToast } from "./toasts/DesktopNotificatio
 import { SettingLevel } from "./settings/SettingLevel";
 import { isPushNotifyDisabled } from "./settings/controllers/NotificationControllers";
 import UserActivity from "./UserActivity";
-import {getHttpUrlFromMxc} from "./customisations/Media";
+import { getHttpUrlFromMxc } from "./customisations/Media";
 import ErrorDialog from "./components/views/dialogs/ErrorDialog";
 import LegacyCallHandler from "./LegacyCallHandler";
 import VoipUserMapper from "./VoipUserMapper";
@@ -52,6 +52,8 @@ import ToastStore from "./stores/ToastStore";
 import { ElementCall } from "./models/Call";
 import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType } from "./voice-broadcast";
 import { getSenderName } from "./utils/event/getSenderName";
+import { getParentEventId } from "matrix-react-sdk/src/utils/Reply";
+import { bodyToHtml } from "matrix-react-sdk/src/HtmlUtils";
 
 /*
  * Dispatches:
@@ -114,6 +116,16 @@ class NotifierClass {
         return TextForEvent.textForEvent(ev);
     }
 
+    public transformMxEventToText(mxEvent: MatrixEvent) {
+        const content = mxEvent.getContent();
+        const stripReply = !mxEvent.replacingEvent() && !!getParentEventId(mxEvent);
+
+        return bodyToHtml(content, undefined, {
+            returnString: true,
+            stripReplyFallback: stripReply,
+        });
+    }
+
     // XXX: exported for tests
     public displayPopupNotification(ev: MatrixEvent, room: Room): void {
         const plaf = PlatformPeg.get();
@@ -138,7 +150,7 @@ class NotifierClass {
             // notificationMessageForEvent includes sender, but we already have the sender here
             const msgType = ev.getContent().msgtype;
             if (ev.getContent().body && (!msgType || !msgTypeHandlers.hasOwnProperty(msgType))) {
-                msg = ev.getContent().body;
+                msg = this.transformMxEventToText(ev);
             }
         } else if (ev.getType() === "m.room.member") {
             // context is all in the message here, we don't need
@@ -149,7 +161,7 @@ class NotifierClass {
             // notificationMessageForEvent includes sender, but we've just out sender in the title
             const msgType = ev.getContent().msgtype;
             if (ev.getContent().body && (!msgType || !msgTypeHandlers.hasOwnProperty(msgType))) {
-                msg = ev.getContent().body;
+                msg = this.transformMxEventToText(ev);
             }
         }
 
