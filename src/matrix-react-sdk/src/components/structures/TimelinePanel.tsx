@@ -1049,6 +1049,7 @@ class TimelinePanel extends React.Component<IProps, IState> {
         }
 
         let lastReadEvent: MatrixEvent | null = this.state.events[lastReadEventIndex ?? 0];
+        console.log("readMarker bugfix this.state.events", [...this.state.events]);
         console.log("readMarker bugfix lastReadEvent", lastReadEvent);
 
         shouldSendRR =
@@ -1822,6 +1823,7 @@ class TimelinePanel extends React.Component<IProps, IState> {
         let adjacentInvisibleEventCount = 0;
         // Use `liveEvents` here because we don't want the read marker or read
         // receipt to advance into pending events.
+        console.log("readMarker bugfix this.state.liveEvents", [...this.state.liveEvents]);
         for (let i = this.state.liveEvents.length - 1; i >= 0; --i) {
             const ev = this.state.liveEvents[i];
             console.log(
