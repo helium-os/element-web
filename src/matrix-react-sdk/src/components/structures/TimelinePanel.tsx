@@ -990,6 +990,9 @@ class TimelinePanel extends React.Component<IProps, IState> {
     }
 
     private sendReadReceipt = (): void => {
+        console.log(
+            "------------------------------------readMarker bugfix enter sendReadReceipt-------------------------------------",
+        );
         if (SettingsStore.getValue("lowBandwidth")) return;
 
         if (!this.messagePanel.current) return;
@@ -1002,9 +1005,12 @@ class TimelinePanel extends React.Component<IProps, IState> {
         if (!cli || cli.isGuest()) return;
 
         let shouldSendRR = true;
+        console.log("readMarker bugfix shouldSendRR1", shouldSendRR);
 
         const currentRREventId = this.getCurrentReadReceipt(true);
+        console.log("readMarker bugfix currentRREventId", currentRREventId);
         const currentRREventIndex = this.indexForEventId(currentRREventId);
+        console.log("readMarker bugfix currentRREventIndex", currentRREventIndex);
         // We want to avoid sending out read receipts when we are looking at
         // events in the past which are before the latest RR.
         //
@@ -1018,21 +1024,33 @@ class TimelinePanel extends React.Component<IProps, IState> {
         // RRs) - but that is a bit of a niche case. It will sort itself out when
         // the user eventually hits the live timeline.
         //
+
+        console.log(
+            "readMarker bugfix this.timelineWindow?.canPaginate(EventTimeline.FORWARDS)",
+            this.timelineWindow?.canPaginate(EventTimeline.FORWARDS),
+        );
         if (
             currentRREventId &&
             currentRREventIndex === null &&
             this.timelineWindow?.canPaginate(EventTimeline.FORWARDS)
         ) {
             shouldSendRR = false;
+            console.log("readMarker bugfix shouldSendRR2", shouldSendRR);
         }
 
         const lastReadEventIndex = this.getLastDisplayedEventIndex({
             ignoreOwn: true,
         });
+        console.log("readMarker bugfix lastReadEventIndex", lastReadEventIndex);
+
         if (lastReadEventIndex === null) {
             shouldSendRR = false;
+            console.log("readMarker bugfix shouldSendRR3", shouldSendRR);
         }
+
         let lastReadEvent: MatrixEvent | null = this.state.events[lastReadEventIndex ?? 0];
+        console.log("readMarker bugfix lastReadEvent", lastReadEvent);
+
         shouldSendRR =
             shouldSendRR &&
             // Only send a RR if the last read event is ahead in the timeline relative to
@@ -1040,6 +1058,25 @@ class TimelinePanel extends React.Component<IProps, IState> {
             lastReadEventIndex > currentRREventIndex &&
             // Only send a RR if the last RR set != the one we would send
             this.lastRRSentEventId !== lastReadEvent?.getId();
+
+        console.log(
+            "readMarker bugfix lastReadEventIndex",
+            lastReadEventIndex,
+            "currentRREventIndex",
+            currentRREventIndex,
+            "lastReadEventIndex > currentRREventIndex",
+            lastReadEventIndex > currentRREventIndex,
+        );
+        console.log(
+            "readMarker bugfix",
+            "this.lastRRSentEventId",
+            this.lastRRSentEventId,
+            "lastReadEvent?.getId()",
+            lastReadEvent?.getId(),
+            "this.lastRRSentEventId !== lastReadEvent?.getId()",
+            this.lastRRSentEventId !== lastReadEvent?.getId(),
+        );
+        console.log("*********************readMarker bugfix shouldSendRR final", shouldSendRR);
 
         // Only send a RM if the last RM sent != the one we would send
         const shouldSendRM = this.lastRMSentEventId != this.state.readMarkerEventId;
@@ -1056,13 +1093,6 @@ class TimelinePanel extends React.Component<IProps, IState> {
 
             const roomId = this.props.timelineSet.room.roomId;
             const sendRRs = SettingsStore.getValue("sendReadReceipts", roomId);
-
-            debuglog(
-                `Sending Read Markers for ${this.props.timelineSet.room.roomId}: `,
-                `rm=${this.state.readMarkerEventId} `,
-                `rr=${sendRRs ? lastReadEvent?.getId() : null} `,
-                `prr=${lastReadEvent?.getId()}`,
-            );
 
             if (this.props.timelineSet.thread && sendRRs && lastReadEvent) {
                 // There's no support for fully read markers on threads
@@ -1756,11 +1786,24 @@ class TimelinePanel extends React.Component<IProps, IState> {
         const messagePanelNode = ReactDOM.findDOMNode(messagePanel) as Element;
         if (!messagePanelNode) return null; // sometimes this happens for fresh rooms/post-sync
         const wrapperRect = messagePanelNode.getBoundingClientRect();
+        console.log("readMarker bugfix wrapperRect", wrapperRect);
         const myUserId = MatrixClientPeg.get().credentials.userId;
 
         const isNodeInView = (node?: HTMLElement): boolean => {
             if (node) {
                 const boundingRect = node.getBoundingClientRect();
+                console.log("readMarker bugfix boundingRect", boundingRect);
+                console.log(
+                    "readMarker bugfix",
+                    "allowPartial",
+                    allowPartial,
+                    "boundingRect.bottom",
+                    boundingRect.bottom,
+                    "wrapperRect.bottom",
+                    wrapperRect.bottom,
+                    "boundingRect.bottom <= wrapperRect.bottom",
+                    boundingRect.bottom <= wrapperRect.bottom,
+                );
                 if (
                     (allowPartial && boundingRect.top <= wrapperRect.bottom) ||
                     (!allowPartial && boundingRect.bottom <= wrapperRect.bottom)
@@ -1781,17 +1824,28 @@ class TimelinePanel extends React.Component<IProps, IState> {
         // receipt to advance into pending events.
         for (let i = this.state.liveEvents.length - 1; i >= 0; --i) {
             const ev = this.state.liveEvents[i];
+            console.log(
+                "~~~~~~~~~~~~~~~readMarker bugfix i",
+                i,
+                "ev",
+                ev,
+                "adjacentInvisibleEventCount",
+                adjacentInvisibleEventCount,
+            );
 
             const node = messagePanel.getNodeForEventId(ev.getId());
             const isInView = isNodeInView(node);
+            console.log("readMarker bugfix isInView", isInView);
 
             // when we've reached the first visible event, and the previous
             // events were all invisible (with the first one not being ignored),
             // return the index of the first invisible event.
             if (isInView && adjacentInvisibleEventCount !== 0) {
+                console.log("readMarker bugfix return1", i + adjacentInvisibleEventCount);
                 return i + adjacentInvisibleEventCount;
             }
             if (node && !isInView) {
+                console.log("readMarker bugfix adjacentInvisibleEventCount 重置为 0");
                 // has node but not in view, so reset adjacent invisible events
                 adjacentInvisibleEventCount = 0;
             }
@@ -1799,8 +1853,10 @@ class TimelinePanel extends React.Component<IProps, IState> {
             const shouldIgnore =
                 !!ev.status || // local echo
                 (ignoreOwn && ev.getSender() === myUserId); // own message
+            console.log("readMarker bugfix shouldIgnore", shouldIgnore);
             const isWithoutTile =
                 !haveRendererForEvent(ev, this.context?.showHiddenEvents) || shouldHideEvent(ev, this.context);
+            console.log("readMarker bugfix isWithoutTile", isWithoutTile);
 
             if (isWithoutTile || !node) {
                 // don't start counting if the event should be ignored,
@@ -1809,19 +1865,24 @@ class TimelinePanel extends React.Component<IProps, IState> {
                 // doesn't get messed up
                 if (!shouldIgnore || (shouldIgnore && adjacentInvisibleEventCount !== 0)) {
                     ++adjacentInvisibleEventCount;
+                    console.log("readMarker bugfix ++adjacentInvisibleEventCount", adjacentInvisibleEventCount);
                 }
+                console.log("readMarker bugfix continue1");
                 continue;
             }
 
             if (shouldIgnore) {
+                console.log("readMarker bugfix continue2");
                 continue;
             }
 
             if (isInView) {
+                console.log("readMarker bugfix getLastDisplayedEventIndex return ", i);
                 return i;
             }
         }
 
+        console.log("readMarker bugfix getLastDisplayedEventIndex return ", null);
         return null;
     }
 
