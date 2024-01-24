@@ -1018,7 +1018,6 @@ class TimelinePanel extends React.Component<IProps, IState> {
         // RRs) - but that is a bit of a niche case. It will sort itself out when
         // the user eventually hits the live timeline.
         //
-
         if (
             currentRREventId &&
             currentRREventIndex === null &&
@@ -1030,7 +1029,6 @@ class TimelinePanel extends React.Component<IProps, IState> {
         const lastReadEventIndex = this.getLastDisplayedEventIndex({
             ignoreOwn: true,
         });
-
         if (lastReadEventIndex === null) {
             shouldSendRR = false;
         }
@@ -1758,6 +1756,12 @@ class TimelinePanel extends React.Component<IProps, IState> {
         const isNodeInView = (node?: HTMLElement): boolean => {
             if (node) {
                 const boundingRect = node.getBoundingClientRect();
+                /**
+                 * rect做取整处理
+                 *
+                 * 一些分辨率下，获取到的值可能为小数，导致判断有问题，最后返回的index不正确
+                 * 导致sendReadReceipt方法里lastReadEventIndex > currentRREventIndex 为false，调用read_markers接口时没有传入最后阅读的eventId，下次刷新后未读小红点依然存在的bug
+                 */
                 if (
                     (allowPartial && Math.round(boundingRect.top) <= Math.round(wrapperRect.bottom)) ||
                     (!allowPartial && Math.round(boundingRect.bottom) <= Math.round(wrapperRect.bottom))
