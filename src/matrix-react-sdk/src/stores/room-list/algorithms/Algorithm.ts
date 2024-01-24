@@ -443,7 +443,8 @@ export class Algorithm extends EventEmitter {
      * for each tag. May be empty, but never null/undefined.
      */
     public getOrderedRooms(): ITagMap {
-        return this._cachedStickyRooms || this.cachedRooms;
+        // return this._cachedStickyRooms || this.cachedRooms;
+        return this.cachedRooms;
     }
 
     /**
@@ -713,12 +714,17 @@ export class Algorithm extends EventEmitter {
 
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.RoomOrderInTagChange);
                     this._cachedRooms[tag] = algorithm.orderedRooms;
+                    this.recalculateStickyRoom(tag); // update sticky room to make sure it moves if needed
+                    this.recalculateActiveCallRooms(tag);
 
                     cause = RoomUpdateCause.Timeline;
                     didTagChange = true;
                 }
             }
 
+            if (!didTagChange) {
+                return false;
+            }
             // Update the tag map so we don't regen it in a moment
             this.roomIdsToTags[room.roomId] = newTags;
 

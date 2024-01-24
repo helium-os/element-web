@@ -154,7 +154,7 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
                 this.algorithm.setStickyRoom(null);
             } else if (activeRoom !== this.algorithm.stickyRoom) {
                 /**
-                 * tips: 此处逻辑会导致新创建的room，在cachedOrderedRooms里被删除，所以先注释掉
+                 * tips: 此处逻辑会导致新创建的room，在cachedOrderedRooms里被删除，导致新创建的room拖拽排序出错，所以先注释掉
                  */
                 // this.algorithm.setStickyRoom(activeRoom);
             }
