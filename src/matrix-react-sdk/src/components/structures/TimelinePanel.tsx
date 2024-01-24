@@ -1829,8 +1829,8 @@ class TimelinePanel extends React.Component<IProps, IState> {
                     boundingRect.bottom <= wrapperRect.bottom,
                 );
                 if (
-                    (allowPartial && boundingRect.top <= wrapperRect.bottom) ||
-                    (!allowPartial && boundingRect.bottom <= wrapperRect.bottom)
+                    (allowPartial && Math.round(boundingRect.top) <= Math.round(wrapperRect.bottom)) ||
+                    (!allowPartial && Math.round(boundingRect.bottom) <= Math.round(wrapperRect.bottom))
                 ) {
                     return true;
                 }
