@@ -399,7 +399,7 @@ function kickUser(event: MessageEvent<any>, roomId: string, userId: string): voi
 
     const reason = event.data.reason;
     client
-        .kick(roomId, userId, reason)
+        .batchLeave(roomId, userId, reason)
         .then(() => {
             sendResponse(event, {
                 success: true,

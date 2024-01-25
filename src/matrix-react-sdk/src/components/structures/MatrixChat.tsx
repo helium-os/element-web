@@ -124,7 +124,7 @@ import { DoAfterSyncPreparedPayload } from "../../dispatcher/payloads/DoAfterSyn
 import { ViewStartChatOrReusePayload } from "../../dispatcher/payloads/ViewStartChatOrReusePayload";
 import { IConfigOptions } from "../../IConfigOptions";
 import { SnakedObject } from "../../utils/SnakedObject";
-import { deleteRoomBehaviour, leaveRoomBehaviour } from "../../utils/leave-behaviour";
+import { batchLeaveRoomBehaviour, deleteRoomBehaviour } from "../../utils/leave-behaviour";
 import { CallStore } from "../../stores/CallStore";
 import { IRoomStateEventsActionPayload } from "../../actions/MatrixActionCreators";
 import { ShowThreadPayload } from "../../dispatcher/payloads/ShowThreadPayload";
@@ -1252,9 +1252,9 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 </>
             ),
             button: actionType,
-            onFinished: (shouldLeave) => {
+            onFinished: async (shouldLeave) => {
                 if (shouldLeave) {
-                    leaveRoomBehaviour(roomId);
+                    await batchLeaveRoomBehaviour(roomId);
 
                     dis.dispatch<AfterLeaveRoomPayload>({
                         action: Action.AfterLeaveRoom,

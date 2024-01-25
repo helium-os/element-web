@@ -1619,7 +1619,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         this.setState({
             rejecting: true,
         });
-        this.context.client.leave(this.state.roomId).then(
+        this.context.client.batchLeave(this.state.roomId).then(
             () => {
                 disActionAfterLeaveRoom(this.state.roomId);
                 this.setState({
@@ -1655,7 +1655,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
             ignoredUsers.push(inviteEvent.getSender()); // de-duped internally in the js-sdk
             await this.context.client.setIgnoredUsers(ignoredUsers);
 
-            await this.context.client.leave(this.state.roomId);
+            await this.context.client.batchLeave(this.state.roomId);
             disActionAfterLeaveRoom(this.state.roomId);
             this.setState({
                 rejecting: false,

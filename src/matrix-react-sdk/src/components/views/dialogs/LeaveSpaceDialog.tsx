@@ -25,22 +25,22 @@ import { filterBoolean } from "../../../utils/arrays";
 
 interface IProps {
     space: Room;
-    onFinished(leave: boolean, rooms?: Room[]): void;
+    onFinished(leave: boolean): void;
 }
 
 const LeaveSpaceDialog: React.FC<IProps> = ({ space, onFinished }) => {
-    const spaceChildren = useMemo(() => {
-        const roomSet = new Set(SpaceStore.instance.getSpaceFilteredRoomIds(space.roomId));
-        SpaceStore.instance.traverseSpace(
-            space.roomId,
-            (spaceId) => {
-                if (space.roomId === spaceId) return; // skip the root node
-                roomSet.add(spaceId);
-            },
-            false,
-        );
-        return filterBoolean(Array.from(roomSet).map((roomId) => space.client.getRoom(roomId)));
-    }, [space]);
+    // const spaceChildren = useMemo(() => {
+    //     const roomSet = new Set(SpaceStore.instance.getSpaceFilteredRoomIds(space.roomId));
+    //     SpaceStore.instance.traverseSpace(
+    //         space.roomId,
+    //         (spaceId) => {
+    //             if (space.roomId === spaceId) return; // skip the root node
+    //             roomSet.add(spaceId);
+    //         },
+    //         false,
+    //     );
+    //     return filterBoolean(Array.from(roomSet).map((roomId) => space.client.getRoom(roomId)));
+    // }, [space]);
 
     const footer = (
         <DialogButtons
@@ -48,7 +48,7 @@ const LeaveSpaceDialog: React.FC<IProps> = ({ space, onFinished }) => {
             primaryButtonProps={{
                 danger: true,
             }}
-            onPrimaryButtonClick={() => onFinished(true, spaceChildren)}
+            onPrimaryButtonClick={() => onFinished(true)}
             hasCancel={true}
             onCancel={() => onFinished(false)}
         />

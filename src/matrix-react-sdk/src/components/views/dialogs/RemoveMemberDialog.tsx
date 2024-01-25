@@ -21,7 +21,7 @@ const RemoveMemberDialog: React.FC<IProps> = ({ roomId, userId, onFinished }) =>
 
         setBusy(true);
         try {
-            await client.kick(roomId, userId);
+            await client.batchLeave(roomId, userId);
         } catch (error) {
             Modal.createDialog(ErrorDialog, {
                 title: _t("Failed to remove user"),

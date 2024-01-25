@@ -67,7 +67,7 @@ import { PosthogAnalytics } from "./PosthogAnalytics";
 import { ViewRoomPayload } from "./dispatcher/payloads/ViewRoomPayload";
 import VoipUserMapper from "./VoipUserMapper";
 import { htmlSerializeFromMdIfNeeded } from "./editor/serialize";
-import { leaveRoomBehaviour } from "./utils/leave-behaviour";
+import { batchLeaveRoomBehaviour } from "./utils/leave-behaviour";
 import { isLocalRoom } from "./utils/localRoom/isLocalRoom";
 import { SdkContextClass } from "./contexts/SDKContext";
 
@@ -505,9 +505,7 @@ export const Commands = [
             }
 
             const content = room.currentState.getStateEvents("m.room.topic", "")?.getContent<MRoomTopicEventContent>();
-            const topic = !!content
-                ? ContentHelpers.parseTopicContent(content)
-                : { text: _t("This room has no topic.") };
+            const topic = content ? ContentHelpers.parseTopicContent(content) : { text: _t("This room has no topic.") };
 
             const body = topicToHtml(topic.text, topic.html, undefined, true);
 
@@ -766,7 +764,7 @@ export const Commands = [
             }
 
             if (!targetRoomId) targetRoomId = roomId;
-            return success(leaveRoomBehaviour(targetRoomId));
+            return success(batchLeaveRoomBehaviour(targetRoomId));
         },
         category: CommandCategories.actions,
         renderingTypes: [TimelineRenderingType.Room],
@@ -781,7 +779,7 @@ export const Commands = [
             if (args) {
                 const matches = args.match(/^(\S+?)( +(.*))?$/);
                 if (matches) {
-                    return success(MatrixClientPeg.get().kick(roomId, matches[1], matches[3]));
+                    return success(MatrixClientPeg.get().batchLeave(roomId, matches[1], matches[3]));
                 }
             }
             return reject(this.getUsage());
