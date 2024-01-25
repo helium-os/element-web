@@ -1057,7 +1057,11 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             this.emit(room.roomId);
         }
 
-        if (membership === "join" && room.roomId === SdkContextClass.instance.roomViewStore.getRoomId()) {
+        if (
+            membership === "join" &&
+            (room.roomId === SdkContextClass.instance.roomViewStore.getRoomId() || // 当前查看的room是订阅到ClientEvent.Room事件的spaceRoom
+                this.isRoomInSpace(room.roomId, SdkContextClass.instance.roomViewStore.getRoomId())) // 当前查看的room是订阅到ClientEvent.Room事件的spaceRoom内的频道
+        ) {
             // if the user was looking at the space and then joined: select that space
             this.setActiveSpace(room.roomId, false);
         } else if (membership === "leave" && room.roomId === this.activeSpace) {

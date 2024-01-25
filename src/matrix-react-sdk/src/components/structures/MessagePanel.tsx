@@ -60,7 +60,6 @@ import { VoiceBroadcastInfoEventType } from "../../voice-broadcast";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import { EffectiveMembership, getEffectiveMembership } from "matrix-react-sdk/src/utils/membership";
 import { UPDATE_SELECTED_SPACE } from "matrix-react-sdk/src/stores/spaces";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -852,10 +851,9 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
         const callEventGrouper = this.props.callEventGroupers.get(mxEv.getContent().call_id);
         // use txnId as key if available so that we don't remount during sending
-        const isLeaveEvent = getEffectiveMembership(mxEv.getContent().membership) === EffectiveMembership.Leave;
         if (
             this.state.displayEventType.includes(mxEv.getType() as EventType) &&
-            (this.state.isHomeSpace || mxEv.getType() !== EventType.RoomMember || isLeaveEvent)
+            (this.state.isHomeSpace || mxEv.getType() !== EventType.RoomMember) // 社区内频道不展示成员关于invite、join、leave的提示性消息；个人主页展示
         ) {
             ret.push(
                 <EventTile

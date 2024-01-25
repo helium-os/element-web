@@ -33,7 +33,6 @@ import {
 import { EffectiveMembership, getEffectiveMembership, splitRoomsByMembership } from "../../../utils/membership";
 import { OrderingAlgorithm } from "./list-ordering/OrderingAlgorithm";
 import { getListAlgorithmInstance } from "./list-ordering";
-import { VisibilityProvider } from "../filters/VisibilityProvider";
 import { CallStore, CallStoreEvent } from "../../CallStore";
 
 /**
@@ -49,12 +48,6 @@ export const LIST_UPDATED_EVENT = "list_updated_event";
 // we'll make bad assumptions.
 const CAUSES_REQUIRING_ROOM = [RoomUpdateCause.Timeline, RoomUpdateCause.ReadReceipt];
 
-interface IStickyRoom {
-    room: Room;
-    position: number;
-    tag: TagID;
-}
-
 /**
  * Represents a list ordering algorithm. This class will take care of tag
  * management (which rooms go in which tags) and ask the implementation to
@@ -62,9 +55,6 @@ interface IStickyRoom {
  */
 export class Algorithm extends EventEmitter {
     private _cachedRooms: ITagMap = {};
-    private _cachedStickyRooms: ITagMap | null = {}; // a clone of the _cachedRooms, with the sticky room
-    private _stickyRoom: IStickyRoom | null = null;
-    private _lastStickyRoom: IStickyRoom | null = null; // only not-null when changing the sticky room
     private sortAlgorithms: ITagSortingMap | null = null;
     private listAlgorithms: IListOrderingMap | null = null;
     private algorithms: IOrderingAlgorithmMap | null = null;
@@ -86,10 +76,6 @@ export class Algorithm extends EventEmitter {
         CallStore.instance.off(CallStoreEvent.ActiveCalls, this.onActiveCalls);
     }
 
-    public get stickyRoom(): Room | null {
-        return this._stickyRoom ? this._stickyRoom.room : null;
-    }
-
     public get knownRooms(): Room[] {
         return this.rooms;
     }
@@ -100,28 +86,11 @@ export class Algorithm extends EventEmitter {
 
     protected set cachedRooms(val: ITagMap) {
         this._cachedRooms = val;
-        this.recalculateStickyRoom();
         this.recalculateActiveCallRooms();
     }
 
     protected get cachedRooms(): ITagMap {
-        // 🐉 Here be dragons.
-        // Note: this is used by the underlying algorithm classes, so don't make it return
-        // the sticky room cache. If it ends up returning the sticky room cache, we end up
-        // corrupting our caches and confusing them.
         return this._cachedRooms;
-    }
-
-    /**
-     * Awaitable version of the sticky room setter.
-     * @param val The new room to sticky.
-     */
-    public setStickyRoom(val: Room | null): void {
-        try {
-            this.updateStickyRoom(val);
-        } catch (e) {
-            logger.warn("Failed to update sticky room", e);
-        }
     }
 
     public getTagSorting(tagId: TagID): SortAlgorithm | null {
@@ -140,7 +109,6 @@ export class Algorithm extends EventEmitter {
         algorithm.setSortAlgorithm(sort);
 
         this._cachedRooms[tagId] = algorithm.orderedRooms;
-        this.recalculateStickyRoom(tagId); // update sticky room to make sure it appears if needed
         this.recalculateActiveCallRooms(tagId);
     }
 
@@ -163,149 +131,10 @@ export class Algorithm extends EventEmitter {
         algorithm.setRooms(this._cachedRooms[tagId]);
 
         this._cachedRooms[tagId] = algorithm.orderedRooms;
-        this.recalculateStickyRoom(tagId); // update sticky room to make sure it appears if needed
         this.recalculateActiveCallRooms(tagId);
     }
 
-    private updateStickyRoom(val: Room | null): void {
-        this.doUpdateStickyRoom(val);
-        this._lastStickyRoom = null; // clear to indicate we're done changing
-    }
-
-    private doUpdateStickyRoom(val: Room | null): void {
-        if (val?.isSpaceRoom() && val.getMyMembership() !== "invite") {
-            // no-op sticky rooms for spaces - they're effectively virtual rooms
-            val = null;
-        }
-
-        if (val && !VisibilityProvider.instance.isRoomVisible(val)) {
-            val = null; // the room isn't visible - lie to the rest of this function
-        }
-
-        // Set the last sticky room to indicate that we're in a change. The code throughout the
-        // class can safely handle a null room, so this should be safe to do as a backup.
-        this._lastStickyRoom = this._stickyRoom || <IStickyRoom>{};
-
-        // It's possible to have no selected room. In that case, clear the sticky room
-        if (!val) {
-            if (this._stickyRoom) {
-                const stickyRoom = this._stickyRoom.room;
-                this._stickyRoom = null; // clear before we go to update the algorithm
-
-                // Lie to the algorithm and re-add the room to the algorithm
-                this.handleRoomUpdate(stickyRoom, RoomUpdateCause.NewRoom);
-                return;
-            }
-            return;
-        }
-
-        // When we do have a room though, we expect to be able to find it
-        let tag = this.roomIdsToTags[val.roomId]?.[0];
-        if (!tag) throw new Error(`${val.roomId} does not belong to a tag and cannot be sticky`);
-
-        // We specifically do NOT use the ordered rooms set as it contains the sticky room, which
-        // means we'll be off by 1 when the user is switching rooms. This leads to visual jumping
-        // when the user is moving south in the list (not north, because of math).
-        const tagList = this.getOrderedRoomsWithoutSticky()[tag] || []; // can be null if filtering
-        let position = tagList.indexOf(val);
-
-        // We do want to see if a tag change happened though - if this did happen then we'll want
-        // to force the position to zero (top) to ensure we can properly handle it.
-        const wasSticky = this._lastStickyRoom.room ? this._lastStickyRoom.room.roomId === val.roomId : false;
-        if (this._lastStickyRoom.tag && tag !== this._lastStickyRoom.tag && wasSticky && position < 0) {
-            logger.warn(`Sticky room ${val.roomId} changed tags during sticky room handling`);
-            position = 0;
-        }
-
-        // Sanity check the position to make sure the room is qualified for being sticky
-        if (position < 0) throw new Error(`${val.roomId} does not appear to be known and cannot be sticky`);
-
-        // 🐉 Here be dragons.
-        // Before we can go through with lying to the underlying algorithm about a room
-        // we need to ensure that when we do we're ready for the inevitable sticky room
-        // update we'll receive. To prepare for that, we first remove the sticky room and
-        // recalculate the state ourselves so that when the underlying algorithm calls for
-        // the same thing it no-ops. After we're done calling the algorithm, we'll issue
-        // a new update for ourselves.
-        const lastStickyRoom = this._stickyRoom;
-        this._stickyRoom = null; // clear before we update the algorithm
-        this.recalculateStickyRoom();
-
-        // When we do have the room, re-add the old room (if needed) to the algorithm
-        // and remove the sticky room from the algorithm. This is so the underlying
-        // algorithm doesn't try and confuse itself with the sticky room concept.
-        // We don't add the new room if the sticky room isn't changing because that's
-        // an easy way to cause duplication. We have to do room ID checks instead of
-        // referential checks as the references can differ through the lifecycle.
-        if (lastStickyRoom && lastStickyRoom.room && lastStickyRoom.room.roomId !== val.roomId) {
-            // Lie to the algorithm and re-add the room to the algorithm
-            this.handleRoomUpdate(lastStickyRoom.room, RoomUpdateCause.NewRoom);
-        }
-        // Lie to the algorithm and remove the room from it's field of view
-        this.handleRoomUpdate(val, RoomUpdateCause.RoomRemoved);
-
-        // handleRoomUpdate may have modified this._stickyRoom. Convince the
-        // compiler of this fact.
-        this._stickyRoom = this.stickyRoomMightBeModified();
-
-        // Check for tag & position changes while we're here. We also check the room to ensure
-        // it is still the same room.
-        if (this._stickyRoom) {
-            if (this._stickyRoom.room !== val) {
-                // Check the room IDs just in case
-                if (this._stickyRoom.room.roomId === val.roomId) {
-                    logger.warn("Sticky room changed references");
-                } else {
-                    throw new Error("Sticky room changed while the sticky room was changing");
-                }
-            }
-
-            logger.warn(
-                `Sticky room changed tag & position from ${tag} / ${position} ` +
-                    `to ${this._stickyRoom.tag} / ${this._stickyRoom.position}`,
-            );
-
-            tag = this._stickyRoom.tag;
-            position = this._stickyRoom.position;
-        }
-
-        // Now that we're done lying to the algorithm, we need to update our position
-        // marker only if the user is moving further down the same list. If they're switching
-        // lists, or moving upwards, the position marker will splice in just fine but if
-        // they went downwards in the same list we'll be off by 1 due to the shifting rooms.
-        if (lastStickyRoom && lastStickyRoom.tag === tag && lastStickyRoom.position <= position) {
-            position++;
-        }
-
-        this._stickyRoom = {
-            room: val,
-            position: position,
-            tag: tag,
-        };
-
-        // We update the filtered rooms just in case, as otherwise users will end up visiting
-        // a room while filtering and it'll disappear. We don't update the filter earlier in
-        // this function simply because we don't have to.
-        this.recalculateStickyRoom();
-        this.recalculateActiveCallRooms(tag);
-        if (lastStickyRoom && lastStickyRoom.tag !== tag) this.recalculateActiveCallRooms(lastStickyRoom.tag);
-
-        // Finally, trigger an update
-        if (this.updatesInhibited) return;
-        this.emit(LIST_UPDATED_EVENT);
-    }
-
-    /**
-     * Hack to prevent Typescript claiming this._stickyRoom is always null.
-     */
-    private stickyRoomMightBeModified(): IStickyRoom | null {
-        return this._stickyRoom;
-    }
-
     private onActiveCalls = (): void => {
-        // In case we're unsticking a room, sort it back into natural order
-        this.recalculateStickyRoom();
-
         // Update the stickiness of rooms with calls
         this.recalculateActiveCallRooms();
 
@@ -314,63 +143,6 @@ export class Algorithm extends EventEmitter {
         // so notify the store that it needs to force-update
         this.emit(LIST_UPDATED_EVENT, true);
     };
-
-    private initCachedStickyRooms(): void {
-        this._cachedStickyRooms = {};
-        for (const tagId of Object.keys(this.cachedRooms)) {
-            this._cachedStickyRooms[tagId] = [...this.cachedRooms[tagId]]; // shallow clone
-        }
-    }
-
-    /**
-     * Recalculate the sticky room position. If this is being called in relation to
-     * a specific tag being updated, it should be given to this function to optimize
-     * the call.
-     * @param updatedTag The tag that was updated, if possible.
-     */
-    protected recalculateStickyRoom(updatedTag: TagID | null = null): void {
-        // 🐉 Here be dragons.
-        // This function does far too much for what it should, and is called by many places.
-        // Not only is this responsible for ensuring the sticky room is held in place at all
-        // times, it is also responsible for ensuring our clone of the cachedRooms is up to
-        // date. If either of these desyncs, we see weird behaviour like duplicated rooms,
-        // outdated lists, and other nonsensical issues that aren't necessarily obvious.
-
-        if (!this._stickyRoom) {
-            // If there's no sticky room, just do nothing useful.
-            if (this._cachedStickyRooms) {
-                // Clear the cache if we won't be needing it
-                this._cachedStickyRooms = null;
-                if (this.updatesInhibited) return;
-                this.emit(LIST_UPDATED_EVENT);
-            }
-            return;
-        }
-
-        if (!this._cachedStickyRooms || !updatedTag) {
-            this.initCachedStickyRooms();
-        }
-
-        if (updatedTag) {
-            // Update the tag indicated by the caller, if possible. This is mostly to ensure
-            // our cache is up to date.
-            if (this._cachedStickyRooms) {
-                this._cachedStickyRooms[updatedTag] = [...this.cachedRooms[updatedTag]]; // shallow clone
-            }
-        }
-
-        // Now try to insert the sticky room, if we need to.
-        // We need to if there's no updated tag (we regenned the whole cache) or if the tag
-        // we might have updated from the cache is also our sticky room.
-        const sticky = this._stickyRoom;
-        if (sticky && (!updatedTag || updatedTag === sticky.tag) && this._cachedStickyRooms) {
-            this._cachedStickyRooms[sticky.tag].splice(sticky.position, 0, sticky.room);
-        }
-
-        // Finally, trigger an update
-        if (this.updatesInhibited) return;
-        this.emit(LIST_UPDATED_EVENT);
-    }
 
     /**
      * Recalculate the position of any rooms with calls. If this is being called in
@@ -397,9 +169,7 @@ export class Algorithm extends EventEmitter {
         }
 
         if (CallStore.instance.activeCalls.size) {
-            // We operate on the sticky rooms map
-            if (!this._cachedStickyRooms) this.initCachedStickyRooms();
-            const rooms = this._cachedStickyRooms![updatedTag];
+            const rooms = this._cachedRooms![updatedTag];
 
             const activeRoomIds = new Set([...CallStore.instance.activeCalls].map((call) => call.roomId));
             const activeRooms: Room[] = [];
@@ -409,8 +179,7 @@ export class Algorithm extends EventEmitter {
                 (activeRoomIds.has(room.roomId) ? activeRooms : inactiveRooms).push(room);
             }
 
-            // Stick rooms with active calls to the top
-            this._cachedStickyRooms![updatedTag] = [...activeRooms, ...inactiveRooms];
+            this._cachedRooms![updatedTag] = [...activeRooms, ...inactiveRooms];
         }
     }
 
@@ -443,17 +212,6 @@ export class Algorithm extends EventEmitter {
      * for each tag. May be empty, but never null/undefined.
      */
     public getOrderedRooms(): ITagMap {
-        return this._cachedStickyRooms || this.cachedRooms;
-    }
-
-    /**
-     * This returns the same as getOrderedRooms(), but without the sticky room
-     * map as it causes issues for sticky room handling (see sticky room handling
-     * for more information).
-     * @returns {ITagMap} The cached list of rooms, ordered,
-     * for each tag. May be empty, but never null/undefined.
-     */
-    private getOrderedRoomsWithoutSticky(): ITagMap {
         return this.cachedRooms;
     }
 
@@ -472,11 +230,6 @@ export class Algorithm extends EventEmitter {
             // an intentional invocation.
             logger.warn("Resetting known rooms, initiating regeneration");
         }
-
-        // Before we go any further we need to clear (but remember) the sticky room to
-        // avoid accidentally duplicating it in the list.
-        const oldStickyRoom = this._stickyRoom;
-        if (oldStickyRoom) this.updateStickyRoom(null);
 
         this.rooms = rooms;
 
@@ -530,22 +283,8 @@ export class Algorithm extends EventEmitter {
         this.generateFreshTags(newTags);
 
         this.cachedRooms = newTags; // this recalculates the filtered rooms for us
-        this.updateTagsFromCache();
 
-        // Now that we've finished generation, we need to update the sticky room to what
-        // it was. It's entirely possible that it changed lists though, so if it did then
-        // we also have to update the position of it.
-        if (oldStickyRoom && oldStickyRoom.room) {
-            this.updateStickyRoom(oldStickyRoom.room);
-            if (this._stickyRoom && this._stickyRoom.room) {
-                // just in case the update doesn't go according to plan
-                if (this._stickyRoom.tag !== oldStickyRoom.tag) {
-                    // We put the sticky room at the top of the list to treat it as an obvious tag change.
-                    this._stickyRoom.position = 0;
-                    this.recalculateStickyRoom(this._stickyRoom.tag);
-                }
-            }
-        }
+        this.updateTagsFromCache();
     }
 
     public getTagsForRoom(room: Room): TagID[] {
@@ -629,17 +368,13 @@ export class Algorithm extends EventEmitter {
     public handleRoomUpdate(room: Room, cause: RoomUpdateCause): boolean {
         if (!this.algorithms) throw new Error("Not ready: no algorithms to determine tags from");
 
-        // Note: check the isSticky against the room ID just in case the reference is wrong
-        const isSticky = this._stickyRoom?.room?.roomId === room.roomId;
         if (cause === RoomUpdateCause.NewRoom) {
-            const isForLastSticky = this._lastStickyRoom?.room === room;
             const roomTags = this.roomIdsToTags[room.roomId];
             const hasTags = roomTags && roomTags.length > 0;
 
-            // Don't change the cause if the last sticky room is being re-added. If we fail to
             // pass the cause through as NewRoom, we'll fail to lie to the algorithm and thus
             // lose the room.
-            if (hasTags && !isForLastSticky) {
+            if (hasTags) {
                 logger.warn(`${room.roomId} is reportedly new but is already known - assuming TagChange instead`);
                 cause = RoomUpdateCause.PossibleTagChange;
             }
@@ -657,21 +392,14 @@ export class Algorithm extends EventEmitter {
 
             // If we have tags for a room and don't have the room referenced, something went horribly
             // wrong - the reference should have been updated above.
-            if (hasTags && !knownRoomRef && !isSticky) {
+            if (hasTags && !knownRoomRef) {
                 throw new Error(`${room.roomId} is missing from room array but is known - trying to find duplicate`);
-            }
-
-            // Like above, update the reference to the sticky room if we need to
-            if (hasTags && isSticky && this._stickyRoom) {
-                // Go directly in and set the sticky room's new reference, being careful not
-                // to trigger a sticky room update ourselves.
-                this._stickyRoom.room = room;
             }
 
             // If after all that we're still a NewRoom update, add the room if applicable.
             // We don't do this for the sticky room (because it causes duplication issues)
             // or if we know about the reference (as it should be replaced).
-            if (cause === RoomUpdateCause.NewRoom && !isSticky && !knownRoomRef) {
+            if (cause === RoomUpdateCause.NewRoom && !knownRoomRef) {
                 this.rooms.push(room);
             }
         }
@@ -689,7 +417,6 @@ export class Algorithm extends EventEmitter {
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.RoomRemoved);
 
                     this._cachedRooms[rmTag] = algorithm.orderedRooms;
-                    this.recalculateStickyRoom(rmTag); // update sticky room to make sure it moves if needed
                     this.recalculateActiveCallRooms(rmTag);
                 }
                 // room新增tag
@@ -713,39 +440,18 @@ export class Algorithm extends EventEmitter {
 
                     algorithm.handleRoomUpdate(room, RoomUpdateCause.RoomOrderInTagChange);
                     this._cachedRooms[tag] = algorithm.orderedRooms;
+                    this.recalculateActiveCallRooms(tag);
 
                     cause = RoomUpdateCause.Timeline;
                     didTagChange = true;
                 }
             }
 
-            // Update the tag map so we don't regen it in a moment
-            this.roomIdsToTags[room.roomId] = newTags;
-
-            if (didTagChange && isSticky) {
-                // Manually update the tag for the sticky room without triggering a sticky room
-                // update. The update will be handled implicitly by the sticky room handling and
-                // requires no changes on our part, if we're in the middle of a sticky room change.
-                if (this._lastStickyRoom) {
-                    this._stickyRoom = {
-                        room,
-                        tag: this.roomIdsToTags[room.roomId][0],
-                        position: 0, // right at the top as it changed tags
-                    };
-                } else {
-                    // We have to clear the lock as the sticky room change will trigger updates.
-                    this.setStickyRoom(room);
-                }
-            }
-        }
-
-        // If the update is for a room change which might be the sticky room, prevent it. We
-        // need to make sure that the causes (NewRoom and RoomRemoved) are still triggered though
-        // as the sticky room relies on this.
-        if (cause !== RoomUpdateCause.NewRoom && cause !== RoomUpdateCause.RoomRemoved) {
-            if (this.stickyRoom === room) {
+            if (!didTagChange) {
                 return false;
             }
+            // Update the tag map so we don't regen it in a moment
+            this.roomIdsToTags[room.roomId] = newTags;
         }
 
         if (!this.roomIdsToTags[room.roomId]) {
@@ -778,7 +484,6 @@ export class Algorithm extends EventEmitter {
             this._cachedRooms[tag] = algorithm.orderedRooms;
 
             // Flag that we've done something
-            this.recalculateStickyRoom(tag); // update sticky room to make sure it appears if needed
             this.recalculateActiveCallRooms(tag);
             changed = true;
         }

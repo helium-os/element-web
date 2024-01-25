@@ -144,22 +144,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
     private handleRVSUpdate({ trigger = true }): void {
         if (!this.matrixClient) return; // We assume there won't be RVS updates without a client
 
-        const activeRoomId = SdkContextClass.instance.roomViewStore.getRoomId();
-        if (!activeRoomId && this.algorithm.stickyRoom) {
-            this.algorithm.setStickyRoom(null);
-        } else if (activeRoomId) {
-            const activeRoom = this.matrixClient.getRoom(activeRoomId);
-            if (!activeRoom) {
-                logger.warn(`${activeRoomId} is current in RVS but missing from client - clearing sticky room`);
-                this.algorithm.setStickyRoom(null);
-            } else if (activeRoom !== this.algorithm.stickyRoom) {
-                /**
-                 * tips: 此处逻辑会导致新创建的room，在cachedOrderedRooms里被删除，所以先注释掉
-                 */
-                // this.algorithm.setStickyRoom(activeRoom);
-            }
-        }
-
         if (trigger) this.updateFn.trigger();
     }
 
@@ -314,11 +298,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
             if (predecessor) {
                 const prevRoom = this.matrixClient.getRoom(predecessor.roomId);
                 if (prevRoom) {
-                    const isSticky = this.algorithm.stickyRoom === prevRoom;
-                    if (isSticky) {
-                        this.algorithm.setStickyRoom(null);
-                    }
-
                     // Note: we hit the algorithm instead of our handleRoomUpdate() function to
                     // avoid redundant updates.
                     this.algorithm.handleRoomUpdate(prevRoom, RoomUpdateCause.RoomRemoved);
@@ -376,7 +355,6 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
         ) {
             return; // don't do anything on new/moved rooms which ought not to be shown
         }
-
         const shouldUpdate = this.algorithm.handleRoomUpdate(room, cause);
         if (shouldUpdate) {
             this.updateFn.mark();
@@ -392,20 +370,8 @@ export class RoomListStoreClass extends AsyncStoreWithClient<IState> implements 
 
         // Figure out which rooms are about to be valid, and the state of affairs
         const rooms = this.getPlausibleRooms();
-        const currentSticky = this.algorithm.stickyRoom;
-        const stickyIsStillPresent = currentSticky && rooms.includes(currentSticky);
-
-        // Reset the sticky room before resetting the known rooms so the algorithm
-        // doesn't freak out.
-        this.algorithm.setStickyRoom(null);
 
         this.algorithm.setKnownRooms(rooms);
-
-        // Set the sticky room back, if needed, now that we have updated the store.
-        // This will use relative stickyness to the new room set.
-        if (stickyIsStillPresent) {
-            this.algorithm.setStickyRoom(currentSticky);
-        }
 
         // Finally, mark an update and resume updates from the algorithm
         this.updateFn.mark();
