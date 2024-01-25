@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import React, { ComponentProps } from "react";
-import { Room } from "matrix-js-sdk/src/models/room";
+import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import classNames from "classnames";
@@ -46,6 +46,7 @@ interface IProps extends Omit<ComponentProps<typeof BaseAvatar>, "name" | "idNam
 
 interface IState {
     urls: string[];
+    name: string;
 }
 
 export default class RoomAvatar extends React.PureComponent<IProps, IState> {
@@ -61,21 +62,34 @@ export default class RoomAvatar extends React.PureComponent<IProps, IState> {
 
         this.state = {
             urls: RoomAvatar.getImageUrls(this.props),
+            name: this.calcRoomName(),
         };
     }
 
     public componentDidMount(): void {
         MatrixClientPeg.get().on(RoomStateEvent.Events, this.onRoomStateEvents);
+        this.props.room?.on(RoomEvent.Name, this.onRoomNameUpdate);
     }
 
     public componentWillUnmount(): void {
         MatrixClientPeg.get()?.removeListener(RoomStateEvent.Events, this.onRoomStateEvents);
+        this.props.room?.off(RoomEvent.Name, this.onRoomNameUpdate);
     }
 
-    public static getDerivedStateFromProps(nextProps: IProps): IState {
+    public static getDerivedStateFromProps(nextProps: IProps): Partial<IState> {
         return {
             urls: RoomAvatar.getImageUrls(nextProps),
         };
+    }
+
+    private onRoomNameUpdate = () => {
+        this.setState({
+            name: this.calcRoomName(),
+        });
+    };
+
+    private calcRoomName(): string {
+        return this.props.room?.name ?? this.props.oobData.name ?? "?";
     }
 
     private onRoomStateEvents = (ev: MatrixEvent): void => {
@@ -133,15 +147,14 @@ export default class RoomAvatar extends React.PureComponent<IProps, IState> {
 
     public render(): React.ReactNode {
         const { room, oobData, viewAvatarOnClick, onClick, className, ...otherProps } = this.props;
-        const roomName = room?.name ?? oobData.name ?? "?";
 
         return (
             <BaseAvatar
                 {...otherProps}
                 className={classNames(className, {
-                    mx_RoomAvatar_isSpaceRoom: (room?.getType() ?? this.props.oobData?.roomType) === RoomType.Space,
+                    mx_RoomAvatar_isSpaceRoom: (room?.getType() ?? oobData?.roomType) === RoomType.Space,
                 })}
-                name={roomName}
+                name={this.state.name}
                 idName={this.roomIdName}
                 urls={this.state.urls}
                 onClick={viewAvatarOnClick && this.state.urls[0] ? this.onRoomAvatarClick : onClick}
