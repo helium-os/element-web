@@ -437,6 +437,7 @@ interface IOpts {
     highlightLink?: string;
     disableBigEmoji?: boolean;
     stripReplyFallback?: boolean;
+    useSafeBody?: boolean;
     returnString?: boolean;
     forComposerQuote?: boolean;
     ref?: React.Ref<HTMLSpanElement>;
@@ -532,6 +533,8 @@ function formatEmojis(message: string | undefined, returnType: ReturnEmojiMsgTyp
 export function bodyToHtml(content: IContent, highlights: Optional<string[]>, opts: IOptsReturnString): string;
 export function bodyToHtml(content: IContent, highlights: Optional<string[]>, opts: IOptsReturnNode): ReactNode;
 export function bodyToHtml(content: IContent, highlights: Optional<string[]>, opts: IOpts = {}): ReactNode | string {
+    opts.useSafeBody = opts.useSafeBody ?? true; // 默认使用safeBody
+
     const isFormattedBody = content.format === "org.matrix.custom.html" && typeof content.formatted_body === "string";
     let bodyHasEmoji = false;
     let isHtmlMessage = false;
@@ -540,75 +543,76 @@ export function bodyToHtml(content: IContent, highlights: Optional<string[]>, op
     if (opts.forComposerQuote) {
         sanitizeParams = composerSanitizeHtmlParams;
     }
+    const plainBody = typeof content.body === "string" ? content.body : "";
 
-    let strippedBody: string;
+    const strippedBody: string = opts.stripReplyFallback ? stripPlainReply(plainBody) : plainBody;
+
     let safeBody: string | undefined; // safe, sanitised HTML, preferred over `strippedBody` which is fully plaintext
+    if (opts.useSafeBody) {
+        try {
+            // sanitizeHtml can hang if an unclosed HTML tag is thrown at it
+            // A search for `<foo` will make the browser crash an alternative would be to escape HTML special characters
+            // but that would bring no additional benefit as the highlighter does not work with those special chars
+            const safeHighlights = highlights
+                ?.filter((highlight: string): boolean => !highlight.includes("<"))
+                .map((highlight: string): string => sanitizeHtml(highlight, sanitizeParams));
 
-    try {
-        // sanitizeHtml can hang if an unclosed HTML tag is thrown at it
-        // A search for `<foo` will make the browser crash an alternative would be to escape HTML special characters
-        // but that would bring no additional benefit as the highlighter does not work with those special chars
-        const safeHighlights = highlights
-            ?.filter((highlight: string): boolean => !highlight.includes("<"))
-            .map((highlight: string): string => sanitizeHtml(highlight, sanitizeParams));
+            let formattedBody = typeof content.formatted_body === "string" ? content.formatted_body : null;
 
-        let formattedBody = typeof content.formatted_body === "string" ? content.formatted_body : null;
-        const plainBody = typeof content.body === "string" ? content.body : "";
+            if (opts.stripReplyFallback && formattedBody) formattedBody = stripHTMLReply(formattedBody);
+            bodyHasEmoji = mightContainEmoji(isFormattedBody ? formattedBody! : plainBody);
 
-        if (opts.stripReplyFallback && formattedBody) formattedBody = stripHTMLReply(formattedBody);
-        strippedBody = opts.stripReplyFallback ? stripPlainReply(plainBody) : plainBody;
-        bodyHasEmoji = mightContainEmoji(isFormattedBody ? formattedBody! : plainBody);
+            const highlighter = safeHighlights?.length
+                ? new HtmlHighlighter("mx_EventTile_searchHighlight", opts.highlightLink)
+                : null;
 
-        const highlighter = safeHighlights?.length
-            ? new HtmlHighlighter("mx_EventTile_searchHighlight", opts.highlightLink)
-            : null;
+            if (isFormattedBody) {
+                if (highlighter) {
+                    // XXX: We sanitize the HTML whilst also highlighting its text nodes, to avoid accidentally trying
+                    // to highlight HTML tags themselves. However, this does mean that we don't highlight textnodes which
+                    // are interrupted by HTML tags (not that we did before) - e.g. foo<span/>bar won't get highlighted
+                    // by an attempt to search for 'foobar'.  Then again, the search query probably wouldn't work either
+                    // XXX: hacky bodge to temporarily apply a textFilter to the sanitizeParams structure.
+                    sanitizeParams.textFilter = function (safeText) {
+                        return highlighter.applyHighlights(safeText, safeHighlights!).join("");
+                    };
+                }
 
-        if (isFormattedBody) {
-            if (highlighter) {
-                // XXX: We sanitize the HTML whilst also highlighting its text nodes, to avoid accidentally trying
-                // to highlight HTML tags themselves. However, this does mean that we don't highlight textnodes which
-                // are interrupted by HTML tags (not that we did before) - e.g. foo<span/>bar won't get highlighted
-                // by an attempt to search for 'foobar'.  Then again, the search query probably wouldn't work either
-                // XXX: hacky bodge to temporarily apply a textFilter to the sanitizeParams structure.
-                sanitizeParams.textFilter = function (safeText) {
-                    return highlighter.applyHighlights(safeText, safeHighlights!).join("");
-                };
-            }
-
-            safeBody = sanitizeHtml(formattedBody!, sanitizeParams);
-            const phtml = cheerio.load(safeBody, {
-                // @ts-ignore: The `_useHtmlParser2` internal option is the
-                // simplest way to both parse and render using `htmlparser2`.
-                _useHtmlParser2: true,
-                decodeEntities: false,
-            });
-            const isPlainText = phtml.html() === phtml.root().text();
-            isHtmlMessage = !isPlainText;
-
-            if (isHtmlMessage && SettingsStore.getValue("feature_latex_maths")) {
-                // @ts-ignore - The types for `replaceWith` wrongly expect
-                // Cheerio instance to be returned.
-                phtml('div, span[data-mx-maths!=""]').replaceWith(function (i, e) {
-                    return katex.renderToString(decode(phtml(e).attr("data-mx-maths")), {
-                        throwOnError: false,
-                        // @ts-ignore - `e` can be an Element, not just a Node
-                        displayMode: e.name == "div",
-                        output: "htmlAndMathml",
-                    });
+                safeBody = sanitizeHtml(formattedBody!, sanitizeParams);
+                const phtml = cheerio.load(safeBody, {
+                    // @ts-ignore: The `_useHtmlParser2` internal option is the
+                    // simplest way to both parse and render using `htmlparser2`.
+                    _useHtmlParser2: true,
+                    decodeEntities: false,
                 });
-                safeBody = phtml.html();
+                const isPlainText = phtml.html() === phtml.root().text();
+                isHtmlMessage = !isPlainText;
+
+                if (isHtmlMessage && SettingsStore.getValue("feature_latex_maths")) {
+                    // @ts-ignore - The types for `replaceWith` wrongly expect
+                    // Cheerio instance to be returned.
+                    phtml('div, span[data-mx-maths!=""]').replaceWith(function (i, e) {
+                        return katex.renderToString(decode(phtml(e).attr("data-mx-maths")), {
+                            throwOnError: false,
+                            // @ts-ignore - `e` can be an Element, not just a Node
+                            displayMode: e.name == "div",
+                            output: "htmlAndMathml",
+                        });
+                    });
+                    safeBody = phtml.html();
+                }
+                if (bodyHasEmoji) {
+                    safeBody = formatEmojis(
+                        safeBody,
+                        opts.returnString ? ReturnEmojiMsgType.Text : ReturnEmojiMsgType.Html,
+                    ).join("");
+                }
+            } else if (highlighter) {
+                safeBody = highlighter.applyHighlights(plainBody, safeHighlights!).join("");
             }
-            if (bodyHasEmoji) {
-                safeBody = formatEmojis(
-                    safeBody,
-                    opts.returnString ? ReturnEmojiMsgType.Text : ReturnEmojiMsgType.Html,
-                ).join("");
-            }
-        } else if (highlighter) {
-            safeBody = highlighter.applyHighlights(plainBody, safeHighlights!).join("");
+        } finally {
+            delete sanitizeParams.textFilter;
         }
-    } finally {
-        delete sanitizeParams.textFilter;
     }
 
     const contentBody = safeBody ?? strippedBody;
