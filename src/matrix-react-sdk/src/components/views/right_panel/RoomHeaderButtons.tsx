@@ -324,28 +324,10 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
             return <></>;
         }
 
-        const rightPanelPhaseButtons: Map<RightPanelPhases | HeaderButtonAction, any> = new Map();
+        const isHomeSpace = SpaceStore.instance.isHomeSpace;
+        const isPeopleRoom = this.props.room.isPeopleRoom(); // 是否是私聊
 
-        // if (SettingsStore.getValue("feature_pinning")) {
-        //     rightPanelPhaseButtons.set(
-        //         RightPanelPhases.PinnedMessages,
-        //         <PinnedMessagesHeaderButton
-        //             key="pinnedMessagesButton"
-        //             room={this.props.room}
-        //             isHighlighted={this.isPhase(RightPanelPhases.PinnedMessages)}
-        //             onClick={this.onPinnedMessagesClicked}
-        //         />,
-        //     );
-        // }
-        // rightPanelPhaseButtons.set(
-        //     RightPanelPhases.Timeline,
-        //     <TimelineCardHeaderButton
-        //         key="timelineButton"
-        //         room={this.props.room}
-        //         isHighlighted={this.isPhase(RightPanelPhases.Timeline)}
-        //         onClick={this.onTimelineCardClicked}
-        //     />,
-        // );
+        const rightPanelPhaseButtons: Map<RightPanelPhases | HeaderButtonAction, any> = new Map();
         rightPanelPhaseButtons.set(
             HeaderButtonAction.Notification,
             <div ref={this.notificationBtnRef}>
@@ -367,7 +349,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                 />
             </div>,
         );
-        if (this.props.room.isPeopleRoom()) {
+        if (isPeopleRoom) {
             // 私聊
             rightPanelPhaseButtons.set(
                 HeaderButtonAction.InviteAndCreateRoom,
@@ -389,7 +371,6 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                 />,
             );
         } else {
-            const isHomeSpace = SpaceStore.instance.isHomeSpace;
             // 群聊 || 频道
             isHomeSpace &&
                 this.props.room.canInvite(MatrixClientPeg.get().getUserId()) &&
@@ -414,35 +395,36 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                         onClick={this.onRoomMemberListClicked}
                     />,
                 );
-
-            !isHomeSpace &&
-                rightPanelPhaseButtons.set(
-                    RightPanelPhases.ThreadPanel,
-                    <HeaderButton
-                        key={RightPanelPhases.ThreadPanel}
-                        name="threadsButton"
-                        data-testid="threadsButton"
-                        title={_t("Threads")}
-                        onClick={this.onThreadsPanelClicked}
-                        isHighlighted={this.isPhase(RoomHeaderButtons.THREAD_PHASES)}
-                        isUnread={this.state.threadNotificationColor > 0}
-                    >
-                        <UnreadIndicator color={this.state.threadNotificationColor} />
-                    </HeaderButton>,
-                );
-
-            isHomeSpace &&
-                rightPanelPhaseButtons.set(
-                    RightPanelPhases.RoomSettings,
-                    <HeaderButton
-                        key="roomSettingsButton"
-                        name="roomSettingsButton"
-                        title={"群设置"}
-                        isHighlighted={this.isPhase(RightPanelPhases.RoomSettings)}
-                        onClick={this.onRoomSettingsClicked}
-                    />,
-                );
         }
+
+        rightPanelPhaseButtons.set(
+            RightPanelPhases.ThreadPanel,
+            <HeaderButton
+                key={RightPanelPhases.ThreadPanel}
+                name="threadsButton"
+                data-testid="threadsButton"
+                title={_t("Threads")}
+                onClick={this.onThreadsPanelClicked}
+                isHighlighted={this.isPhase(RoomHeaderButtons.THREAD_PHASES)}
+                isUnread={this.state.threadNotificationColor > 0}
+            >
+                <UnreadIndicator color={this.state.threadNotificationColor} />
+            </HeaderButton>,
+        );
+
+        isHomeSpace &&
+            !isPeopleRoom &&
+            rightPanelPhaseButtons.set(
+                RightPanelPhases.RoomSettings,
+                <HeaderButton
+                    key="roomSettingsButton"
+                    name="roomSettingsButton"
+                    title={"群设置"}
+                    isHighlighted={this.isPhase(RightPanelPhases.RoomSettings)}
+                    onClick={this.onRoomSettingsClicked}
+                />,
+            );
+
         return (
             <>
                 {Array.from(rightPanelPhaseButtons.keys()).map((phase) =>
