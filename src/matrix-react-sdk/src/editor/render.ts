@@ -131,7 +131,7 @@ function reconcileLine(lineContainer: ChildNode, parts: Part[]): void {
     removeNextSiblings(currentNode);
 }
 
-function reconcileEmptyLine(lineContainer: HTMLElement, modePartsLength: number = 0): void {
+function reconcileEmptyLine(lineContainer: HTMLElement, addBr: boolean = true): void {
     // empty div needs to have a BR in it to give it height
     let foundBR = false;
     let partNode = lineContainer.firstChild;
@@ -144,10 +144,7 @@ function reconcileEmptyLine(lineContainer: HTMLElement, modePartsLength: number 
         }
         partNode = nextNode;
     }
-    if (
-        !foundBR &&
-        modePartsLength > 0 // 没有内容输入时，不添加br标签
-    ) {
+    if (!foundBR && addBr) {
         lineContainer.appendChild(document.createElement("br"));
     }
 }
@@ -181,7 +178,8 @@ export function renderModel(editor: HTMLDivElement, model: EditorModel): void {
         if (parts.length) {
             reconcileLine(lineContainer, parts);
         } else {
-            reconcileEmptyLine(lineContainer as HTMLElement, model.parts.length);
+            // 没有内容输入时，不添加br标签
+            reconcileEmptyLine(lineContainer as HTMLElement, !!model.parts.length);
         }
     });
     if (lines.length) {
