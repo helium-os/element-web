@@ -26,8 +26,11 @@ import { _t } from "../languageHandler";
 import { AsyncActionPayload } from "../dispatcher/payloads";
 import RoomListStore from "../stores/room-list/RoomListStore";
 import { SortAlgorithm } from "../stores/room-list/algorithms/models";
-import { DefaultTagID, TagID } from "../stores/room-list/models";
+import { DefaultTagID, RoomUpdateCause, TagID } from "../stores/room-list/models";
 import ErrorDialog from "../components/views/dialogs/ErrorDialog";
+import { MatrixEvent } from "matrix-js-sdk/src/models/event";
+import { EventType } from "matrix-js-sdk/src/@types/event";
+import { cloneDeep } from "lodash";
 
 export default class RoomListActions {
     public static defaultOrder = "100";
@@ -118,24 +121,37 @@ export default class RoomListActions {
 
                 // if we moved lists or the ordering changed, add the new tag
                 if (newTag && newTag !== DefaultTagID.DM && (hasChangedSubLists || order)) {
+                    // 先更新视图，防止频道跳动，导致交互体验不好
+                    const newRoom = cloneDeep(room);
+                    const newTags = [
+                        {
+                            ...(newTag !== DefaultTagID.Untagged ? { tagId: newTag } : {}),
+                            order,
+                        },
+                    ];
+                    const event = new MatrixEvent({
+                        room_id: roomId,
+                        state_key: "",
+                        type: EventType.Tag,
+                        content: {
+                            tags: newTags,
+                        },
+                    });
+                    newRoom.currentState.setStateEvents([event]);
+                    RoomListStore.instance.manualRoomUpdate(newRoom, RoomUpdateCause.PossibleTagChange);
+
                     // metaData is the body of the PUT to set the tag, so it must
                     // at least be an empty object.
+                    const promiseToAdd = matrixClient.setRoomOnlyTags(roomId, newTags).catch(function (err) {
+                        RoomListStore.instance.manualRoomUpdate(room, RoomUpdateCause.PossibleTagChange); // 接口调用失败后，重置频道的所属分组
 
-                    const promiseToAdd = matrixClient
-                        .setRoomOnlyTags(roomId, [
-                            {
-                                ...(newTag !== DefaultTagID.Untagged ? { tagId: newTag } : {}),
-                                order,
-                            },
-                        ])
-                        .catch(function (err) {
-                            Modal.createDialog(ErrorDialog, {
-                                title: _t("Failed to add tag %(tagName)s to room", { tagName: newTag }),
-                                description: err && err.message ? err.message : _t("Operation failed"),
-                            });
-
-                            throw err;
+                        Modal.createDialog(ErrorDialog, {
+                            title: _t("Failed to add tag %(tagName)s to room", { tagName: newTag }),
+                            description: err && err.message ? err.message : _t("Operation failed"),
                         });
+
+                        throw err;
+                    });
 
                     promises.push(promiseToAdd);
                 }

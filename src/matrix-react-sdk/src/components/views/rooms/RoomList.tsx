@@ -27,7 +27,7 @@ import React, {
     useCallback,
 } from "react";
 
-import { DragDropContext, DragUpdate, Droppable, ResponderProvided } from "react-beautiful-dnd";
+import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import type { DropResult } from "react-beautiful-dnd";
 
 import { IState as IRovingTabIndexState, RovingTabIndexProvider } from "../../../accessibility/RovingTabIndex";
@@ -83,6 +83,8 @@ import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
+import Modal from "matrix-react-sdk/src/Modal";
+import ErrorDialog from "matrix-react-sdk/src/components/views/dialogs/ErrorDialog";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -755,13 +757,22 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
         // 拖拽修改社区分组顺序
         if (targetIndex === -1 || targetIndex === originalIndex) return; // 为-1时，表示拖拽到了默认分组之前，不做任何处理
 
-        const tags = Array.from(SpaceStore.instance.spaceTags);
-        const [removed] = tags.splice(originalIndex, 1);
-        tags.splice(targetIndex, 0, removed);
+        const oldTags = SpaceStore.instance.spaceTags;
+        const newTags = Array.from(oldTags);
+        const [removed] = newTags.splice(originalIndex, 1);
+        newTags.splice(targetIndex, 0, removed);
+
+        SpaceStore.instance.setSpaceTags(newTags); // 先更新视图，防止分组跳动，导致交互体验不好
+
         try {
-            await SpaceStore.instance.sendSpaceTags(tags);
+            await SpaceStore.instance.sendSpaceTags(newTags);
         } catch (error) {
-            alert(error.message);
+            SpaceStore.instance.setSpaceTags(oldTags); // 接口调用失败后，重置space tags
+
+            Modal.createDialog(ErrorDialog, {
+                title: "分组顺序调整失败",
+                description: error.message,
+            });
         }
     };
 
