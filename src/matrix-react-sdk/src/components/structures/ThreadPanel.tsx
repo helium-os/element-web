@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 import { Optional } from "matrix-events-sdk";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState, memo } from "react";
 import { EventTimelineSet } from "matrix-js-sdk/src/models/event-timeline-set";
 import { Thread, ThreadEvent } from "matrix-js-sdk/src/models/thread";
 import { Room } from "matrix-js-sdk/src/models/room";
@@ -334,4 +334,4 @@ const ThreadPanel: React.FC<IProps> = ({ roomId, onClose, permalinkCreator }) =>
         </RoomContext.Provider>
     );
 };
-export default ThreadPanel;
+export default memo(ThreadPanel);

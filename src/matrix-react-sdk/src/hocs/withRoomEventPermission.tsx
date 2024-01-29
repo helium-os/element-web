@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import useRoomEventPermission from "matrix-react-sdk/src/hooks/room/useRoomEventPermission";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
@@ -11,7 +11,7 @@ export interface IBaseProps {
 }
 
 // 单个eventType权限同步
-export default function withPermission<T extends IBaseProps>(
+export default function withRoomEventPermission<T extends IBaseProps>(
     Component: React.FC<T> | React.ComponentType<T>,
     eventType: IEventType,
     propsKey: string,
@@ -24,5 +24,5 @@ export default function withPermission<T extends IBaseProps>(
         return <Component {...props} {...{ [propsKey]: hasPermission }} />;
     };
 
-    return Proxy;
+    return memo(Proxy);
 }

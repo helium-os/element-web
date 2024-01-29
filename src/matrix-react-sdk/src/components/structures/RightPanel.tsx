@@ -45,7 +45,7 @@ import TimelineCard from "../views/right_panel/TimelineCard";
 import { UPDATE_EVENT } from "../../stores/AsyncStore";
 import { IRightPanelCard, IRightPanelCardState } from "../../stores/right-panel/RightPanelStoreIPanelState";
 import { Action } from "../../dispatcher/actions";
-import withPermissions from "matrix-react-sdk/src/hocs/withPermissions";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
 import { StateEvent } from "matrix-react-sdk/src/powerLevel";
 
 interface IProps {
@@ -54,7 +54,7 @@ interface IProps {
     resizeNotifier: ResizeNotifier;
     permalinkCreator?: RoomPermalinkCreator;
     e2eStatus?: E2EStatus;
-    displayMemberList: boolean;
+    displayMemberList?: boolean;
 }
 
 interface IState {
@@ -63,7 +63,7 @@ interface IState {
     cardState?: IRightPanelCardState;
 }
 
-class RightPanel extends React.Component<IProps, IState> {
+class RightPanel extends React.PureComponent<IProps, IState> {
     public static contextType = MatrixClientContext;
     public context!: React.ContextType<typeof MatrixClientContext>;
 
@@ -92,7 +92,7 @@ class RightPanel extends React.Component<IProps, IState> {
         // 不允许普通用户展示成员列表后，如果用户当前打开了成员列表面板，则关闭面板
         if (
             RightPanelStore.instance.currentCard?.phase === RightPanelPhases.RoomMemberList &&
-            !this.props.displayMemberList
+            this.props.displayMemberList === false
         ) {
             RightPanelStore.instance.togglePanel(null);
         }
@@ -164,6 +164,7 @@ class RightPanel extends React.Component<IProps, IState> {
         const roomId = this.props.room?.roomId;
         const phase = this.props.overwriteCard?.phase ?? this.state.phase;
         const cardState = this.props.overwriteCard?.state ?? this.state.cardState;
+
         switch (phase) {
             case RightPanelPhases.RoomMemberList:
                 if (roomId) {
@@ -296,6 +297,6 @@ class RightPanel extends React.Component<IProps, IState> {
     }
 }
 
-export default withPermissions<IProps>(RightPanel, {
+export default withRoomPermissions<IProps>(RightPanel, {
     displayMemberList: StateEvent.DisplayMemberList,
 });
