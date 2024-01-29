@@ -184,6 +184,11 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         if (this.slidingSyncMode) {
             return this.state.rooms.length;
         }
+
+        // 默认强制展开分组列表时，所有频道都展示
+        if (this.props.forceExpanded) {
+            return this.numTiles;
+        }
         const nVisible = Math.ceil(this.layout.visibleTiles);
         return Math.min(nVisible, this.numTiles);
     }
