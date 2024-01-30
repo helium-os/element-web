@@ -10,6 +10,7 @@ export enum AdditionalClientPrefix {
 
 MatrixClient.prototype.jwtLogin = function (data?: any): Promise<any> {
     return this.http.authedRequest(Method.Post, "/login", undefined, data, {
+        baseUrl: "https://matrix.system.app.heliumos",
         prefix: AdditionalClientPrefix.HeliumosV1,
     });
 };
