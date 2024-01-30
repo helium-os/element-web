@@ -7,6 +7,13 @@ module.exports = {
     },
     theme: {},
     proxy: {
+        "/heliumos-chat-api": {
+            target: "https://matrix.system.app.easypay-internal",
+            changeOrigin: true,
+            secure: false,
+            pathRewrite: { "^/heliumos-chat-api": "" },
+            agent,
+        },
         "/heliumos-user-api": {
             target: "https://user.system.app.easypay-internal",
             changeOrigin: true,
