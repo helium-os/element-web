@@ -182,6 +182,22 @@ export default class Login {
 
 // jwt登录
 export function jwtLoginRequest(client: MatrixClient): Promise<any> {
+    return client.jwtLogin().then((res) => {
+        console.log("登陆成功", res);
+        const data = res.data;
+
+        data.user_id = User.instance().generateUserIdByBaseUrl(res.data.user_id, client.baseUrl);
+
+        const { token, user_id } = data;
+        if (token) client.http.opts.accessToken = token;
+        if (user_id) {
+            client.credentials = {
+                userId: user_id,
+            };
+        }
+        return data;
+    });
+
     return fetch("/heliumos-chat-api/user/v1/matrices/login", {
         method: "POST",
     })

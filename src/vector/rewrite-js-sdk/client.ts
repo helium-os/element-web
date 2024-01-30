@@ -4,6 +4,16 @@ import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 import * as utils from "matrix-js-sdk/src/utils";
 import { ClientPrefix, Method } from "matrix-js-sdk/src/http-api";
 
+export enum AdditionalClientPrefix {
+    HeliumosV1 = "/_matrix/client/heliumos_v1",
+}
+
+MatrixClient.prototype.jwtLogin = function (data?: any): Promise<any> {
+    return this.http.authedRequest(Method.Post, "/login", undefined, data, {
+        prefix: AdditionalClientPrefix.HeliumosV1,
+    });
+};
+
 /**
  * setRoomOnlyTags -设置room tag（tag只打在room上）
  * setRoomTag - 设置room +user tag（tag是打在user + room上的）

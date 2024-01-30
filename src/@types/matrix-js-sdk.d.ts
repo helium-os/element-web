@@ -19,6 +19,7 @@ declare module "matrix-js-sdk/src/@types/partials" {
 
 declare module "matrix-js-sdk/src/client" {
     interface MatrixClient {
+        jwtLogin(data?: any): Promise<any>;
         setRoomOnlyTags(roomId: string, tags: Tag[]): Promise<ISendEventResponse>;
         getRoomOnlyTags(roomId: string): Promise<Record<string, any>>;
         deleteRoom(roomId: string): Promise<{}>;
