@@ -125,9 +125,9 @@ class NotifierClass {
             returnString: true,
             stripReplyFallback: stripReply,
             useSafeBody: true,
-        }).replaceAll(/<br\s*\/>/g, "\n");
+        });
 
-        return stripPlainMention(text);
+        return text;
     }
 
     // XXX: exported for tests
