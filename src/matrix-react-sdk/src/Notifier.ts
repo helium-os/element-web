@@ -53,7 +53,7 @@ import { ElementCall } from "./models/Call";
 import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType } from "./voice-broadcast";
 import { getSenderName } from "./utils/event/getSenderName";
 import { getParentEventId } from "matrix-react-sdk/src/utils/Reply";
-import { bodyToHtml } from "matrix-react-sdk/src/HtmlUtils";
+import { bodyToHtml, stripPlainMention } from "matrix-react-sdk/src/HtmlUtils";
 
 /*
  * Dispatches:
@@ -128,10 +128,10 @@ class NotifierClass {
         const text = bodyToHtml(content, undefined, {
             returnString: true,
             stripReplyFallback: stripReply,
-            useSafeBody: false,
+            useSafeBody: true,
         });
 
-        return isPill ? `@${text}` : text;
+        return isPill ? stripPlainMention(text) : text;
     }
 
     // XXX: exported for tests
