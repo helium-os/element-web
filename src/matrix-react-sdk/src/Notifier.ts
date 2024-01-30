@@ -53,7 +53,7 @@ import { ElementCall } from "./models/Call";
 import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType } from "./voice-broadcast";
 import { getSenderName } from "./utils/event/getSenderName";
 import { getParentEventId } from "matrix-react-sdk/src/utils/Reply";
-import { bodyToHtml, stripPlainMention } from "matrix-react-sdk/src/HtmlUtils";
+import { bodyToHtml } from "matrix-react-sdk/src/HtmlUtils";
 
 /*
  * Dispatches:
