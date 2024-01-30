@@ -460,7 +460,10 @@ const emojiToJsxSpan = (emoji: string, key: number): JSX.Element => (
 );
 
 export function stripPlainMention(body: string): string {
-    return body.replace(/<a\s+href="[^"]+".*>(.*)<\/a>/g, "@$1").replace(/<br\s*\/>/g, "\n");
+    return body
+        .replaceAll(/<a\s+href="[^>]+">/g, "@")
+        .replaceAll(/<\/a>/g, "")
+        .replaceAll(/<br\s*\/>/g, "\n");
 }
 
 export enum ReturnEmojiMsgType {
