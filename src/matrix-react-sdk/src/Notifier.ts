@@ -121,17 +121,13 @@ class NotifierClass {
 
         const stripReply = !mxEvent.replacingEvent() && !!getParentEventId(mxEvent); // 是否是回复
 
-        const isFormattedBody =
-            content.format === "org.matrix.custom.html" && typeof content.formatted_body === "string";
-        const isPill = isFormattedBody && !mxEvent.replacingEvent() && !stripReply; // 是否是@
-
         const text = bodyToHtml(content, undefined, {
             returnString: true,
             stripReplyFallback: stripReply,
-            useSafeBody: false,
+            useSafeBody: true,
         });
 
-        return isPill ? `@${text}` : text;
+        return text;
     }
 
     // XXX: exported for tests

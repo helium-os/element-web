@@ -459,6 +459,11 @@ const emojiToJsxSpan = (emoji: string, key: number): JSX.Element => (
     </span>
 );
 
+// 将'<a href="xxx">user</a>'转化为'@user'
+export function stripPlainMention(body: string): string {
+    return body.replaceAll(/<a\s+href="[^>]+">/g, "@").replaceAll(/<\/a>/g, "");
+}
+
 export enum ReturnEmojiMsgType {
     Html,
     Jsx,
@@ -617,7 +622,7 @@ export function bodyToHtml(content: IContent, highlights: Optional<string[]>, op
 
     const contentBody = safeBody ?? strippedBody;
     if (opts.returnString) {
-        return contentBody;
+        return stripPlainMention(contentBody.replaceAll(/<br\s*\/>/g, "\n"));
     }
 
     let emojiBody = false;
