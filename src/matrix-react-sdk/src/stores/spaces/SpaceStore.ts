@@ -44,6 +44,7 @@ import {
     ISuggestedRoom,
     MetaSpace,
     SpaceKey,
+    UPDATE_CAN_MANAGE_SPACE_PRIVATE_CHANNEL,
     UPDATE_FILTERED_SUGGESTED_ROOMS,
     UPDATE_HOME_BEHAVIOUR,
     UPDATE_INVITED_SPACES,
@@ -68,7 +69,7 @@ import { AfterLeaveRoomPayload } from "../../dispatcher/payloads/AfterLeaveRoomP
 import { SdkContextClass } from "../../contexts/SDKContext";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import { hasStateEventPermission, StateEvent } from "matrix-react-sdk/src/powerLevel";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 
 interface IState {}
 
@@ -162,6 +163,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     private _spaceTags: Tag[] = []; // 组织（tag）列表
 
+    private _canManageSpacePrivateChannel: boolean = false; // 是否有管理当前社区私密频道的权限
+
     public constructor() {
         super(defaultDispatcher, {});
 
@@ -210,14 +213,24 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.emit(UPDATE_FILTERED_SUGGESTED_ROOMS, this._filteredSuggestedRooms);
     }
 
-    // 判断当前用户是否有权限管理社区私密频道
-    public get canManageSpacePrivateChannel(): boolean {
+    public setCanManageSpacePrivateChannel() {
         if (!this.activeSpaceRoom) {
-            return false;
+            this._canManageSpacePrivateChannel = false;
+        } else {
+            const myUserId = MatrixClientPeg.get().getUserId()!;
+            this._canManageSpacePrivateChannel = this.activeSpaceRoom.currentState.hasEventTypePermission(
+                StateEventType.ManagePrivateChannel,
+                myUserId,
+                true,
+            );
         }
 
-        const myUserId = MatrixClientPeg.get().getUserId()!;
-        return hasStateEventPermission(this.activeSpaceRoom, StateEvent.ManagePrivateChannel, myUserId);
+        this.emit(UPDATE_CAN_MANAGE_SPACE_PRIVATE_CHANNEL, this._canManageSpacePrivateChannel);
+    }
+
+    // 获取当前用户是否有管理当前社区私密频道的权限
+    public get canManageSpacePrivateChannel(): boolean {
+        return this._canManageSpacePrivateChannel;
     }
 
     public get allRoomsInHome(): boolean {
@@ -1010,6 +1023,11 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         }
     };
 
+    private onActiveSpaceChange = () => {
+        this.refreshSpaceTags();
+        this.setCanManageSpacePrivateChannel();
+    };
+
     private onRoom = (room: Room, newMembership?: string, oldMembership?: string): void => {
         const roomMembership = room.getMyMembership();
         if (!roomMembership) {
@@ -1068,6 +1086,10 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             // user's active space has gone away, go back to home
             this.goToFirstSpace(true);
         }
+
+        if (membership !== oldMembership) {
+            this.setCanManageSpacePrivateChannel();
+        }
     };
 
     private notifyIfOrderChanged(): void {
@@ -1123,6 +1145,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                 if (room.isSpaceRoom()) {
                     this.onRoomsUpdate();
                     this.setFilteredSuggestedRooms();
+                    this.setCanManageSpacePrivateChannel();
                 }
                 break;
         }
@@ -1130,6 +1153,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
         this.setFilteredSuggestedRooms();
+        this.setCanManageSpacePrivateChannel();
     };
 
     // listening for m.room.member events in onRoomState above doesn't work as the Member object isn't updated by then
@@ -1246,7 +1270,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         }
         await this.reset();
 
-        this.off(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
+        this.off(UPDATE_SELECTED_SPACE, this.onActiveSpaceChange);
         this.off(UPDATE_SUGGESTED_ROOMS, this.setFilteredSuggestedRooms);
     }
 
@@ -1259,7 +1283,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
         this.matrixClient.on(RoomStateEvent.Members, this.onRoomStateMembers);
         this.matrixClient.on(ClientEvent.AccountData, this.onAccountData);
 
-        this.on(UPDATE_SELECTED_SPACE, this.refreshSpaceTags);
+        this.on(UPDATE_SELECTED_SPACE, this.onActiveSpaceChange);
         this.on(UPDATE_SUGGESTED_ROOMS, this.setFilteredSuggestedRooms);
 
         const oldMetaSpaces = this._enabledMetaSpaces;

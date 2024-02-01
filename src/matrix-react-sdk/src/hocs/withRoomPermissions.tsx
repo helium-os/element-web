@@ -1,40 +1,45 @@
-import React, { useState, useEffect, memo } from "react";
-import { IEventType } from "matrix-js-sdk/src/models/room-state";
+import React, { useState, useEffect, useMemo, memo, forwardRef, ForwardedRef } from "react";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
+import useRoomPermissions, { EventTypeMap } from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
 import { Room } from "matrix-js-sdk/src/models/room";
 
 interface IProps {
     cli?: MatrixClient;
-    room: Room;
+    room?: Room;
+    roomId?: string;
 }
 interface EventTypePermissionMap {
-    [propsKey: string]: IEventType;
+    [propsKey: string]: EventTypeMap;
 }
 
 interface PermissionProps {
     [propsKey: string]: boolean;
 }
 
+interface Opts {
+    forwardRef: boolean;
+}
+
 // 多个eventType权限同步
-export default function withRoomPermissions<T extends IProps>(
-    Component: React.FC<T> | React.ComponentType<T>,
+export default function withRoomPermissions<P extends IProps>(
+    Component: React.FC<P> | React.ComponentType<P>,
     mapEventPermissionToProps: EventTypePermissionMap,
-): React.FC<T> {
-    const propsKeys = [];
-    const eventTypes = [];
+    opts: Opts = {} as Opts,
+) {
+    const propsKeys: string[] = [];
+    const eventTypes: EventTypeMap[] = [];
     for (const [key, value] of Object.entries(mapEventPermissionToProps)) {
         propsKeys.push(key);
         eventTypes.push(value);
     }
-    const Proxy: React.FC<T> = (props) => {
+    const Proxy = (props: P, ref?: ForwardedRef<any>) => {
         const cli: MatrixClient = props.cli || MatrixClientPeg.get();
 
+        const room = useMemo(() => props.room ?? cli.getRoom(props.roomId), [cli, props.room, props.roomId]);
+        const permissions = useRoomPermissions(cli, room, eventTypes);
+
         const [permissionProps, setPermissionProps] = useState<PermissionProps>({});
-
-        const permissions = useRoomPermissions(cli, props.room, eventTypes);
-
         useEffect(() => {
             const permissionProps: PermissionProps = {};
             for (const [index, permission] of permissions.entries()) {
@@ -44,8 +49,11 @@ export default function withRoomPermissions<T extends IProps>(
 
             setPermissionProps(permissionProps);
         }, [permissions]);
-        return <Component {...props} {...permissionProps} />;
+
+        const refProps = useMemo(() => (opts.forwardRef ? { ref } : {}), [ref]);
+
+        return <Component {...props} {...refProps} room={room} {...permissionProps} />;
     };
 
-    return memo(Proxy);
+    return memo(opts.forwardRef ? forwardRef(Proxy) : Proxy);
 }

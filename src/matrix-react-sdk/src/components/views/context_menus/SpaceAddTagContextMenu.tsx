@@ -22,6 +22,7 @@ import Modal from "matrix-react-sdk/src/Modal";
 import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MatrixClientContext from "matrix-react-sdk/src/contexts/MatrixClientContext";
+import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
 
 interface IProps extends ContextMenuProps {
     showIcon?: boolean;
@@ -31,7 +32,8 @@ const SpaceAddTagContextMenu: React.FC<IProps> = ({ showIcon = false }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission = activeSpaceRoom?.canManageTag(userId);
+
+    const canManageTag = useRoomTagManage(cli, activeSpaceRoom, userId);
 
     // 新增分组
     const onAddSpaceTag = async (): Promise<void> => {
@@ -42,7 +44,7 @@ const SpaceAddTagContextMenu: React.FC<IProps> = ({ showIcon = false }) => {
 
     return (
         <>
-            {hasTagPermission && (
+            {canManageTag && (
                 <IconizedContextMenuOption
                     iconClassName={showIcon ? "mx_SpacePanel_iconAddGroup" : ""}
                     label={_t("Create Group")}

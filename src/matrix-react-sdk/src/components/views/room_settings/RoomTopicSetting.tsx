@@ -7,6 +7,7 @@ import Modal from "matrix-react-sdk/src/Modal";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+import useRoomEventPermission from "matrix-react-sdk/src/hooks/room/useRoomEventPermission";
 
 interface IProps {
     room: Room;
@@ -20,14 +21,16 @@ function getRoomTopic(room) {
 const RoomTopicSetting: React.FC<IProps> = ({ room, title = true }) => {
     const client = MatrixClientPeg.get();
 
-    const [canSetTopic, setCanSetTopic] = useState<boolean>(false);
-    const [topic, setTopic] = useState<string>("");
+    // 是否有修改topic的权限
+    const canSetTopic: boolean = useRoomEventPermission(
+        client,
+        room,
+        EventType.RoomTopic,
+        false,
+        client.getSafeUserId(),
+    );
 
-    // 判断是否有修改topic的权限
-    useEffect(() => {
-        const userId = client.getSafeUserId();
-        setCanSetTopic(room.currentState.maySendStateEvent(EventType.RoomTopic, userId) && !room.isAdminLeft());
-    }, [client, room]);
+    const [topic, setTopic] = useState<string>("");
 
     useEffect(() => {
         if (!room?.roomId) {

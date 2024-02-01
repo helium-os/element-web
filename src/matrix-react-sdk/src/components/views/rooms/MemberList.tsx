@@ -58,7 +58,7 @@ interface IState {
     truncateAtInvited: number;
 }
 
-export default class MemberList extends React.Component<IProps, IState> {
+export default class MemberList extends React.PureComponent<IProps, IState> {
     public static defaultProps = {
         showInvited: true,
     };

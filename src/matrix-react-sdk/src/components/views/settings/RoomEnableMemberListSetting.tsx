@@ -15,7 +15,7 @@ interface IProps {
 const RoomEnableMemberListSetting: React.FC<IProps> = ({ room, onError }) => {
     const cli = useContext(MatrixClientContext);
 
-    const { disabled, value, setValue } = useRoomEnableMemberList(
+    const { hasPermission, value, setValue } = useRoomEnableMemberList(
         cli,
         room,
         (newContent) => {
@@ -32,7 +32,6 @@ const RoomEnableMemberListSetting: React.FC<IProps> = ({ room, onError }) => {
             ...statePowerLevels,
             ...getPowerLevelByEnableDefaultUserMemberList(enable),
             events,
-            users,
         };
 
         return cli.sendStateEvent(room.roomId, EventType.RoomPowerLevels, plContent);
@@ -46,7 +45,7 @@ const RoomEnableMemberListSetting: React.FC<IProps> = ({ room, onError }) => {
         <>
             <LabelledToggleSwitch
                 label={"是否显示成员列表"}
-                disabled={disabled}
+                disabled={!hasPermission}
                 value={value}
                 onChange={onToggleMemberListEnable}
             />

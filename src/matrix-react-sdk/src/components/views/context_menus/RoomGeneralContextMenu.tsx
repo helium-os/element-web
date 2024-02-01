@@ -36,6 +36,7 @@ import IconizedContextMenu, {
 import { ButtonEvent } from "../elements/AccessibleButton";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { showRoomInviteDialog } from "matrix-react-sdk/src/RoomInvite";
+import { UPDATE_CAN_MANAGE_SPACE_PRIVATE_CHANNEL } from "matrix-react-sdk/src/stores/spaces";
 
 export interface RoomGeneralContextMenuProps extends IContextMenuProps {
     room: Room;
@@ -50,11 +51,18 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
 }) => {
     const cli = useContext(MatrixClientContext);
 
-    const [isAdminLeft, setIsAdminLeft] = useState(false);
-
+    const [canManageSpacePrivateChannel, setCanManageSpacePrivateChannel] = useState<boolean>(false); // 是否有管理当前社区私密频道的权限
     useEffect(() => {
-        setIsAdminLeft(room.isAdminLeft());
-    }, [room]);
+        const resetCanManageSpacePrivateChannel = () => {
+            setCanManageSpacePrivateChannel(SpaceStore.instance.canManageSpacePrivateChannel);
+        };
+
+        resetCanManageSpacePrivateChannel();
+        SpaceStore.instance.on(UPDATE_CAN_MANAGE_SPACE_PRIVATE_CHANNEL, resetCanManageSpacePrivateChannel);
+        return () => {
+            SpaceStore.instance.off(UPDATE_CAN_MANAGE_SPACE_PRIVATE_CHANNEL, resetCanManageSpacePrivateChannel);
+        };
+    }, []);
 
     const roomTags = useEventEmitterState(RoomListStore.instance, LISTS_UPDATE_EVENT, () =>
         RoomListStore.instance.getTagsForRoom(room),
@@ -112,8 +120,8 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
     };
 
     // 私密频道特权用户展示邀请成员按钮
-    let inviteOption;
-    if (SpaceStore.instance.canManageSpacePrivateChannel && room.isPrivateRoom()) {
+    let inviteOption: JSX.Element | null;
+    if (room.isPrivateRoom() && canManageSpacePrivateChannel) {
         inviteOption = <IconizedContextMenuOption onClick={onInvitePeople} label={_t("Invite people")} />;
     }
 
@@ -122,7 +130,7 @@ export const RoomGeneralContextMenu: React.FC<RoomGeneralContextMenuProps> = ({
             <IconizedContextMenuOptionList>
                 {/*{markAsReadOption}*/}
                 {inviteOption}
-                {!roomTags.includes(DefaultTagID.Archived) && !isAdminLeft && <>{settingsOption}</>}
+                {!roomTags.includes(DefaultTagID.Archived) && <>{settingsOption}</>}
             </IconizedContextMenuOptionList>
         </IconizedContextMenu>
     );

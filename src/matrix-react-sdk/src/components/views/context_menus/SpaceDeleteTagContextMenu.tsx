@@ -23,6 +23,7 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MatrixClientContext from "matrix-react-sdk/src/contexts/MatrixClientContext";
 import DeleteGroupConfirmDialog from "matrix-react-sdk/src/components/views/dialogs/group/DeleteGroupConfirmDialog";
 import { TagID } from "matrix-react-sdk/src/stores/room-list/models";
+import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
 
 interface IProps extends ContextMenuProps {
     tagId: TagID;
@@ -32,7 +33,8 @@ const SpaceDeleteTagContextMenu: React.FC<IProps> = ({ tagId }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission = activeSpaceRoom?.canManageTag(userId);
+
+    const canManageTag = useRoomTagManage(cli, activeSpaceRoom, userId);
 
     // 删除分组
     const onDeleteSpaceTag = (tagId: TagID): void => {
@@ -43,7 +45,7 @@ const SpaceDeleteTagContextMenu: React.FC<IProps> = ({ tagId }) => {
 
     return (
         <>
-            {hasTagPermission && (
+            {canManageTag && (
                 <IconizedContextMenuOption
                     isDestructive={true}
                     label={_t("Delete Group")}

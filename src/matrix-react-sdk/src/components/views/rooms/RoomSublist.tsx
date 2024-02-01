@@ -20,8 +20,7 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import classNames from "classnames";
 import { Enable, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
-import * as React from "react";
-import { ComponentType, createRef, ReactComponentElement, ReactNode } from "react";
+import React, { ComponentType, createRef, ReactComponentElement, ReactNode, useMemo, memo } from "react";
 
 import { Droppable, Draggable, DroppableProvided } from "react-beautiful-dnd";
 
@@ -51,13 +50,15 @@ import ExtraTile from "./ExtraTile";
 import SettingsStore from "../../../settings/SettingsStore";
 import { SlidingSyncManager } from "../../../SlidingSyncManager";
 import NotificationBadge from "./NotificationBadge";
-import RoomTile from "./RoomTile";
+import { DragRoomTile } from "./RoomTile";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { IconizedContextMenuOptionList } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 import SpaceDeleteTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceDeleteTagContextMenu";
 import EditSpaceTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/EditSpaceTagContextMenu";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
+import { EventType } from "matrix-js-sdk/src/matrix";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -74,7 +75,7 @@ export interface IAuxButtonProps {
     dispatcher?: MatrixDispatcher;
 }
 
-interface IProps {
+interface BaseProps {
     index: number;
     forRooms: boolean;
     startAsHidden: boolean;
@@ -88,6 +89,10 @@ interface IProps {
     resizeNotifier: ResizeNotifier;
     extraTiles?: ReactComponentElement<typeof ExtraTile>[] | null;
     onListCollapse?: (isExpanded: boolean) => void;
+}
+
+interface IProps extends BaseProps {
+    canManageSpaceTag: boolean;
 }
 
 // TODO: Use re-resizer's NumberSize when it is exposed as the type
@@ -119,8 +124,6 @@ export default class RoomSublist extends React.Component<IProps, IState> {
     private notificationState: ListNotificationState;
 
     private slidingSyncMode: boolean;
-
-    private userId: string = MatrixClientPeg.get().getUserId()!;
 
     public constructor(props: IProps) {
         super(props);
@@ -533,31 +536,15 @@ export default class RoomSublist extends React.Component<IProps, IState> {
             }
 
             for (const [index, room] of visibleRooms.entries()) {
-                const disabled =
-                    (OrderedDefaultTagIDs.includes(this.props.tagId) && this.props.tagId !== DefaultTagID.Untagged) ||
-                    !room.canManageTag(this.userId);
                 tiles.push(
-                    <Draggable
-                        key={`channel-${room.roomId}`}
-                        isDragDisabled={disabled}
-                        draggableId={room.roomId}
+                    <DragRoomTile
+                        key={room.roomId}
                         index={index}
-                    >
-                        {(draggableProvided, draggableSnapshot) => (
-                            <div
-                                ref={draggableProvided.innerRef}
-                                {...draggableProvided.draggableProps}
-                                {...draggableProvided.dragHandleProps}
-                            >
-                                <RoomTile
-                                    room={room}
-                                    showMessagePreview={this.layout.showPreviews}
-                                    isMinimized={this.props.isMinimized}
-                                    tag={this.props.tagId}
-                                />
-                            </div>
-                        )}
-                    </Draggable>,
+                        room={room}
+                        showMessagePreview={this.layout.showPreviews}
+                        isMinimized={this.props.isMinimized}
+                        tag={this.props.tagId}
+                    />,
                 );
             }
         }
@@ -923,8 +910,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
             <Draggable
                 isDragDisabled={
                     OrderedDefaultTagIDs.includes(this.props.tagId) ||
-                    (!SpaceStore.instance.isHomeSpace &&
-                        !SpaceStore.instance.activeSpaceRoom?.canManageTag(this.userId))
+                    (!SpaceStore.instance.isHomeSpace && !this.props.canManageSpaceTag)
                 }
                 draggableId={this.props.tagId}
                 index={this.props.index}
@@ -969,3 +955,24 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         );
     }
 }
+
+interface DragRoomSublistProps extends BaseProps {
+    space: Room | null;
+}
+export const DragRoomSublist = memo((props: DragRoomSublistProps) => {
+    const cli = MatrixClientPeg.get();
+    const [canManageSpaceTag] = useRoomPermissions(
+        cli,
+        props.space,
+        useMemo(
+            () => [
+                {
+                    eventType: EventType.Tag,
+                    state: false,
+                },
+            ],
+            [],
+        ),
+    );
+    return <RoomSublist {...props} canManageSpaceTag={canManageSpaceTag} />;
+});

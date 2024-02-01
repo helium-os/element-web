@@ -9,11 +9,23 @@ export default function useRoomEventPermission(
     cli: MatrixClient,
     room: Room,
     eventType: IEventType,
+    state: boolean,
     userId?: string,
 ): boolean {
-    const eventTypeArr = useMemo(() => [eventType], [eventType]);
-
-    const [hasPermission] = useRoomPermissions(cli, room, eventTypeArr, userId);
+    const [hasPermission] = useRoomPermissions(
+        cli,
+        room,
+        useMemo(
+            () => [
+                {
+                    eventType,
+                    state,
+                },
+            ],
+            [eventType, state],
+        ),
+        userId,
+    );
 
     return hasPermission;
 }

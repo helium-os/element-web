@@ -33,10 +33,16 @@ import { _t } from "matrix-react-sdk/src/languageHandler";
 import Modal from "matrix-react-sdk/src/Modal";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
 import { contextMenuBelow, PartialDOMRect } from "matrix-react-sdk/src/components/views/rooms/RoomTile";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
+import { PowerLevel, StateEventType } from "matrix-react-sdk/src/powerLevel";
 
-interface IProps {
+interface BaseProps {
     roomId: string;
     onClose(): void;
+}
+
+interface IProps extends BaseProps {
+    canKickMember: boolean; // 是否有移除成员的权限
 }
 
 interface IState {
@@ -47,7 +53,7 @@ interface IState {
     generalMenuPosition: PartialDOMRect | null;
 }
 
-export default class MemberListPanel extends React.Component<IProps, IState> {
+class MemberListPanel extends React.Component<IProps, IState> {
     private memberListRef = createRef<HTMLDivElement>();
     private readonly showPresence: boolean = false;
 
@@ -84,16 +90,29 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         });
     };
 
+    private validCanKickMember = (member: RoomMember) => {
+        const cli = MatrixClientPeg.get();
+        const room = cli.getRoom(this.props.roomId);
+
+        if (!room) return false;
+
+        const myUserId = cli.getUserId();
+        const isMe = member.userId === myUserId;
+        if (isMe) return false;
+
+        const plContent = room?.currentState.getPowerLevels();
+        const userLevels = plContent.users || {};
+        const myUserLevel = userLevels[myUserId];
+        const memberLevel = userLevels[member.userId] || PowerLevel.Default;
+
+        return myUserLevel > memberLevel && this.props.canKickMember;
+    };
+
     private onContextMenu = (member, e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const client = MatrixClientPeg.get();
-        const isMe = member.userId === client.getUserId();
-        if (isMe) return;
-
-        const room = client.getRoom(this.props.roomId);
-        if (!room.canRemoveUser(client.getUserId())) return;
+        if (!this.validCanKickMember(member)) return;
 
         this.setState({
             showContextMenu: true,
@@ -187,3 +206,10 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(MemberListPanel, {
+    canKickMember: {
+        eventType: StateEventType.Kick,
+        state: true,
+    },
+});

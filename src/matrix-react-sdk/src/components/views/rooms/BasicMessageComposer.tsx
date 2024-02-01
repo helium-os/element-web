@@ -51,6 +51,8 @@ import { ALTERNATE_KEY_NAME, KeyBindingAction } from "../../../accessibility/Key
 import { _t } from "../../../languageHandler";
 import { linkify } from "../../../linkify-matrix";
 import { SdkContextClass } from "../../../contexts/SDKContext";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 
 // matches emoticons which follow the start of a line or whitespace
 const REGEX_EMOTICON_WHITESPACE = new RegExp("(?:^|\\s)(" + EMOTICON_REGEX.source + ")\\s|:^$");
@@ -98,7 +100,7 @@ function selectionEquals(a: Partial<Selection>, b: Selection): boolean {
     );
 }
 
-interface IProps {
+interface BaseProps {
     model: EditorModel;
     room: Room;
     threadId?: string;
@@ -112,6 +114,10 @@ interface IProps {
     onPaste?(event: ClipboardEvent<HTMLDivElement>, model: EditorModel): boolean;
 }
 
+interface IProps extends BaseProps {
+    displayMemberList: boolean;
+}
+
 interface IState {
     useMarkdown: boolean;
     showPillAvatar: boolean;
@@ -122,7 +128,7 @@ interface IState {
     surroundWith: boolean;
 }
 
-export default class BasicMessageEditor extends React.Component<IProps, IState> {
+class BasicMessageEditor extends React.Component<IProps, IState> {
     public readonly editorRef = createRef<HTMLDivElement>();
     private autocompleteRef = createRef<Autocomplete>();
     private formatBarRef = createRef<MessageComposerFormatBar>();
@@ -760,9 +766,60 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
         formatRange(range, action);
     };
 
+    public focus(): void {
+        this.editorRef.current?.focus();
+    }
+
+    public insertMention(userId: string): void {
+        this.modifiedFlag = true;
+        const { model } = this.props;
+        const { partCreator } = model;
+        const member = this.props.room.getMember(userId);
+        const displayName = member ? member.rawDisplayName : userId;
+        const caret = this.getCaret();
+        const position = model.positionForOffset(caret.offset, caret.atNodeEnd);
+        // Insert suffix only if the caret is at the start of the composer
+        const parts = partCreator.createMentionParts(caret.offset === 0, displayName, userId);
+        model.transform(() => {
+            const addedLen = model.insert(parts, position);
+            return model.positionForOffset(caret.offset + addedLen, true);
+        });
+        // refocus on composer, as we just clicked "Mention"
+        this.focus();
+    }
+
+    public insertQuotedMessage(event: MatrixEvent): void {
+        this.modifiedFlag = true;
+        const { model } = this.props;
+        const { partCreator } = model;
+        const quoteParts = parseEvent(event, partCreator, { isQuotedMessage: true });
+        // add two newlines
+        quoteParts.push(partCreator.newline());
+        quoteParts.push(partCreator.newline());
+        model.transform(() => {
+            const addedLen = model.insert(quoteParts, model.positionForOffset(0));
+            return model.positionForOffset(addedLen, true);
+        });
+        // refocus on composer, as we just clicked "Quote"
+        this.focus();
+    }
+
+    public insertPlaintext(text: string): void {
+        this.modifiedFlag = true;
+        const { model } = this.props;
+        const { partCreator } = model;
+        const caret = this.getCaret();
+        const position = model.positionForOffset(caret.offset, caret.atNodeEnd);
+        model.transform(() => {
+            const addedLen = model.insert(partCreator.plainWithEmoji(text), position);
+            return model.positionForOffset(caret.offset + addedLen, true);
+        });
+    }
+
     public render(): React.ReactNode {
         let autoComplete: JSX.Element | undefined;
-        if (this.state.autoComplete) {
+        // 私聊没有@功能；不展示成员列表时没有@功能
+        if (this.state.autoComplete && !this.props.room.isPeopleRoom() && this.props.displayMemberList) {
             const query = this.state.query;
             const queryLen = query.length;
             autoComplete = (
@@ -840,54 +897,17 @@ export default class BasicMessageEditor extends React.Component<IProps, IState> 
             </div>
         );
     }
-
-    public focus(): void {
-        this.editorRef.current?.focus();
-    }
-
-    public insertMention(userId: string): void {
-        this.modifiedFlag = true;
-        const { model } = this.props;
-        const { partCreator } = model;
-        const member = this.props.room.getMember(userId);
-        const displayName = member ? member.rawDisplayName : userId;
-        const caret = this.getCaret();
-        const position = model.positionForOffset(caret.offset, caret.atNodeEnd);
-        // Insert suffix only if the caret is at the start of the composer
-        const parts = partCreator.createMentionParts(caret.offset === 0, displayName, userId);
-        model.transform(() => {
-            const addedLen = model.insert(parts, position);
-            return model.positionForOffset(caret.offset + addedLen, true);
-        });
-        // refocus on composer, as we just clicked "Mention"
-        this.focus();
-    }
-
-    public insertQuotedMessage(event: MatrixEvent): void {
-        this.modifiedFlag = true;
-        const { model } = this.props;
-        const { partCreator } = model;
-        const quoteParts = parseEvent(event, partCreator, { isQuotedMessage: true });
-        // add two newlines
-        quoteParts.push(partCreator.newline());
-        quoteParts.push(partCreator.newline());
-        model.transform(() => {
-            const addedLen = model.insert(quoteParts, model.positionForOffset(0));
-            return model.positionForOffset(addedLen, true);
-        });
-        // refocus on composer, as we just clicked "Quote"
-        this.focus();
-    }
-
-    public insertPlaintext(text: string): void {
-        this.modifiedFlag = true;
-        const { model } = this.props;
-        const { partCreator } = model;
-        const caret = this.getCaret();
-        const position = model.positionForOffset(caret.offset, caret.atNodeEnd);
-        model.transform(() => {
-            const addedLen = model.insert(partCreator.plainWithEmoji(text), position);
-            return model.positionForOffset(caret.offset + addedLen, true);
-        });
-    }
 }
+
+export default withRoomPermissions<BaseProps>(
+    BasicMessageEditor,
+    {
+        displayMemberList: {
+            eventType: StateEventType.DisplayMemberList,
+            state: true,
+        },
+    },
+    {
+        forwardRef: true,
+    },
+);

@@ -46,15 +46,18 @@ import { UPDATE_EVENT } from "../../stores/AsyncStore";
 import { IRightPanelCard, IRightPanelCardState } from "../../stores/right-panel/RightPanelStoreIPanelState";
 import { Action } from "../../dispatcher/actions";
 import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
-import { StateEvent } from "matrix-react-sdk/src/powerLevel";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 
-interface IProps {
+interface BaseProps {
     room: Room; // if showing panels for a given room, this is set
     overwriteCard?: IRightPanelCard; // used to display a custom card and ignoring the RightPanelStore (used for UserView)
     resizeNotifier: ResizeNotifier;
     permalinkCreator?: RoomPermalinkCreator;
     e2eStatus?: E2EStatus;
-    displayMemberList?: boolean;
+}
+
+interface IProps extends BaseProps {
+    displayMemberList: boolean;
 }
 
 interface IState {
@@ -297,6 +300,9 @@ class RightPanel extends React.PureComponent<IProps, IState> {
     }
 }
 
-export default withRoomPermissions<IProps>(RightPanel, {
-    displayMemberList: StateEvent.DisplayMemberList,
+export default withRoomPermissions<BaseProps>(RightPanel, {
+    displayMemberList: {
+        eventType: StateEventType.DisplayMemberList,
+        state: true,
+    },
 });
