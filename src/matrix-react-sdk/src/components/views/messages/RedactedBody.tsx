@@ -28,7 +28,11 @@ interface IProps {
 
 const RedactedBody = React.forwardRef<any, IProps | IBodyProps>(({ mxEvent, hasReply = false }, ref) => {
     const cli: MatrixClient = useContext(MatrixClientContext);
-    const hasThread = mxEvent.getThread(); // 是否有消息列回复
+
+    // 是否有消息列回复
+    const thread = mxEvent.getThread();
+    const hasThread = thread && thread.id === mxEvent.getId();
+
     let text = _t("Message deleted"); // "消息被撤回"
     const unsigned = mxEvent.getUnsigned();
     const redactedBecauseUserId = unsigned && unsigned.redacted_because && unsigned.redacted_because.sender;
