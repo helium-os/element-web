@@ -183,7 +183,7 @@ export function getDefaultEventPowerLevels(isSpace: boolean): PowerLevelsMap {
         [EventType.SpaceChild]: PowerLevel.Moderator,
         [EventType.Tag]: PowerLevel.Moderator,
         [EventType.RoomPinnedEvents]: PowerLevel.Moderator,
-        [EventType.RoomHistoryVisibility]: PowerLevel.Admin,
+        [EventType.RoomHistoryVisibility]: getChangePowerLevelRequiredLevel(isSpace),
         [EventType.RoomJoinRules]: getChangePowerLevelRequiredLevel(isSpace),
         [EventType.RoomPowerLevels]: getChangePowerLevelRequiredLevel(isSpace),
         [EventType.RoomTombstone]: PowerLevel.Admin,
