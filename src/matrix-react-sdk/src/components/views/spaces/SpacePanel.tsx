@@ -309,10 +309,11 @@ const SpacePanelInner: React.FC<IInnerSpacePanelProps> = ({
                     </Draggable>
                 ))}
                 {children}
-                {shouldShowComponent(UIComponent.CreateSpaces) && UserStore.instance().canCreateSpace && (
-                    <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
-                )}
             </IndicatorScrollbar>
+            <div className="mx_Space_Divider" />
+            {shouldShowComponent(UIComponent.CreateSpaces) && UserStore.instance().canCreateSpace && (
+                <CreateSpaceButton isPanelCollapsed={isPanelCollapsed} setPanelCollapsed={setPanelCollapsed} />
+            )}
         </>
     );
 };
