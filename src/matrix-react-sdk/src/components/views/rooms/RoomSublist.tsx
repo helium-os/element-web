@@ -15,12 +15,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+import React, { ComponentType, createRef, ReactComponentElement, ReactNode, useEffect } from "react";
 import { Room } from "matrix-js-sdk/src/models/room";
 import classNames from "classnames";
 import { Enable, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
-import React, { ComponentType, createRef, ReactComponentElement, ReactNode, useMemo, memo } from "react";
 
 import { Droppable, Draggable, DroppableProvided } from "react-beautiful-dnd";
 
@@ -57,8 +56,7 @@ import SpaceAddChanelContextMenu from "matrix-react-sdk/src/components/views/con
 import SpaceDeleteTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/SpaceDeleteTagContextMenu";
 import EditSpaceTagContextMenu from "matrix-react-sdk/src/components/views/context_menus/EditSpaceTagContextMenu";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
-import { EventType } from "matrix-js-sdk/src/matrix";
+import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
 
 const SHOW_N_BUTTON_HEIGHT = 28; // As defined by CSS
 const RESIZE_HANDLE_HEIGHT = 4; // As defined by CSS
@@ -75,8 +73,7 @@ export interface IAuxButtonProps {
     dispatcher?: MatrixDispatcher;
 }
 
-interface BaseProps {
-    index: number;
+interface IProps {
     forRooms: boolean;
     startAsHidden: boolean;
     label: string;
@@ -89,10 +86,7 @@ interface BaseProps {
     resizeNotifier: ResizeNotifier;
     extraTiles?: ReactComponentElement<typeof ExtraTile>[] | null;
     onListCollapse?: (isExpanded: boolean) => void;
-}
-
-interface IProps extends BaseProps {
-    canManageSpaceTag: boolean;
+    droppableProvided?: DroppableProvided;
 }
 
 // TODO: Use re-resizer's NumberSize when it is exposed as the type
@@ -759,7 +753,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         (e.target as HTMLDivElement).scrollTop = 0;
     }
 
-    private getSublist(dropProvided?: DroppableProvided): JSX.Element | undefined {
+    private getSublist(droppableProvided?: DroppableProvided): JSX.Element | undefined {
         let content: JSX.Element | undefined;
 
         const visibleTiles = this.renderVisibleTiles();
@@ -770,7 +764,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                 <div className="mx_RoomSublist_resizeBox mx_RoomSublist_resizeBox_forceExpanded">
                     <div className="mx_RoomSublist_tiles" ref={this.tilesRef}>
                         {visibleTiles}
-                        {dropProvided?.placeholder}
+                        {droppableProvided?.placeholder}
                     </div>
                 </div>
             );
@@ -884,7 +878,7 @@ export default class RoomSublist extends React.Component<IProps, IState> {
                     >
                         <div className="mx_RoomSublist_tiles" ref={this.tilesRef}>
                             {visibleTiles}
-                            {dropProvided?.placeholder}
+                            {droppableProvided?.placeholder}
                         </div>
                         {showNButton}
                     </Resizable>
@@ -907,72 +901,61 @@ export default class RoomSublist extends React.Component<IProps, IState> {
         });
 
         return (
-            <Draggable
-                isDragDisabled={
-                    OrderedDefaultTagIDs.includes(this.props.tagId) ||
-                    (!SpaceStore.instance.isHomeSpace && !this.props.canManageSpaceTag)
-                }
-                draggableId={this.props.tagId}
-                index={this.props.index}
+            <div
+                ref={this.sublistRef}
+                className={classes}
+                role="group"
+                aria-hidden={hidden}
+                aria-label={this.props.label}
+                data-id={this.props.tagId}
+                onKeyDown={this.onKeyDown}
             >
-                {(draggableProvided, draggableSnapshot) => (
-                    <div
-                        ref={draggableProvided.innerRef}
-                        {...draggableProvided.draggableProps}
-                        {...draggableProvided.dragHandleProps}
-                    >
-                        <Droppable
-                            isDropDisabled={
-                                OrderedDefaultTagIDs.includes(this.props.tagId) &&
-                                this.props.tagId !== DefaultTagID.Untagged
-                            }
-                            droppableId={this.props.tagId}
-                            type={DragType.Channel}
-                        >
-                            {(droppableProvided, droppableSnapshot) => (
-                                <div ref={droppableProvided.innerRef}>
-                                    <div
-                                        ref={this.sublistRef}
-                                        className={classes}
-                                        role="group"
-                                        aria-hidden={hidden}
-                                        aria-label={this.props.label}
-                                        data-id={this.props.tagId}
-                                        onKeyDown={this.onKeyDown}
-                                    >
-                                        {/*社区内默认分组不展示header*/}
-                                        {(SpaceStore.instance.isHomeSpace ||
-                                            this.props.tagId !== DefaultTagID.Untagged) &&
-                                            this.renderHeader()}
-                                        {this.getSublist(droppableProvided)}
-                                    </div>
-                                </div>
-                            )}
-                        </Droppable>
-                    </div>
-                )}
-            </Draggable>
+                {/*社区内默认分组不展示header*/}
+                {(SpaceStore.instance.isHomeSpace || this.props.tagId !== DefaultTagID.Untagged) && this.renderHeader()}
+                {this.getSublist(this.props.droppableProvided)}
+            </div>
         );
     }
 }
 
-interface DragRoomSublistProps extends BaseProps {
+interface DragRoomSublistProps extends IProps {
     space: Room | null;
+    index: number;
 }
-export const DragRoomSublist = memo((props: DragRoomSublistProps) => {
+export const DragRoomSublist = (props: DragRoomSublistProps) => {
     const cli = MatrixClientPeg.get();
-    const [canManageSpaceTag] = useRoomPermissions(
-        cli,
-        props.space,
-        useMemo(
-            () => [
-                {
-                    eventType: EventType.Tag,
-                    state: false,
-                },
-            ],
-            [],
-        ),
+
+    const canManageSpaceTag = useRoomTagManage(cli, props.space, cli.getUserId());
+
+    return (
+        <Draggable
+            isDragDisabled={
+                OrderedDefaultTagIDs.includes(props.tagId) || (!SpaceStore.instance.isHomeSpace && !canManageSpaceTag)
+            }
+            draggableId={props.tagId}
+            index={props.index}
+        >
+            {(draggableProvided, draggableSnapshot) => (
+                <div
+                    ref={draggableProvided.innerRef}
+                    {...draggableProvided.draggableProps}
+                    {...draggableProvided.dragHandleProps}
+                >
+                    <Droppable
+                        isDropDisabled={
+                            OrderedDefaultTagIDs.includes(props.tagId) && props.tagId !== DefaultTagID.Untagged
+                        }
+                        droppableId={props.tagId}
+                        type={DragType.Channel}
+                    >
+                        {(droppableProvided, droppableSnapshot) => (
+                            <div ref={droppableProvided.innerRef}>
+                                <RoomSublist {...props} droppableProvided={droppableProvided} />
+                            </div>
+                        )}
+                    </Droppable>
+                </div>
+            )}
+        </Draggable>
     );
-    return <RoomSublist {...props} canManageSpaceTag={canManageSpaceTag} />;
-});
+};

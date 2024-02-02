@@ -19,7 +19,6 @@ limitations under the License.
 
 import React, { createRef } from "react";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
-import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import BaseCard from "./BaseCard";
 import MemberTile from "../rooms/MemberTile";
 import { toLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
@@ -34,7 +33,8 @@ import Modal from "matrix-react-sdk/src/Modal";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
 import { contextMenuBelow, PartialDOMRect } from "matrix-react-sdk/src/components/views/rooms/RoomTile";
 import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
-import { PowerLevel, StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { Room } from "matrix-js-sdk/src/models/room";
 
 interface BaseProps {
     roomId: string;
@@ -42,6 +42,7 @@ interface BaseProps {
 }
 
 interface IProps extends BaseProps {
+    room: Room;
     canKickMember: boolean; // 是否有移除成员的权限
 }
 
@@ -90,29 +91,11 @@ class MemberListPanel extends React.Component<IProps, IState> {
         });
     };
 
-    private validCanKickMember = (member: RoomMember) => {
-        const cli = MatrixClientPeg.get();
-        const room = cli.getRoom(this.props.roomId);
-
-        if (!room) return false;
-
-        const myUserId = cli.getUserId();
-        const isMe = member.userId === myUserId;
-        if (isMe) return false;
-
-        const plContent = room?.currentState.getPowerLevels();
-        const userLevels = plContent.users || {};
-        const myUserLevel = userLevels[myUserId];
-        const memberLevel = userLevels[member.userId] || PowerLevel.Default;
-
-        return myUserLevel > memberLevel && this.props.canKickMember;
-    };
-
     private onContextMenu = (member, e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!this.validCanKickMember(member)) return;
+        if (!this.props.room.validCanKickMember(member, this.props.canKickMember)) return;
 
         this.setState({
             showContextMenu: true,
@@ -179,13 +162,10 @@ class MemberListPanel extends React.Component<IProps, IState> {
         const rect = this.state.contextMenuBtn.getBoundingClientRect();
         if (!rect) return;
 
-        const cli = MatrixClientPeg.get();
-        const room = cli.getRoom(this.props.roomId);
-
         return (
             <SendDMContextMenu
                 {...toLeftOf(rect, rect.height / 2)}
-                room={room}
+                room={this.props.room}
                 member={this.state.selectedMember}
                 onFinished={this.onCloseSendDMContextMenu}
             />

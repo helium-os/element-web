@@ -42,17 +42,17 @@ export default function useRoomPermissions(
         };
 
         const onRoomStateEvents = (ev: MatrixEvent) => {
-            if (ev.getRoomId() !== room.roomId || ev.getType() !== EventType.RoomPowerLevels) return;
+            if (ev.getType() !== EventType.RoomPowerLevels) return;
 
             resetPermissions();
         };
 
         resetPermissions();
 
-        cli?.on(RoomStateEvent.Events, onRoomStateEvents); // 订阅room powerLevels更改
+        room?.on(RoomStateEvent.Events, onRoomStateEvents); // 订阅room powerLevels更改
         room?.on(RoomEvent.MyMembership, resetPermissions); // 订阅user membership更改
         return () => {
-            cli?.off(RoomStateEvent.Events, onRoomStateEvents);
+            room?.off(RoomStateEvent.Events, onRoomStateEvents);
             room?.off(RoomEvent.MyMembership, resetPermissions);
         };
     }, [cli, room, eventTypes, userId]);

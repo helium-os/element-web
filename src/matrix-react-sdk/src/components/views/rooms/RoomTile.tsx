@@ -53,6 +53,7 @@ import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissio
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { EventType } from "matrix-js-sdk/src/matrix";
 import { Draggable } from "react-beautiful-dnd";
+import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
 
 interface Props {
     room: Room;
@@ -448,22 +449,11 @@ export default RoomTileHOC;
 interface DragRoomTileProps extends Props {
     index: number;
 }
-export const DragRoomTile = memo((props: DragRoomTileProps) => {
+export const DragRoomTile = (props: DragRoomTileProps) => {
     const { index, ...roomTileProps } = props;
     const cli = MatrixClientPeg.get();
-    const [canManageTag] = useRoomPermissions(
-        cli,
-        props.room,
-        useMemo(
-            () => [
-                {
-                    eventType: EventType.Tag,
-                    state: false,
-                },
-            ],
-            [],
-        ),
-    );
+
+    const canManageTag = useRoomTagManage(cli, props.room, cli.getUserId());
 
     return (
         <Draggable
@@ -485,4 +475,4 @@ export const DragRoomTile = memo((props: DragRoomTileProps) => {
             )}
         </Draggable>
     );
-});
+};

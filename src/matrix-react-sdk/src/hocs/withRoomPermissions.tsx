@@ -17,7 +17,7 @@ interface PermissionProps {
     [propsKey: string]: boolean;
 }
 
-interface Opts {
+export interface Opts {
     forwardRef: boolean;
 }
 
@@ -37,6 +37,7 @@ export default function withRoomPermissions<P extends IProps>(
         const cli: MatrixClient = props.cli || MatrixClientPeg.get();
 
         const room = useMemo(() => props.room ?? cli.getRoom(props.roomId), [cli, props.room, props.roomId]);
+
         const permissions = useRoomPermissions(cli, room, eventTypes);
 
         const [permissionProps, setPermissionProps] = useState<PermissionProps>({});
@@ -52,7 +53,7 @@ export default function withRoomPermissions<P extends IProps>(
 
         const refProps = useMemo(() => (opts.forwardRef ? { ref } : {}), [ref]);
 
-        return <Component {...props} {...refProps} room={room} {...permissionProps} />;
+        return <Component {...props} {...permissionProps} {...refProps} room={room} />;
     };
 
     return memo(opts.forwardRef ? forwardRef(Proxy) : Proxy);

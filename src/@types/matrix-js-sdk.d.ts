@@ -6,6 +6,7 @@ import { MatrixClient } from "matrix-js-sdk/src/client";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { AdditionalEventType } from "../vector/rewrite-js-sdk/event";
+import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 
 declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableSendMsgEventContent {
@@ -50,6 +51,7 @@ declare module "matrix-js-sdk/src/models/room" {
         isRestrictedRoom(): boolean;
         isPrivateRoom(): boolean;
         canRemoveUser(userId?: string): boolean;
+        validCanKickMember(member: RoomMember, canRemoveUser: boolean): boolean;
         displayMemberList(userId?: string): boolean;
         canDeleteRoom(userId?: string): boolean;
         canManageTag(userId: string): boolean;

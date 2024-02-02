@@ -513,8 +513,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
                 const parent = this.matrixClient.getRoom(ev.getStateKey());
                 const relation = parent?.currentState.getStateEvents(EventType.SpaceChild, roomId);
                 if (
-                    (requiredValidatePermission &&
-                        !parent?.currentState.maySendStateEvent(EventType.SpaceChild, userId)) ||
+                    (requiredValidatePermission && !parent?.currentState.maySendEvent(EventType.SpaceChild, userId)) ||
                     // also skip this relation if the parent had this child added but then since removed it
                     (relation && !Array.isArray(relation.getContent().via))
                 ) {
@@ -1153,7 +1152,6 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
         this.setFilteredSuggestedRooms();
-        this.setCanManageSpacePrivateChannel();
     };
 
     // listening for m.room.member events in onRoomState above doesn't work as the Member object isn't updated by then

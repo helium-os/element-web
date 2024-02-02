@@ -306,7 +306,7 @@ class MessagePanel extends React.Component<IProps, IState> {
 
     public componentDidMount(): void {
         this.calculateRoomMembersCount();
-        this.setDisplayEventType(this.props.displayMemberList);
+        this.setDisplayEventType();
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
         SpaceStore.instance.on(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
         this.isMounted = true;
@@ -344,7 +344,7 @@ class MessagePanel extends React.Component<IProps, IState> {
 
         // 成员列表展示状态更新后，重新生成需要展示的eventType列表
         if (this.props.displayMemberList !== prevProps.displayMemberList) {
-            this.setDisplayEventType(this.props.displayMemberList);
+            this.setDisplayEventType();
         }
     }
 
@@ -354,10 +354,10 @@ class MessagePanel extends React.Component<IProps, IState> {
         });
     };
 
-    private setDisplayEventType = (displayMemberList: boolean) => {
+    private setDisplayEventType = () => {
         const newDisplayEventType = [...displayEventType];
         // 过滤掉不展示成员列表时需要隐藏的事件类型
-        if (!displayMemberList) {
+        if (!this.props.displayMemberList) {
             hiddenEventTypeIfNotDisplayMemberList.forEach((eventType) => {
                 const index = newDisplayEventType.indexOf(eventType);
                 if (index !== -1) {

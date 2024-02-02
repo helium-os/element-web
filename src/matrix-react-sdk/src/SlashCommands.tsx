@@ -894,10 +894,7 @@ export const Commands = [
             const roomId = SdkContextClass.instance.roomViewStore.getRoomId();
             if (!roomId) return false;
             const room = cli.getRoom(roomId);
-            return (
-                !!room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, cli.getUserId()!) &&
-                !isLocalRoom(room)
-            );
+            return !!room?.currentState.maySendEvent(EventType.RoomPowerLevels, cli.getUserId()!) && !isLocalRoom(room);
         },
         runFn: function (roomId, args) {
             if (args) {
@@ -945,10 +942,7 @@ export const Commands = [
             const roomId = SdkContextClass.instance.roomViewStore.getRoomId();
             if (!roomId) return false;
             const room = cli.getRoom(roomId);
-            return (
-                !!room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, cli.getUserId()!) &&
-                !isLocalRoom(room)
-            );
+            return !!room?.currentState.maySendEvent(EventType.RoomPowerLevels, cli.getUserId()!) && !isLocalRoom(room);
         },
         runFn: function (roomId, args) {
             if (args) {

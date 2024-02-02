@@ -85,8 +85,8 @@ const SpaceSettingsVisibilityTab: React.FC<IProps> = ({ matrixClient: cli, space
 
     const [showAdvancedSection, toggleAdvancedSection] = useStateToggle();
 
-    const canSetGuestAccess = space.currentState.maySendStateEvent(EventType.RoomGuestAccess, userId);
-    const canSetHistoryVisibility = space.currentState.maySendStateEvent(EventType.RoomHistoryVisibility, userId);
+    const canSetGuestAccess = space.currentState.maySendEvent(EventType.RoomGuestAccess, userId);
+    const canSetHistoryVisibility = space.currentState.maySendEvent(EventType.RoomHistoryVisibility, userId);
     const canSetCanonical = space.currentState.mayClientSendStateEvent(EventType.RoomCanonicalAlias, cli);
     const canonicalAliasEv = space.currentState.getStateEvents(EventType.RoomCanonicalAlias, "");
 

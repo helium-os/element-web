@@ -6,9 +6,11 @@ import { EventType } from "matrix-js-sdk/src/@types/event";
 import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomVersions";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { PowerLevel, StateEventType } from "matrix-react-sdk/src/powerLevel";
 import { DefaultTagID, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 
 export enum RoomType {
     People = "people", // 私聊
@@ -140,6 +142,27 @@ Room.prototype.canInvite = function (userId: string): boolean {
 // 判断是否可以移除用户
 Room.prototype.canRemoveUser = function (userId?: string) {
     return this.currentState.hasEventTypePermission(StateEventType.Kick, userId, true);
+};
+
+/**
+ * 校验当前用户是否可以移除某个用户
+ * @param member 被移除的用户
+ * @param canRemoveUser 当前用户是否有移除他人的权限
+ */
+Room.prototype.validCanKickMember = function (member: RoomMember, canRemoveUser: boolean) {
+    if (!canRemoveUser) return false;
+
+    const cli = MatrixClientPeg.get();
+    const myUserId = cli.getUserId();
+    const isMe = member.userId === myUserId;
+    if (isMe) return false;
+
+    const plContent = this.currentState.getPowerLevels();
+    const userLevels = plContent.users || {};
+    const myUserLevel = userLevels[myUserId];
+    const memberLevel = userLevels[member.userId] || PowerLevel.Default;
+
+    return myUserLevel > memberLevel; // 只能移除比当前用户自身权利低的用户
 };
 
 // 判断是否展示成员列表

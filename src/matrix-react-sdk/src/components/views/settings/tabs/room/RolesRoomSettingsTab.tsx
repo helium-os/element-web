@@ -271,7 +271,7 @@ class RolesRoomSettingsTab extends React.Component<IProps, IState> {
 
                 // 社区内拥有修改用户角色权限的用户
                 const canChangeLevelsUsers = Object.keys(userLevels).filter(
-                    (userId) => room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, userId),
+                    (userId) => room?.currentState.maySendEvent(EventType.RoomPowerLevels, userId),
                 );
 
                 const canChangeMemberLevels =
@@ -295,8 +295,7 @@ class RolesRoomSettingsTab extends React.Component<IProps, IState> {
                                     </ContextMenuButton>
                                 </li>
                             )}
-                            {/*只能移除比当前用户自身权利低的用户*/}
-                            {!isMe && myUserLevel > memberLevel && this.props.canKickMember && (
+                            {room.validCanKickMember(m, this.props.canKickMember) && (
                                 <li onClick={() => this.onRemoveMember(m.userId)}>{_t("Remove users")}</li>
                             )}
                         </ul>

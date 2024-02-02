@@ -197,7 +197,7 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         }
 
         let newRoomOptions: JSX.Element | undefined;
-        if (activeSpace?.currentState.maySendStateEvent(EventType.RoomAvatar, cli.getUserId()!)) {
+        if (activeSpace?.currentState.maySendEvent(EventType.RoomAvatar, cli.getUserId()!)) {
             newRoomOptions = (
                 <>
                     <IconizedContextMenuOption
