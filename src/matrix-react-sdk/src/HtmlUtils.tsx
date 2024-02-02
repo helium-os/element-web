@@ -622,7 +622,7 @@ export function bodyToHtml(content: IContent, highlights: Optional<string[]>, op
 
     const contentBody = safeBody ?? strippedBody;
     if (opts.returnString) {
-        return stripPlainMention(contentBody.replaceAll(/<br\s*\/>/g, "\n"));
+        return isFormattedBody ? stripPlainMention(contentBody.replaceAll(/<br\s*\/>/g, "\n")) : contentBody;
     }
 
     let emojiBody = false;
