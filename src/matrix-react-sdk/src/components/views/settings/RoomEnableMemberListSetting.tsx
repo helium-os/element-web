@@ -32,6 +32,7 @@ const RoomEnableMemberListSetting: React.FC<IProps> = ({ room, onError }) => {
             ...statePowerLevels,
             ...getPowerLevelByEnableDefaultUserMemberList(enable),
             events,
+            users,
         };
 
         return cli.sendStateEvent(room.roomId, EventType.RoomPowerLevels, plContent);

@@ -49,6 +49,7 @@ const RoomEnableSendMsgSetting: React.FC<IProps> = ({ room, onError }) => {
             ...statePowerLevels,
             ...getPowerLevelByEnableDefaultUserSendMsg(enable),
             events,
+            users,
         };
 
         return cli.sendStateEvent(room.roomId, EventType.RoomPowerLevels, plContent);

@@ -118,6 +118,7 @@ const SpaceAndChannelJoinRuleSettings: React.FC<IProps> = ({ room, onError, befo
                 ...events,
                 ...getDefaultEventPowerLevels(isSpaceRoom),
             },
+            users,
         };
 
         return cli.sendStateEvent(room.roomId, EventType.RoomPowerLevels, plContent);
