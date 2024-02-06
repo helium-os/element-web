@@ -54,8 +54,9 @@ export enum TabLocation {
 interface IProps {
     title?: string;
     tabs: NonEmptyArray<Tab>;
-    footer?: React.ReactNode;
     initialTabId?: string;
+    defaultTabId?: string; // 缺省Tab
+    footer?: React.ReactNode;
     tabLocation: TabLocation;
     onChange?: (tabId: string) => void;
     screenName?: ScreenName;
@@ -70,15 +71,36 @@ export default class TabbedView extends React.Component<IProps, IState> {
     public constructor(props: IProps) {
         super(props);
 
-        const initialTabIdIsValid = props.tabs.find((tab) => tab.id === props.initialTabId);
         this.state = {
-            activeTabId: initialTabIdIsValid ? props.initialTabId! : props.tabs[0].id,
+            activeTabId: props.initialTabId,
         };
     }
 
     public static defaultProps = {
         tabLocation: TabLocation.LEFT,
         showIcon: false,
+    };
+
+    public componentDidMount() {
+        this.initActiveTab();
+    }
+
+    public componentDidUpdate(prevProps: Readonly<IProps>, prevState: Readonly<IState>, snapshot?: any) {
+        if (this.props.tabs !== prevProps.tabs || this.state.activeTabId !== prevState.activeTabId) {
+            this.initActiveTab();
+        }
+    }
+
+    private validTabId(): Tab {
+        return this.props.tabs.find((tab) => tab.id === this.state.activeTabId);
+    }
+
+    private initActiveTab = () => {
+        if (!this.validTabId()) {
+            this.setActiveTab(
+                this.props.tabs.find((tab) => [this.props.defaultTabId, this.props.tabs[0]?.id].includes(tab.id)),
+            );
+        }
     };
 
     private getTabById(id: string): Tab | undefined {

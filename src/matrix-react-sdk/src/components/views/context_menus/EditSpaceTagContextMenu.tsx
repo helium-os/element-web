@@ -23,6 +23,7 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MatrixClientContext from "matrix-react-sdk/src/contexts/MatrixClientContext";
 import { TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import GroupNameDialog, { DialogType } from "matrix-react-sdk/src/components/views/dialogs/group/GroupNameDialog";
+import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
 
 interface IProps extends ContextMenuProps {
     tagId: TagID;
@@ -32,7 +33,8 @@ const EditSpaceTagContextMenu: React.FC<IProps> = ({ tagId }) => {
     const cli = useContext(MatrixClientContext);
     const userId = cli.getUserId()!;
     const activeSpaceRoom = SpaceStore.instance.activeSpaceRoom;
-    const hasTagPermission = activeSpaceRoom?.canManageTag(userId);
+
+    const canManageTag = useRoomTagManage(cli, activeSpaceRoom, userId);
 
     // 编辑分组名称
     const onChangeTagName = (tagId: TagID): void => {
@@ -44,7 +46,7 @@ const EditSpaceTagContextMenu: React.FC<IProps> = ({ tagId }) => {
 
     return (
         <>
-            {hasTagPermission && (
+            {canManageTag && (
                 <IconizedContextMenuOption label={_t("Edit Group Name")} onClick={() => onChangeTagName(tagId)} />
             )}
         </>

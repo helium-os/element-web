@@ -19,7 +19,6 @@ limitations under the License.
 
 import React, { createRef } from "react";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
-import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import BaseCard from "./BaseCard";
 import MemberTile from "../rooms/MemberTile";
 import { toLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
@@ -33,10 +32,18 @@ import { _t } from "matrix-react-sdk/src/languageHandler";
 import Modal from "matrix-react-sdk/src/Modal";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
 import { contextMenuBelow, PartialDOMRect } from "matrix-react-sdk/src/components/views/rooms/RoomTile";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { Room } from "matrix-js-sdk/src/models/room";
 
-interface IProps {
+interface BaseProps {
     roomId: string;
     onClose(): void;
+}
+
+interface IProps extends BaseProps {
+    room: Room;
+    canKickMember: boolean; // 是否有移除成员的权限
 }
 
 interface IState {
@@ -47,7 +54,7 @@ interface IState {
     generalMenuPosition: PartialDOMRect | null;
 }
 
-export default class MemberListPanel extends React.Component<IProps, IState> {
+class MemberListPanel extends React.Component<IProps, IState> {
     private memberListRef = createRef<HTMLDivElement>();
     private readonly showPresence: boolean = false;
 
@@ -88,12 +95,7 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         e.preventDefault();
         e.stopPropagation();
 
-        const client = MatrixClientPeg.get();
-        const isMe = member.userId === client.getUserId();
-        if (isMe) return;
-
-        const room = client.getRoom(this.props.roomId);
-        if (!room.canRemoveUser(client.getUserId())) return;
+        if (!this.props.room.validCanKickMember(member, this.props.canKickMember)) return;
 
         this.setState({
             showContextMenu: true,
@@ -160,13 +162,10 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         const rect = this.state.contextMenuBtn.getBoundingClientRect();
         if (!rect) return;
 
-        const cli = MatrixClientPeg.get();
-        const room = cli.getRoom(this.props.roomId);
-
         return (
             <SendDMContextMenu
                 {...toLeftOf(rect, rect.height / 2)}
-                room={room}
+                room={this.props.room}
                 member={this.state.selectedMember}
                 onFinished={this.onCloseSendDMContextMenu}
             />
@@ -187,3 +186,10 @@ export default class MemberListPanel extends React.Component<IProps, IState> {
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(MemberListPanel, {
+    canKickMember: {
+        eventType: StateEventType.Kick,
+        state: true,
+    },
+});

@@ -57,10 +57,10 @@ import { haveRendererForEvent } from "../../events/EventTileFactory";
 import { editorRoomKey } from "../../Editing";
 import { displayEventType, hasThreadSummary, hiddenEventTypeIfNotDisplayMemberList } from "../../utils/EventUtils";
 import { VoiceBroadcastInfoEventType } from "../../voice-broadcast";
-import { MatrixClient } from "matrix-js-sdk/src/client";
-import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { UPDATE_SELECTED_SPACE } from "matrix-react-sdk/src/stores/spaces";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -118,7 +118,7 @@ export function shouldFormContinuation(
     return true;
 }
 
-interface IProps {
+interface BaseProps {
     // the list of MatrixEvents to display
     events: MatrixEvent[];
 
@@ -202,12 +202,15 @@ interface IProps {
     callEventGroupers: Map<string, LegacyCallEventGrouper>;
 }
 
+interface IProps extends BaseProps {
+    displayMemberList: boolean;
+}
+
 interface IState {
     ghostReadMarkers: string[];
     showTypingNotifications: boolean;
     hideSender: boolean;
     displayEventType: EventType[];
-    displayMemberList: boolean;
     isHomeSpace: boolean;
 }
 
@@ -218,7 +221,7 @@ interface IReadReceiptForUser {
 
 /* (almost) stateless UI component which builds the event tiles in the room timeline.
  */
-export default class MessagePanel extends React.Component<IProps, IState> {
+class MessagePanel extends React.Component<IProps, IState> {
     public static contextType = RoomContext;
     public context!: React.ContextType<typeof RoomContext>;
 
@@ -276,9 +279,6 @@ export default class MessagePanel extends React.Component<IProps, IState> {
     // A map to allow groupers to maintain consistent keys even if their first event is uprooted due to back-pagination.
     public grouperKeyMap = new WeakMap<MatrixEvent, string>();
 
-    private cli: MatrixClient = MatrixClientPeg.get();
-    private myUserId = this.cli.getUserId();
-
     public constructor(props: IProps, context: React.ContextType<typeof RoomContext>) {
         super(props, context);
 
@@ -288,7 +288,6 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             ghostReadMarkers: [],
             showTypingNotifications: SettingsStore.getValue("showTypingNotifications"),
             hideSender: this.shouldHideSender(),
-            displayMemberList: false, // 是否展示成员列表
             displayEventType,
             isHomeSpace: SpaceStore.instance.isHomeSpace,
         };
@@ -307,11 +306,8 @@ export default class MessagePanel extends React.Component<IProps, IState> {
 
     public componentDidMount(): void {
         this.calculateRoomMembersCount();
-        const displayMemberList = this.setDisplayMemberList(this.props.room);
-        this.generateDisplayEventType(displayMemberList);
+        this.setDisplayEventType();
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
-        MatrixClientPeg.get().on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
-        this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
         SpaceStore.instance.on(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
         this.isMounted = true;
     }
@@ -319,8 +315,6 @@ export default class MessagePanel extends React.Component<IProps, IState> {
     public componentWillUnmount(): void {
         this.isMounted = false;
         this.props.room?.currentState.off(RoomStateEvent.Update, this.calculateRoomMembersCount);
-        MatrixClientPeg.get().off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
-        this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
         SpaceStore.instance.off(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
         SettingsStore.unwatchSetting(this.showTypingNotificationsWatcherRef);
     }
@@ -349,8 +343,8 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         }
 
         // 成员列表展示状态更新后，重新生成需要展示的eventType列表
-        if (this.state.displayMemberList !== prevState.displayMemberList) {
-            this.generateDisplayEventType(this.state.displayMemberList);
+        if (this.props.displayMemberList !== prevProps.displayMemberList) {
+            this.setDisplayEventType();
         }
     }
 
@@ -360,10 +354,10 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         });
     };
 
-    private generateDisplayEventType = (displayMemberList: boolean) => {
+    private setDisplayEventType = () => {
         const newDisplayEventType = [...displayEventType];
         // 过滤掉不展示成员列表时需要隐藏的事件类型
-        if (!displayMemberList) {
+        if (!this.props.displayMemberList) {
             hiddenEventTypeIfNotDisplayMemberList.forEach((eventType) => {
                 const index = newDisplayEventType.indexOf(eventType);
                 if (index !== -1) {
@@ -375,30 +369,6 @@ export default class MessagePanel extends React.Component<IProps, IState> {
             displayEventType: newDisplayEventType,
         });
     };
-
-    private onRoomStateEvents = (ev: MatrixEvent) => {
-        switch (ev.getType()) {
-            case EventType.RoomPowerLevels:
-                // powerLevel更新
-                this.setDisplayMemberList(this.props.room);
-                break;
-        }
-    };
-
-    // 用户角色（powerLevel）更新
-    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
-        this.setDisplayMemberList(this.props.room);
-    };
-
-    private setDisplayMemberList(room: Room): boolean {
-        if (!room) return;
-
-        const displayMemberList = room.displayMemberList(this.myUserId);
-        this.setState({
-            displayMemberList,
-        });
-        return displayMemberList;
-    }
 
     private shouldHideSender(): boolean {
         return this.props.room?.getInvitedAndJoinedMemberCount() <= 2 && this.props.layout === Layout.Bubble;
@@ -1133,6 +1103,19 @@ export default class MessagePanel extends React.Component<IProps, IState> {
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(
+    MessagePanel,
+    {
+        displayMemberList: {
+            eventType: StateEventType.DisplayMemberList,
+            state: true,
+        },
+    },
+    {
+        forwardRef: true,
+    },
+);
 
 /**
  * Holds on to an event, caching the information about whether it should be

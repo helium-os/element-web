@@ -3,6 +3,7 @@ import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { Room } from "matrix-js-sdk/src/models/room";
 import LabelledToggleSwitch from "matrix-react-sdk/src/components/views/elements/LabelledToggleSwitch";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
+import { IEnableMemberListContent } from "matrix-js-sdk/src/@types/partials";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { getPowerLevelByEnableDefaultUserMemberList } from "matrix-react-sdk/src/powerLevel";
 import { useRoomEnableMemberList } from "matrix-react-sdk/src/hooks/room/useRoomEnableMemberList";
@@ -15,10 +16,10 @@ interface IProps {
 const RoomEnableMemberListSetting: React.FC<IProps> = ({ room, onError }) => {
     const cli = useContext(MatrixClientContext);
 
-    const { disabled, value, setValue } = useRoomEnableMemberList(
+    const { hasPermission, value, setValue } = useRoomEnableMemberList(
         cli,
         room,
-        (newContent) => {
+        (newContent: IEnableMemberListContent) => {
             changeRoomPowerLevels(room, newContent.enable); // 修改配置后，同时修改powerLevel display_member_list一项，控制谁可以展示成员列表
         },
         onError,
@@ -46,7 +47,7 @@ const RoomEnableMemberListSetting: React.FC<IProps> = ({ room, onError }) => {
         <>
             <LabelledToggleSwitch
                 label={"是否显示成员列表"}
-                disabled={disabled}
+                disabled={!hasPermission}
                 value={value}
                 onChange={onToggleMemberListEnable}
             />

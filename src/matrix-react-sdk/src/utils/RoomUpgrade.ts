@@ -78,9 +78,7 @@ export async function upgradeRoom(
     if (updateSpaces) {
         parentsToRelink = Array.from(SpaceStore.instance.getKnownParents(room.roomId))
             .map((roomId) => cli.getRoom(roomId))
-            .filter((parent) =>
-                parent?.currentState.maySendStateEvent(EventType.SpaceChild, cli.getUserId()!),
-            ) as Room[];
+            .filter((parent) => parent?.currentState.maySendEvent(EventType.SpaceChild, cli.getUserId()!)) as Room[];
     }
 
     const progress: IProgress = {

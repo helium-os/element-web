@@ -23,6 +23,7 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { getHttpUrlFromMxc } from "matrix-react-sdk/src/customisations/Media";
+import useRoomEventPermission from "matrix-react-sdk/src/hooks/room/useRoomEventPermission";
 
 export interface AvatarEditProps extends Partial<AvatarProps> {
     autoUpload?: boolean; // 是否是自动上传  true-自动上传  false-手动上传
@@ -39,15 +40,16 @@ function getRoomAvatarUrl(room, size) {
 const RoomAvatarSetting: React.FC<AvatarEditProps> = ({ autoUpload = true, room, size, setAvatar, ...restProps }) => {
     const client = MatrixClientPeg.get();
 
-    const [canSetAvatar, setCanSetAvatar] = useState<boolean>(false);
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    // 是否有修改头像的权限
+    const canSetAvatar: boolean = useRoomEventPermission(
+        client,
+        room,
+        EventType.RoomAvatar,
+        false,
+        client.getSafeUserId(),
+    );
 
-    // 判断是否有修改头像的权限
-    useEffect(() => {
-        const client = MatrixClientPeg.get();
-        const userId = client.getSafeUserId();
-        setCanSetAvatar(room.currentState.maySendStateEvent(EventType.RoomAvatar, userId) && !room.isAdminLeft());
-    }, [client, room]);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (!room?.roomId) {

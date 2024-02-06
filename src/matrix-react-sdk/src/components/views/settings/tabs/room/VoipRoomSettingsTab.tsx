@@ -41,7 +41,7 @@ const ElementCallSwitch: React.FC<ElementCallSwitchProps> = ({ roomId }) => {
             return [
                 content ?? {},
                 content?.["events"] ?? {},
-                state?.maySendStateEvent(EventType.RoomPowerLevels, MatrixClientPeg.get().getUserId()),
+                state?.maySendEvent(EventType.RoomPowerLevels, MatrixClientPeg.get().getUserId()),
             ];
         }, []),
     );

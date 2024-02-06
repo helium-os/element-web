@@ -214,7 +214,6 @@ const JoinRuleSettings: React.FC<IProps> = ({
             description = _t("Anyone in a space can find and join. You can select multiple spaces.");
         }
 
-
         // 隐藏空间成员一项
         // definitions.splice(1, 0, {
         //     value: JoinRule.Restricted,
@@ -246,7 +245,7 @@ const JoinRuleSettings: React.FC<IProps> = ({
                 let warning: JSX.Element | undefined;
                 const userId = cli.getUserId()!;
                 const unableToUpdateSomeParents = Array.from(SpaceStore.instance.getKnownParents(room.roomId)).some(
-                    (roomId) => !cli.getRoom(roomId)?.currentState.maySendStateEvent(EventType.SpaceChild, userId),
+                    (roomId) => !cli.getRoom(roomId)?.currentState.maySendEvent(EventType.SpaceChild, userId),
                 );
                 if (unableToUpdateSomeParents) {
                     warning = (

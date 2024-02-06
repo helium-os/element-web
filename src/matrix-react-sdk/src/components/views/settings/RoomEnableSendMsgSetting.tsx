@@ -20,6 +20,7 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import LabelledToggleSwitch from "matrix-react-sdk/src/components/views/elements/LabelledToggleSwitch";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
+import { IEnableSendMsgEventContent } from "matrix-js-sdk/src/@types/partials";
 import { getPowerLevelByEnableDefaultUserSendMsg } from "matrix-react-sdk/src/powerLevel";
 import { useRoomEnableSendMsg } from "matrix-react-sdk/src/hooks/room/useRoomEnableSendMsg";
 
@@ -31,10 +32,10 @@ interface IProps {
 const RoomEnableSendMsgSetting: React.FC<IProps> = ({ room, onError }) => {
     const cli = useContext(MatrixClientContext);
 
-    const { disabled, value, setValue } = useRoomEnableSendMsg(
+    const { hasPermission, value, setValue } = useRoomEnableSendMsg(
         cli,
         room,
-        (newContent) => {
+        (newContent: IEnableSendMsgEventContent) => {
             changeRoomPowerLevels(room, newContent.enable); // 修改配置后，同时修改powerLevel events_default一项，控制谁可以发送消息
         },
         onError,
@@ -62,7 +63,7 @@ const RoomEnableSendMsgSetting: React.FC<IProps> = ({ room, onError }) => {
         <>
             <LabelledToggleSwitch
                 label={"允许普通用户发送消息"}
-                disabled={disabled}
+                disabled={!hasPermission}
                 value={value}
                 onChange={onToggleSendMsgEnable}
             />

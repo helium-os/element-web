@@ -42,11 +42,7 @@ RoomState.prototype.hasEventTypePermission = function (
     if (!userId) userId = cli.getUserId()!;
 
     const me = this.getMember(userId);
-    if (!me) {
-        return false;
-    }
-
-    if (this.getMember(userId).membership !== "join") {
+    if (!me || me?.membership !== "join") {
         return false;
     }
 
@@ -62,9 +58,9 @@ RoomState.prototype.hasEventTypePermission = function (
         stateDefault = 50;
     }
 
-    const eventsDefault = powerLevels.events_default!;
-    if (!Number.isSafeInteger(stateDefault)) {
-        stateDefault = 0;
+    let eventsDefault = powerLevels.events_default!;
+    if (!Number.isSafeInteger(eventsDefault)) {
+        eventsDefault = 0;
     }
 
     let usersDefault = powerLevels.users_default!;
@@ -72,7 +68,7 @@ RoomState.prototype.hasEventTypePermission = function (
         usersDefault = 0;
     }
 
-    let userPowerLevel = me.powerLevel;
+    let userPowerLevel = powerLevels.users?.[userId];
     if (!Number.isSafeInteger(userPowerLevel)) {
         userPowerLevel = usersDefault;
     }
@@ -102,4 +98,13 @@ RoomState.prototype.hasEventTypePermission = function (
     }
 
     return userPowerLevel >= requiredLevel;
+};
+
+// 重写方法
+RoomState.prototype.maySendEventOfType = function (
+    eventType: EventType | string,
+    userId: string,
+    state: boolean,
+): boolean {
+    return this.hasEventTypePermission(eventType, userId, state);
 };

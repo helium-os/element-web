@@ -3,9 +3,10 @@ import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
 import { Tag, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import { IPowerLevelsContent } from "matrix-js-sdk/src/models/room-state";
 import { MatrixClient } from "matrix-js-sdk/src/client";
-import { StateEvent } from "matrix-react-sdk/src/powerLevel";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { AdditionalEventType } from "../vector/rewrite-js-sdk/event";
+import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 
 declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableSendMsgEventContent {
@@ -27,7 +28,7 @@ declare module "matrix-js-sdk/src/client" {
 }
 
 declare module "matrix-js-sdk/src/models/room-state" {
-    type IEventType = StateEvent | EventType | AdditionalEventType | string;
+    type IEventType = StateEventType | EventType | AdditionalEventType | string;
     interface RoomState {
         isAdminLeft(): boolean;
         getPowerLevels(): IPowerLevelsContent;
@@ -50,6 +51,7 @@ declare module "matrix-js-sdk/src/models/room" {
         isRestrictedRoom(): boolean;
         isPrivateRoom(): boolean;
         canRemoveUser(userId?: string): boolean;
+        validCanKickMember(member: RoomMember, canRemoveUser: boolean): boolean;
         displayMemberList(userId?: string): boolean;
         canDeleteRoom(userId?: string): boolean;
         canManageTag(userId: string): boolean;

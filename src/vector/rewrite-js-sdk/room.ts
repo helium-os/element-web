@@ -6,9 +6,11 @@ import { EventType } from "matrix-js-sdk/src/@types/event";
 import { PreferredRoomVersions } from "matrix-react-sdk/src/utils/PreferredRoomVersions";
 import { JoinRule } from "matrix-js-sdk/src/@types/partials";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
-import { hasStateEventPermission, StateEvent } from "matrix-react-sdk/src/powerLevel";
+import { PowerLevel, StateEventType } from "matrix-react-sdk/src/powerLevel";
 import { DefaultTagID, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 
 export enum RoomType {
     People = "people", // 私聊
@@ -129,34 +131,53 @@ Room.prototype.isPrivateRoom = function () {
 };
 
 // 判断是否可以邀请其他人
-const _canInvite = Room.prototype.canInvite;
 Room.prototype.canInvite = function (userId: string): boolean {
-    const canInvite = _canInvite.call(this, userId);
-    return canInvite && !this.isPeopleRoom() && !this.isAdminLeft(); // 私聊不展示邀请按钮；群聊房间如果管理员离开了也不展示邀请按钮
+    return (
+        this.currentState.hasEventTypePermission(StateEventType.Invite, userId, true) &&
+        !this.isPeopleRoom() && // 私聊不展示邀请按钮
+        !this.isAdminLeft() // 群聊房间如果管理员离开了也不展示邀请按钮
+    );
 };
 
 // 判断是否可以移除用户
 Room.prototype.canRemoveUser = function (userId?: string) {
-    return hasStateEventPermission(this, StateEvent.Kick, userId);
+    return this.currentState.hasEventTypePermission(StateEventType.Kick, userId, true);
+};
+
+/**
+ * 校验当前用户是否可以移除某个用户
+ * @param member 被移除的用户
+ * @param canRemoveUser 当前用户是否有移除他人的权限
+ */
+Room.prototype.validCanKickMember = function (member: RoomMember, canRemoveUser: boolean) {
+    if (!canRemoveUser) return false;
+
+    const cli = MatrixClientPeg.get();
+    const myUserId = cli.getUserId();
+    const isMe = member.userId === myUserId;
+    if (isMe) return false;
+
+    const plContent = this.currentState.getPowerLevels();
+    const userLevels = plContent.users || {};
+    const myUserLevel = userLevels[myUserId];
+    const memberLevel = userLevels[member.userId] || PowerLevel.Default;
+
+    return myUserLevel > memberLevel; // 只能移除比当前用户自身权利低的用户
 };
 
 // 判断是否展示成员列表
 Room.prototype.displayMemberList = function (userId?: string) {
-    return hasStateEventPermission(this, StateEvent.DisplayMemberList, userId);
+    return this.currentState.hasEventTypePermission(StateEventType.DisplayMemberList, userId, true);
 };
 
 // 判断是否可以删除room
 Room.prototype.canDeleteRoom = function (userId?: string) {
-    return hasStateEventPermission(this, StateEvent.Delete, userId);
+    return this.currentState.hasEventTypePermission(StateEventType.Delete, userId, true);
 };
 
 // 判断是否可以增删改Tag
 Room.prototype.canManageTag = function (userId: string) {
-    if (this.getMyMembership() !== "join") {
-        return false;
-    }
-
-    return this.currentState.maySendStateEvent(EventType.Tag, userId);
+    return this.currentState.hasEventTypePermission(EventType.Tag, userId, false);
 };
 
 // 获取当前room的parents room

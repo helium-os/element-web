@@ -22,9 +22,7 @@ import React, {
     RefObject,
     SyntheticEvent,
     useContext,
-    useEffect,
-    useState,
-    useCallback,
+    useMemo,
 } from "react";
 
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
@@ -71,20 +69,19 @@ import IconizedContextMenu, {
 } from "../context_menus/IconizedContextMenu";
 import AccessibleTooltipButton from "../elements/AccessibleTooltipButton";
 import ExtraTile from "./ExtraTile";
-import RoomSublist, { IAuxButtonProps } from "./RoomSublist";
+import { DragRoomSublist, IAuxButtonProps } from "./RoomSublist";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import SpaceAddChanelContextMenu, {
     onCreateRoom,
 } from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../../vector/rewrite-js-sdk/room";
-import { EventType } from "matrix-js-sdk/src/@types/event";
-import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 import Modal from "matrix-react-sdk/src/Modal";
 import ErrorDialog from "matrix-react-sdk/src/components/views/dialogs/ErrorDialog";
+import { useSpaceAndChild } from "matrix-react-sdk/src/hooks/room/useSpaceAndChild";
 
 interface IProps {
     onKeyDown: (ev: React.KeyboardEvent, state: IRovingTabIndexState) => void;
@@ -102,6 +99,7 @@ interface IState {
     currentRoomId?: string;
     suggestedRooms: ISuggestedRoom[];
     feature_favourite_messages: boolean;
+    activeSpaceRoom: Room | null;
     spaceTags: Tag[];
     userTagIds: TagID[];
     spaceTagIds: TagID[];
@@ -234,29 +232,16 @@ const UntaggedAuxButton: React.FC<IAuxButtonProps> = ({ tabIndex, tagId }) => {
 
     const showExploreRooms = false && shouldShowComponent(UIComponent.ExploreRooms);
 
-    const shouldShowCreateRoom = useCallback(
+    const canAddSpaceChild = useSpaceAndChild(cli, activeSpace, userId);
+
+    // 是否展示创建频道 | 私聊 | 群聊按钮
+    const showCreateRoom = useMemo(
         () =>
             activeSpace
-                ? activeSpace?.getMyMembership() === "join" &&
-                  activeSpace?.currentState.maySendStateEvent(EventType.SpaceChild, userId) &&
-                  shouldShowComponent(UIComponent.CreateRooms)
+                ? canAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms)
                 : shouldShowComponent(UIComponent.CreateRooms),
-        [activeSpace, userId],
+        [activeSpace, canAddSpaceChild],
     );
-
-    const [showCreateRoom, setShowCreateRoom] = useState<boolean>(() => shouldShowCreateRoom()); // 是否展示创建频道 | 私聊 | 群聊按钮
-
-    // 成员角色改变后重新判断是否展示创建频道按钮
-    useEffect(() => {
-        const onRoomMemberPowerLevel = () => {
-            setShowCreateRoom(shouldShowCreateRoom());
-        };
-
-        cli.on(RoomMemberEvent.PowerLevel, onRoomMemberPowerLevel);
-        return () => {
-            cli.off(RoomMemberEvent.PowerLevel, onRoomMemberPowerLevel);
-        };
-    }, [cli, shouldShowCreateRoom]);
 
     const onCreate = () => {
         let tags;
@@ -421,6 +406,7 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             sublists: {},
             suggestedRooms: SpaceStore.instance.filteredSuggestedRooms,
             feature_favourite_messages: SettingsStore.getValue("feature_favourite_messages"),
+            activeSpaceRoom: SpaceStore.instance.activeSpaceRoom,
             spaceTags: [],
             spaceTagIds: [],
             userTagIds: [],
@@ -469,6 +455,9 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
     }
 
     private onActiveSpaceUpdate = () => {
+        this.setState({
+            activeSpaceRoom: SpaceStore.instance.activeSpaceRoom,
+        });
         this.updateUserTags();
     };
 
@@ -700,7 +689,8 @@ export default class RoomList extends React.PureComponent<IProps, IState> {
             // The cost of mounting/unmounting this component offsets the cost
             // of keeping it in the DOM and hiding it when it is not required
             return (
-                <RoomSublist
+                <DragRoomSublist
+                    space={this.state.activeSpaceRoom}
                     key={`sublist-${this.props.activeSpace}-${orderedTagId}`}
                     index={this.state.spaceTagIds.indexOf(orderedTagId)}
                     tagId={orderedTagId}

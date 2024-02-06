@@ -4,8 +4,7 @@ import { isPrivateRoom } from "../../vector/rewrite-js-sdk/room";
 import { _t, _td } from "matrix-react-sdk/src/languageHandler";
 import { ElementCall } from "matrix-react-sdk/src/models/Call";
 import { VoiceBroadcastInfoEventType } from "matrix-react-sdk/src/voice-broadcast";
-import { Room } from "matrix-js-sdk/src/models/room";
-import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { AdditionalEventType } from "../../vector/rewrite-js-sdk/event";
 
 export enum PowerLevel {
     Admin = 100, // 管理员
@@ -54,7 +53,7 @@ interface EventPowerLevelDescriptorsMap {
     [eventType: string]: EventPowerLevelDescriptorItem;
 }
 
-export enum StateEvent {
+export enum StateEventType {
     UsersDefault = "users_default",
     EventsDefault = "events_default",
     StateDefault = "state_default",
@@ -68,20 +67,27 @@ export enum StateEvent {
     NotificationRooms = "notifications.room",
 }
 
+// 哪些角色可以修改权限
+function getChangePowerLevelRequiredLevel(isSpace: boolean) {
+    return isSpace ? PowerLevel.Admin : PowerLevel.Moderator;
+}
+
 /** ------------------------------- state powerLevel  -------------------------------**/
 export function getDefaultStatePowerLevels(isSpace: boolean, joinRule: JoinRule): PowerLevelsMap {
     return {
-        [StateEvent.UsersDefault]: PowerLevel.Default,
-        [StateEvent.StateDefault]: PowerLevel.Moderator,
-        [StateEvent.EventsDefault]: isSpace ? PowerLevel.Admin : PowerLevel.Default, // 哪些角色可以发送消息
-        [StateEvent.Invite]: isSpace && isPrivateRoom(joinRule) ? PowerLevel.Moderator : PowerLevel.Default, // 私密社区协管员及以上权限才可以邀请
-        [StateEvent.Kick]: PowerLevel.Moderator,
-        [StateEvent.Ban]: PowerLevel.Moderator,
-        [StateEvent.Redact]: PowerLevel.Moderator,
-        [StateEvent.DisplayMemberList]: isSpace ? PowerLevel.Moderator : PowerLevel.Default, // 哪些角色可以展示成员列表
-        ...(isSpace ? { [StateEvent.ManagePrivateChannel]: PowerLevel.Moderator } : {}), // 哪些角色可以管理社区内的私密频道
-        [StateEvent.Delete]: isSpace ? PowerLevel.Admin : PowerLevel.Moderator, // 哪些角色可以删除room（只有管理员可以删除社区；管理员和协管员可以删除频道）
-        // [StateEvent.NotificationRooms]: PowerLevel.Moderator,
+        [StateEventType.UsersDefault]: PowerLevel.Default,
+        [StateEventType.StateDefault]: PowerLevel.Moderator,
+        [StateEventType.EventsDefault]: isSpace ? PowerLevel.Admin : PowerLevel.Default, // 哪些角色可以发送消息
+        [StateEventType.Invite]: isSpace && isPrivateRoom(joinRule) ? PowerLevel.Moderator : PowerLevel.Default, // 私密社区协管员及以上权限才可以邀请
+        [StateEventType.Kick]: PowerLevel.Moderator,
+        [StateEventType.Ban]: PowerLevel.Moderator,
+        [StateEventType.Redact]: PowerLevel.Moderator,
+        [StateEventType.DisplayMemberList]: isSpace ? PowerLevel.Moderator : PowerLevel.Default, // 哪些角色可以展示成员列表
+        ...(isSpace ? { [StateEventType.ManagePrivateChannel]: PowerLevel.Moderator } : {}), // 哪些角色可以管理社区内的私密频道
+        [StateEventType.Delete]: isSpace ? PowerLevel.Admin : PowerLevel.Moderator, // 哪些角色可以删除room（只有管理员可以删除社区；管理员和协管员可以删除频道）
+        [AdditionalEventType.RoomEnableDefaultUserSendMsg]: getChangePowerLevelRequiredLevel(isSpace), // 哪些角色可以控制是否允许普通用户发送消息
+        [AdditionalEventType.RoomEnableDefaultUserMemberList]: getChangePowerLevelRequiredLevel(isSpace), // 哪些角色可以控制是否允许普通用户展示成员列表
+        // [StateEventType.NotificationRooms]: PowerLevel.Moderator,
     };
 }
 
@@ -115,61 +121,36 @@ export function getInitStatePowerLevels({
     };
 }
 
-// 判断用户是否有某些state event的权限
-export function hasStateEventPermission(room: Room, key: string, userId?: string): boolean {
-    if (room.getMyMembership() !== "join") {
-        return false;
-    }
-
-    if (!userId) userId = MatrixClientPeg.get().getUserId()!;
-    const me = room.getMember(userId);
-    if (!me) {
-        return false;
-    }
-
-    const powerLevelsEvent = room.currentState.getStateEvents(EventType.RoomPowerLevels, "");
-    const powerLevels = powerLevelsEvent?.getContent() ?? {};
-
-    let requiredLevel = powerLevels[key];
-    if (!requiredLevel) {
-        const isSpace = room.isSpaceRoom();
-        const joinRule = room.getJoinRule();
-        requiredLevel = getDefaultStatePowerLevels(isSpace, joinRule)?.[key];
-    }
-
-    return me.powerLevel >= requiredLevel;
-}
-
 export function getStatePowerLevelOpts(eventType: string, isSpace: boolean): PowerLevelOpts | PowerLevelOptsMap {
     const eventPowerLevelLabels: PowerLevelOptsMap = {
-        [StateEvent.UsersDefault]: {
+        [StateEventType.UsersDefault]: {
             label: _t("Default role"),
         },
-        [StateEvent.EventsDefault]: {
+        [StateEventType.EventsDefault]: {
             label: _t("Send messages"),
         },
-        [StateEvent.StateDefault]: {
+        [StateEventType.StateDefault]: {
             label: _t("Change settings"),
         },
-        [StateEvent.Invite]: {
+        [StateEventType.Invite]: {
             label: _t("Invite users"),
         },
-        [StateEvent.Kick]: {
+        [StateEventType.Kick]: {
             label: _t("Remove users"),
         },
-        [StateEvent.Ban]: {
+        [StateEventType.Ban]: {
             label: _t("Ban users"),
         },
-        [StateEvent.Redact]: {
+        [StateEventType.Redact]: {
             label: _t("Remove messages sent by others"),
         },
-        [StateEvent.NotificationRooms]: {
+        [StateEventType.NotificationRooms]: {
             label: _t("Notify everyone"),
         },
-        [StateEvent.DisplayMemberList]: {
+        [StateEventType.DisplayMemberList]: {
             label: "展示成员列表",
         },
-        [StateEvent.Delete]: {
+        [StateEventType.Delete]: {
             label: isSpace
                 ? _t("Delete Space")
                 : _t("Delete room", {
@@ -200,9 +181,11 @@ export function getDefaultEventPowerLevels(isSpace: boolean): PowerLevelsMap {
         [EventType.RoomName]: PowerLevel.Moderator,
         [EventType.RoomCanonicalAlias]: PowerLevel.Moderator,
         [EventType.SpaceChild]: PowerLevel.Moderator,
+        [EventType.Tag]: PowerLevel.Moderator,
         [EventType.RoomPinnedEvents]: PowerLevel.Moderator,
-        [EventType.RoomHistoryVisibility]: PowerLevel.Admin,
-        [EventType.RoomPowerLevels]: PowerLevel.Admin,
+        [EventType.RoomHistoryVisibility]: getChangePowerLevelRequiredLevel(isSpace),
+        [EventType.RoomJoinRules]: getChangePowerLevelRequiredLevel(isSpace),
+        [EventType.RoomPowerLevels]: getChangePowerLevelRequiredLevel(isSpace),
         [EventType.RoomTombstone]: PowerLevel.Admin,
         [EventType.RoomEncryption]: PowerLevel.Admin,
         [EventType.RoomServerAcl]: PowerLevel.Admin,

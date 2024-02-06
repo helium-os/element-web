@@ -36,8 +36,10 @@ import { ActionPayload } from "../../../dispatcher/payloads";
 import { NonEmptyArray } from "../../../@types/common";
 import { PollHistoryTab } from "../settings/tabs/room/PollHistoryTab";
 import RoomSettingsBaseDialog from "matrix-react-sdk/src/components/views/dialogs/RoomSettingsBaseDialog";
-import { MatrixClient } from "matrix-js-sdk/src/client";
 import trashSvg from "matrix-react-sdk/res/img/feather-customised/trash.svg";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import SecurityRoomSettingsTab from "matrix-react-sdk/src/components/views/settings/tabs/room/SecurityRoomSettingsTab";
 
 export const ROOM_GENERAL_TAB = "ROOM_GENERAL_TAB";
 export const ROOM_VOIP_TAB = "ROOM_VOIP_TAB";
@@ -48,28 +50,27 @@ export const ROOM_BRIDGES_TAB = "ROOM_BRIDGES_TAB";
 export const ROOM_ADVANCED_TAB = "ROOM_ADVANCED_TAB";
 export const ROOM_POLL_HISTORY_TAB = "ROOM_POLL_HISTORY_TAB";
 
-interface IProps {
+interface BaseProps {
     roomId: string;
     onFinished: (success?: boolean) => void;
     initialTabId?: string;
 }
-
-interface IState {
+interface IProps extends BaseProps {
     room: Room;
-    roomName: string;
     canDelete: boolean;
 }
 
-export default class RoomSettingsDialog extends React.Component<IProps, IState> {
+interface IState {
+    roomName: string;
+}
+
+class RoomSettingsDialog extends React.PureComponent<IProps, IState> {
     private dispatcherRef: string;
-    private cli: MatrixClient = MatrixClientPeg.get();
 
     public constructor(props: IProps) {
         super(props);
         this.state = {
-            room: this.getRoom(),
             roomName: "",
-            canDelete: false,
         };
     }
 
@@ -78,14 +79,9 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
         MatrixClientPeg.get().on(RoomEvent.Name, this.onRoomName);
 
         this.onRoomName();
-        this.onCanDeleteRoom();
     }
 
-    public componentDidUpdate(prevProps: IProps, prevState: IState): void {
-        if (this.props.roomId !== prevProps.roomId) {
-            this.onRoom();
-        }
-    }
+    public componentDidUpdate(prevProps: IProps, prevState: IState): void {}
 
     public componentWillUnmount(): void {
         if (this.dispatcherRef) {
@@ -110,25 +106,9 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
         }
     };
 
-    private getRoom = (): Room => {
-        return this.cli.getRoom(this.props.roomId);
-    };
-
-    private onRoom = (): void => {
-        this.setState({
-            room: this.getRoom(),
-        });
-    };
-
     private onRoomName = (): void => {
         this.setState({
-            roomName: this.state.room?.name ?? "",
-        });
-    };
-
-    private onCanDeleteRoom = (): void => {
-        this.setState({
-            canDelete: this.state.room?.canDeleteRoom(),
+            roomName: this.props.room?.name ?? "",
         });
     };
 
@@ -165,20 +145,20 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
         }
 
         if (SettingsStore.getValue(UIFeature.RoomSecurityAndPrivacySettings)) {
-            // tabs.push(
-            //     new Tab(
-            //         ROOM_SECURITY_TAB,
-            //         _t("Security & Privacy"),
-            //         "mx_RoomSettingsDialog_securityIcon",
-            //         (
-            //             <SecurityRoomSettingsTab
-            //                 roomId={this.props.roomId}
-            //                 closeSettingsFn={() => this.props.onFinished(true)}
-            //             />
-            //         ),
-            //         "RoomSettingsSecurityPrivacy",
-            //     ),
-            // );
+            tabs.push(
+                new Tab(
+                    ROOM_SECURITY_TAB,
+                    _t("Security & Privacy"),
+                    "mx_RoomSettingsDialog_securityIcon",
+                    (
+                        <SecurityRoomSettingsTab
+                            roomId={this.props.roomId}
+                            closeSettingsFn={() => this.props.onFinished(true)}
+                        />
+                    ),
+                    "RoomSettingsSecurityPrivacy",
+                ),
+            );
         }
 
         if (SettingsStore.getValue(UIFeature.RoomRolesAndPermissionsSettings)) {
@@ -256,7 +236,7 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
     public render(): React.ReactNode {
         const roomName = this.state.roomName;
 
-        const footer = this.state.canDelete && (
+        const footer = this.props.canDelete && (
             <Button
                 type={ButtonType.Text}
                 size={ButtonSize.Small}
@@ -276,9 +256,17 @@ export default class RoomSettingsDialog extends React.Component<IProps, IState> 
                     footer={footer}
                     tabs={this.getTabs()}
                     initialTabId={this.props.initialTabId}
+                    defaultTabId={ROOM_GENERAL_TAB}
                     screenName="RoomSettings"
                 />
             </RoomSettingsBaseDialog>
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(RoomSettingsDialog, {
+    canDelete: {
+        eventType: StateEventType.Delete,
+        state: true,
+    },
+});

@@ -359,32 +359,31 @@ export const AddExistingToSpace: React.FC<IAddExistingToSpaceProps> = ({
 
 const defaultRendererFactory =
     (title: string): Renderer =>
-    (rooms, selectedToAdd, { scrollTop, height }, onChange) =>
-        (
-            <div className="mx_AddExistingToSpace_section">
-                <h3>{_t(title)}</h3>
-                <LazyRenderList
-                    itemHeight={ROW_HEIGHT}
-                    items={rooms}
-                    scrollTop={scrollTop}
-                    height={height}
-                    renderItem={(room) => (
-                        <Entry
-                            key={room.roomId}
-                            room={room}
-                            checked={selectedToAdd.has(room)}
-                            onChange={
-                                onChange
-                                    ? (checked: boolean) => {
-                                          onChange(checked, room);
-                                      }
-                                    : undefined
-                            }
-                        />
-                    )}
-                />
-            </div>
-        );
+    (rooms, selectedToAdd, { scrollTop, height }, onChange) => (
+        <div className="mx_AddExistingToSpace_section">
+            <h3>{_t(title)}</h3>
+            <LazyRenderList
+                itemHeight={ROW_HEIGHT}
+                items={rooms}
+                scrollTop={scrollTop}
+                height={height}
+                renderItem={(room) => (
+                    <Entry
+                        key={room.roomId}
+                        room={room}
+                        checked={selectedToAdd.has(room)}
+                        onChange={
+                            onChange
+                                ? (checked: boolean) => {
+                                      onChange(checked, room);
+                                  }
+                                : undefined
+                        }
+                    />
+                )}
+            />
+        </div>
+    );
 
 export const defaultRoomsRenderer = defaultRendererFactory(_td("Rooms"));
 export const defaultSpacesRenderer = defaultRendererFactory(_td("Spaces"));
@@ -402,7 +401,7 @@ export const SubspaceSelector: React.FC<ISubspaceSelectorProps> = ({ title, spac
         return [
             space,
             ...SpaceStore.instance.getChildSpaces(space.roomId).filter((space) => {
-                return space.currentState.maySendStateEvent(EventType.SpaceChild, space.client.getSafeUserId());
+                return space.currentState.maySendEvent(EventType.SpaceChild, space.client.getSafeUserId());
             }),
         ];
     }, [space]);

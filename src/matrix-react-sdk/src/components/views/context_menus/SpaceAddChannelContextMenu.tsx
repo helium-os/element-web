@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useContext } from "react";
-import { EventType, RoomType } from "matrix-js-sdk/src/@types/event";
+import React, { useContext, memo } from "react";
+import { RoomType } from "matrix-js-sdk/src/@types/event";
 
 import { ContextMenuProps } from "../../structures/ContextMenu";
 import { IconizedContextMenuOption } from "./IconizedContextMenu";
@@ -31,6 +31,7 @@ import { UIComponent } from "../../../settings/UIFeature";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { Tag, TagID } from "matrix-react-sdk/src/stores/room-list/models";
 import { Room } from "matrix-js-sdk/src/models/room";
+import { useSpaceAndChild } from "matrix-react-sdk/src/hooks/room/useSpaceAndChild";
 
 interface IProps extends ContextMenuProps {
     showIcon?: boolean;
@@ -50,102 +51,96 @@ const SpaceAddChanelContextMenu: React.FC<IProps> = ({ tagId, showIcon = false }
     const videoRoomsEnabled = useFeatureEnabled("feature_video_rooms");
     const elementCallVideoRoomsEnabled = useFeatureEnabled("feature_element_call_video_rooms");
 
-    const hasPermissionToAddSpaceChild = activeSpaceRoom?.currentState.maySendStateEvent(EventType.SpaceChild, userId);
-    const canAddRooms =
-        activeSpaceRoom?.getMyMembership() === "join" &&
-        hasPermissionToAddSpaceChild &&
-        shouldShowComponent(UIComponent.CreateRooms);
+    const canAddSpaceChild = useSpaceAndChild(cli, activeSpaceRoom, userId);
+
+    const canAddRooms = canAddSpaceChild && shouldShowComponent(UIComponent.CreateRooms);
     const canAddVideoRooms = canAddRooms && videoRoomsEnabled;
     const canAddSubSpaces =
         SettingsStore.getValue("Spaces.addSubSpace") &&
-        hasPermissionToAddSpaceChild &&
+        canAddSpaceChild &&
         shouldShowComponent(UIComponent.CreateSpaces);
 
-    let newRoomSection: JSX.Element | null = null;
-    if (canAddRooms || canAddSubSpaces) {
-        let tags;
-        if (tagId) tags = [{ tagId }];
+    const getTags = () => {
+        return tagId ? [{ tagId }] : undefined;
+    };
 
-        const onNewRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
+    const onNewRoomClick = (ev: ButtonEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
 
-            onCreateRoom(activeSpaceRoom, undefined, tags);
-        };
+        onCreateRoom(activeSpaceRoom, undefined, getTags());
+    };
 
-        const onNewVideoRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
+    const onNewVideoRoomClick = (ev: ButtonEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
 
-            onCreateRoom(
-                activeSpaceRoom,
-                elementCallVideoRoomsEnabled ? RoomType.UnstableCall : RoomType.ElementVideo,
-                tags,
-            );
-        };
-
-        const onNewSubspaceClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            showCreateNewSubspace(activeSpaceRoom);
-        };
-
-        const onAddExistingRoomClick = (ev: ButtonEvent): void => {
-            ev.preventDefault();
-            ev.stopPropagation();
-
-            showAddExistingRooms(activeSpaceRoom);
-        };
-
-        const iconClassName = showIcon ? "mx_SpacePanel_iconAddChannel" : "";
-
-        newRoomSection = (
-            <>
-                {canAddRooms && (
-                    <IconizedContextMenuOption
-                        data-testid="new-room-option"
-                        iconClassName={iconClassName}
-                        label={_t("Create room", { roomType: _t("channel") })}
-                        onClick={onNewRoomClick}
-                    />
-                )}
-                {canAddVideoRooms && (
-                    <IconizedContextMenuOption
-                        data-testid="new-video-room-option"
-                        iconClassName={iconClassName}
-                        label={_t("Create video room")}
-                        onClick={onNewVideoRoomClick}
-                    >
-                        <BetaPill />
-                    </IconizedContextMenuOption>
-                )}
-                {activeSpaceRoom && (
-                    <>
-                        {canAddSubSpaces && (
-                            <IconizedContextMenuOption
-                                data-testid="new-subspace-option"
-                                iconClassName={iconClassName}
-                                label={_t("Space")}
-                                onClick={onNewSubspaceClick}
-                            >
-                                <BetaPill />
-                            </IconizedContextMenuOption>
-                        )}
-                        {SettingsStore.getValue("Spaces.addExistingRoom") && (
-                            <IconizedContextMenuOption
-                                label={_t("Add existing room")}
-                                iconClassName={showIcon ? "mx_RoomList_iconAddExistingRoom" : ""}
-                                onClick={onAddExistingRoomClick}
-                            />
-                        )}
-                    </>
-                )}
-            </>
+        onCreateRoom(
+            activeSpaceRoom,
+            elementCallVideoRoomsEnabled ? RoomType.UnstableCall : RoomType.ElementVideo,
+            getTags(),
         );
-    }
+    };
 
-    return <>{newRoomSection}</>;
+    const onNewSubspaceClick = (ev: ButtonEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        showCreateNewSubspace(activeSpaceRoom);
+    };
+
+    const onAddExistingRoomClick = (ev: ButtonEvent): void => {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        showAddExistingRooms(activeSpaceRoom);
+    };
+
+    const iconClassName = showIcon ? "mx_SpacePanel_iconAddChannel" : "";
+
+    return (
+        <>
+            {canAddRooms && (
+                <IconizedContextMenuOption
+                    data-testid="new-room-option"
+                    iconClassName={iconClassName}
+                    label={_t("Create room", { roomType: _t("channel") })}
+                    onClick={onNewRoomClick}
+                />
+            )}
+            {canAddVideoRooms && (
+                <IconizedContextMenuOption
+                    data-testid="new-video-room-option"
+                    iconClassName={iconClassName}
+                    label={_t("Create video room")}
+                    onClick={onNewVideoRoomClick}
+                >
+                    <BetaPill />
+                </IconizedContextMenuOption>
+            )}
+            {activeSpaceRoom && (
+                <>
+                    {canAddSubSpaces && (
+                        <IconizedContextMenuOption
+                            data-testid="new-subspace-option"
+                            iconClassName={iconClassName}
+                            label={_t("Space")}
+                            onClick={onNewSubspaceClick}
+                        >
+                            <BetaPill />
+                        </IconizedContextMenuOption>
+                    )}
+                    {SettingsStore.getValue("Spaces.addExistingRoom") && (
+                        <IconizedContextMenuOption
+                            label={_t("Add existing room")}
+                            iconClassName={showIcon ? "mx_RoomList_iconAddExistingRoom" : ""}
+                            onClick={onAddExistingRoomClick}
+                        />
+                    )}
+                </>
+            )}
+        </>
+    );
 };
 
-export default SpaceAddChanelContextMenu;
+export default memo(SpaceAddChanelContextMenu);

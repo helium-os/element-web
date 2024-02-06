@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { IEnableMemberListContent } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { useRoomState } from "matrix-react-sdk/src/hooks/room/useRoomState";
+import { useRoomEvent } from "matrix-react-sdk/src/hooks/room/useRoomEvent";
 import { AdditionalEventType } from "../../../../vector/rewrite-js-sdk/event";
 
 interface RoomStateResult {
-    disabled: boolean;
+    hasPermission: boolean;
     value: boolean;
     setValue: (value: boolean) => void;
 }
@@ -23,10 +23,11 @@ export function useRoomEnableMemberList(
     effectFn?: (newContent: IEnableMemberListContent) => Promise<void> | void,
     errorFn?: (error: Error) => void,
 ): RoomStateResult {
-    const { disabled, content, setContent, sendStateEvent } = useRoomState<IEnableMemberListContent>(
+    const { hasPermission, content, setContent, sendStateEvent } = useRoomEvent<IEnableMemberListContent>(
         cli,
         room,
         AdditionalEventType.RoomEnableDefaultUserMemberList,
+        true,
         async (newContent) => {
             await sendStateEvent(newContent); // 修改配置
             await effectFn?.(newContent);
@@ -47,7 +48,7 @@ export function useRoomEnableMemberList(
     };
 
     return {
-        disabled,
+        hasPermission,
         value,
         setValue: onChange,
     };

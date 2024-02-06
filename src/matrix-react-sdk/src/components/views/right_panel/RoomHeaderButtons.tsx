@@ -25,7 +25,7 @@ import { ThreadEvent } from "matrix-js-sdk/src/models/thread";
 
 import { _t } from "../../../languageHandler";
 import HeaderButton from "./HeaderButton";
-import HeaderButtons, { HeaderKind } from "./HeaderButtons";
+import HeaderButtons, { HeaderButtonsProps, HeaderButtonsState, HeaderKind } from "./HeaderButtons";
 import { HeaderButtonAction, RightPanelPhases } from "../../../stores/right-panel/RightPanelStorePhases";
 import { Action } from "../../../dispatcher/actions";
 import { ActionPayload } from "../../../dispatcher/payloads";
@@ -46,11 +46,8 @@ import { EchoChamber } from "matrix-react-sdk/src/stores/local-echo/EchoChamber"
 import { CachedRoomKey, RoomEchoChamber } from "matrix-react-sdk/src/stores/local-echo/RoomEchoChamber";
 import { PROPERTY_UPDATED } from "matrix-react-sdk/src/stores/local-echo/GenericEchoChamber";
 import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
-import { MatrixClient } from "matrix-js-sdk/src/client";
-import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
-import { MatrixEvent } from "matrix-js-sdk/src/models/event";
-import { EventType } from "matrix-js-sdk/src/@types/event";
-import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 
 const ROOM_INFO_PHASES = [
     RightPanelPhases.RoomSummary,
@@ -86,24 +83,24 @@ const UnreadIndicator: React.FC<IUnreadIndicatorProps> = ({ color }) => {
     );
 };
 
-interface IProps {
+interface BaseProps extends HeaderButtonsProps {
     room?: Room;
-    excludedRightPanelPhaseButtons?: Array<RightPanelPhases>;
+    excludedRightPanelPhaseButtons?: Array<RightPanelPhases | HeaderButtonAction>;
 }
 
-interface IState {
+interface IProps extends BaseProps {
+    displayMemberList?: boolean;
+}
+
+interface IState extends HeaderButtonsState {
     notificationState: RoomNotifState;
     showRoomNotificationContextMenu: boolean;
-    displayMemberList: boolean;
 }
 
-export default class RoomHeaderButtons extends HeaderButtons<IProps> {
+class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
     private notificationBtnRef = createRef<HTMLDivElement>();
     private static readonly THREAD_PHASES = [RightPanelPhases.ThreadPanel, RightPanelPhases.ThreadView];
     private echoChamber: RoomEchoChamber;
-    private cli: MatrixClient = MatrixClientPeg.get();
-    private myUserId = this.cli.getUserId();
-    // private state: IState;
 
     public constructor(props: IProps) {
         super(props, HeaderKind.Room);
@@ -111,17 +108,14 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.state = {
             notificationState: this.echoChamber?.notificationVolume,
             showRoomNotificationContextMenu: false,
-            displayMemberList: false, // 是否展示成员列表
-        };
+        } as IState;
     }
 
     public componentDidMount(): void {
         super.componentDidMount();
-        this.setDisplayMemberList(this.props.room);
         // Notification badge may change if the notification counts from the
         // server change, if a new thread is created or updated, or if a
         // receipt is sent in the thread.
-        this.cli.on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.on(RoomEvent.UnreadNotifications, this.onNotificationUpdate);
         this.props.room?.on(RoomEvent.Receipt, this.onNotificationUpdate);
         this.props.room?.on(RoomEvent.Timeline, this.onNotificationUpdate);
@@ -132,12 +126,10 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.props.room?.on(ThreadEvent.Update, this.onNotificationUpdate);
         this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
         this.onNotificationUpdate();
-        this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
     }
 
     public componentWillUnmount(): void {
         super.componentWillUnmount();
-        this.cli.off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
         this.props.room?.off(RoomEvent.UnreadNotifications, this.onNotificationUpdate);
         this.props.room?.off(RoomEvent.Receipt, this.onNotificationUpdate);
         this.props.room?.off(RoomEvent.Timeline, this.onNotificationUpdate);
@@ -147,32 +139,6 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         this.props.room?.off(ThreadEvent.New, this.onNotificationUpdate);
         this.props.room?.off(ThreadEvent.Update, this.onNotificationUpdate);
         this.echoChamber?.on(PROPERTY_UPDATED, this.onRoomPropertyUpdate);
-        this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
-    }
-
-    private onRoomStateEvents = (ev: MatrixEvent) => {
-        switch (ev.getType()) {
-            case EventType.RoomPowerLevels:
-                // powerLevel更新
-                this.setDisplayMemberList(this.props.room);
-                break;
-        }
-    };
-
-    // 用户角色（powerLevel）更新
-    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
-        this.setDisplayMemberList(this.props.room);
-    };
-
-    private setDisplayMemberList(room: Room): boolean {
-        if (!room) return;
-
-        const displayMemberList = room.displayMemberList(this.myUserId);
-        this.setState({
-            displayMemberList,
-        });
-
-        return displayMemberList;
     }
 
     private onRoomPropertyUpdate = (property: CachedRoomKey): void => {
@@ -181,7 +147,6 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
 
     private onMyMembership = () => {
         this.onNotificationUpdate();
-        this.setDisplayMemberList(this.props.room);
     };
 
     private onNotificationUpdate = (): void => {
@@ -384,7 +349,7 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
                     />,
                 );
 
-            this.state.displayMemberList &&
+            this.props.displayMemberList &&
                 rightPanelPhaseButtons.set(
                     RightPanelPhases.RoomMemberList,
                     <HeaderButton
@@ -428,12 +393,19 @@ export default class RoomHeaderButtons extends HeaderButtons<IProps> {
         return (
             <>
                 {Array.from(rightPanelPhaseButtons.keys()).map((phase) =>
-                    this.props.excludedRightPanelPhaseButtons?.includes(phase)
-                        ? null
-                        : rightPanelPhaseButtons.get(phase),
+                    this.props.excludedRightPanelPhaseButtons?.includes(phase) ? null : (
+                        <div key={phase}>{rightPanelPhaseButtons.get(phase)}</div>
+                    ),
                 )}
                 {this.renderRoomNotificationContextMenu()}
             </>
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(RoomHeaderButtons, {
+    displayMemberList: {
+        eventType: StateEventType.DisplayMemberList,
+        state: true,
+    },
+});
