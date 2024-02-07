@@ -1450,12 +1450,9 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         if (room) {
             const me = this.context.client.getSafeUserId();
             const isAdminLeft = room.isAdminLeft();
-            const canReact =
-                room.getMyMembership() === "join" &&
-                room.currentState.maySendEvent(EventType.Reaction, me) &&
-                !isAdminLeft;
+            const canReact = room.currentState.maySendEvent(EventType.Reaction, me) && !isAdminLeft;
             const canSendMessages = room.maySendMessage() && !isAdminLeft;
-            const canSelfRedact = room.currentState.maySendEvent(EventType.RoomRedaction, me);
+            const canSelfRedact = room.currentState.maySendEvent(EventType.RoomRedaction, me) && !isAdminLeft;
 
             this.setState({
                 canReact,
@@ -2159,11 +2156,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
         );
 
         let messageComposer;
-        const showComposer =
-            // joined and not showing search results
-            myMembership === "join" && this.state.canSendMessages;
-
-        if (showComposer) {
+        if (this.state.canSendMessages) {
             messageComposer = (
                 <MessageComposer
                     room={this.state.room}

@@ -23,12 +23,6 @@ import { Room } from "matrix-js-sdk/src/models/room";
 import Autocompleter, { ICompletion, ISelectionRange, IProviderCompletions } from "../../../autocomplete/Autocompleter";
 import SettingsStore from "../../../settings/SettingsStore";
 import RoomContext from "../../../contexts/RoomContext";
-import { MatrixClient } from "matrix-js-sdk/src/client";
-import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
-import { MatrixEvent } from "matrix-js-sdk/src/models/event";
-import { EventType } from "matrix-js-sdk/src/@types/event";
-import { RoomMemberEvent } from "matrix-js-sdk/src/models/room-member";
 
 const MAX_PROVIDER_MATCHES = 20;
 
@@ -53,7 +47,6 @@ interface IState {
     shouldShowCompletions: boolean;
     hide: boolean;
     forceComplete: boolean;
-    displayMemberList: boolean;
 }
 
 export default class Autocomplete extends React.PureComponent<IProps, IState> {
@@ -63,10 +56,6 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     private containerRef = createRef<HTMLDivElement>();
 
     public static contextType = RoomContext;
-
-    private cli: MatrixClient = MatrixClientPeg.get();
-    private myUserId = this.cli.getUserId();
-
     public constructor(props: IProps) {
         super(props);
 
@@ -86,20 +75,15 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
             hide: false,
 
             forceComplete: false,
-
-            displayMemberList: false, // 是否展示成员列表
         };
     }
 
     public componentDidMount(): void {
         this.autocompleter = new Autocompleter(this.props.room, this.context.timelineRenderingType);
-        const displayMemberList = this.setDisplayMemberList(this.props.room);
-        this.applyNewProps(displayMemberList);
-        this.props.room?.on(RoomStateEvent.Events, this.onRoomStateEvents);
-        this.cli.on(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
+        this.applyNewProps();
     }
 
-    private applyNewProps(displayMemberList: boolean, oldQuery?: string, oldRoom?: Room): void {
+    private applyNewProps(oldQuery?: string, oldRoom?: Room): void {
         if (oldRoom && this.props.room.roomId !== oldRoom.roomId) {
             this.autocompleter.destroy();
             this.autocompleter = new Autocompleter(this.props.room);
@@ -110,39 +94,11 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
             return;
         }
 
-        if (this.props.room.isPeopleRoom() || !displayMemberList) return; // 私聊没有@功能；不展示成员列表时没有@功能
-
         this.complete(this.props.query, this.props.selection);
     }
 
     public componentWillUnmount(): void {
         this.autocompleter.destroy();
-        this.props.room?.off(RoomStateEvent.Events, this.onRoomStateEvents);
-        this.cli.off(RoomMemberEvent.PowerLevel, this.onRoomMemberPowerLevel);
-    }
-
-    private onRoomStateEvents = (ev: MatrixEvent) => {
-        switch (ev.getType()) {
-            case EventType.RoomPowerLevels:
-                // powerLevel更新
-                this.setDisplayMemberList(this.props.room);
-                break;
-        }
-    };
-
-    // 用户角色（powerLevel）更新
-    private onRoomMemberPowerLevel = (ev: MatrixEvent) => {
-        this.setDisplayMemberList(this.props.room);
-    };
-
-    private setDisplayMemberList(room: Room): boolean {
-        if (!room) return;
-
-        const displayMemberList = room.displayMemberList(this.myUserId);
-        this.setState({
-            displayMemberList,
-        });
-        return displayMemberList;
     }
 
     private complete(query: string, selection: ISelectionRange): Promise<void> {
@@ -309,7 +265,7 @@ export default class Autocomplete extends React.PureComponent<IProps, IState> {
     }
 
     public componentDidUpdate(prevProps: IProps): void {
-        this.applyNewProps(this.state.displayMemberList, prevProps.query, prevProps.room);
+        this.applyNewProps(prevProps.query, prevProps.room);
         // this is the selected completion, so scroll it into view if needed
         const selectedCompletion = this.refs[`completion${this.state.selectionOffset}`] as HTMLElement;
 

@@ -43,10 +43,10 @@ export const shouldShowSpaceSettings = (space: Room): boolean => {
     const userId = space.client.getUserId()!;
     return (
         space.getMyMembership() === "join" &&
-        (space.currentState.maySendStateEvent(EventType.RoomAvatar, userId) ||
-            space.currentState.maySendStateEvent(EventType.RoomName, userId) ||
-            space.currentState.maySendStateEvent(EventType.RoomTopic, userId) ||
-            space.currentState.maySendStateEvent(EventType.RoomJoinRules, userId))
+        (space.currentState.maySendEvent(EventType.RoomAvatar, userId) ||
+            space.currentState.maySendEvent(EventType.RoomName, userId) ||
+            space.currentState.maySendEvent(EventType.RoomTopic, userId) ||
+            space.currentState.maySendEvent(EventType.RoomJoinRules, userId))
     );
 };
 

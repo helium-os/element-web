@@ -32,20 +32,23 @@ export enum HeaderKind {
     Room = "room",
 }
 
-interface IState {
+export interface HeaderButtonsState {
     headerKind: HeaderKind;
     phase: RightPanelPhases | null;
     threadNotificationColor: NotificationColor;
     globalNotificationColor: NotificationColor;
 }
 
-interface IProps {}
+export interface HeaderButtonsProps {}
 
-export default abstract class HeaderButtons<P = {}> extends React.Component<IProps & P, IState> {
+export default abstract class HeaderButtons<
+    P extends HeaderButtonsProps,
+    S extends HeaderButtonsState,
+> extends React.PureComponent<P, S> {
     private unmounted = false;
     private dispatcherRef?: string = undefined;
 
-    public constructor(props: IProps & P, kind: HeaderKind) {
+    public constructor(props: P, kind: HeaderKind) {
         super(props);
 
         const rps = RightPanelStore.instance;
@@ -54,7 +57,7 @@ export default abstract class HeaderButtons<P = {}> extends React.Component<IPro
             phase: rps.currentCard.phase,
             threadNotificationColor: NotificationColor.None,
             globalNotificationColor: NotificationColor.None,
-        };
+        } as S;
     }
 
     public componentDidMount(): void {

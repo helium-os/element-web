@@ -103,7 +103,7 @@ export class DialogOpener {
                 Modal.createDialog(
                     SpaceSettingsDialog,
                     {
-                        matrixClient: payload.space.client,
+                        cli: payload.space.client,
                         space: payload.space,
                     },
                     /*className=*/ undefined,

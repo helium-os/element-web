@@ -38,11 +38,12 @@ import IconizedContextMenu, {
     IconizedContextMenuOption,
 } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
 import { aboveLeftOf } from "matrix-react-sdk/src/components/structures/ContextMenu";
-import { PowerLabel, PowerLevel } from "matrix-react-sdk/src/powerLevel";
+import { PowerLabel, PowerLevel, StateEventType } from "matrix-react-sdk/src/powerLevel";
 import AutoHideScrollbar from "matrix-react-sdk/src/components/structures/AutoHideScrollbar";
 import DropdownButton from "matrix-react-sdk/src/components/views/elements/DropdownButton";
 import RemoveUserDialog from "matrix-react-sdk/src/components/views/dialogs/RemoveMemberDialog";
 import { ISendEventResponse } from "matrix-js-sdk/src/@types/requests";
+import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
 
 interface IEventShowOpts {
     isState?: boolean;
@@ -136,8 +137,13 @@ export class BannedUser extends React.Component<IBannedUserProps> {
     }
 }
 
-interface IProps {
+interface BaseProps {
     roomId: string;
+}
+
+interface IProps extends BaseProps {
+    canChangePowerLevels: boolean;
+    canKickMember: boolean;
 }
 
 interface IState {
@@ -151,15 +157,8 @@ const options = [PowerLevel.Admin, PowerLevel.Moderator];
 
 const changeMemberPermissionBtnClassName = "mx_RoleSettings_changeMemberPermission";
 
-export default class RolesRoomSettingsTab extends React.Component<IProps, IState> {
+class RolesRoomSettingsTab extends React.Component<IProps, IState> {
     private memberListRef = createRef<HTMLDivElement>();
-
-    // 当前用户是否拥有修改社区内用户角色的权限
-    get canChangeLevels(): boolean {
-        const client = MatrixClientPeg.get();
-        const room = client.getRoom(this.props.roomId);
-        return room?.currentState.mayClientSendStateEvent(EventType.RoomPowerLevels, client);
-    }
     public constructor(props: IProps) {
         super(props);
         this.state = {
@@ -262,25 +261,23 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                 const client = MatrixClientPeg.get();
                 const room = client.getRoom(this.props.roomId);
 
-                const plEvent = room?.currentState.getStateEvents(EventType.RoomPowerLevels, "");
-                const plContent = plEvent?.getContent() || {};
+                const plContent = room?.currentState.getPowerLevels();
                 const userLevels = plContent.users || {};
-                const mLevel = userLevels[m.userId] || PowerLevel.Default;
+                const memberLevel = userLevels[m.userId] || PowerLevel.Default;
 
                 const myUserId = client.getUserId();
-
                 const isMe = m.userId === myUserId;
-                const myUserLevel = userLevels[client.getUserId()!];
+                const myUserLevel = userLevels[myUserId];
 
                 // 社区内拥有修改用户角色权限的用户
                 const canChangeLevelsUsers = Object.keys(userLevels).filter(
-                    (userId) => room?.currentState.maySendStateEvent(EventType.RoomPowerLevels, userId),
+                    (userId) => room?.currentState.maySendEvent(EventType.RoomPowerLevels, userId),
                 );
 
-                const canChange =
-                    this.canChangeLevels && // 当前用户拥有修改社区内用户角色的权限
-                    ((isMe && canChangeLevelsUsers.length > 1) || // 如果是当前用户，必须保证当前社区内拥有修改角色权限的用户数 > 1时，才允许当前用户修改自己的角色权限
-                        myUserLevel > mLevel); // 如果当前用户的level > 某个用户的level，则当前用户可以修改该用户的角色权限
+                const canChangeMemberLevels =
+                    this.props.canChangePowerLevels && // 当前用户拥有修改社区内用户角色的权限
+                    (myUserLevel > memberLevel || // 如果当前用户的level > 某个用户的level，则当前用户可以修改该用户的角色权限
+                        (isMe && canChangeLevelsUsers.length > 1)); // 如果是当前用户，必须保证当前社区内拥有修改角色权限的用户数 > 1时，才允许当前用户修改自己的角色权限
 
                 const isSelected = this.state.selectedMember?.userId === m.userId;
 
@@ -288,7 +285,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                     <div key={m.userId} className={`mx_MemberItem ${isSelected ? "mx_MemberItem_active" : ""}`}>
                         <MemberTile member={m} avatarSize={24} showPresence={false} />
                         <ul className="mx_RoleSettings_memberItem_actions">
-                            {canChange && (
+                            {canChangeMemberLevels && (
                                 <li className={changeMemberPermissionBtnClassName} data-uid={m.userId}>
                                     <ContextMenuButton
                                         isExpanded={this.state.showContextMenu && isSelected}
@@ -298,7 +295,7 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
                                     </ContextMenuButton>
                                 </li>
                             )}
-                            {!isMe && room.canRemoveUser(myUserId) && myUserLevel > mLevel && (
+                            {room.validCanKickMember(m, this.props.canKickMember) && (
                                 <li onClick={() => this.onRemoveMember(m.userId)}>{_t("Remove users")}</li>
                             )}
                         </ul>
@@ -472,3 +469,14 @@ export default class RolesRoomSettingsTab extends React.Component<IProps, IState
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(RolesRoomSettingsTab, {
+    canChangePowerLevels: {
+        eventType: EventType.RoomPowerLevels,
+        state: false,
+    },
+    canKickMember: {
+        eventType: StateEventType.Kick,
+        state: true,
+    },
+});

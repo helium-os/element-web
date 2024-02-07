@@ -30,6 +30,8 @@ export const UPDATE_SUGGESTED_ROOMS = Symbol("suggested-rooms");
 
 export const UPDATE_FILTERED_SUGGESTED_ROOMS = Symbol("filtered-suggested-rooms");
 
+export const UPDATE_CAN_MANAGE_SPACE_PRIVATE_CHANNEL = Symbol("can-manage-space-private-channel");
+
 export const UPDATE_SPACE_TAGS = Symbol("space-tags");
 // Space Key will be emitted when a Space's children change
 

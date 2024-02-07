@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { memo, useEffect, useMemo, useState } from "react";
 import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 
@@ -35,6 +35,8 @@ import Button, { ButtonSize, ButtonType } from "matrix-react-sdk/src/components/
 import { deleteSpace, leaveSpace } from "matrix-react-sdk/src/utils/leave-behaviour";
 import trashSvg from "matrix-react-sdk/res/img/feather-customised/trash.svg";
 import leaveSvg from "matrix-react-sdk/res/img/feather-customised/leave.svg";
+import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
 
 export enum SpaceSettingsTab {
     General = "SPACE_GENERAL_TAB",
@@ -44,12 +46,32 @@ export enum SpaceSettingsTab {
 }
 
 interface IProps {
-    matrixClient: MatrixClient;
+    cli: MatrixClient;
     space: Room;
     onFinished(): void;
 }
 
-const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFinished }) => {
+const SpaceSettingsDialog: React.FC<IProps> = ({ cli, space, onFinished }) => {
+    // 是否有删除社区、展示用户列表的权限
+    const [canDelete, displayMemberList] = useRoomPermissions(
+        cli,
+        space,
+        useMemo(
+            () => [
+                {
+                    eventType: StateEventType.Delete,
+                    state: false,
+                },
+                {
+                    eventType: StateEventType.DisplayMemberList,
+                    state: true,
+                },
+            ],
+            [],
+        ),
+        cli.getSafeUserId(),
+    );
+
     const [spaceName, setSpaceName] = useState<string>("");
 
     useTypedEventEmitter(space, RoomEvent.Name, () => {
@@ -73,12 +95,16 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
     const tabs = useMemo(() => {
         return [
             new Tab(SpaceSettingsTab.General, _t("General"), null, <SpaceSettingsGeneralTab space={space} />),
-            new Tab(
-                SpaceSettingsTab.Roles,
-                _t("Roles & Permissions"),
-                null,
-                <RolesRoomSettingsTab roomId={space.roomId} />,
-            ),
+            ...(displayMemberList
+                ? [
+                      new Tab(
+                          SpaceSettingsTab.Roles,
+                          _t("Roles & Permissions"),
+                          null,
+                          <RolesRoomSettingsTab roomId={space.roomId} />,
+                      ),
+                  ]
+                : []),
             SettingsStore.getValue(UIFeature.SpaceAdvancedSettings)
                 ? new Tab(
                       SpaceSettingsTab.Advanced,
@@ -88,11 +114,9 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
                   )
                 : null,
         ].filter(Boolean) as NonEmptyArray<Tab>;
-    }, [cli, space, onFinished]);
+    }, [space, displayMemberList, onFinished]);
 
     const footer = useMemo(() => {
-        const canDelete = space.canDeleteRoom();
-
         let label, icon, iconClassName, onClick;
         if (canDelete) {
             label = _t("Delete Space");
@@ -118,13 +142,18 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ matrixClient: cli, space, onFin
                 {label}
             </Button>
         );
-    }, [space]);
+    }, [space, canDelete]);
 
     return (
         <RoomSettingsBaseDialog onFinished={onFinished}>
-            <TabbedView footer={footer} title={spaceName || _t("Unnamed Space")} tabs={tabs} />
+            <TabbedView
+                footer={footer}
+                title={spaceName || _t("Unnamed Space")}
+                tabs={tabs}
+                defaultTabId={SpaceSettingsTab.General}
+            />
         </RoomSettingsBaseDialog>
     );
 };
 
-export default SpaceSettingsDialog;
+export default memo(SpaceSettingsDialog);

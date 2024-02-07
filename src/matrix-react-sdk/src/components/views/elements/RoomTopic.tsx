@@ -62,7 +62,7 @@ export default function RoomTopic({ room, ...props }: IProps): JSX.Element {
 
     useDispatcher(dis, (payload) => {
         if (payload.action === Action.ShowRoomTopic) {
-            const canSetTopic = room.currentState.maySendStateEvent(EventType.RoomTopic, client.getSafeUserId());
+            const canSetTopic = room.currentState.maySendEvent(EventType.RoomTopic, client.getSafeUserId());
             const body = topicToHtml(topic?.text, topic?.html, ref, true);
 
             const modal = Modal.createDialog(InfoDialog, {

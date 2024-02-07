@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { IEnableSendMsgEventContent } from "matrix-js-sdk/src/@types/partials";
 import { Room } from "matrix-js-sdk/src/models/room";
-import { useRoomState } from "matrix-react-sdk/src/hooks/room/useRoomState";
+import { useRoomEvent } from "matrix-react-sdk/src/hooks/room/useRoomEvent";
 import { AdditionalEventType } from "../../../../vector/rewrite-js-sdk/event";
 
 interface RoomStateResult {
-    disabled: boolean;
+    hasPermission: boolean;
     value: boolean;
     setValue: (value: boolean) => void;
 }
@@ -20,13 +20,14 @@ function getRoomEnableSendMsg(content: IEnableSendMsgEventContent): boolean {
 export function useRoomEnableSendMsg(
     cli: MatrixClient,
     room: Room,
-    effectFn?: (newContent: IEnableSendMsgEventContent) => Promise<void> | void,
+    effectFn?: (newContent: IEnableSendMsgEventContent) => Promise<void> | void, // 调用setValue修改配置成功后的回调
     errorFn?: (error: Error) => void,
 ): RoomStateResult {
-    const { disabled, content, setContent, sendStateEvent } = useRoomState<IEnableSendMsgEventContent>(
+    const { hasPermission, content, setContent, sendStateEvent } = useRoomEvent<IEnableSendMsgEventContent>(
         cli,
         room,
         AdditionalEventType.RoomEnableDefaultUserSendMsg,
+        true,
         async (newContent) => {
             await sendStateEvent(newContent); // 修改配置
             await effectFn?.(newContent);
@@ -47,7 +48,7 @@ export function useRoomEnableSendMsg(
     };
 
     return {
-        disabled,
+        hasPermission,
         value,
         setValue: onChange,
     };

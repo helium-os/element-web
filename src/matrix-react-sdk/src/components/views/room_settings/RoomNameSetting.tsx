@@ -7,6 +7,7 @@ import Modal from "matrix-react-sdk/src/Modal";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import { MatrixEvent } from "matrix-js-sdk/src/models/event";
 import { RoomStateEvent } from "matrix-js-sdk/src/models/room-state";
+import useRoomEventPermission from "matrix-react-sdk/src/hooks/room/useRoomEventPermission";
 
 interface IProps {
     room: Room;
@@ -21,14 +22,8 @@ function getRoomName(room) {
 const RoomNameSetting: React.FC<IProps> = ({ room, title = true }) => {
     const client = MatrixClientPeg.get();
 
-    const [canSetName, setCanSetName] = useState<boolean>(false);
+    const canSetName: boolean = useRoomEventPermission(client, room, EventType.RoomName, false, client.getSafeUserId()); // 是否有修改名称的权限
     const [name, setName] = useState<string>("");
-
-    // 判断是否有修改名称的权限
-    useEffect(() => {
-        const userId = client.getSafeUserId();
-        setCanSetName(room.currentState.maySendStateEvent(EventType.RoomName, userId) && !room.isAdminLeft());
-    }, [client, room]);
 
     useEffect(() => {
         if (!room?.roomId) {
@@ -67,10 +62,10 @@ const RoomNameSetting: React.FC<IProps> = ({ room, title = true }) => {
                         {typeof title === "string"
                             ? title
                             : room.isSpaceRoom()
-                            ? _t("Space Name")
-                            : _t("Room name", {
-                                  roomType: room.getRoomTypeLabel(),
-                              })}
+                              ? _t("Space Name")
+                              : _t("Room name", {
+                                    roomType: room.getRoomTypeLabel(),
+                                })}
                     </div>
                 )}
                 <div className="mx_TextSettingsItem_info" onClick={onEditName}>

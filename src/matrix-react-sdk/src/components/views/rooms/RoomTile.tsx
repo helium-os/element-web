@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { createRef } from "react";
+import React, { createRef, useMemo, memo } from "react";
 import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import classNames from "classnames";
 
@@ -26,7 +26,7 @@ import defaultDispatcher from "../../../dispatcher/dispatcher";
 import { Action } from "../../../dispatcher/actions";
 import { _t } from "../../../languageHandler";
 import { ChevronFace, MenuProps } from "../../structures/ContextMenu";
-import { DefaultTagID, TagID } from "../../../stores/room-list/models";
+import { DefaultTagID, OrderedDefaultTagIDs, TagID } from "../../../stores/room-list/models";
 import { MessagePreviewStore } from "../../../stores/room-list/MessagePreviewStore";
 import NotificationBadge from "./NotificationBadge";
 import { ActionPayload } from "../../../dispatcher/payloads";
@@ -49,6 +49,11 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MentionsNotificationBadge from "matrix-react-sdk/src/components/views/rooms/NotificationBadge/MentionsNotificationBadge";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
+import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
+import { EventType } from "matrix-js-sdk/src/matrix";
+import { Draggable } from "react-beautiful-dnd";
+import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
 
 interface Props {
     room: Room;
@@ -440,3 +445,34 @@ const RoomTileHOC: React.FC<Props> = (props: Props) => {
 };
 
 export default RoomTileHOC;
+
+interface DragRoomTileProps extends Props {
+    index: number;
+}
+export const DragRoomTile = (props: DragRoomTileProps) => {
+    const { index, ...roomTileProps } = props;
+    const cli = MatrixClientPeg.get();
+
+    const canManageTag = useRoomTagManage(cli, props.room, cli.getUserId());
+
+    return (
+        <Draggable
+            key={`channel-${props.room.roomId}`}
+            isDragDisabled={
+                (OrderedDefaultTagIDs.includes(props.tag) && props.tag !== DefaultTagID.Untagged) || !canManageTag
+            }
+            draggableId={props.room.roomId}
+            index={index}
+        >
+            {(draggableProvided, draggableSnapshot) => (
+                <div
+                    ref={draggableProvided.innerRef}
+                    {...draggableProvided.draggableProps}
+                    {...draggableProvided.dragHandleProps}
+                >
+                    <RoomTileHOC {...roomTileProps} />
+                </div>
+            )}
+        </Draggable>
+    );
+};

@@ -21,7 +21,7 @@ import { EventType } from "matrix-js-sdk/src/matrix";
 import { _t } from "../../../languageHandler";
 import { MatrixClientPeg } from "../../../MatrixClientPeg";
 import Field from "../elements/Field";
-import {getHttpUrlFromMxc} from "../../../customisations/Media";
+import { getHttpUrlFromMxc } from "../../../customisations/Media";
 import AccessibleButton from "../elements/AccessibleButton";
 import AvatarSetting from "../settings/AvatarSetting";
 import { htmlSerializeFromMdIfNeeded } from "../../../editor/serialize";
@@ -76,9 +76,9 @@ export default class RoomProfileSettings extends React.Component<IProps, IState>
             originalTopic: topic,
             topic: topic,
             profileFieldsTouched: {},
-            canSetName: room.currentState.maySendStateEvent(EventType.RoomName, userId) && !room.isAdminLeft(),
-            canSetTopic: room.currentState.maySendStateEvent(EventType.RoomTopic, userId) && !room.isAdminLeft(),
-            canSetAvatar: room.currentState.maySendStateEvent(EventType.RoomAvatar, userId) && !room.isAdminLeft(),
+            canSetName: room.currentState.maySendEvent(EventType.RoomName, userId) && !room.isAdminLeft(),
+            canSetTopic: room.currentState.maySendEvent(EventType.RoomTopic, userId) && !room.isAdminLeft(),
+            canSetAvatar: room.currentState.maySendEvent(EventType.RoomAvatar, userId) && !room.isAdminLeft(),
         };
     }
 

@@ -108,7 +108,7 @@ const NewRoomIntro: React.FC = () => {
     } else {
         const inRoom = room && room.getMyMembership() === "join";
         const topic = room.currentState.getStateEvents(EventType.RoomTopic, "")?.getContent()?.topic;
-        const canAddTopic = inRoom && room.currentState.maySendStateEvent(EventType.RoomTopic, cli.getSafeUserId());
+        const canAddTopic = inRoom && room.currentState.maySendEvent(EventType.RoomTopic, cli.getSafeUserId());
 
         const onTopicClick = (): void => {
             defaultDispatcher.dispatch(

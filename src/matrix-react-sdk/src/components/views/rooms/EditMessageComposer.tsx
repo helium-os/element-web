@@ -471,7 +471,9 @@ class EditMessageComposer extends React.Component<IEditMessageComposerProps, ISt
                 <div className="mx_EditMessageComposer_buttons">
                     <DialogButtons
                         primaryButton={_t("Save")}
-                        primaryDisabled={this.state.saveDisabled}
+                        primaryButtonProps={{
+                            disabled: this.state.saveDisabled,
+                        }}
                         onPrimaryButtonClick={this.sendEdit}
                         onCancel={this.cancelEdit}
                     />
