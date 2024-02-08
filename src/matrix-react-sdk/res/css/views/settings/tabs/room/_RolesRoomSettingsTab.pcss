@@ -30,6 +30,16 @@ limitations under the License.
         flex: 1;
         overflow: hidden;
         margin: 0 -20px;
+        .mx_AutoHideScrollbar {
+            &::-webkit-scrollbar-thumb {
+                background-color: transparent;
+            }
+            &:hover {
+                &::-webkit-scrollbar-thumb {
+                    background-color: $scrollbar-thumb-color;
+                }
+            }
+        }
     }
     .mx_MemberList_wrapper {
         padding: 0 12px;
