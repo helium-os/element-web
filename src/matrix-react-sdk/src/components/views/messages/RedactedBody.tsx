@@ -36,7 +36,7 @@ const RedactedBody = React.forwardRef<any, IProps | IBodyProps>(({ mxEvent, hasR
     let text = _t("Message deleted"); // "消息被撤回"
     const unsigned = mxEvent.getUnsigned();
     const redactedBecauseUserId = unsigned && unsigned.redacted_because && unsigned.redacted_because.sender;
-    // 没有普通回复||消息列回复的消息被撤回后展示"xxx 撤回了一条消息"
+    // 当前消息没有普通回复||消息列回复的消息被撤回后展示"xxx 撤回了一条消息"
     if (!hasThread && !hasReply && redactedBecauseUserId) {
         const room = cli.getRoom(mxEvent.getRoomId());
         const sender = room && room.getMember(redactedBecauseUserId);

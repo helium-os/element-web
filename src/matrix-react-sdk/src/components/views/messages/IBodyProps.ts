@@ -55,4 +55,6 @@ export interface IBodyProps {
     getRelationsForEvent?: GetRelationsForEvent;
 
     ref?: React.RefObject<any> | LegacyRef<any>;
+
+    hasReply?: boolean;
 }

@@ -103,11 +103,19 @@ export function shouldFormContinuation(
         mxEvent.sender.getMxcAvatarUrl() !== prevEvent.sender.getMxcAvatarUrl()
     )
         return false;
-
-    // Thread summaries in the main timeline should break up a continuation on both sides
+    // 主消息面板里某条消息或者前一条消息有消息列回复或者有父消息节点（说明该条消息是条普通回复消息），则跳出连续
     if (
-        (hasThreadSummary(mxEvent) || hasThreadSummary(prevEvent)) &&
-        timelineRenderingType !== TimelineRenderingType.Thread
+        timelineRenderingType !== TimelineRenderingType.Thread &&
+        (hasThreadSummary(mxEvent) || hasThreadSummary(prevEvent) || !!mxEvent.replyEventId || !!prevEvent.replyEventId)
+    ) {
+        return false;
+    }
+
+    // 消息列消息面板里某条消息或者前一条消息有父消息节点（说明该条消息是条普通回复消息），则跳出连续
+    if (
+        timelineRenderingType === TimelineRenderingType.Thread &&
+        ((!!mxEvent.replyEventId && !mxEvent.getRelation()?.is_falling_back) || // 消息列面板里默认的replyEventId为列表里的最后一条消息，如果真的是回复，则sendMessage时is_falling_back设置为false，所以可以用来判断是否是消息列面板里真实的普通回复
+            (!!prevEvent.replyEventId && !prevEvent.getRelation()?.is_falling_back))
     ) {
         return false;
     }
