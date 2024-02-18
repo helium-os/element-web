@@ -713,11 +713,12 @@ class MessagePanel extends React.Component<IProps, IState> {
             const { event, shouldShow } = eventAndShouldShow;
             const eventId = event.getId();
             const last = event === lastShownEvent;
+            const isLastEvent = i >= lastShownNonLocalEchoIndex;
             const { nextEventAndShouldShow, nextTile } = this.getNextEventInfo(events, i);
 
             if (grouper) {
                 if (grouper.shouldGroup(eventAndShouldShow)) {
-                    grouper.add(eventAndShouldShow);
+                    grouper.add(eventAndShouldShow, isLastEvent);
                     continue;
                 } else {
                     // not part of group, so get the group tiles, close the
@@ -751,7 +752,7 @@ class MessagePanel extends React.Component<IProps, IState> {
                     prevEvent = event;
                 }
 
-                const readMarker = this.readMarkerForEvent(eventId, i >= lastShownNonLocalEchoIndex);
+                const readMarker = this.readMarkerForEvent(eventId, isLastEvent);
                 if (readMarker) ret.push(readMarker);
             }
         }
@@ -1169,7 +1170,7 @@ abstract class BaseGrouper {
     }
 
     public abstract shouldGroup(ev: EventAndShouldShow): boolean;
-    public abstract add(ev: EventAndShouldShow): void;
+    public abstract add(ev: EventAndShouldShow, isLastEvent: boolean): void;
     public abstract getTiles(): ReactNode[];
     public abstract getNewPrevEvent(): MatrixEvent;
 }
@@ -1229,9 +1230,9 @@ class CreationGrouper extends BaseGrouper {
         return false;
     }
 
-    public add({ event: ev, shouldShow }: EventAndShouldShow): void {
+    public add({ event: ev, shouldShow }: EventAndShouldShow, isLastEvent: boolean): void {
         const panel = this.panel;
-        this.readMarker = this.readMarker || panel.readMarkerForEvent(ev.getId(), ev === this.lastShownEvent);
+        this.readMarker = this.readMarker || panel.readMarkerForEvent(ev.getId(), isLastEvent);
         if (!shouldShow) {
             return;
         }
@@ -1378,12 +1379,12 @@ class MainGrouper extends BaseGrouper {
         return false;
     }
 
-    public add({ event: ev, shouldShow }: EventAndShouldShow): void {
+    public add({ event: ev, shouldShow }: EventAndShouldShow, isLastEvent: boolean): void {
         if (ev.getType() === EventType.RoomMember) {
             // We can ignore any events that don't actually have a message to display
             if (!hasText(ev, this.panel.showHiddenEvents)) return;
         }
-        this.readMarker = this.readMarker || this.panel.readMarkerForEvent(ev.getId(), ev === this.lastShownEvent);
+        this.readMarker = this.readMarker || this.panel.readMarkerForEvent(ev.getId(), isLastEvent);
         if (!this.panel.showHiddenEvents && !shouldShow) {
             // absorb hidden events to not split the summary
             return;
