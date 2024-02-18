@@ -547,48 +547,60 @@ class MessagePanel extends React.Component<IProps, IState> {
             // algorithms which depend on its position on the screen aren't
             // confused.
             if (visible) {
-                hr = <hr className="mx_RoomView_myReadMarker" style={{ opacity: 1, width: "99%" }} />;
+                hr = (
+                    <div className="mx_RoomViewDivider">
+                        <hr />
+                        <div className="mx_RoomViewDivider_content">
+                            <h2 className="mx_RoomViewDivider_heading">新消息</h2>
+                        </div>
+                        <hr />
+                    </div>
+                );
             }
 
             return (
                 <li
                     key={"readMarker_" + eventId}
                     ref={this.readMarkerNode}
-                    className="mx_RoomView_myReadMarker_container"
+                    className="mx_RoomView_myReadMarker_container mx_RoomViewDivider_item"
                     data-scroll-tokens={eventId}
                 >
                     {hr}
                 </li>
             );
-        } else if (this.state.ghostReadMarkers.includes(eventId)) {
-            // We render 'ghost' read markers in the DOM while they
-            // transition away. This allows the actual read marker
-            // to be in the right place straight away without having
-            // to wait for the transition to finish.
-            // There are probably much simpler ways to do this transition,
-            // possibly using react-transition-group which handles keeping
-            // elements in the DOM whilst they transition out, although our
-            // case is a little more complex because only some of the items
-            // transition (ie. the read markers do but the event tiles do not)
-            // and TransitionGroup requires that all its children are Transitions.
-            const hr = (
-                <hr
-                    className="mx_RoomView_myReadMarker"
-                    ref={this.collectGhostReadMarker}
-                    onTransitionEnd={this.onGhostTransitionEnd}
-                    data-eventid={eventId}
-                />
-            );
-
-            // give it a key which depends on the event id. That will ensure that
-            // we get a new DOM node (restarting the animation) when the ghost
-            // moves to a different event.
-            return (
-                <li key={"_readuptoghost_" + eventId} className="mx_RoomView_myReadMarker_container">
-                    {hr}
-                </li>
-            );
         }
+        // else if (this.state.ghostReadMarkers.includes(eventId)) {
+        //     // We render 'ghost' read markers in the DOM while they
+        //     // transition away. This allows the actual read marker
+        //     // to be in the right place straight away without having
+        //     // to wait for the transition to finish.
+        //     // There are probably much simpler ways to do this transition,
+        //     // possibly using react-transition-group which handles keeping
+        //     // elements in the DOM whilst they transition out, although our
+        //     // case is a little more complex because only some of the items
+        //     // transition (ie. the read markers do but the event tiles do not)
+        //     // and TransitionGroup requires that all its children are Transitions.
+        //     const hr = (
+        //         <hr
+        //             className="mx_RoomView_myReadMarker"
+        //             ref={this.collectGhostReadMarker}
+        //             onTransitionEnd={this.onGhostTransitionEnd}
+        //             data-eventid={eventId}
+        //         />
+        //     );
+        //
+        //     // give it a key which depends on the event id. That will ensure that
+        //     // we get a new DOM node (restarting the animation) when the ghost
+        //     // moves to a different event.
+        //     return (
+        //         <li
+        //             key={"_readuptoghost_" + eventId}
+        //             className="mx_RoomView_myReadMarker_container mx_RoomViewDivider_item"
+        //         >
+        //             {hr}
+        //         </li>
+        //     );
+        // }
 
         return null;
     }
@@ -775,7 +787,7 @@ class MessagePanel extends React.Component<IProps, IState> {
         const wantsDateSeparator = this.wantsDateSeparator(prevEvent, eventDate);
         if (wantsDateSeparator && !isGrouped && this.props.room) {
             const dateSeparator = (
-                <li className="mx_DateSeparatorItem" key={ts1}>
+                <li className="mx_RoomViewDivider_item" key={ts1}>
                     <DateSeparator key={ts1} roomId={this.props.room.roomId} ts={ts1} />
                 </li>
             );
@@ -1245,7 +1257,7 @@ class CreationGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, createEvent.event.getDate())) {
             const ts = createEvent.event.getTs();
             ret.push(
-                <li className="mx_DateSeparatorItem" key={ts + "~"}>
+                <li className="mx_RoomViewDivider_item" key={ts + "~"}>
                     <DateSeparator roomId={createEvent.event.getRoomId()} ts={ts} />
                 </li>,
             );
@@ -1397,7 +1409,7 @@ class MainGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, this.events[0].getDate())) {
             const ts = this.events[0].getTs();
             ret.push(
-                <li className="mx_DateSeparatorItem" key={ts + "~"}>
+                <li className="mx_RoomViewDivider_item" key={ts + "~"}>
                     <DateSeparator roomId={this.events[0].getRoomId()} ts={ts} />
                 </li>,
             );

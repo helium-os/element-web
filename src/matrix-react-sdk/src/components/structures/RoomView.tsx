@@ -1159,6 +1159,9 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                     this.messagePanel?.jumpToLiveTimeline();
                 }
                 break;
+            case "jump_to_unread":
+                this.messagePanel?.jumpToReadMarker();
+                break;
         }
     };
 
@@ -1701,6 +1704,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
 
     // jump up to wherever our read marker is
     private jumpToReadMarker = (): void => {
+        if (!this.messagePanel?.canJumpToReadMarker()) return;
         this.messagePanel?.jumpToReadMarker();
     };
 
