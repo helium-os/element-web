@@ -538,7 +538,10 @@ class MessagePanel extends React.Component<IProps, IState> {
     public readMarkerForEvent(eventId: string, isLastEvent: boolean): ReactNode {
         const visible = !isLastEvent && this.props.readMarkerVisible;
 
-        if (this.props.readMarkerEventId === eventId) {
+        if (
+            [TimelineRenderingType.Room, TimelineRenderingType.Thread].includes(this.context.timelineRenderingType) &&
+            this.props.readMarkerEventId === eventId
+        ) {
             let hr;
             // if the read marker comes at the end of the timeline (except
             // for local echoes, which are excluded from RMs, because they
