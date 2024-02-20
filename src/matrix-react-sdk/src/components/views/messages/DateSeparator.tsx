@@ -304,16 +304,16 @@ export default class DateSeparator extends React.Component<IProps, IState> {
 
         return (
             <ContextMenuTooltipButton
-                className="mx_DateSeparator_jumpToDateMenu mx_DateSeparator_dateContent"
+                className="mx_DateSeparator_jumpToDateMenu mx_RoomViewDivider_content"
                 data-testid="jump-to-date-separator-button"
                 onClick={this.onContextMenuOpenClick}
                 isExpanded={!!this.state.contextMenuPosition}
                 title={_t("Jump to date")}
             >
-                <h2 className="mx_DateSeparator_dateHeading" aria-hidden="true">
+                <h2 className="mx_RoomViewDivider_heading" aria-hidden="true">
                     {this.getLabel()}
                 </h2>
-                <div className="mx_DateSeparator_chevron" />
+                <div className="mx_RoomViewDivider_chevron" />
                 {contextMenu}
             </ContextMenuTooltipButton>
         );
@@ -327,8 +327,8 @@ export default class DateSeparator extends React.Component<IProps, IState> {
             dateHeaderContent = this.renderJumpToDateMenu();
         } else {
             dateHeaderContent = (
-                <div className="mx_DateSeparator_dateContent">
-                    <h2 className="mx_DateSeparator_dateHeading" aria-hidden="true">
+                <div className="mx_RoomViewDivider_content">
+                    <h2 className="mx_RoomViewDivider_heading" aria-hidden="true">
                         {label}
                     </h2>
                 </div>
@@ -338,7 +338,7 @@ export default class DateSeparator extends React.Component<IProps, IState> {
         // ARIA treats <hr/>s as separators, here we abuse them slightly so manually treat this entire thing as one
         // tab-index=-1 to allow it to be focusable but do not add tab stop for it, primarily for screen readers
         return (
-            <div className="mx_DateSeparator" role="separator" tabIndex={-1} aria-label={label}>
+            <div className="mx_RoomViewDivider" role="separator" tabIndex={-1} aria-label={label}>
                 <hr role="none" />
                 {dateHeaderContent}
                 <hr role="none" />

@@ -157,11 +157,13 @@ limitations under the License.
     clear: both;
 }
 
-li.mx_RoomView_myReadMarker_container {
-    height: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
+.mx_RoomView_myReadMarker_container {
+    .mx_RoomViewDivider hr {
+        background: $text-primary-color4;
+    }
+    .mx_RoomViewDivider_heading{
+        color: $text-primary-color4;
+    }
 }
 
 hr.mx_RoomView_myReadMarker {

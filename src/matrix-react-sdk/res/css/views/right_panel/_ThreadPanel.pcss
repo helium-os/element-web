@@ -32,6 +32,7 @@ limitations under the License.
 
     .mx_ThreadView_timelinePanelWrapper {
         flex: 1;
+        padding-bottom: 20px;
         overflow: hidden;
         .mx_FileDropTarget {
             border-radius: 8px;
@@ -40,7 +41,7 @@ limitations under the License.
 
     .mx_RoomView_messagePanel {
         box-sizing: border-box;
-        padding: 0 20px 20px;
+        padding: 0 20px;
     }
 
     .mx_RoomView_messageListWrapper {
@@ -65,7 +66,7 @@ limitations under the License.
         /* Account for scrollbar when hovering */
         padding-top: 0;
 
-        .mx_DateSeparator {
+        .mx_RoomViewDivider {
             display: none;
         }
 
@@ -91,13 +92,14 @@ limitations under the License.
 
     /* For style rules of EventTile in a thread, see _EventTile.pcss */
     &.mx_ThreadView {
-
         .mx_BaseCard_content {
             padding-top: 0;
         }
-
+        .mx_ThreadView_timelinePanelWrapper {
+            padding-top: 22px;
+        }
         .mx_RoomView_messagePanel {
-            padding: 22px 0 0;
+            padding: 0;
         }
     }
 }

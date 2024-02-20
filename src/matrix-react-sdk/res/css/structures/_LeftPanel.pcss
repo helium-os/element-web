@@ -222,6 +222,15 @@ $roomListCollapsedWidth: 68px;
             position: relative; /* for sticky headers */
             height: 100%; /* ensure scrolling still works */
             padding: 0 12px;
+
+            &::-webkit-scrollbar-thumb {
+                background-color: transparent;
+            }
+            &:hover {
+                &::-webkit-scrollbar-thumb {
+                    background-color: $scrollbar-thumb-color;
+                }
+            }
         }
     }
 
