@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { createRef, useMemo, memo } from "react";
+import React, { createRef } from "react";
 import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import classNames from "classnames";
 
@@ -49,11 +49,10 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import MentionsNotificationBadge from "matrix-react-sdk/src/components/views/rooms/NotificationBadge/MentionsNotificationBadge";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
-import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import { EventType } from "matrix-js-sdk/src/matrix";
 import { Draggable } from "react-beautiful-dnd";
 import { useRoomTagManage } from "matrix-react-sdk/src/hooks/room/useRoomTagManage";
+import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 
 interface Props {
     room: Room;
@@ -250,6 +249,13 @@ export class RoomTile extends React.PureComponent<ClassProps, State> {
             clear_search: clearSearch,
             metricsTrigger: "RoomList",
             metricsViaKeyboard: ev.type !== "click",
+        });
+
+        // 跳转到未读消息
+        setImmediate(() => {
+            dis.dispatch({
+                action: "jump_to_unread",
+            });
         });
     };
 

@@ -396,11 +396,19 @@ const RoomListHeader: React.FC<IProps> = ({ onVisibilityChange }) => {
         .join("\n");
 
     let contextMenuButton: JSX.Element = <div className="mx_RoomListHeader_contextLessTitle">{title}</div>;
+
     if (canShowMainMenu) {
+        const onRoomListHeaderClick = (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+
+            !!activeSpace && openMainMenu();
+        };
+
         contextMenuButton = (
             <ContextMenuTooltipButton
                 inputRef={mainMenuHandle}
-                onClick={() => !!activeSpace && openMainMenu()}
+                onClick={onRoomListHeaderClick}
                 isExpanded={mainMenuDisplayed}
                 className={`mx_RoomListHeader_contextMenuButton ${
                     !activeSpace ? "mx_RoomListHeader_contextMenuButton_Home" : ""

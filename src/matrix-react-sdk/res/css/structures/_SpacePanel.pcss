@@ -301,6 +301,10 @@ $activeBorderColor: $primary-content;
         min-width: 0;
         flex-grow: 1;
 
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
         .mx_BaseAvatar:not(.mx_UserMenu_userAvatar_BaseAvatar) .mx_BaseAvatar_initial {
             font-size: $font-16px !important; /* override inline style */
             font-weight: $font-normal-bold;

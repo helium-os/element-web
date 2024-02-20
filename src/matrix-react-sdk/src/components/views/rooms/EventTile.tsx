@@ -947,7 +947,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         const isSending = ["sending", "queued", "encrypting"].includes(this.props.eventSendStatus!);
         const isRedacted = isMessageEvent(this.props.mxEvent) && this.props.isRedacted;
         const isEncryptionFailure = this.props.mxEvent.isDecryptionFailure();
-        const isNoThreadInfoMessage = isInfoMessage && !this.state.hasThread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
+        const isNotThreadInfoMessage = isInfoMessage && !this.state.hasThread; // 是否是没有消息列回复的info message（为了兼容有消息列回复的消息被撤回的情况）
 
         let isContinuation = this.props.continuation;
         if (
@@ -969,14 +969,14 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             mx_EventTile: true,
             mx_EventTile_isReplying: this.props.isReplying,
             mx_EventTile_isEditing: isEditing,
-            mx_EventTile_info: isNoThreadInfoMessage,
+            mx_EventTile_info: isNotThreadInfoMessage,
             mx_EventTile_12hr: this.props.isTwelveHour,
             // Note: we keep the `sending` state class for tests, not for our styles
             mx_EventTile_sending: !isEditing && isSending,
             mx_EventTile_highlight: this.shouldHighlight(),
             mx_EventTile_selected: this.props.isSelectedEvent || this.state.contextMenu,
             mx_EventTile_continuation:
-                (isContinuation && isNoThreadInfoMessage) ||
+                (isContinuation && !isInfoMessage) ||
                 eventType === EventType.CallInvite ||
                 ElementCall.CALL_EVENT_TYPE.matches(eventType),
             mx_EventTile_last: this.props.last,
@@ -1019,7 +1019,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         if (isRenderingNotification) {
             avatarSize = 24;
             needsSenderProfile = true;
-        } else if (isNoThreadInfoMessage) {
+        } else if (isNotThreadInfoMessage) {
             // a small avatar, with no sender profile, for
             // joins/parts/etc
             avatarSize = 0;
@@ -1393,7 +1393,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             {!isRenderingThread && this.state.hasThread && (
                                 <div
                                     className="mx_EventTile_threadLine"
-                                    style={{ top: avatarSize + 3, left: avatarSize / 2 }}
+                                    style={{ top: avatarSize + 5, left: avatarSize / 2 }}
                                 />
                             )}
                             {ircTimestamp}

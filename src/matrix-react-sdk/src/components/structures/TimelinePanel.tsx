@@ -268,13 +268,15 @@ class TimelinePanel extends React.Component<IProps, IState> {
         // XXX: we could track RM per TimelineSet rather than per Room.
         // but for now we just do it per room for simplicity.
         let initialReadMarker: string | null = null;
+        // 取readReceipt作为初始的readMarker
         if (this.props.manageReadMarkers) {
-            const readmarker = this.props.timelineSet.room?.getAccountData("m.fully_read");
-            if (readmarker) {
-                initialReadMarker = readmarker.getContent().event_id;
-            } else {
-                initialReadMarker = this.getCurrentReadReceipt();
-            }
+            // const readmarker = this.props.timelineSet.room?.getAccountData("m.fully_read");
+            // if (readmarker) {
+            //     initialReadMarker = readmarker.getContent().event_id;
+            // } else {
+            //     initialReadMarker = this.getCurrentReadReceipt();
+            // }
+            initialReadMarker = this.getCurrentReadReceipt();
         }
 
         this.state = {
@@ -321,9 +323,10 @@ class TimelinePanel extends React.Component<IProps, IState> {
         if (this.props.manageReadReceipts) {
             this.updateReadReceiptOnUserActivity();
         }
-        if (this.props.manageReadMarkers) {
-            this.updateReadMarkerOnUserActivity();
-        }
+        // 消息滚动时不再重新设置readMarker（否则会有readMarker分割线跳动问题），每次都将上一次已读的最后一条消息作为分割线开始的位置
+        // if (this.props.manageReadMarkers) {
+        //     this.updateReadMarkerOnUserActivity();
+        // }
         this.initTimeline(this.props);
     }
 

@@ -103,11 +103,19 @@ export function shouldFormContinuation(
         mxEvent.sender.getMxcAvatarUrl() !== prevEvent.sender.getMxcAvatarUrl()
     )
         return false;
-
-    // Thread summaries in the main timeline should break up a continuation on both sides
+    // 主消息面板里某条消息或者前一条消息有消息列回复或者有父消息节点（说明该条消息是条普通回复消息），则跳出连续
     if (
-        (hasThreadSummary(mxEvent) || hasThreadSummary(prevEvent)) &&
-        timelineRenderingType !== TimelineRenderingType.Thread
+        timelineRenderingType !== TimelineRenderingType.Thread &&
+        (hasThreadSummary(mxEvent) || hasThreadSummary(prevEvent) || !!mxEvent.replyEventId || !!prevEvent.replyEventId)
+    ) {
+        return false;
+    }
+
+    // 消息列消息面板里某条消息或者前一条消息有父消息节点（说明该条消息是条普通回复消息），则跳出连续
+    if (
+        timelineRenderingType === TimelineRenderingType.Thread &&
+        ((!!mxEvent.replyEventId && !mxEvent.getRelation()?.is_falling_back) || // 消息列面板里默认的replyEventId为列表里的最后一条消息，如果真的是回复，则sendMessage时is_falling_back设置为false，所以可以用来判断是否是消息列面板里真实的普通回复
+            (!!prevEvent.replyEventId && !prevEvent.getRelation()?.is_falling_back))
     ) {
         return false;
     }
@@ -530,7 +538,10 @@ class MessagePanel extends React.Component<IProps, IState> {
     public readMarkerForEvent(eventId: string, isLastEvent: boolean): ReactNode {
         const visible = !isLastEvent && this.props.readMarkerVisible;
 
-        if (this.props.readMarkerEventId === eventId) {
+        if (
+            [TimelineRenderingType.Room, TimelineRenderingType.Thread].includes(this.context.timelineRenderingType) &&
+            this.props.readMarkerEventId === eventId
+        ) {
             let hr;
             // if the read marker comes at the end of the timeline (except
             // for local echoes, which are excluded from RMs, because they
@@ -539,48 +550,60 @@ class MessagePanel extends React.Component<IProps, IState> {
             // algorithms which depend on its position on the screen aren't
             // confused.
             if (visible) {
-                hr = <hr className="mx_RoomView_myReadMarker" style={{ opacity: 1, width: "99%" }} />;
+                hr = (
+                    <div className="mx_RoomViewDivider">
+                        <hr />
+                        <div className="mx_RoomViewDivider_content">
+                            <h2 className="mx_RoomViewDivider_heading">新消息</h2>
+                        </div>
+                        <hr />
+                    </div>
+                );
             }
 
             return (
                 <li
                     key={"readMarker_" + eventId}
                     ref={this.readMarkerNode}
-                    className="mx_RoomView_myReadMarker_container"
+                    className="mx_RoomView_myReadMarker_container mx_RoomViewDivider_item"
                     data-scroll-tokens={eventId}
                 >
                     {hr}
                 </li>
             );
-        } else if (this.state.ghostReadMarkers.includes(eventId)) {
-            // We render 'ghost' read markers in the DOM while they
-            // transition away. This allows the actual read marker
-            // to be in the right place straight away without having
-            // to wait for the transition to finish.
-            // There are probably much simpler ways to do this transition,
-            // possibly using react-transition-group which handles keeping
-            // elements in the DOM whilst they transition out, although our
-            // case is a little more complex because only some of the items
-            // transition (ie. the read markers do but the event tiles do not)
-            // and TransitionGroup requires that all its children are Transitions.
-            const hr = (
-                <hr
-                    className="mx_RoomView_myReadMarker"
-                    ref={this.collectGhostReadMarker}
-                    onTransitionEnd={this.onGhostTransitionEnd}
-                    data-eventid={eventId}
-                />
-            );
-
-            // give it a key which depends on the event id. That will ensure that
-            // we get a new DOM node (restarting the animation) when the ghost
-            // moves to a different event.
-            return (
-                <li key={"_readuptoghost_" + eventId} className="mx_RoomView_myReadMarker_container">
-                    {hr}
-                </li>
-            );
         }
+        // else if (this.state.ghostReadMarkers.includes(eventId)) {
+        //     // We render 'ghost' read markers in the DOM while they
+        //     // transition away. This allows the actual read marker
+        //     // to be in the right place straight away without having
+        //     // to wait for the transition to finish.
+        //     // There are probably much simpler ways to do this transition,
+        //     // possibly using react-transition-group which handles keeping
+        //     // elements in the DOM whilst they transition out, although our
+        //     // case is a little more complex because only some of the items
+        //     // transition (ie. the read markers do but the event tiles do not)
+        //     // and TransitionGroup requires that all its children are Transitions.
+        //     const hr = (
+        //         <hr
+        //             className="mx_RoomView_myReadMarker"
+        //             ref={this.collectGhostReadMarker}
+        //             onTransitionEnd={this.onGhostTransitionEnd}
+        //             data-eventid={eventId}
+        //         />
+        //     );
+        //
+        //     // give it a key which depends on the event id. That will ensure that
+        //     // we get a new DOM node (restarting the animation) when the ghost
+        //     // moves to a different event.
+        //     return (
+        //         <li
+        //             key={"_readuptoghost_" + eventId}
+        //             className="mx_RoomView_myReadMarker_container mx_RoomViewDivider_item"
+        //         >
+        //             {hr}
+        //         </li>
+        //     );
+        // }
 
         return null;
     }
@@ -693,11 +716,12 @@ class MessagePanel extends React.Component<IProps, IState> {
             const { event, shouldShow } = eventAndShouldShow;
             const eventId = event.getId();
             const last = event === lastShownEvent;
+            const isLastEvent = i >= lastShownNonLocalEchoIndex;
             const { nextEventAndShouldShow, nextTile } = this.getNextEventInfo(events, i);
 
             if (grouper) {
                 if (grouper.shouldGroup(eventAndShouldShow)) {
-                    grouper.add(eventAndShouldShow);
+                    grouper.add(eventAndShouldShow, isLastEvent);
                     continue;
                 } else {
                     // not part of group, so get the group tiles, close the
@@ -731,7 +755,7 @@ class MessagePanel extends React.Component<IProps, IState> {
                     prevEvent = event;
                 }
 
-                const readMarker = this.readMarkerForEvent(eventId, i >= lastShownNonLocalEchoIndex);
+                const readMarker = this.readMarkerForEvent(eventId, isLastEvent);
                 if (readMarker) ret.push(readMarker);
             }
         }
@@ -767,7 +791,7 @@ class MessagePanel extends React.Component<IProps, IState> {
         const wantsDateSeparator = this.wantsDateSeparator(prevEvent, eventDate);
         if (wantsDateSeparator && !isGrouped && this.props.room) {
             const dateSeparator = (
-                <li className="mx_DateSeparatorItem" key={ts1}>
+                <li className="mx_RoomViewDivider_item" key={ts1}>
                     <DateSeparator key={ts1} roomId={this.props.room.roomId} ts={ts1} />
                 </li>
             );
@@ -1149,7 +1173,7 @@ abstract class BaseGrouper {
     }
 
     public abstract shouldGroup(ev: EventAndShouldShow): boolean;
-    public abstract add(ev: EventAndShouldShow): void;
+    public abstract add(ev: EventAndShouldShow, isLastEvent: boolean): void;
     public abstract getTiles(): ReactNode[];
     public abstract getNewPrevEvent(): MatrixEvent;
 }
@@ -1209,9 +1233,9 @@ class CreationGrouper extends BaseGrouper {
         return false;
     }
 
-    public add({ event: ev, shouldShow }: EventAndShouldShow): void {
+    public add({ event: ev, shouldShow }: EventAndShouldShow, isLastEvent: boolean): void {
         const panel = this.panel;
-        this.readMarker = this.readMarker || panel.readMarkerForEvent(ev.getId(), ev === this.lastShownEvent);
+        this.readMarker = this.readMarker || panel.readMarkerForEvent(ev.getId(), isLastEvent);
         if (!shouldShow) {
             return;
         }
@@ -1237,7 +1261,7 @@ class CreationGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, createEvent.event.getDate())) {
             const ts = createEvent.event.getTs();
             ret.push(
-                <li className="mx_DateSeparatorItem" key={ts + "~"}>
+                <li className="mx_RoomViewDivider_item" key={ts + "~"}>
                     <DateSeparator roomId={createEvent.event.getRoomId()} ts={ts} />
                 </li>,
             );
@@ -1358,12 +1382,12 @@ class MainGrouper extends BaseGrouper {
         return false;
     }
 
-    public add({ event: ev, shouldShow }: EventAndShouldShow): void {
+    public add({ event: ev, shouldShow }: EventAndShouldShow, isLastEvent: boolean): void {
         if (ev.getType() === EventType.RoomMember) {
             // We can ignore any events that don't actually have a message to display
             if (!hasText(ev, this.panel.showHiddenEvents)) return;
         }
-        this.readMarker = this.readMarker || this.panel.readMarkerForEvent(ev.getId(), ev === this.lastShownEvent);
+        this.readMarker = this.readMarker || this.panel.readMarkerForEvent(ev.getId(), isLastEvent);
         if (!this.panel.showHiddenEvents && !shouldShow) {
             // absorb hidden events to not split the summary
             return;
@@ -1389,7 +1413,7 @@ class MainGrouper extends BaseGrouper {
         if (panel.wantsDateSeparator(this.prevEvent, this.events[0].getDate())) {
             const ts = this.events[0].getTs();
             ret.push(
-                <li className="mx_DateSeparatorItem" key={ts + "~"}>
+                <li className="mx_RoomViewDivider_item" key={ts + "~"}>
                     <DateSeparator roomId={this.events[0].getRoomId()} ts={ts} />
                 </li>,
             );
