@@ -111,16 +111,17 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({
     const preview = useMemo(() => {
         if (previewContent) return previewContent;
 
-        const { rootEvent } = thread;
+        const mxEvent = thread.rootEvent;
+        if (!mxEvent) return null;
 
-        return thread.rootEvent.isRedacted() ? (
-            <RedactedBody mxEvent={rootEvent} />
-        ) : thread.rootEvent.isDecryptionFailure() ? (
-            <DecryptionFailureBody mxEvent={rootEvent} />
+        return mxEvent.isRedacted() ? (
+            <RedactedBody mxEvent={mxEvent} />
+        ) : mxEvent.isDecryptionFailure() ? (
+            <DecryptionFailureBody mxEvent={mxEvent} />
         ) : (
-            MessagePreviewStore.instance.generatePreviewForEvent(rootEvent)
+            MessagePreviewStore.instance.generatePreviewForEvent(mxEvent)
         );
-    }, [thread, previewContent]);
+    }, [thread.rootEvent, previewContent]);
 
     if (!count || !preview || !lastReply) {
         return null;
