@@ -1,4 +1,4 @@
-import { Room } from "matrix-js-sdk/src/models/room";
+import { NotificationCountType, Room } from "matrix-js-sdk/src/models/room";
 import DMRoomMap from "../../matrix-react-sdk/src/utils/DMRoomMap";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import OrgStore from "matrix-react-sdk/src/stores/OrgStore";
@@ -11,6 +11,8 @@ import { DefaultTagID, TagID } from "matrix-react-sdk/src/stores/room-list/model
 import RoomListActions from "matrix-react-sdk/src/actions/RoomListActions";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
+import { determineUnreadState } from "matrix-react-sdk/src/RoomNotifs";
+import { NotificationColor } from "matrix-react-sdk/src/stores/notifications/NotificationColor";
 
 export enum RoomType {
     People = "people", // 私聊
@@ -189,3 +191,55 @@ Room.prototype.getParents = function () {
 Room.prototype.isSpaceChannel = function () {
     return this.getParents().length > 0;
 };
+
+// 获取单个消息列的真实的未读消息数
+Room.prototype.getThreadNotificationCount = function (threadId: string) {
+    return {
+        highlight: this.getThreadUnreadNotificationCount(threadId, NotificationCountType.Highlight),
+        total: this.getThreadUnreadNotificationCount(threadId, NotificationCountType.Total),
+    };
+};
+
+// 获取单个消息列经过处理后的消息数 & color
+Room.prototype.getThreadUnreadState = function (threadId: string) {
+    return determineUnreadState(this, threadId);
+};
+
+Object.defineProperties(Room.prototype, {
+    // 获取当前room内所有消息列的真实的未读消息数
+    threadsNotificationCount: {
+        get: function () {
+            let highlightCount = 0,
+                totalCount = 0;
+
+            for (const threadId of this.threadNotifications.keys()) {
+                highlightCount += this.getThreadUnreadNotificationCount(threadId, NotificationCountType.Highlight);
+                totalCount += this.getThreadUnreadNotificationCount(threadId, NotificationCountType.Total);
+            }
+
+            return {
+                highlight: highlightCount,
+                total: totalCount,
+            };
+        },
+    },
+    // 获取当前room内所有消息列经过处理后的消息数 & color
+    threadsNotificationTotalState: {
+        get: function () {
+            let count = 0;
+            let color = NotificationColor.None;
+
+            for (const threadId of this.threadNotifications.keys()) {
+                const state = this.getThreadUnreadState(threadId);
+                count += state.count;
+                color = Math.max(color, state.color);
+            }
+
+            return {
+                symbol: null,
+                count,
+                color,
+            };
+        },
+    },
+});

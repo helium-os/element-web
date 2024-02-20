@@ -325,6 +325,13 @@ $group_line-padding-horizontal: 16px;
                 color: rgba($text-primary-color1, 0.3);
             }
         }
+        .mx_EventTile_unreadNotificationBadge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform: translate(50%, -50%);
+            z-index: 2;
+        }
         .mx_EventTile_mainTile {
             position: relative;
         }
@@ -836,6 +843,15 @@ $group_line-padding-horizontal: 16px;
     background: $background-primary1-secondary-color1;
     &:last-child {
         margin-bottom: 0;
+    }
+
+    &.mx_EventTile_hasUnread {
+        border-color: #DEEAFF;
+        background: #DEEAFF;
+        &:hover {
+            border-color: #D6E5FF;
+            background: #D6E5FF;
+        }
     }
 
     .mx_BaseAvatar_image {

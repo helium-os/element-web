@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useMemo } from "react";
 import { Thread, ThreadEvent } from "matrix-js-sdk/src/models/thread";
 import { IContent, MatrixEvent, MatrixEventEvent } from "matrix-js-sdk/src/models/event";
 
@@ -32,6 +32,8 @@ import { Action } from "../../../dispatcher/actions";
 import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayload";
 import defaultDispatcher from "../../../dispatcher/dispatcher";
 import MessageTimestamp from "matrix-react-sdk/src/components/views/messages/MessageTimestamp";
+import RedactedBody from "matrix-react-sdk/src/components/views/messages/RedactedBody";
+import { DecryptionFailureBody } from "matrix-react-sdk/src/components/views/messages/DecryptionFailureBody";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -87,25 +89,38 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({
     }
 
     const lastReply = useTypedEventEmitterState(thread, ThreadEvent.Update, () => thread.replyToEvent) ?? undefined;
-    // track the content as a means to regenerate the thread message preview upon edits & decryption
-    const [content, setContent] = useState<IContent | undefined>(lastReply?.getContent());
-    useTypedEventEmitter(lastReply, MatrixEventEvent.Replaced, () => {
-        setContent(lastReply!.getContent());
-    });
-
     const lastReplyTime = lastReply?.getTs();
 
-    const awaitDecryption = lastReply?.shouldAttemptDecryption() || lastReply?.isBeingDecrypted();
-    useTypedEventEmitter(awaitDecryption ? lastReply : undefined, MatrixEventEvent.Decrypted, () => {
-        setContent(lastReply!.getContent());
-    });
+    // // track the content as a means to regenerate the thread message preview upon edits & decryption
+    // const [content, setContent] = useState<IContent | undefined>(lastReply?.getContent());
+    // useTypedEventEmitter(lastReply, MatrixEventEvent.Replaced, () => {
+    //     setContent(lastReply!.getContent());
+    // });
+    // const awaitDecryption = lastReply?.shouldAttemptDecryption() || lastReply?.isBeingDecrypted();
+    // useTypedEventEmitter(awaitDecryption ? lastReply : undefined, MatrixEventEvent.Decrypted, () => {
+    //     setContent(lastReply!.getContent());
+    // });
 
-    const preview = useAsyncMemo(async (): Promise<React.ReactNode | string | undefined> => {
+    // const preview = useAsyncMemo(async (): Promise<React.ReactNode | string | undefined> => {
+    //     if (previewContent) return previewContent;
+    //     if (!lastReply) return;
+    //     await cli.decryptEventIfNeeded(lastReply);
+    //     return MessagePreviewStore.instance.generatePreviewForEvent(lastReply);
+    // }, [lastReply, previewContent]);
+
+    const preview = useMemo(() => {
         if (previewContent) return previewContent;
-        if (!lastReply) return;
-        await cli.decryptEventIfNeeded(lastReply);
-        return MessagePreviewStore.instance.generatePreviewForEvent(lastReply);
-    }, [lastReply, previewContent]);
+
+        const { rootEvent } = thread;
+
+        return thread.rootEvent.isRedacted() ? (
+            <RedactedBody mxEvent={rootEvent} />
+        ) : thread.rootEvent.isDecryptionFailure() ? (
+            <DecryptionFailureBody mxEvent={rootEvent} />
+        ) : (
+            MessagePreviewStore.instance.generatePreviewForEvent(rootEvent)
+        );
+    }, [thread, previewContent]);
 
     if (!count || !preview || !lastReply) {
         return null;
@@ -122,7 +137,7 @@ export const ThreadMessagePreview: React.FC<IPreviewProps> = ({
                         <span className="mx_ThreadSummary_message-preview">{_t("Unable to decrypt message")}</span>
                     </div>
                 ) : (
-                    <div className="mx_ThreadSummary_content" title={preview}>
+                    <div className="mx_ThreadSummary_content">
                         <span className="mx_ThreadSummary_message-preview">{preview}</span>
                     </div>
                 )}

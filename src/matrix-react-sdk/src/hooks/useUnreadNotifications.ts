@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { RoomEvent } from "matrix-js-sdk/src/models/room";
+import { RoomEvent, UnreadNotificationState } from "matrix-js-sdk/src/models/room";
 import { useCallback, useEffect, useState } from "react";
 
 import type { NotificationCount, Room } from "matrix-js-sdk/src/models/room";
@@ -22,14 +22,7 @@ import { determineUnreadState } from "../RoomNotifs";
 import { NotificationColor } from "../stores/notifications/NotificationColor";
 import { useEventEmitter } from "./useEventEmitter";
 
-export const useUnreadNotifications = (
-    room?: Room,
-    threadId?: string,
-): {
-    symbol: string | null;
-    count: number;
-    color: NotificationColor;
-} => {
+export const useUnreadNotifications = (room?: Room, threadId?: string): UnreadNotificationState => {
     const [symbol, setSymbol] = useState<string | null>(null);
     const [count, setCount] = useState<number>(0);
     const [color, setColor] = useState<NotificationColor>(NotificationColor.None);
