@@ -55,7 +55,6 @@ import RoomView from "./RoomView";
 import type { RoomView as RoomViewType } from "./RoomView";
 import ToastContainer from "./ToastContainer";
 import UserView from "./UserView";
-import BackdropPanel from "./BackdropPanel";
 import { getHttpUrlFromMxc } from "../../customisations/Media";
 import { UserTab } from "../views/dialogs/UserTab";
 import { OpenToTabPayload } from "../../dispatcher/payloads/OpenToTabPayload";
@@ -139,7 +138,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
     protected compactLayoutWatcherRef: string;
     protected backgroundImageWatcherRef: string;
 
-    private leftPanelDefaultSize: number = 297;
+    private leftPanelDefaultSize: number = 240;
 
     public constructor(props: IProps) {
         super(props);
@@ -720,46 +719,39 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                         <MatrixChatToolbar />
                     </div>
                     <div className={bodyClasses}>
-                        <Resizable
-                            defaultSize={this.loadSidePanelSize()}
-                            minWidth={this.leftPanelDefaultSize}
-                            maxWidth="30%"
-                            enable={{
-                                top: false,
-                                right: true,
-                                bottom: false,
-                                left: false,
-                                topRight: false,
-                                bottomRight: false,
-                                bottomLeft: false,
-                                topLeft: false,
-                            }}
-                            className="mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper"
-                            handleClasses={{ right: "mx_ResizeHandle_horizontal" }}
-                            onResizeStart={this.onResizeStart}
-                            onResize={this.onResize}
-                            onResizeStop={this.onResizeStop}
-                        >
-                            <div className="mx_LeftPanel_outerWrapper">
-                                <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
-                                <nav className="mx_LeftPanel_wrapper">
-                                    {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}
-                                    {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
-                                    {/*<BackdropPanel backgroundImage={this.state.backgroundImage} />*/}
-                                    <div
-                                        className="mx_LeftPanel_wrapper--user"
-                                        data-collapsed={this.props.collapseLhs ? true : undefined}
-                                    >
-                                        <LeftPanel
-                                            pageType={this.props.page_type as PageTypes}
-                                            isMinimized={this.props.collapseLhs || false}
-                                            resizeNotifier={this.props.resizeNotifier}
-                                        />
-                                    </div>
-                                </nav>
-                            </div>
-                        </Resizable>
-                        <div className="mx_RoomView_wrapper">{pageElement}</div>
+                        <div className="mx_LeftPanel_outerWrapper">
+                            <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
+                            {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
+                        </div>
+                        <div className="mx_mainContent">
+                            <Resizable
+                                defaultSize={this.loadSidePanelSize()}
+                                minWidth={this.leftPanelDefaultSize}
+                                maxWidth="30%"
+                                enable={{
+                                    top: false,
+                                    right: true,
+                                    bottom: false,
+                                    left: false,
+                                    topRight: false,
+                                    bottomRight: false,
+                                    bottomLeft: false,
+                                    topLeft: false,
+                                }}
+                                className="mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper"
+                                handleClasses={{ right: "mx_ResizeHandle_horizontal" }}
+                                onResizeStart={this.onResizeStart}
+                                onResize={this.onResize}
+                                onResizeStop={this.onResizeStop}
+                            >
+                                <LeftPanel
+                                    pageType={this.props.page_type as PageTypes}
+                                    isMinimized={this.props.collapseLhs || false}
+                                    resizeNotifier={this.props.resizeNotifier}
+                                />
+                            </Resizable>
+                            <div className="mx_RoomView_wrapper">{pageElement}</div>
+                        </div>
                     </div>
                 </div>
                 <ToastContainer />

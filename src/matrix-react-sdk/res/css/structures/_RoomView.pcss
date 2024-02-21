@@ -31,10 +31,16 @@ limitations under the License.
 
 .mx_RoomView {
     word-wrap: break-word;
-    display: flex;
-    flex-direction: column;
     flex: 1;
     position: relative;
+}
+
+.mx_RoomView_mainBody {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: $background;
 }
 
 .mx_RoomView_auxPanel {
@@ -82,7 +88,6 @@ limitations under the License.
     flex-direction: column;
     flex: 1;
     min-width: 0;
-    background: $background;
 
     .mx_RoomView_messagePanel,
     .mx_RoomView_messagePanelSpinner,
@@ -127,10 +132,10 @@ limitations under the License.
 }
 
 .mx_RoomView_messageListWrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    position: relative;
 }
 
 .mx_RoomView_empty {

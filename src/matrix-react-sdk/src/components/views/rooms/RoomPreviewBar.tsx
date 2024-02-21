@@ -627,7 +627,7 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
 
         const isPanel = this.props.canPreview;
 
-        const classes = classNames("mx_RoomPreviewBar", `mx_RoomPreviewBar_${messageCase}`, {
+        const classes = classNames({
             mx_RoomPreviewBar_panel: isPanel,
             mx_RoomPreviewBar_dialog: !isPanel,
         });
@@ -648,14 +648,16 @@ export default class RoomPreviewBar extends React.Component<IProps, IState> {
         );
 
         return (
-            <div className={classes}>
-                <div className="mx_RoomPreviewBar_message">
-                    {titleElement}
-                    {subTitleElements && <div className="mx_RoomPreviewBar_subTitle_box">{subTitleElements}</div>}
+            <div className={`mx_RoomPreviewBar mx_RoomPreviewBar_${messageCase}`}>
+                <div className={classes}>
+                    <div className="mx_RoomPreviewBar_message">
+                        {titleElement}
+                        {subTitleElements && <div className="mx_RoomPreviewBar_subTitle_box">{subTitleElements}</div>}
+                    </div>
+                    {reasonElement}
+                    <div className="mx_RoomPreviewBar_actions">{actions}</div>
+                    <div className="mx_RoomPreviewBar_footer">{footer}</div>
                 </div>
-                {reasonElement}
-                <div className="mx_RoomPreviewBar_actions">{actions}</div>
-                <div className="mx_RoomPreviewBar_footer">{footer}</div>
             </div>
         );
     }

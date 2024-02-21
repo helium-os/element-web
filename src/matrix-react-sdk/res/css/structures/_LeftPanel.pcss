@@ -27,8 +27,6 @@ $roomListCollapsedWidth: 68px;
     /* Contain the amount of layers rendered by constraining what actually needs re-layering via css */
     //contain: layout paint;
     height: 100%;
-    background-color: $background-primary-color2;
-    border-right: 1px solid $border-primary-color2;
     user-select: none;
 }
 
@@ -51,17 +49,14 @@ $roomListCollapsedWidth: 68px;
 }
 
 .mx_LeftPanel {
-
-    /* Create a row-based flexbox for the space panel and the room list */
-    display: flex;
-    //contain: content;
     position: relative;
-    flex-grow: 1;
-    overflow: hidden;
+    height: 100%;
 
     /* Note: The 'room list' in this context is actually everything that isn't the tag */
     /* panel, such as the menu options, breadcrumbs, filtering, etc */
     .mx_LeftPanel_roomListContainer {
+        box-sizing: border-box;
+        height: 100%;
         padding: 12px 12px 0;
         flex: 1 0 0;
         min-width: 0;
@@ -184,7 +179,7 @@ $roomListCollapsedWidth: 68px;
         }
 
         .mx_LeftPanel_spaceInfoWrapper {
-            padding-bottom: 4px;
+            padding-bottom: 10px;
             @mixin HalfPxBorder $border-primary-color2;
             &:before {
                 border-top-width: 0;
@@ -204,7 +199,7 @@ $roomListCollapsedWidth: 68px;
         }
 
         .mx_LeftPanel_roomListWrapper {
-            margin: 0 -12px;
+            margin: 10px -12px 0;
             /* Make the y-scrollbar more responsive */
             overflow: hidden;
             flex: 1 0 0; /* needed in Safari to properly set flex-basis */

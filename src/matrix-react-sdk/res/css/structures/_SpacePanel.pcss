@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-$topLevelHeight: 36px;
+$topLevelHeight: 40px;
 $topLevelIconHeight: 12px;
 $nestedHeight: 24px;
 $gutterSize: 16px;
@@ -24,7 +24,8 @@ $activeBackgroundColor: $panel-actions;
 $activeBorderColor: $primary-content;
 
 .mx_SpacePanel {
-    width: 52px;
+    width: 56px;
+    height: 100%;
     flex: 0 0 auto;
     padding: 0;
     margin: 0;
@@ -35,7 +36,6 @@ $activeBorderColor: $primary-content;
     /* Create another flexbox so the Panel fills the container */
     display: flex;
     flex-direction: column;
-    border-right: 1px solid $border-primary-color2;
 
     .mx_SpacePanel_toggleCollapse {
         display: none;
@@ -94,15 +94,14 @@ $activeBorderColor: $primary-content;
     }
 
     .mx_Space_Divider {
-        width: 38px;
-        height: 2px;
-        margin: 0 auto;
-        border-radius: 2px;
+        width: 24px;
+        height: 1px;
+        margin: 4px auto;
         background: $border-primary-color2;
     }
 
     .mx_SpaceItem {
-        margin: 6px 0;
+        margin: 4px 0;
         width: 100%;
         &.mx_SpaceItem_narrow {
             align-self: baseline;
@@ -133,11 +132,10 @@ $activeBorderColor: $primary-content;
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 48px;
         cursor: pointer;
 
         .mx_BaseAvatar_image {
-            border-radius: 10px;
+            border-radius: 12px;
         }
 
         &:hover, &.mx_SpaceButton_active {
@@ -147,15 +145,10 @@ $activeBorderColor: $primary-content;
         }
 
         &.mx_SpaceButton_active {
-            background-color: $spacePanel-active-bg-color;
-            &::before {
-                content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 2px;
-                height: 100%;
-                background: $spacePanel-active-border-color;
+            .mx_BaseAvatar {
+                border: 3px solid $border-primary-color3;
+                box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+                border-radius: 50%;
             }
             &:not(.mx_SpaceButton_narrow) .mx_SpaceButton_selectionWrapper {
                 background-color: $activeBackgroundColor;

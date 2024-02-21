@@ -15,12 +15,16 @@ limitations under the License.
 */
 
 .mx_RoomPreviewBar {
-    flex: 0 0 auto;
-    align-items: center;
-    flex-direction: column;
-    justify-content: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     display: flex;
-    -webkit-align-items: center;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: $background;
 
     h3 {
         font-size: $font-18px;

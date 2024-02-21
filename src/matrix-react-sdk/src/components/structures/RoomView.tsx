@@ -2363,7 +2363,7 @@ export class RoomView extends React.Component<IRoomProps, IRoomState> {
                                     viewingCall={viewingCall}
                                     activeCall={this.state.activeCall}
                                 />
-                                {mainSplitBody}
+                                <div className="mx_RoomView_mainBody">{mainSplitBody}</div>
                             </div>
                         </MainSplit>
                     </ErrorBoundary>
