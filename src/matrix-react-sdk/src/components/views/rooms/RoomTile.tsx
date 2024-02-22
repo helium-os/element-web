@@ -465,7 +465,9 @@ export const DragRoomTile = (props: DragRoomTileProps) => {
         <Draggable
             key={`channel-${props.room.roomId}`}
             isDragDisabled={
-                (OrderedDefaultTagIDs.includes(props.tag) && props.tag !== DefaultTagID.Untagged) || !canManageTag
+                (OrderedDefaultTagIDs.includes(props.tag) &&
+                    (SpaceStore.instance.isHomeSpace || props.tag !== DefaultTagID.Untagged)) ||
+                !canManageTag
             }
             draggableId={props.room.roomId}
             index={index}

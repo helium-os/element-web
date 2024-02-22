@@ -929,9 +929,7 @@ export const DragRoomSublist = (props: DragRoomSublistProps) => {
 
     return (
         <Draggable
-            isDragDisabled={
-                OrderedDefaultTagIDs.includes(props.tagId) || (!SpaceStore.instance.isHomeSpace && !canManageSpaceTag)
-            }
+            isDragDisabled={OrderedDefaultTagIDs.includes(props.tagId) || !canManageSpaceTag}
             draggableId={props.tagId}
             index={props.index}
         >
