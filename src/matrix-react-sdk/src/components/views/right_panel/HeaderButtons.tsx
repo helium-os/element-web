@@ -35,7 +35,6 @@ export enum HeaderKind {
 export interface HeaderButtonsState {
     headerKind: HeaderKind;
     phase: RightPanelPhases | null;
-    threadNotificationColor: NotificationColor;
     globalNotificationColor: NotificationColor;
 }
 
@@ -55,7 +54,6 @@ export default abstract class HeaderButtons<
         this.state = {
             headerKind: kind,
             phase: rps.currentCard.phase,
-            threadNotificationColor: NotificationColor.None,
             globalNotificationColor: NotificationColor.None,
         } as S;
     }

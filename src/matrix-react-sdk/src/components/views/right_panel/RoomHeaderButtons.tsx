@@ -20,7 +20,7 @@ limitations under the License.
 
 import React, { createRef } from "react";
 import classNames from "classnames";
-import { NotificationCountType, Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import { Room, RoomEvent } from "matrix-js-sdk/src/models/room";
 import { ThreadEvent } from "matrix-js-sdk/src/models/thread";
 
 import { _t } from "../../../languageHandler";
@@ -45,7 +45,6 @@ import { RoomNotifState } from "matrix-react-sdk/src/RoomNotifs";
 import { EchoChamber } from "matrix-react-sdk/src/stores/local-echo/EchoChamber";
 import { CachedRoomKey, RoomEchoChamber } from "matrix-react-sdk/src/stores/local-echo/RoomEchoChamber";
 import { PROPERTY_UPDATED } from "matrix-react-sdk/src/stores/local-echo/GenericEchoChamber";
-import { doesRoomOrThreadHaveUnreadMessages } from "../../../Unread";
 import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 
@@ -94,6 +93,7 @@ interface IProps extends BaseProps {
 
 interface IState extends HeaderButtonsState {
     notificationState: RoomNotifState;
+    threadNotificationColor: NotificationColor;
     showRoomNotificationContextMenu: boolean;
 }
 
@@ -106,6 +106,7 @@ class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
         super(props, HeaderKind.Room);
         this.echoChamber = EchoChamber.forRoom(this.props.room);
         this.state = {
+            threadNotificationColor: this.threadsNotificationColor,
             notificationState: this.echoChamber?.notificationVolume,
             showRoomNotificationContextMenu: false,
         } as IState;
@@ -151,28 +152,15 @@ class RoomHeaderButtons extends HeaderButtons<IProps, IState> {
 
     private onNotificationUpdate = (): void => {
         this.setState({
-            threadNotificationColor: this.notificationColor,
+            threadNotificationColor: this.threadsNotificationColor,
             notificationState: this.echoChamber?.notificationVolume,
         });
     };
 
-    private get notificationColor(): NotificationColor {
-        switch (this.props.room?.threadsAggregateNotificationType) {
-            case NotificationCountType.Highlight:
-                return NotificationColor.Red;
-            case NotificationCountType.Total:
-                return NotificationColor.Grey;
-        }
-        // We don't have any notified messages, but we might have unread messages. Let's
-        // find out.
-        for (const thread of this.props.room!.getThreads()) {
-            // If the current thread has unread messages, we're done.
-            if (doesRoomOrThreadHaveUnreadMessages(thread)) {
-                return NotificationColor.Bold;
-            }
-        }
-        // Otherwise, no notification color.
-        return NotificationColor.None;
+    private get threadsNotificationColor(): NotificationColor {
+        const { count, color } = this.props.room?.threadsNotificationTotalState || {};
+        if (count > 0) return NotificationColor.Red;
+        return color || NotificationColor.None;
     }
 
     protected onAction(payload: ActionPayload): void {

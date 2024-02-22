@@ -23,7 +23,7 @@ import { Relations } from "matrix-js-sdk/src/models/relations";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 import { Thread, ThreadEvent } from "matrix-js-sdk/src/models/thread";
 import { logger } from "matrix-js-sdk/src/logger";
-import { NotificationCountType, Room, RoomEvent } from "matrix-js-sdk/src/models/room";
+import { Room, RoomEvent, UnreadNotificationState } from "matrix-js-sdk/src/models/room";
 import { CallErrorCode } from "matrix-js-sdk/src/webrtc/call";
 import { CryptoEvent } from "matrix-js-sdk/src/crypto";
 import { UserTrustLevel } from "matrix-js-sdk/src/crypto/CrossSigning";
@@ -74,6 +74,7 @@ import { ShowThreadPayload } from "../../../dispatcher/payloads/ShowThreadPayloa
 import { isLocalRoom } from "../../../utils/localRoom/isLocalRoom";
 import { ElementCall } from "../../../models/Call";
 import { UnreadNotificationBadge } from "./NotificationBadge/UnreadNotificationBadge";
+import { NotificationColor } from "matrix-react-sdk/src/stores/notifications/NotificationColor";
 
 export type GetRelationsForEvent = (
     eventId: string,
@@ -243,7 +244,7 @@ interface IState {
 
     thread: Thread | null;
     hasThread: boolean;
-    threadNotification?: NotificationCountType;
+    threadNotificationState: UnreadNotificationState | null;
 }
 
 // MUST be rendered within a RoomContext with a set timelineRenderingType
@@ -286,6 +287,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
 
             thread,
             hasThread: this.calcHasThread(thread), // 此条消息是否有消息列回复
+            threadNotificationState: null, // 消息列未读消息 & color状态
 
             showQuote: false, // 是否显示"展开|收起引号"按钮
         };
@@ -895,6 +897,12 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
         );
     }
 
+    private onThreadNotificationStateChange = (state: UnreadNotificationState) => {
+        this.setState({
+            threadNotificationState: state,
+        });
+    };
+
     public render(): ReactNode {
         const msgtype = this.props.mxEvent.getContent().msgtype;
         const eventType = this.props.mxEvent.getType();
@@ -984,6 +992,11 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
             mx_EventTile_clamp:
                 this.timelineRenderingType === TimelineRenderingType.ThreadsList || isRenderingNotification,
             mx_EventTile_noBubble: noBubbleEvent,
+            // 未读消息列标识
+            mx_EventTile_hasUnread:
+                this.timelineRenderingType === TimelineRenderingType.ThreadsList &&
+                this.state.hasThread &&
+                this.state.threadNotificationState?.color >= NotificationColor.Grey,
         });
 
         // If the tile is in the Sending state, don't speak the message.
@@ -1239,13 +1252,7 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                 );
             }
             case TimelineRenderingType.ThreadsList: {
-                const previewContent = this.props.mxEvent.isRedacted() ? (
-                    <RedactedBody mxEvent={this.props.mxEvent} />
-                ) : this.props.mxEvent.isDecryptionFailure() ? (
-                    <DecryptionFailureBody mxEvent={this.props.mxEvent} />
-                ) : (
-                    MessagePreviewStore.instance.generatePreviewForEvent(this.props.mxEvent)
-                );
+                const room = MatrixClientPeg.get().getRoom(this.props.mxEvent.getRoomId());
 
                 // tab-index=-1 to allow it to be focusable but do not add tab stop for it, primarily for screen readers
                 return React.createElement(
@@ -1294,16 +1301,21 @@ export class UnwrappedEventTile extends React.Component<EventTileProps, IState> 
                             {ircPadlock}
                             {avatar}
                             <div className={lineClasses} key="mx_EventTile_line">
-                                {this.renderThreadPanelSummary(previewContent)}
+                                {this.renderThreadPanelSummary()}
                             </div>
                             {msgOption}
                         </div>
-                        {/*{this.timelineRenderingType === TimelineRenderingType.ThreadsList && (*/}
+                        <div className="mx_EventTile_unreadNotificationBadge">
+                            <UnreadNotificationBadge
+                                room={room}
+                                threadId={this.props.mxEvent.threadRootId}
+                                onStateChange={this.onThreadNotificationStateChange}
+                            />
+                        </div>
                         {/*    <EventTileThreadToolbar*/}
                         {/*        viewInRoom={this.viewInRoom}*/}
                         {/*        copyLinkToThread={this.copyLinkToThread}*/}
                         {/*    />*/}
-                        {/*)}*/}
                     </>,
                 );
             }

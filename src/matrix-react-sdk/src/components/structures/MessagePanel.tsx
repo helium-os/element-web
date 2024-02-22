@@ -61,6 +61,7 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { UPDATE_SELECTED_SPACE } from "matrix-react-sdk/src/stores/spaces";
 import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { Thread, ThreadEvent } from "matrix-js-sdk/src/models/thread";
 
 const CONTINUATION_MAX_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const continuedTypes = [EventType.Sticker, EventType.RoomMessage];
@@ -105,7 +106,7 @@ export function shouldFormContinuation(
         return false;
     // 主消息面板里某条消息或者前一条消息有消息列回复或者有父消息节点（说明该条消息是条普通回复消息），则跳出连续
     if (
-        timelineRenderingType !== TimelineRenderingType.Thread &&
+        timelineRenderingType === TimelineRenderingType.Room &&
         (hasThreadSummary(mxEvent) || hasThreadSummary(prevEvent) || !!mxEvent.replyEventId || !!prevEvent.replyEventId)
     ) {
         return false;
@@ -316,6 +317,7 @@ class MessagePanel extends React.Component<IProps, IState> {
         this.calculateRoomMembersCount();
         this.setDisplayEventType();
         this.props.room?.currentState.on(RoomStateEvent.Update, this.calculateRoomMembersCount);
+        this.props.room?.on(ThreadEvent.Update, this.onThreadUpdate);
         SpaceStore.instance.on(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
         this.isMounted = true;
     }
@@ -324,6 +326,7 @@ class MessagePanel extends React.Component<IProps, IState> {
         this.isMounted = false;
         this.props.room?.currentState.off(RoomStateEvent.Update, this.calculateRoomMembersCount);
         SpaceStore.instance.off(UPDATE_SELECTED_SPACE, this.onSelectedSpaceChange);
+        this.props.room?.off(ThreadEvent.Update, this.onThreadUpdate);
         SettingsStore.unwatchSetting(this.showTypingNotificationsWatcherRef);
     }
 
@@ -355,6 +358,25 @@ class MessagePanel extends React.Component<IProps, IState> {
             this.setDisplayEventType();
         }
     }
+
+    /**
+     * 订阅thread变化，当thread存在，但是thread.length <= 1时，强制更新视图，以触发continuation的重新计算
+     * @param thread
+     *
+     * bugfix: 为了解决当前消息的消息列仅有一条消息时，当前消息没有跳出连续性的bug，因为hasThreadSummary方法里thread.length为0，导致不满足条件，continuation计算结果为ture
+     */
+    private onThreadUpdate = (thread: Thread) => {
+        if (
+            !thread ||
+            thread.roomId !== this.props.room?.roomId ||
+            this.context.timelineRenderingType !== TimelineRenderingType.Room
+        )
+            return;
+
+        if (thread.length <= 1) {
+            this.forceUpdate();
+        }
+    };
 
     private onSelectedSpaceChange = () => {
         this.setState({

@@ -7,6 +7,8 @@ import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 import { EventType } from "matrix-js-sdk/src/@types/event";
 import { AdditionalEventType } from "../vector/rewrite-js-sdk/event";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
+import { determineUnreadState } from "matrix-react-sdk/src/RoomNotifs";
+import { UnreadNotificationState } from "matrix-js-sdk/src/models/room";
 
 declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableSendMsgEventContent {
@@ -37,6 +39,11 @@ declare module "matrix-js-sdk/src/models/room-state" {
 }
 
 declare module "matrix-js-sdk/src/models/room" {
+    type UnreadNotificationState = ReturnType<typeof determineUnreadState>;
+    type UnreadNotificationCount = {
+        highlight: number;
+        total: number;
+    };
     interface Room {
         isAdminLeft(): boolean;
         isPeopleRoom(): boolean;
@@ -57,6 +64,10 @@ declare module "matrix-js-sdk/src/models/room" {
         canManageTag(userId: string): boolean;
         getParents(): Room[];
         isSpaceChannel(): boolean;
+        getThreadUnreadState(threadId: string): UnreadNotificationState;
+        threadsNotificationTotalState: UnreadNotificationState;
+        getThreadNotificationCount(threadId: string): UnreadNotificationCount;
+        threadsNotificationCount: UnreadNotificationCount;
     }
 }
 
