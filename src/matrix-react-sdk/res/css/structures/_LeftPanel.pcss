@@ -17,6 +17,8 @@ limitations under the License.
 $roomListCollapsedWidth: 68px;
 
 .mx_LeftPanel_ResizeWrapper {
+    box-sizing: content-box!important;
+    border-right: 1px solid $border-primary-color1;
     z-index: 2;
 }
 
@@ -180,12 +182,7 @@ $roomListCollapsedWidth: 68px;
 
         .mx_LeftPanel_spaceInfoWrapper {
             padding-bottom: 10px;
-            @mixin HalfPxBorder $border-primary-color2;
-            &:before {
-                border-top-width: 0;
-                border-left-width: 0;
-                border-right-width: 0;
-            }
+            border-bottom: 1px solid $border-primary-color2;
         }
         .mx_LeftPanel_spaceInfoInner {
             position: relative;
