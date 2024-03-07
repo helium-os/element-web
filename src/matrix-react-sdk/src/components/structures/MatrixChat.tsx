@@ -147,7 +147,7 @@ import { OwnProfileStore } from "../../stores/OwnProfileStore";
 
 import SDK from "heliumos-js-sdk";
 import * as languageHandler from "../../../src/languageHandler";
-import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
+import { AppConfigSubscribeKey, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
 
@@ -451,7 +451,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
-        SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
+        SDK.subscribe(AppConfigSubscribeKey.SystemLanguageChange, this.onLanguageChange);
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
@@ -476,7 +476,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         UIStore.destroy();
         this.state.resizeNotifier.removeListener("middlePanelResized", this.dispatchTimelineResize);
         window.removeEventListener("resize", this.onWindowResized);
-        SDK.unsubscribe(appEventKeyMap.languageChange, this.onLanguageChange);
+        SDK.unsubscribe(AppConfigSubscribeKey.SystemLanguageChange, this.onLanguageChange);
 
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();

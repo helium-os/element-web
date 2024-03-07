@@ -1,49 +1,77 @@
 import SDK from "heliumos-js-sdk";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
+import { Roles } from "matrix-react-sdk/src/stores/UserStore";
 
-export const appEventKeyMap = {
-    languageChange: "system.language_changed",
-};
+// 获取app config
+export enum AppConfigInvokeKey {
+    SystemLanguage = "system.getLanguage",
+    UserRoles = "user.getRoles",
+    SystemMediaAccess = "system.askForMediaAccess",
+}
+
+// 订阅app config change
+export enum AppConfigSubscribeKey {
+    SystemLanguageChange = "system.language_changed",
+}
+
+type Handler<T> = (res: T, resolve, reject) => void;
+function getAppConfigHandler<R, P>(key: string, handler: Handler<P>, params = {}) {
+    return Promise.race<R>([
+        new Promise((resolve, reject) => {
+            setTimeout(() => {
+                reject(`获取${key} appConfig超时无响应`);
+            }, 2000);
+        }),
+        new Promise((resolve, reject) => {
+            try {
+                SDK.invoke(
+                    key,
+                    (res) => {
+                        handler?.(res, resolve, reject);
+                    },
+                    params,
+                );
+            } catch (error) {
+                reject(error);
+            }
+        }),
+    ]);
+}
 
 // 获取desktop语言设置
-export function getLanguage(): Promise<string> {
-    return new Promise((resolve, reject) => {
-        SDK.invoke("system.getLanguage", (res) => {
-            console.log("get app language config success", res);
-            resolve(languageMap.get(res) || defaultLanguage);
-        });
+export function getLanguage() {
+    return getAppConfigHandler<string, string>(AppConfigInvokeKey.SystemLanguage, (res, resolve, reject) => {
+        console.log("get app language config success", res);
+        resolve(languageMap.get(res) || defaultLanguage);
     });
 }
 
 // 获取desktop当前用户权限
 export function getUserRoles() {
-    return new Promise((resolve, reject) => {
-        SDK.invoke("user.getRoles", (res) => {
-            console.log("get app user roles success", res);
-            resolve(res);
-        });
+    return getAppConfigHandler<Roles, Roles>(AppConfigInvokeKey.UserRoles, (res, resolve, reject) => {
+        console.log("get app user roles success", res);
+        resolve(res);
     });
 }
 
 // 请求desktop音视频权限
-export function askForMediaAccess(audio: boolean, video: boolean): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const reqAccess = [audio, video];
-        SDK.invoke(
-            "system.askForMediaAccess",
-            (res: [boolean, boolean]) => {
-                console.log("get app media access success", res);
-                const result = !reqAccess.find((reqAccess, index) => reqAccess && !res[index]);
+export function askForMediaAccess(audio: boolean, video: boolean) {
+    const reqAccess = [audio, video];
 
-                console.log("askForMediaAccess", "reqAccess", reqAccess, "resAccess", res, "result", result);
-                if (!result) {
-                    return reject("media access from app is false");
-                }
-                return resolve();
-            },
-            {
-                data: reqAccess,
-            },
-        );
-    });
+    return getAppConfigHandler<void, [boolean, boolean]>(
+        AppConfigInvokeKey.SystemMediaAccess,
+        (res, resolve, reject) => {
+            console.log("get app media access success", res);
+            const result = !reqAccess.find((reqAccess, index) => reqAccess && !res[index]);
+
+            console.log("askForMediaAccess", "reqAccess", reqAccess, "resAccess", res, "result", result);
+            if (!result) {
+                return reject("media access from app is false");
+            }
+            return resolve();
+        },
+        {
+            data: reqAccess,
+        },
+    );
 }

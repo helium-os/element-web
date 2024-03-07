@@ -1,4 +1,4 @@
-type Roles = string[];
+export type Roles = string[];
 export default class UserStore {
     roles: Roles = [];
 
