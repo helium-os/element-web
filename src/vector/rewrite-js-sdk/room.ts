@@ -265,7 +265,7 @@ Object.defineProperties(Room.prototype, {
  * @2 A频道的消息列为空时，用户点开其消息列面板，然后关闭面板，此时其他用户在A频道发送该频道的第一个消息列，当前用户再次点开消息列面板时，其消息列面板仍然为空
  * 以上两种场景出现bug的原因为：
  * #1 用户第一次点开每个room的消息列面板时，会调用fetchRoomThreads方法，该方法调用完成后，会设置room.threadsReady为true，而fetchRoomThreads内部判断room.threadsReady为false时才调用接口获取消息列列表，
- *    所以在不刷新页面的情况下，每个room只会调用一次获取消息列列表的接口，这也是为什么刷新页面后消息列列表会正常展示
+ *    所以在不刷新页面的情况下，每个room只会执行一次fetchRoomThreads内的逻辑，也就是只会调用一次获取消息列列表的接口，这也是为什么刷新页面后消息列列表会正常展示
  * #2 在A频道消息列面板不展示的情况，此时该频道有第一个消息列时，因为当前room的消息列列表面板组件已卸载，所以订阅不到ThreadEvent.New事件，导致threadsTimelines没有更新
  */
 const _fetchRoomThreads = Room.prototype.fetchRoomThreads;
