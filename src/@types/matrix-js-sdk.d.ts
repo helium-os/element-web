@@ -9,6 +9,7 @@ import { AdditionalEventType } from "../vector/rewrite-js-sdk/event";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 import { determineUnreadState } from "matrix-react-sdk/src/RoomNotifs";
 import { UnreadNotificationState } from "matrix-js-sdk/src/models/room";
+import { Thread } from "matrix-js-sdk/src/models/thread";
 
 declare module "matrix-js-sdk/src/@types/partials" {
     interface IEnableSendMsgEventContent {
@@ -68,6 +69,7 @@ declare module "matrix-js-sdk/src/models/room" {
         threadsNotificationTotalState: UnreadNotificationState;
         getThreadNotificationCount(threadId: string): UnreadNotificationCount;
         threadsNotificationCount: UnreadNotificationCount;
+        onNewThread(thread: Thread, toStartOfTimeline: boolean): void;
     }
 }
 
