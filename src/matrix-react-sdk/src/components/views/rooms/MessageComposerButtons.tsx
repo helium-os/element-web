@@ -44,6 +44,7 @@ import SettingsStore from "../../../settings/SettingsStore";
 import { UIFeature } from "../../../settings/UIFeature";
 import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
 import CallButtons from "matrix-react-sdk/src/components/views/rooms/CallButtons";
+import { isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     addEmoji: (emoji: string) => boolean;
@@ -139,7 +140,7 @@ const MessageComposerButtons: React.FC<IProps> = (props: IProps) => {
                     {item}
                 </div>
             ))}
-            {props.showCallButtons && (
+            {isInDesktop && props.showCallButtons && (
                 <div className="mx_MessageComposer_callButtons">
                     <CallButtons room={room} className="mx_MessageComposer_button" />
                 </div>
