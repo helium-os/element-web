@@ -13,6 +13,7 @@ import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { RoomMember } from "matrix-js-sdk/src/models/room-member";
 import { determineUnreadState } from "matrix-react-sdk/src/RoomNotifs";
 import { NotificationColor } from "matrix-react-sdk/src/stores/notifications/NotificationColor";
+import { Thread, ThreadEvent } from "matrix-js-sdk/src/models/thread";
 
 export enum RoomType {
     People = "people", // 私聊
@@ -243,3 +244,41 @@ Object.defineProperties(Room.prototype, {
         },
     },
 });
+
+/**
+ * 重写fetchRoomThreads，给room添加ThreadEvent.New事件的订阅
+ * 订阅到新创建的消息列事件后，将threadRootEvent添加到threadsTimelines里
+ *
+ * bugfix:为了解决其他成员新创建的消息列在当前用户的消息列列表里不展示，只有该消息列有第二条回复 或者 刷新页面后才展示的bug
+ *
+ * 原因：
+ * js-sdk里通过updateThreadRootEvents方法更新threadsTimelines
+ * js-sdk里创建消息列成功以后会调用updateThreadRootEvents方法，但是该方法里判断了只有thread.length > 0的时候才更新threadsTimeline
+ * 所以已存在的消息列有新的回复时会及时更新，而新创建的消息列因为此时thread.length为0，虽然调用了方法，但是并没有将新创建的threadRootEvent添加到threadsTimeline里
+ *
+ * 为什么这样改？
+ * 基于上述原因，可以通过重写updateThreadRootEvents方法来实现，判断只要thread存在就执行方法，但是因为js-sdk里该方法为实例方法，并非原型方法，所以不能这样修改
+ * js-sdk里room createThread完成后会emit ThreadEvent.New事件，最后决定通过订阅该事件，然后触发updateThreadRootEvent
+ *
+ * PS: 中间做过一版在ThreadPanel组件里给room订阅ThreadEvent.New事件的修改，但是在以下场景下仍然有bug:
+ * @1 A频道的消息列为空时，点开其消息列面板，然后切换到B频道，切换后，其他用户在A频道发送该频道的第一个消息列，然后当前用户切换到A频道，其消息列面板仍然为空
+ * @2 A频道的消息列为空时，用户点开其消息列面板，然后关闭面板，此时其他用户在A频道发送该频道的第一个消息列，当前用户再次点开消息列面板时，其消息列面板仍然为空
+ * 以上两种场景出现bug的原因为：
+ * #1 用户第一次点开每个room的消息列面板时，会调用fetchRoomThreads方法，该方法调用完成后，会设置room.threadsReady为true，而fetchRoomThreads内部判断room.threadsReady为false时才调用接口获取消息列列表，
+ *    所以在不刷新页面的情况下，每个room只会执行一次fetchRoomThreads内的逻辑，也就是只会调用一次获取消息列列表的接口，这也是为什么刷新页面后消息列列表会正常展示
+ * #2 在A频道消息列面板不展示的情况，此时该频道有第一个消息列时，因为当前room的消息列列表面板组件已卸载，所以订阅不到ThreadEvent.New事件，导致threadsTimelines没有更新
+ */
+const _fetchRoomThreads = Room.prototype.fetchRoomThreads;
+Room.prototype.fetchRoomThreads = function (...args): Promise<void> {
+    const result = _fetchRoomThreads.call(this, ...args);
+    this.on(ThreadEvent.New, this.onNewThread);
+    return result;
+};
+Room.prototype.onNewThread = function (thread: Thread, toStartOfTimeline: boolean) {
+    if (!thread) return;
+
+    this.updateThreadRootEvent(this.threadsTimelineSets?.[0], thread, toStartOfTimeline, false);
+    if (thread.hasCurrentUserParticipated) {
+        this.updateThreadRootEvent(this.threadsTimelineSets?.[1], thread, toStartOfTimeline, false);
+    }
+};
