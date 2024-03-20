@@ -27,15 +27,5 @@ export function getRequestOptions(options) {
 const _fetch = FetchHttpApi.prototype.fetch;
 FetchHttpApi.prototype.fetch = function (resource, options) {
     const finalResource = getRequestResource(resource);
-
-    console.log(
-        "FetchHttpApi fetch",
-        "needRequestIntercept",
-        needRequestIntercept,
-        "resource",
-        resource,
-        "finalResource",
-        finalResource,
-    );
     return _fetch.call(this, finalResource, getRequestOptions(options));
 };

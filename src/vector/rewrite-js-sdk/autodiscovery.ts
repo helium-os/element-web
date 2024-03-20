@@ -4,15 +4,5 @@ import { getRequestOptions, getRequestResource, needRequestIntercept } from "./f
 const _fetch = AutoDiscovery.fetch;
 AutoDiscovery.fetch = function (resource, options) {
     const finalResource = getRequestResource(resource);
-
-    console.log(
-        "AutoDiscovery fetch",
-        "needRequestIntercept",
-        needRequestIntercept,
-        "resource",
-        resource,
-        "finalResource",
-        finalResource,
-    );
     return _fetch.call(this, finalResource, getRequestOptions(options));
 };
