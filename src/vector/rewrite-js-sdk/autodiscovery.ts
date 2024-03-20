@@ -1,5 +1,6 @@
 import { AutoDiscovery } from "matrix-js-sdk/src/autodiscovery";
 import { needRequestIntercept } from "./fetch";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 const _fetch = AutoDiscovery.fetch;
 AutoDiscovery.fetch = function (resource, options) {
@@ -11,7 +12,15 @@ AutoDiscovery.fetch = function (resource, options) {
                 ? resource.pathname
                 : (finalResource as string).replace("https://matrix.system.service.heliumos", "");
     }
-    console.log("AutoDiscovery finalResource", finalResource, "resource", resource);
+    console.log(
+        "AutoDiscovery fetch",
+        "needRequestIntercept",
+        needRequestIntercept,
+        "resource",
+        resource,
+        "finalResource",
+        finalResource,
+    );
     return _fetch.call(this, finalResource, {
         ...options,
         ...(needRequestIntercept ? { credentials: "include" } : {}), // 网页端需要携带cookie
