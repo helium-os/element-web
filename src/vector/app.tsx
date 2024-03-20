@@ -37,7 +37,7 @@ import MatrixChat from "matrix-react-sdk/src/components/structures/MatrixChat";
 import { parseQs } from "./url_utils";
 import VectorBasePlatform from "./platform/VectorBasePlatform";
 import { getScreenFromLocation, init as initRouting, onNewScreen } from "./routing";
-import { getServerOrigin } from "matrix-react-sdk/src/utils/env";
+import { getMatrixServerOrigin } from "matrix-react-sdk/src/utils/env";
 
 // add React and ReactPerf to the global namespace, to make them easier to access via the console
 // this incidentally means we can forget our React imports in JSX files without penalty.
@@ -104,7 +104,7 @@ export async function loadApp(fragParams): Promise<ReactElement> {
     SdkConfig.add({
         default_server_config: {
             "m.homeserver": {
-                base_url: getServerOrigin(),
+                base_url: getMatrixServerOrigin(),
             },
         },
     });

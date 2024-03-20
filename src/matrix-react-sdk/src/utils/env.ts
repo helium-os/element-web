@@ -6,6 +6,7 @@ export const isInDesktop = ua.toLocaleLowerCase().includes("heliumos"); // 是�
 export const isProdWebSite = !isDev && !isInDesktop; // 是否是打包后的网页端
 
 export const hsNamePrefix = "matrix.system.service";
+export const ipfsPrefix = "file.system.service";
 
 export function getOrgId(): string {
     if (isDev) {
@@ -19,6 +20,10 @@ export function getOrgId(): string {
     return hostname.split(".").pop();
 }
 
-export function getServerOrigin(): string {
+export function getMatrixServerOrigin(): string {
     return `https://${hsNamePrefix}.${getOrgId()}`;
+}
+
+export function getIpfsServerOrigin(): string {
+    return `https://${ipfsPrefix}.${getOrgId()}`;
 }
