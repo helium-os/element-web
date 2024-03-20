@@ -67,8 +67,10 @@ const calculateUrls = (url?: string | null, urls?: string[], lowBandwidth = fals
     return Array.from(new Set(_urls));
 };
 
-function getRequestImageSrc(src: string) {
-    if (!isInDesktop) return src;
+export function getRequestImageSrc(src: string) {
+    if (!src) return;
+
+    if (isInDesktop) return src;
 
     // 网页端头像做请求拦截
     let finalSrc = src;
