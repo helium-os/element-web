@@ -1,3 +1,3 @@
 const ua = navigator.userAgent;
 
-export const isInDesktop = ua.includes("HeliumOS"); // 是否是在桌面端
+export const isInDesktop = ua.toLocaleLowerCase().includes("heliumos"); // 是否是在桌面端
