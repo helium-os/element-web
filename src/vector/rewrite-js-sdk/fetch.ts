@@ -11,7 +11,7 @@ FetchHttpApi.prototype.fetch = function (resource, options) {
         finalResource =
             resource instanceof URL
                 ? resource.pathname
-                : (finalResource as string).replace("https://matrix.system.service.heliumos", "");
+                : (finalResource as string).replace("https://matrix.system.service.com", "");
     }
 
     console.log(
