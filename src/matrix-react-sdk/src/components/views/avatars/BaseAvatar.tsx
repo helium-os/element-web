@@ -30,8 +30,7 @@ import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { useTypedEventEmitter } from "../../../hooks/useEventEmitter";
 import { toPx } from "../../../utils/units";
 import { _t } from "../../../languageHandler";
-import { getIpfsServerOrigin, getMatrixServerOrigin } from "matrix-react-sdk/src/utils/env";
-import { needRequestIntercept } from "../../../../../vector/rewrite-js-sdk/fetch";
+import { getIpfsServerOrigin, getMatrixServerOrigin, isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     name?: string; // The name (first initial used as default)
@@ -69,14 +68,13 @@ const calculateUrls = (url?: string | null, urls?: string[], lowBandwidth = fals
 };
 
 function getRequestImageSrc(src: string) {
-    // 网页端做请求拦截
-    if (!needRequestIntercept) return src;
+    if (!isInDesktop) return src;
 
+    // 网页端头像做请求拦截
     let finalSrc = src;
     if (src.includes("_matrix")) {
         finalSrc = src.replace(getMatrixServerOrigin(), "");
     } else if (src.includes("ipfs")) {
-        console.log("getIpfsServerOrigin()", getIpfsServerOrigin());
         finalSrc = src.replace(getIpfsServerOrigin(), "");
     }
 

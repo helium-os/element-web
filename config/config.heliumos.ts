@@ -28,5 +28,17 @@ module.exports = {
             pathRewrite: { "^/heliumos-org-api": "" },
             agent,
         },
+        "/_matrix": {
+            target: "https://matrix.system.service.heliumos",
+            changeOrigin: true,
+            secure: false,
+            agent,
+        },
+        "/ipfs": {
+            target: "https://file.system.service.heliumos",
+            changeOrigin: true,
+            secure: false,
+            agent,
+        },
     },
 };
