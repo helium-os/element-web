@@ -1,7 +1,7 @@
 import { FetchHttpApi } from "matrix-js-sdk/src/http-api/fetch";
-import { isDev, isInDesktop } from "matrix-react-sdk/src/utils/env";
+import { getServerOrigin, isProdWebSite } from "matrix-react-sdk/src/utils/env";
 
-export const needRequestIntercept = !isDev && !isInDesktop; // 是否需要做请求拦截
+export const needRequestIntercept = isProdWebSite; // 网页端做请求拦截
 
 // 获取最终请求的地址
 export function getRequestResource(resource: string | URL) {
@@ -9,9 +9,7 @@ export function getRequestResource(resource: string | URL) {
     // 网页端做请求拦截
     if (needRequestIntercept) {
         finalResource =
-            resource instanceof URL
-                ? resource.pathname
-                : (finalResource as string).replace("https://matrix.system.service.com", "");
+            resource instanceof URL ? resource.pathname : (finalResource as string).replace(getServerOrigin(), "");
     }
     return finalResource;
 }
