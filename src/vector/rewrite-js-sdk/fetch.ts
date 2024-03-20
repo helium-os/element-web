@@ -9,7 +9,9 @@ export function getRequestResource(resource: string | URL) {
     // 网页端做请求拦截
     if (needRequestIntercept) {
         finalResource =
-            resource instanceof URL ? resource.pathname : (finalResource as string).replace(getServerOrigin(), "");
+            resource instanceof URL
+                ? resource.href.replace(getServerOrigin(), "")
+                : (finalResource as string).replace(getServerOrigin(), "");
     }
     return finalResource;
 }
