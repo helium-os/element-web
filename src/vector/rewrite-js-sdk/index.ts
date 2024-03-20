@@ -5,4 +5,5 @@ import "./room";
 import "./event";
 import "./mediaHandler";
 import "./fetch";
+import "./autodiscovery";
 import "./client";
