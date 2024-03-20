@@ -3,8 +3,8 @@ import { isDev, isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 export const needRequestIntercept = !isDev && !isInDesktop; // 是否需要做请求拦截
 
-const _fetch = FetchHttpApi.prototype.fetch;
-FetchHttpApi.prototype.fetch = function (resource, options) {
+// 获取最终请求的地址
+export function getRequestResource(resource: string | URL) {
     let finalResource = resource;
     // 网页端做请求拦截
     if (needRequestIntercept) {
@@ -13,6 +13,20 @@ FetchHttpApi.prototype.fetch = function (resource, options) {
                 ? resource.pathname
                 : (finalResource as string).replace("https://matrix.system.service.com", "");
     }
+    return finalResource;
+}
+
+// 获取最终请求的options
+export function getRequestOptions(options) {
+    return {
+        ...options,
+        ...(needRequestIntercept ? { credentials: "include" } : {}), // 网页端需要携带cookie
+    };
+}
+
+const _fetch = FetchHttpApi.prototype.fetch;
+FetchHttpApi.prototype.fetch = function (resource, options) {
+    const finalResource = getRequestResource(resource);
 
     console.log(
         "FetchHttpApi fetch",
@@ -23,8 +37,5 @@ FetchHttpApi.prototype.fetch = function (resource, options) {
         "finalResource",
         finalResource,
     );
-    return _fetch.call(this, finalResource, {
-        ...options,
-        ...(needRequestIntercept ? { credentials: "include" } : {}), // 网页端需要携带cookie
-    });
+    return _fetch.call(this, finalResource, getRequestOptions(options));
 };
