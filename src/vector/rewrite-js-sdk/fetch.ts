@@ -1,11 +1,9 @@
 import { FetchHttpApi } from "matrix-js-sdk/src/http-api/fetch";
-import { getMatrixServerOrigin, isProdWebSite } from "matrix-react-sdk/src/utils/env";
-
-export const needRequestIntercept = isProdWebSite; // 网页端做请求拦截
+import { getMatrixServerOrigin, isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 // 获取最终请求的地址
 export function getRequestResource(resource: string | URL) {
-    if (!needRequestIntercept) return resource;
+    if (isInDesktop) return resource;
 
     // 网页端做请求拦截
     return resource instanceof URL
@@ -17,7 +15,7 @@ export function getRequestResource(resource: string | URL) {
 export function getRequestOptions(options) {
     return {
         ...options,
-        ...(needRequestIntercept ? { credentials: "include" } : {}), // 网页端需要携带cookie
+        ...(isInDesktop ? {} : { credentials: "include" }),
     };
 }
 

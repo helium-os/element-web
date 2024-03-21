@@ -1,5 +1,5 @@
 import { AutoDiscovery } from "matrix-js-sdk/src/autodiscovery";
-import { getRequestOptions, getRequestResource, needRequestIntercept } from "./fetch";
+import { getRequestOptions, getRequestResource } from "./fetch";
 
 const _fetch = AutoDiscovery.fetch;
 AutoDiscovery.fetch = function (resource, options) {
