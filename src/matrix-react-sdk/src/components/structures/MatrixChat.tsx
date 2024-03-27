@@ -150,6 +150,8 @@ import * as languageHandler from "../../../src/languageHandler";
 import { AppConfigSubscribeKey, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import User from "matrix-react-sdk/src/utils/User";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -449,12 +451,28 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         }
     }
 
+    // 获取默认space
+    private getDefaultSpace() {
+        return fetch("/_matrix/client/api/v1/default_space")
+            .then((response) => response.json())
+            .then((res) => res.data);
+    }
+
+    // 设置默认space为不允许用户离开的space
+    private setNotAllowedLeaveSpaces() {
+        this.getDefaultSpace().then((res) => {
+            res && SpaceStore.instance.setNotAllowedLeaveSpaces([res]);
+        });
+    }
+
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
         SDK.subscribe(AppConfigSubscribeKey.SystemLanguageChange, this.onLanguageChange);
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
+
+        this.setNotAllowedLeaveSpaces();
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {

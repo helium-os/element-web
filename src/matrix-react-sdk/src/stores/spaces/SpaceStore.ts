@@ -48,11 +48,12 @@ import {
     UPDATE_FILTERED_SUGGESTED_ROOMS,
     UPDATE_HOME_BEHAVIOUR,
     UPDATE_INVITED_SPACES,
+    UPDATE_NOT_ALLOWED_LEAVE_SPACES,
     UPDATE_SELECTED_SPACE,
     UPDATE_SPACE_TAGS,
     UPDATE_SUGGESTED_ROOMS,
     UPDATE_TOP_LEVEL_SPACES,
-} from ".";
+} from "./index";
 import { getCachedRoomIDForAlias } from "../../RoomAliasCache";
 import { EffectiveMembership, getEffectiveMembership } from "../../utils/membership";
 import {
@@ -165,6 +166,8 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     private _canManageSpacePrivateChannel: boolean = false; // 是否有管理当前社区私密频道的权限
 
+    private _notAllowedLeaveSpaces: string[] = []; // 不允许离开的社区列表
+
     public constructor() {
         super(defaultDispatcher, {});
 
@@ -248,6 +251,15 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
 
     public async sendSpaceTags(tags: Tag[]) {
         return this.matrixClient?.setRoomOnlyTags(this.activeSpace, tags);
+    }
+
+    public get notAllowedLeaveSpaces(): string[] {
+        return this._notAllowedLeaveSpaces;
+    }
+
+    public setNotAllowedLeaveSpaces(spaces: string[]) {
+        this._notAllowedLeaveSpaces = spaces;
+        this.emit(UPDATE_NOT_ALLOWED_LEAVE_SPACES, this._notAllowedLeaveSpaces);
     }
 
     public setActiveRoomInSpace(space: SpaceKey): void {

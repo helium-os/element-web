@@ -36,6 +36,9 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
     const [name, setName] = useState("");
     const [nameValidate, setNameValidate] = useState<boolean>(false);
 
+    const spaceAliasField = useRef<Field>();
+    const [alias, setAlias] = useState("");
+
     // heliumos组织的admin用户创建社区时需要展示alias配置项
     const showAliasField = useMemo(() => UserStore.instance().canCreateSpace && getOrgId() === defaultOrgId, []);
 
@@ -75,7 +78,7 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
             return;
         }
 
-        return createSpace(name, spaceType === Visibility.Public, "", "", avatar);
+        return createSpace(name, spaceType === Visibility.Public, alias, "", avatar);
     };
 
     const onNameValidate = async (fieldState: IFieldState): Promise<IValidationResult> => {
@@ -116,6 +119,9 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
                 setName={setName}
                 onNameValidate={onNameValidate}
                 showAliasField={showAliasField}
+                aliasFieldRef={spaceAliasField}
+                alias={alias}
+                setAlias={setAlias}
             />
         </BaseDialog>
     );
