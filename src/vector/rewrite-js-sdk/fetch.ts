@@ -8,6 +8,8 @@ export function getRequestResource(resource: string | URL) {
         isInDesktop,
         "resource",
         resource,
+        "getMatrixServerOrigin()",
+        getMatrixServerOrigin(),
         "finalResource",
         isInDesktop
             ? resource
