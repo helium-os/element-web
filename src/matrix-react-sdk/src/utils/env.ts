@@ -9,6 +9,17 @@ export const hsNamePrefix = "matrix.system.service";
 export const ipfsPrefix = "file.system.service";
 
 export function getOrgId(): string {
+    console.log(
+        "getOrgId",
+        "isDev",
+        isDev,
+        "process.env.NODE_ENV",
+        process.env.NODE_ENV,
+        "isInDesktop",
+        isInDesktop,
+        "isProdWebSite",
+        isProdWebSite,
+    );
     if (isDev) {
         return CHAT_ENV_ORG_ID;
     }
