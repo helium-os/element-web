@@ -8,13 +8,14 @@ export const isProdWebSite = !isDev && !isInDesktop; // 是否是打包后的网
 export const hsNamePrefix = "matrix.system.service";
 export const ipfsPrefix = "file.system.service";
 
+export const defaultOrgId = "heliumos";
 export function getOrgId(): string {
     if (isDev) {
         return CHAT_ENV_ORG_ID;
     }
     // 如果是网页端
     if (isProdWebSite) {
-        return "heliumos";
+        return defaultOrgId;
     }
     const { hostname } = window.location;
     return hostname.split(".").pop();

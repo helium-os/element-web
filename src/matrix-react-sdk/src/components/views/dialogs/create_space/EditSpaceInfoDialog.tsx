@@ -1,4 +1,4 @@
-import React, { memo, useState, useRef } from "react";
+import React, { memo, useState, useMemo, useRef } from "react";
 import BaseDialog from "../BaseDialog";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
@@ -10,6 +10,8 @@ import {
 } from "matrix-react-sdk/src/components/views/spaces/SpaceCreateMenu";
 import Field from "matrix-react-sdk/src/components/views/elements/Field";
 import { IFieldState, IValidationResult } from "matrix-react-sdk/src/components/views/elements/Validation";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import { defaultOrgId, getOrgId } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     spaceType: Visibility;
@@ -33,6 +35,9 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
     const spaceNameField = useRef<Field>();
     const [name, setName] = useState("");
     const [nameValidate, setNameValidate] = useState<boolean>(false);
+
+    // heliumos组织的admin用户创建社区时需要展示alias配置项
+    const showAliasField = useMemo(() => UserStore.instance().canCreateSpace && getOrgId() === defaultOrgId, []);
 
     const onOk = async () => {
         if (busy) return;
@@ -110,7 +115,7 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
                 nameFieldRef={spaceNameField}
                 setName={setName}
                 onNameValidate={onNameValidate}
-                showAliasField={false}
+                showAliasField={showAliasField}
             />
         </BaseDialog>
     );
