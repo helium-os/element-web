@@ -3,6 +3,18 @@ import { getMatrixServerOrigin, isInDesktop } from "matrix-react-sdk/src/utils/e
 
 // 获取最终请求的地址
 export function getRequestResource(resource: string | URL) {
+    console.log(
+        "getRequestResource isInDesktop",
+        isInDesktop,
+        "resource",
+        resource,
+        "finalResource",
+        isInDesktop
+            ? resource
+            : resource instanceof URL
+              ? resource.href.replace(getMatrixServerOrigin(), "")
+              : (resource as string).replace(getMatrixServerOrigin(), ""),
+    );
     if (isInDesktop) return resource;
 
     // 网页端做请求拦截
