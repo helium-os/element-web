@@ -248,6 +248,7 @@ export function attemptTokenLogin(
                 button: _t("Try again"),
                 onFinished: (tryAgain) => {
                     if (tryAgain) {
+                        console.log("createClient 3 baseUrl = ", homeserver);
                         const cli = createClient({
                             baseUrl: homeserver,
                             idBaseUrl: identityServer,
@@ -300,6 +301,7 @@ function registerAsGuest(hsUrl: string, isUrl: string, defaultDeviceDisplayName:
     logger.log(`Doing guest login on ${hsUrl}`);
 
     // create a temporary MatrixClient to do the login
+    console.log("createClient 4 baseUrl = ", hsUrl);
     const client = createClient({
         baseUrl: hsUrl,
     });
@@ -942,6 +944,10 @@ async function clearStorage(opts?: { deleteEverything?: boolean }): Promise<void
     window.sessionStorage?.clear();
 
     // create a temporary client to clear out the persistent stores.
+    console.log("createClient  createMatrixClient1", {
+        // we'll never make any requests, so can pass a bogus HS URL
+        baseUrl: "",
+    });
     const cli = createMatrixClient({
         // we'll never make any requests, so can pass a bogus HS URL
         baseUrl: "",
@@ -982,6 +988,7 @@ export function stopMatrixClient(unsetClient = true): void {
 
 // Utility method to perform a login with an existing access_token
 window.mxLoginWithAccessToken = async (hsUrl: string, accessToken: string): Promise<void> => {
+    console.log("createClient 5 baseUrl = ", hsUrl);
     const tempClient = createClient({
         baseUrl: hsUrl,
         accessToken,

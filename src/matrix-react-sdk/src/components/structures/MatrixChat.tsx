@@ -1909,6 +1909,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             let cli = MatrixClientPeg.get();
             if (!cli) {
                 const { hsUrl, isUrl } = this.props.serverConfig;
+                console.log("createClient 10 baseUrl = ", hsUrl);
                 cli = createClient({
                     baseUrl: hsUrl,
                     idBaseUrl: isUrl,

@@ -15,12 +15,11 @@ limitations under the License.
 */
 
 import { ModuleApi } from "@matrix-org/react-sdk-module-api/lib/ModuleApi";
-import { TranslationStringsObject } from "@matrix-org/react-sdk-module-api/lib/types/translations";
+import { TranslationStringsObject, PlainSubstitution } from "@matrix-org/react-sdk-module-api/lib/types/translations";
 import { Optional } from "matrix-events-sdk";
 import { DialogProps } from "@matrix-org/react-sdk-module-api/lib/components/DialogContent";
 import React from "react";
 import { AccountAuthInfo } from "@matrix-org/react-sdk-module-api/lib/types/AccountAuthInfo";
-import { PlainSubstitution } from "@matrix-org/react-sdk-module-api/lib/types/translations";
 import * as Matrix from "matrix-js-sdk/src/matrix";
 import { IRegisterRequestParams } from "matrix-js-sdk/src/matrix";
 
@@ -116,6 +115,7 @@ export class ProxiedModuleApi implements ModuleApi {
     ): Promise<AccountAuthInfo> {
         const hsUrl = SdkConfig.get("validated_server_config")?.hsUrl;
         if (!hsUrl) throw new Error("Could not get homeserver url");
+        console.log("createClient 13 baseUrl = ", hsUrl);
         const client = Matrix.createClient({ baseUrl: hsUrl });
         const deviceName =
             SdkConfig.get("default_device_display_name") || PlatformPeg.get()?.getDefaultDeviceDisplayName();
@@ -137,6 +137,7 @@ export class ProxiedModuleApi implements ModuleApi {
         );
 
         if (displayName) {
+            console.log("createClient 14 baseUrl = ", hsUrl);
             const profileClient = Matrix.createClient({
                 baseUrl: hsUrl,
                 userId: creds.user_id,

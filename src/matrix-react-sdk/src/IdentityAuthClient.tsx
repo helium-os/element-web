@@ -51,6 +51,7 @@ export default class IdentityAuthClient {
             // though, and making all of them take one could lead to developer
             // confusion about what the idBaseUrl does on a client. Therefore, we
             // just make a new client and live with it.
+            console.log("createClient 2 baseUrl = ", "");
             this.tempClient = createClient({
                 baseUrl: "", // invalid by design
                 idBaseUrl: identityUrl,

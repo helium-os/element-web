@@ -188,6 +188,7 @@ class MatrixClientPegClass implements IMatrixClientPeg {
 
     public replaceUsingCreds(creds: IMatrixClientCreds): void {
         this.currentClientCreds = creds;
+        console.log("createClient 8 creds", creds);
         this.createClient(creds);
     }
 
@@ -390,6 +391,7 @@ class MatrixClientPegClass implements IMatrixClientPeg {
     }
 
     private createClient(creds: IMatrixClientCreds): void {
+        console.log("enter MatrixClientPeg createClient creds=", creds);
         const opts: ICreateClientOpts = {
             baseUrl: creds.homeserverUrl,
             idBaseUrl: creds.identityServerUrl,
@@ -438,6 +440,7 @@ class MatrixClientPegClass implements IMatrixClientPeg {
             opts.cryptoCallbacks!.getDehydrationKey = SecurityCustomisations.getDehydrationKey;
         }
 
+        console.log("createClient  createMatrixClient2", opts);
         this.matrixClient = createMatrixClient(opts);
 
         // we're going to add eventlisteners for each matrix event tile, so the

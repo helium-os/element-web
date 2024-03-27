@@ -209,6 +209,7 @@ export default class Registration extends React.Component<IProps, IState> {
             }
         }
 
+        console.log("createClient 12 baseUrl = ", hsUrl);
         const cli = createClient({
             baseUrl: hsUrl,
             idBaseUrl: isUrl,
@@ -314,8 +315,8 @@ export default class Registration extends React.Component<IProps, IState> {
             // can we give a better error message?
             if (response instanceof MatrixError && response.errcode === "M_RESOURCE_LIMIT_EXCEEDED") {
                 const errorTop = messageForResourceLimitError(response.data.limit_type, response.data.admin_contact, {
-                    "monthly_active_user": _td("This homeserver has hit its Monthly Active User limit."),
-                    "hs_blocked": _td("This homeserver has been blocked by its administrator."),
+                    monthly_active_user: _td("This homeserver has hit its Monthly Active User limit."),
+                    hs_blocked: _td("This homeserver has been blocked by its administrator."),
                     "": _td("This homeserver has exceeded one of its resource limits."),
                 });
                 const errorDetail = messageForResourceLimitError(

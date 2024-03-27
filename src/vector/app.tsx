@@ -125,6 +125,7 @@ export async function loadApp(fragParams): Promise<ReactElement> {
     }
     if (!hasPossibleToken && !isReturningFromSso && autoRedirect) {
         logger.log("Bypassing app load to redirect to SSO");
+        console.log("createClient 1 baseUrl = ", config.validated_server_config.hsUrl);
         const tempCli = createClient({
             baseUrl: config.validated_server_config.hsUrl,
             idBaseUrl: config.validated_server_config.isUrl,
