@@ -69,7 +69,6 @@ export default class Login {
      */
     public createTemporaryClient(): MatrixClient {
         if (!this.tempClient) {
-            console.log("createClient 6 baseUrl = ", this.hsUrl);
             this.tempClient = createClient({
                 baseUrl: this.hsUrl,
                 idBaseUrl: this.isUrl,
@@ -222,7 +221,6 @@ export async function sendLoginRequest(
     loginParams: ILoginParams,
     isOriginalLogin = true,
 ): Promise<IMatrixClientCreds> {
-    console.log("createClient 7 baseUrl = ", hsUrl);
     const client = createClient({
         baseUrl: hsUrl,
         idBaseUrl: isUrl,

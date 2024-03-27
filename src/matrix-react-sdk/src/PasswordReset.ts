@@ -40,7 +40,6 @@ export default class PasswordReset {
      * @param {string} identityUrl The URL to the IS which has linked the email -> mxid mapping.
      */
     public constructor(homeserverUrl: string, identityUrl: string) {
-        console.log("createClient 9 baseUrl = ", homeserverUrl);
         this.client = createClient({
             baseUrl: homeserverUrl,
             idBaseUrl: identityUrl,

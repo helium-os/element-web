@@ -46,7 +46,6 @@ try {
  * @returns {MatrixClient} the newly-created MatrixClient
  */
 export default function createMatrixClient(opts: ICreateClientOpts): MatrixClient {
-    console.log("createClient enter  createMatrixClient function  opts = ", opts);
     const storeOpts: Partial<ICreateClientOpts> = {
         useAuthorizationHeader: true,
     };
@@ -70,10 +69,6 @@ export default function createMatrixClient(opts: ICreateClientOpts): MatrixClien
         storeOpts.cryptoStore = new MemoryCryptoStore();
     }
 
-    console.log("createClient 15", {
-        ...storeOpts,
-        ...opts,
-    });
     return createClient({
         ...storeOpts,
         ...opts,

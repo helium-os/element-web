@@ -209,7 +209,6 @@ export default class Registration extends React.Component<IProps, IState> {
             }
         }
 
-        console.log("createClient 12 baseUrl = ", hsUrl);
         const cli = createClient({
             baseUrl: hsUrl,
             idBaseUrl: isUrl,

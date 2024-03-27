@@ -147,7 +147,6 @@ export default class ForgotPassword extends React.Component<Props, State> {
     }
 
     private async checkServerCapabilities(serverConfig: ValidatedServerConfig): Promise<void> {
-        console.log("createClient 11 baseUrl = ", serverConfig.hsUrl);
         const tempClient = createClient({
             baseUrl: serverConfig.hsUrl,
         });

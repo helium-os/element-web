@@ -115,7 +115,6 @@ export class ProxiedModuleApi implements ModuleApi {
     ): Promise<AccountAuthInfo> {
         const hsUrl = SdkConfig.get("validated_server_config")?.hsUrl;
         if (!hsUrl) throw new Error("Could not get homeserver url");
-        console.log("createClient 13 baseUrl = ", hsUrl);
         const client = Matrix.createClient({ baseUrl: hsUrl });
         const deviceName =
             SdkConfig.get("default_device_display_name") || PlatformPeg.get()?.getDefaultDeviceDisplayName();
@@ -137,7 +136,6 @@ export class ProxiedModuleApi implements ModuleApi {
         );
 
         if (displayName) {
-            console.log("createClient 14 baseUrl = ", hsUrl);
             const profileClient = Matrix.createClient({
                 baseUrl: hsUrl,
                 userId: creds.user_id,
