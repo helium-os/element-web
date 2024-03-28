@@ -4,6 +4,7 @@ import "./room-state";
 import "./room";
 import "./event";
 import "./mediaHandler";
+import "./xhr";
 import "./fetch";
 import "./autodiscovery";
 import "./client";
