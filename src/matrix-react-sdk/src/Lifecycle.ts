@@ -449,6 +449,8 @@ export async function restoreFromLocalStorage(opts?: { ignoreGuest?: boolean }):
         hasAccessToken,
         "accessToken = ",
         accessToken,
+        "hsUrl = ",
+        hsUrl,
     );
 
     if (hasAccessToken && !accessToken) {

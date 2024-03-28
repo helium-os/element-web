@@ -20,6 +20,7 @@ import AccessibleButton from "../elements/AccessibleButton";
 import { chromeFileInputFix } from "matrix-react-sdk/src/utils/BrowserWorkarounds";
 import RoomAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAvatar";
 import { Room } from "matrix-js-sdk/src/models/room";
+import { getRequestImageSrc } from "matrix-react-sdk/src/components/views/avatars/BaseAvatar";
 
 export enum OperateType {
     Create,
@@ -67,9 +68,11 @@ const AvatarSetting: React.FC<AvatarProps> = ({
         );
     };
 
+    const finalAvatarUrl = getRequestImageSrc(avatarDataUrl);
+
     if (avatarDisabled) {
         avatarSection = avatarDataUrl ? (
-            <img className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" src={avatarDataUrl} alt="" />
+            <img className="mx_AvatarSetting_avatar mx_AvatarSetting_disabled" src={finalAvatarUrl} alt="" />
         ) : (
             getNoDateUrlAvatar()
         );
@@ -81,7 +84,7 @@ const AvatarSetting: React.FC<AvatarProps> = ({
                         className="mx_AvatarSetting_avatar"
                         onClick={() => avatarUploadRef.current?.click()}
                         element="img"
-                        src={avatarDataUrl}
+                        src={finalAvatarUrl}
                         alt=""
                     />
                 ) : (

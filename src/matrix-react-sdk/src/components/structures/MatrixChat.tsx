@@ -147,9 +147,11 @@ import { OwnProfileStore } from "../../stores/OwnProfileStore";
 
 import SDK from "heliumos-js-sdk";
 import * as languageHandler from "../../../src/languageHandler";
-import { appEventKeyMap, getUserRoles } from "../../../../vector/appConfig";
+import { AppConfigSubscribeKey, getUserRoles } from "../../../../vector/appConfig";
 import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandler";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import User from "matrix-react-sdk/src/utils/User";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -449,9 +451,19 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         }
     }
 
+    // 设置默认space为不允许用户离开的space
+    private setNotAllowedLeaveSpaces() {
+        const cli = MatrixClientPeg.get();
+        if (!cli) return;
+
+        cli.getDefaultSpace().then((res) => {
+            res.data && SpaceStore.instance.setNotAllowedLeaveSpaces([res.data]);
+        });
+    }
+
     public componentDidMount(): void {
         window.addEventListener("resize", this.onWindowResized);
-        SDK.subscribe(appEventKeyMap.languageChange, this.onLanguageChange);
+        SDK.subscribe(AppConfigSubscribeKey.SystemLanguageChange, this.onLanguageChange);
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
@@ -466,6 +478,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             dis.fire(Action.FocusSendMessageComposer);
             this.focusComposer = false;
         }
+
+        if (this.state.ready && this.state.ready !== prevState.ready) {
+            this.setNotAllowedLeaveSpaces();
+        }
     }
 
     public componentWillUnmount(): void {
@@ -476,7 +492,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         UIStore.destroy();
         this.state.resizeNotifier.removeListener("middlePanelResized", this.dispatchTimelineResize);
         window.removeEventListener("resize", this.onWindowResized);
-        SDK.unsubscribe(appEventKeyMap.languageChange, this.onLanguageChange);
+        SDK.unsubscribe(AppConfigSubscribeKey.SystemLanguageChange, this.onLanguageChange);
 
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();

@@ -1,4 +1,4 @@
-import React, { memo, useState, useRef } from "react";
+import React, { memo, useState, useMemo, useRef } from "react";
 import BaseDialog from "../BaseDialog";
 import { _t } from "matrix-react-sdk/src/languageHandler";
 import DialogButtons from "matrix-react-sdk/src/components/views/elements/DialogButtons";
@@ -10,6 +10,10 @@ import {
 } from "matrix-react-sdk/src/components/views/spaces/SpaceCreateMenu";
 import Field from "matrix-react-sdk/src/components/views/elements/Field";
 import { IFieldState, IValidationResult } from "matrix-react-sdk/src/components/views/elements/Validation";
+import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import { defaultOrgId, getOrgId } from "matrix-react-sdk/src/utils/env";
+import Modal from "matrix-react-sdk/src/Modal";
+import ErrorDialog from "matrix-react-sdk/src/components/views/dialogs/ErrorDialog";
 
 interface IProps {
     spaceType: Visibility;
@@ -34,6 +38,12 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
     const [name, setName] = useState("");
     const [nameValidate, setNameValidate] = useState<boolean>(false);
 
+    const spaceAliasField = useRef<Field>();
+    const [alias, setAlias] = useState("");
+
+    // heliumos组织的admin用户创建社区时需要展示alias配置项
+    const showAliasField = useMemo(() => UserStore.instance().canCreateSpace && getOrgId() === defaultOrgId, []);
+
     const onOk = async () => {
         if (busy) return;
 
@@ -41,11 +51,15 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
         try {
             const spaceId = await onCreateSpace();
             if (!spaceId) {
-                throw new Error("创建社区失败");
+                throw new Error("创建社区失败，未返回spaceId");
             }
             onSpaceIdChange(spaceId);
             onNext();
         } catch (error) {
+            Modal.createDialog(ErrorDialog, {
+                title: "创建社区失败",
+                description: error.message,
+            });
         } finally {
             setBusy(false);
         }
@@ -70,7 +84,7 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
             return;
         }
 
-        return createSpace(name, spaceType === Visibility.Public, "", "", avatar);
+        return createSpace(name, spaceType === Visibility.Public, alias, "", avatar);
     };
 
     const onNameValidate = async (fieldState: IFieldState): Promise<IValidationResult> => {
@@ -110,7 +124,10 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
                 nameFieldRef={spaceNameField}
                 setName={setName}
                 onNameValidate={onNameValidate}
-                showAliasField={false}
+                showAliasField={showAliasField}
+                aliasFieldRef={spaceAliasField}
+                alias={alias}
+                setAlias={setAlias}
             />
         </BaseDialog>
     );
