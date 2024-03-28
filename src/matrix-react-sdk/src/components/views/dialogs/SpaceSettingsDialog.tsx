@@ -39,7 +39,7 @@ import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import { SdkContextClass } from "matrix-react-sdk/src/contexts/SDKContext";
-import { UPDATE_NOT_ALLOWED_LEAVE_SPACES, UPDATE_SPACE_TAGS } from "matrix-react-sdk/src/stores/spaces";
+import { UPDATE_NOT_ALLOWED_LEAVE_SPACES } from "matrix-react-sdk/src/stores/spaces";
 
 export enum SpaceSettingsTab {
     General = "SPACE_GENERAL_TAB",
