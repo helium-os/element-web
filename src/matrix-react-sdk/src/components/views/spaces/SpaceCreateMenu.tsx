@@ -67,7 +67,8 @@ export const createSpace = async (
                 isPublic && (await MatrixClientPeg.get().doesServerSupportUnstableFeature("org.matrix.msc3827.stable"))
                     ? Visibility.Public
                     : Visibility.Private,
-            room_alias_name: isPublic && alias ? alias.substring(1, alias.indexOf(":")) : undefined,
+            // room_alias_name: isPublic && alias ? alias.substring(1, alias.indexOf(":")) : undefined,
+            room_alias_name: isPublic && alias ? alias : undefined,
             topic,
             ...createOpts,
         },
@@ -164,7 +165,7 @@ interface ISpaceCreateFormProps extends BProps {
     nameFieldRef: RefObject<Field>;
     onNameValidate?: (input: IFieldState) => Promise<IValidationResult>;
     showAliasField?: boolean;
-    aliasFieldRef?: RefObject<RoomAliasField>;
+    aliasFieldRef?: RefObject<Field>;
     alias?: string;
     setAlias?(alias: string): void;
     showTopicField?: boolean;
@@ -218,10 +219,10 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                 value={name}
                 onChange={(ev: ChangeEvent<HTMLInputElement>) => {
                     const newName = ev.target.value;
-                    if (showAliasField && (!alias || alias === `#${nameToLocalpart(name)}:${domain}`)) {
-                        setAlias(`#${nameToLocalpart(newName)}:${domain}`);
-                        aliasFieldRef.current?.validate({ allowEmpty: true });
-                    }
+                    // if (showAliasField && (!alias || alias === `#${nameToLocalpart(name)}:${domain}`)) {
+                    //     setAlias(`#${nameToLocalpart(newName)}:${domain}`);
+                    //     aliasFieldRef.current?.validate({ allowEmpty: true });
+                    // }
                     setName(newName);
                 }}
                 onKeyDown={onKeyDown}
@@ -232,18 +233,38 @@ export const SpaceCreateForm: React.FC<ISpaceCreateFormProps> = ({
                 onValidate={onNameValidate}
             />
 
-            {showAliasField ? (
-                <RoomAliasField
-                    ref={aliasFieldRef}
-                    onChange={setAlias}
-                    domain={domain}
+            {showAliasField && (
+                <Field
+                    name="spaceAlias"
+                    label="Space Alias"
+                    placeholder="请输入Space Alias"
+                    usePlaceholderAsHint={true}
+                    autoFocus={false}
+                    wordLimit={100}
                     value={alias}
-                    placeholder={name ? nameToLocalpart(name) : _t("e.g. my-space")}
-                    label={_t("Address")}
-                    disabled={busy}
+                    onChange={(ev: ChangeEvent<HTMLInputElement>) => {
+                        const newAlias = ev.target.value;
+                        setAlias(newAlias);
+                    }}
                     onKeyDown={onKeyDown}
+                    ref={aliasFieldRef}
+                    autoComplete="off"
+                    validateOnFocus={false}
                 />
-            ) : null}
+            )}
+
+            {/*{showAliasField ? (*/}
+            {/*    <RoomAliasField*/}
+            {/*        ref={aliasFieldRef}*/}
+            {/*        onChange={setAlias}*/}
+            {/*        domain={domain}*/}
+            {/*        value={alias}*/}
+            {/*        placeholder={name ? nameToLocalpart(name) : _t("e.g. my-space")}*/}
+            {/*        label={_t("Address")}*/}
+            {/*        disabled={busy}*/}
+            {/*        onKeyDown={onKeyDown}*/}
+            {/*    />*/}
+            {/*) : null}*/}
 
             {showTopicField && (
                 <Field
