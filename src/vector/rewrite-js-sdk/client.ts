@@ -48,3 +48,10 @@ MatrixClient.prototype.batchLeave = function (roomId: string, userId?: string, r
         { prefix: ClientPrefix.V3 },
     );
 };
+
+// 获取default space
+MatrixClient.prototype.getDefaultSpace = function () {
+    return this.http.authedRequest(Method.Get, "/default_space", undefined, undefined, {
+        prefix: "/_matrix/client/api/v1",
+    });
+};

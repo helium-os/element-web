@@ -451,17 +451,13 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         }
     }
 
-    // 获取默认space
-    private getDefaultSpace() {
-        return fetch("/_matrix/client/api/v1/default_space")
-            .then((response) => response.json())
-            .then((res) => res.data);
-    }
-
     // 设置默认space为不允许用户离开的space
     private setNotAllowedLeaveSpaces() {
-        this.getDefaultSpace().then((res) => {
-            res && SpaceStore.instance.setNotAllowedLeaveSpaces([res]);
+        const cli = MatrixClientPeg.get();
+        if (!cli) return;
+
+        cli.getDefaultSpace().then((res) => {
+            res.data && SpaceStore.instance.setNotAllowedLeaveSpaces([res.data]);
         });
     }
 
@@ -471,8 +467,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
-
-        this.setNotAllowedLeaveSpaces();
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -483,6 +477,10 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         if (this.focusComposer) {
             dis.fire(Action.FocusSendMessageComposer);
             this.focusComposer = false;
+        }
+
+        if (this.state.ready && this.state.ready !== prevState.ready) {
+            this.setNotAllowedLeaveSpaces();
         }
     }
 
