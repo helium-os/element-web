@@ -12,6 +12,8 @@ import Field from "matrix-react-sdk/src/components/views/elements/Field";
 import { IFieldState, IValidationResult } from "matrix-react-sdk/src/components/views/elements/Validation";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
 import { defaultOrgId, getOrgId } from "matrix-react-sdk/src/utils/env";
+import Modal from "matrix-react-sdk/src/Modal";
+import ErrorDialog from "matrix-react-sdk/src/components/views/dialogs/ErrorDialog";
 
 interface IProps {
     spaceType: Visibility;
@@ -49,11 +51,15 @@ const ChooseSpaceTypeDialog: React.FC<IProps> = ({
         try {
             const spaceId = await onCreateSpace();
             if (!spaceId) {
-                throw new Error("创建社区失败");
+                throw new Error("创建社区失败，未返回spaceId");
             }
             onSpaceIdChange(spaceId);
             onNext();
         } catch (error) {
+            Modal.createDialog(ErrorDialog, {
+                title: "创建社区失败",
+                description: error.message,
+            });
         } finally {
             setBusy(false);
         }
