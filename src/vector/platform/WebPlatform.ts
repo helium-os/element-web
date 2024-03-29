@@ -79,11 +79,7 @@ export default class WebPlatform extends VectorBasePlatform {
         // annoyingly, the latest spec says this returns a
         // promise, but this is only supported in Chrome 46
         // and Firefox 47, so adapt the callback API.
-        return new Promise(function (resolve) {
-            window.Notification.requestPermission((result) => {
-                resolve(result);
-            });
-        });
+        return window.Notification.requestPermission();
     }
 
     private async getMostRecentVersion(): Promise<string> {

@@ -293,6 +293,7 @@ class NotifierClass {
         if (enable) {
             // Attempt to get permission from user
             plaf.requestNotificationPermission().then((result) => {
+                console.log("requestNotificationPermission result", result);
                 if (result !== "granted") {
                     // The permission request was dismissed or denied
                     // TODO: Support alternative branding in messaging
