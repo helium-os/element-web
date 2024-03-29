@@ -14,7 +14,7 @@ WORKDIR /src
 
 COPY . /src
 # RUN dos2unix /src/scripts/docker-link-repos.sh && bash /src/scripts/docker-link-repos.sh
-RUN yarn config set registry https://registry.npmmirror.com
+# RUN yarn config set registry https://registry.npmmirror.com
 RUN yarn --network-timeout=100000 install
 
 
