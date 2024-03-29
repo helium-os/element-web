@@ -54,6 +54,7 @@ import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType } from "./voi
 import { getSenderName } from "./utils/event/getSenderName";
 import { getParentEventId } from "matrix-react-sdk/src/utils/Reply";
 import { bodyToHtml } from "matrix-react-sdk/src/HtmlUtils";
+import { isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 /*
  * Dispatches:
@@ -293,7 +294,6 @@ class NotifierClass {
         if (enable) {
             // Attempt to get permission from user
             plaf.requestNotificationPermission().then((result) => {
-                console.log("requestNotificationPermission result", result);
                 if (result !== "granted") {
                     // The permission request was dismissed or denied
                     // TODO: Support alternative branding in messaging
@@ -382,6 +382,7 @@ class NotifierClass {
         }
         const isGuest = client.isGuest();
         return (
+            isInDesktop &&
             !isGuest &&
             this.supportsDesktopNotifications() &&
             !isPushNotifyDisabled() &&
