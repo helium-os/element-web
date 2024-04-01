@@ -54,6 +54,7 @@ import { VoiceBroadcastChunkEventType, VoiceBroadcastInfoEventType } from "./voi
 import { getSenderName } from "./utils/event/getSenderName";
 import { getParentEventId } from "matrix-react-sdk/src/utils/Reply";
 import { bodyToHtml } from "matrix-react-sdk/src/HtmlUtils";
+import { isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 /*
  * Dispatches:
@@ -381,6 +382,7 @@ class NotifierClass {
         }
         const isGuest = client.isGuest();
         return (
+            isInDesktop &&
             !isGuest &&
             this.supportsDesktopNotifications() &&
             !isPushNotifyDisabled() &&

@@ -30,6 +30,7 @@ import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { useTypedEventEmitter } from "../../../hooks/useEventEmitter";
 import { toPx } from "../../../utils/units";
 import { _t } from "../../../languageHandler";
+import { getIpfsServerOrigin, getMatrixServerOrigin, isInDesktop } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     name?: string; // The name (first initial used as default)
@@ -65,6 +66,22 @@ const calculateUrls = (url?: string | null, urls?: string[], lowBandwidth = fals
     // deduplicate URLs
     return Array.from(new Set(_urls));
 };
+
+export function getRequestImageSrc(src: string) {
+    if (!src) return;
+
+    if (isInDesktop) return src;
+
+    // 网页端头像做请求拦截
+    let finalSrc = src;
+    if (src.includes("_matrix")) {
+        finalSrc = src.replace(getMatrixServerOrigin(), "");
+    } else if (src.includes("ipfs")) {
+        finalSrc = src.replace(getIpfsServerOrigin(), "");
+    }
+
+    return finalSrc;
+}
 
 const useImageUrl = ({ url, urls }: { url?: string | null; urls?: string[] }): [string, () => void] => {
     // Since this is a hot code path and the settings store can be slow, we
@@ -171,12 +188,14 @@ const BaseAvatar: React.FC<IProps> = (props) => {
         }
     }
 
+    const finalSrc = getRequestImageSrc(imageUrl);
+
     if (onClick) {
         return (
             <AccessibleButton
                 className={classNames("mx_BaseAvatar mx_BaseAvatar_image", className)}
                 element="img"
-                src={imageUrl}
+                src={finalSrc}
                 onClick={onClick}
                 onError={onError}
                 style={{
@@ -194,7 +213,7 @@ const BaseAvatar: React.FC<IProps> = (props) => {
         return (
             <img
                 className={classNames("mx_BaseAvatar mx_BaseAvatar_image", className)}
-                src={imageUrl}
+                src={finalSrc}
                 onError={onError}
                 style={{
                     width: toPx(width),

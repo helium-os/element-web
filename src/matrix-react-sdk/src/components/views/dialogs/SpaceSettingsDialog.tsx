@@ -37,6 +37,9 @@ import trashSvg from "matrix-react-sdk/res/img/feather-customised/trash.svg";
 import leaveSvg from "matrix-react-sdk/res/img/feather-customised/leave.svg";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
 import useRoomPermissions from "matrix-react-sdk/src/hooks/room/useRoomPermissions";
+import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { SdkContextClass } from "matrix-react-sdk/src/contexts/SDKContext";
+import { UPDATE_NOT_ALLOWED_LEAVE_SPACES } from "matrix-react-sdk/src/stores/spaces";
 
 export enum SpaceSettingsTab {
     General = "SPACE_GENERAL_TAB",
@@ -73,6 +76,20 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ cli, space, onFinished }) => {
     );
 
     const [spaceName, setSpaceName] = useState<string>("");
+
+    const [allowLeave, setAllowLeave] = useState<boolean>(); // 当前社区是否允许成员离开
+
+    useEffect(() => {
+        const updateAllowLeave = () => {
+            setAllowLeave(!SpaceStore.instance.notAllowedLeaveSpaces.includes(space.roomId));
+        };
+
+        updateAllowLeave();
+        SdkContextClass.instance.spaceStore.on(UPDATE_NOT_ALLOWED_LEAVE_SPACES, updateAllowLeave);
+        return () => {
+            SdkContextClass.instance.spaceStore.off(UPDATE_NOT_ALLOWED_LEAVE_SPACES, updateAllowLeave);
+        };
+    }, [space.roomId]);
 
     useTypedEventEmitter(space, RoomEvent.Name, () => {
         setSpaceName(space?.name);
@@ -117,30 +134,34 @@ const SpaceSettingsDialog: React.FC<IProps> = ({ cli, space, onFinished }) => {
     }, [space, displayMemberList, onFinished]);
 
     const footer = useMemo(() => {
-        let label, icon, iconClassName, onClick;
+        let label, icon, iconClassName, onClick, canLeave;
         if (canDelete) {
             label = _t("Delete Space");
             icon = trashSvg;
             iconClassName = "mx_DeleteRoom_icon";
             onClick = () => deleteSpace(space);
+            canLeave = true;
         } else {
             label = _t("Leave Space");
             icon = leaveSvg;
             iconClassName = "mx_LeaveRoom_icon";
             onClick = () => leaveSpace(space);
+            canLeave = allowLeave;
         }
 
         return (
-            <Button
-                type={ButtonType.Text}
-                size={ButtonSize.Small}
-                danger
-                onClick={onClick}
-                icon={icon}
-                iconClassName={iconClassName}
-            >
-                {label}
-            </Button>
+            canLeave && (
+                <Button
+                    type={ButtonType.Text}
+                    size={ButtonSize.Small}
+                    danger
+                    onClick={onClick}
+                    icon={icon}
+                    iconClassName={iconClassName}
+                >
+                    {label}
+                </Button>
+            )
         );
     }, [space, canDelete]);
 

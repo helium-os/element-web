@@ -37,6 +37,7 @@ import MatrixChat from "matrix-react-sdk/src/components/structures/MatrixChat";
 import { parseQs } from "./url_utils";
 import VectorBasePlatform from "./platform/VectorBasePlatform";
 import { getScreenFromLocation, init as initRouting, onNewScreen } from "./routing";
+import { getMatrixServerOrigin } from "matrix-react-sdk/src/utils/env";
 
 // add React and ReactPerf to the global namespace, to make them easier to access via the console
 // this incidentally means we can forget our React imports in JSX files without penalty.
@@ -45,10 +46,6 @@ window.React = React;
 logger.log(`Application is running in ${process.env.NODE_ENV} mode`);
 
 window.matrixLogger = logger;
-
-const isDev = process.env.NODE_ENV === "development";
-
-const hsNamePrefix = "matrix.system.service";
 
 // We use this to work out what URL the SDK should
 // pass through when registering to allow the user to
@@ -92,14 +89,6 @@ function onTokenLoginCompleted(): void {
     window.history.replaceState(null, "", url.href);
 }
 
-function getOrgId(): string {
-    if (isDev) {
-        return CHAT_ENV_ORG_ID;
-    }
-    const { hostname } = window.location;
-    return hostname.split(".").pop();
-}
-
 export async function loadApp(fragParams): Promise<ReactElement> {
     initRouting();
     const platform = PlatformPeg.get();
@@ -111,13 +100,11 @@ export async function loadApp(fragParams): Promise<ReactElement> {
 
     (platform as VectorBasePlatform).startUpdater();
 
-    const orgId = getOrgId();
-
     // Don't bother loading the app until the config is verified
     SdkConfig.add({
         default_server_config: {
             "m.homeserver": {
-                base_url: `https://${hsNamePrefix}.${orgId}`,
+                base_url: getMatrixServerOrigin(),
             },
         },
     });
