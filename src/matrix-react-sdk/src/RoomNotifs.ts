@@ -205,7 +205,10 @@ export function determineUnreadState(
     room?: Room,
     threadId?: string,
 ): { color: NotificationColor; symbol: string | null; count: number } {
-    if (!room) {
+    if (
+        !room ||
+        getEffectiveMembership(room.getMyMembership()) === EffectiveMembership.Leave // 已离开的房间有消息时不再提示用户
+    ) {
         return { symbol: null, count: 0, color: NotificationColor.None };
     }
 
