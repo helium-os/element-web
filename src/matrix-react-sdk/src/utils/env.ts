@@ -12,6 +12,12 @@ export const ipfsPrefix = "file.system.service";
 
 export const defaultOrgId = "heliumos";
 export function getOrgId(): string {
+    try {
+        window.ReactNativeWebView?.postMessage(
+            "chat debug ua=" + ua + "isInApp=" + isInApp + "isInDesktop=" + isInDesktop,
+        );
+    } catch (error) {}
+
     if (isDev) {
         return CHAT_ENV_ORG_ID;
     }
