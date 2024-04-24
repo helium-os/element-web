@@ -15,11 +15,23 @@ export function getOrgId(): string {
     if (isDev) {
         return CHAT_ENV_ORG_ID;
     }
+
     // 如果是网页端
     if (isProdWebSite) {
         return defaultOrgId;
     }
-    const { hostname } = window.location;
+
+    let hostname = window.location.hostname;
+
+    // 如果是app端
+    if (isInApp) {
+        const { search } = new URL(window.location.href);
+        const searchParams = new URLSearchParams(search);
+        const origin = searchParams.get("real-origin");
+        hostname = origin.substring(origin.indexOf("/") + 2);
+    }
+
+    console.log("orgId = " + hostname.split(".").pop());
     return hostname.split(".").pop();
 }
 
