@@ -5,7 +5,7 @@ import { getMatrixServerOrigin, isInDesktop, isInApp } from "matrix-react-sdk/sr
 export function getRequestResource(resource: string | URL): string | URL {
     console.log("getRequestResource isInDesktop = ", isInDesktop, "isInApp = ", isInApp, "resource = ", resource);
     // 客户端不做拦截
-    if (isInDesktop) return resource;
+    if (isInDesktop && !isInApp) return resource;
 
     const matrixOrigin = getMatrixServerOrigin();
 
