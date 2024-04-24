@@ -12,12 +12,6 @@ export const ipfsPrefix = "file.system.service";
 
 export const defaultOrgId = "heliumos";
 export function getOrgId(): string {
-    try {
-        window.ReactNativeWebView?.postMessage(
-            "chat debug ua=" + ua + "isInApp=" + isInApp + "isInDesktop=" + isInDesktop,
-        );
-    } catch (error) {}
-
     if (isDev) {
         return CHAT_ENV_ORG_ID;
     }
@@ -33,11 +27,10 @@ export function getOrgId(): string {
     if (isInApp) {
         const { search } = new URL(window.location.href);
         const searchParams = new URLSearchParams(search);
-        const origin = searchParams.get("real-origin");
+        const origin = searchParams.get("real-origin") || "";
         hostname = origin.substring(origin.indexOf("/") + 2);
     }
 
-    console.log("orgId = " + hostname.split(".").pop());
     return hostname.split(".").pop();
 }
 
