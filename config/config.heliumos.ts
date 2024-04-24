@@ -1,5 +1,5 @@
 const { HttpsProxyAgent } = require("https-proxy-agent");
-const agent = new HttpsProxyAgent("http://127.0.0.1:50622"); // 端口号是起desktop后，proxy随机生成的port
+const agent = new HttpsProxyAgent("http://127.0.0.1:53444"); // 端口号是起desktop后，proxy随机生成的port
 
 module.exports = {
     define: {
@@ -28,22 +28,31 @@ module.exports = {
             pathRewrite: { "^/heliumos-org-api": "" },
             agent,
         },
-        "/_matrix": {
+        "/web/_matrix": {
             target: "https://matrix.system.service.heliumos",
             changeOrigin: true,
             secure: false,
+            pathRewrite: {
+                "^/web/_matrix": "_matrix",
+            },
             agent,
         },
-        "/.well-known": {
+        "/web/.well-known": {
             target: "https://matrix.system.service.heliumos",
             changeOrigin: true,
             secure: false,
+            pathRewrite: {
+                "^/web/.well-known": ".well-known",
+            },
             agent,
         },
-        "/ipfs": {
+        "/web/ipfs": {
             target: "https://file.system.service.heliumos",
             changeOrigin: true,
             secure: false,
+            pathRewrite: {
+                "^/web/ipfs": "ipfs",
+            },
             agent,
         },
     },

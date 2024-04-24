@@ -3,7 +3,9 @@ const ua = navigator.userAgent;
 export const isDev = process.env.NODE_ENV === "development";
 export const isInDesktop = ua.toLocaleLowerCase().includes("heliumos"); // 是否是在桌面端
 
-export const isProdWebSite = !isDev && !isInDesktop; // 是否是打包后的网页端
+export const isInApp = ua.toLocaleLowerCase().includes("heliumos app"); // 是否是在app端
+
+export const isProdWebSite = !isDev && !isInDesktop && !isInApp; // 是否是打包后的网页端
 
 export const hsNamePrefix = "matrix.system.service";
 export const ipfsPrefix = "file.system.service";
