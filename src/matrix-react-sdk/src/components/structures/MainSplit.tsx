@@ -23,6 +23,7 @@ import ResizeNotifier from "../../utils/ResizeNotifier";
 import RightPanelStore from "matrix-react-sdk/src/stores/right-panel/RightPanelStore";
 import { RightPanelPhases } from "matrix-react-sdk/src/stores/right-panel/RightPanelStorePhases";
 import { UPDATE_EVENT } from "matrix-react-sdk/src/stores/AsyncStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     resizeNotifier: ResizeNotifier;
@@ -82,7 +83,7 @@ export default class MainSplit extends React.Component<IProps, IState> {
         window.localStorage.setItem("mx_rhs_size", (this.loadSidePanelSize().width + delta.width).toString());
     };
 
-    private loadSidePanelSize(): { height: string | number; width: number } {
+    private loadSidePanelSize(): { height: string | number; width: string | number } {
         let rhsSize = parseInt(window.localStorage.getItem("mx_rhs_size")!, 10);
 
         if (isNaN(rhsSize)) {
@@ -90,7 +91,7 @@ export default class MainSplit extends React.Component<IProps, IState> {
         }
         return {
             height: "100%",
-            width: rhsSize,
+            width: isInApp ? "100%" : rhsSize,
         };
     }
 
@@ -106,7 +107,9 @@ export default class MainSplit extends React.Component<IProps, IState> {
                 <Resizable
                     defaultSize={this.loadSidePanelSize()}
                     minWidth={this.state.rightPanelDefaultWidth}
-                    maxWidth={this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth}
+                    maxWidth={
+                        isInApp ? "100%" : this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth
+                    }
                     enable={
                         this.state.rightPanelResizeable
                             ? {

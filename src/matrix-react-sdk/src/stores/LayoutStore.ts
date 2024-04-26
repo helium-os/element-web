@@ -11,7 +11,7 @@ interface IState {}
 
 export default class LayoutStore extends AsyncStoreWithClient<IState> {
     private _showLeftPanel = true; // 是否展示左侧边栏
-    private _showRightContent = true; // 是否展示右侧内容
+    private _showMainPanel = true; // 是否展示主面板
     public static get instance(): LayoutStore {
         if (!window.mxLayoutStore) {
             window.mxLayoutStore = new LayoutStore();
@@ -54,12 +54,12 @@ export default class LayoutStore extends AsyncStoreWithClient<IState> {
         }
     }
 
-    public get showRightContent(): boolean {
-        return this._showRightContent;
+    public get showMainPanel(): boolean {
+        return this._showMainPanel;
     }
 
-    public setShowRightContent(show: boolean) {
-        this._showRightContent = show;
-        this.emit(UPDATE_SHOW_RIGHT_CONTENT, this._showRightContent);
+    public setShowMainPanel(show: boolean) {
+        this._showMainPanel = show;
+        this.emit(UPDATE_SHOW_RIGHT_CONTENT, this._showMainPanel);
     }
 }
