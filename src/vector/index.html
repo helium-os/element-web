@@ -37,6 +37,10 @@
         form-action 'self' <%= csp_extra_source %>;
         manifest-src 'self' <%= csp_extra_source %>;
     ">
+    <meta
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;"
+      name="viewport"
+    />
     <% for (var i=0; i < htmlWebpackPlugin.files.css.length; i++) {
         var file = htmlWebpackPlugin.files.css[i];
         var match = file.match(/^bundles\/.*?\/theme-(.*)\.css$/);

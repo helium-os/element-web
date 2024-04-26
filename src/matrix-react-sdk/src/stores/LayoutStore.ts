@@ -2,6 +2,7 @@ import { AsyncStoreWithClient } from "./AsyncStoreWithClient";
 import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "matrix-react-sdk/src/dispatcher/actions";
 import { isInApp } from "matrix-react-sdk/src/utils/env";
+import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 export const UPDATE_SHOW_LEFT_PANEL = Symbol("show-left-panel");
 export const UPDATE_SHOW_RIGHT_CONTENT = Symbol("show-right-content");
@@ -25,6 +26,14 @@ export default class LayoutStore extends AsyncStoreWithClient<IState> {
     protected async onAction(payload): Promise<void> {
         switch (payload.action) {
             case Action.ViewRoom: {
+                const { room_id } = payload;
+                const cli = MatrixClientPeg.get();
+                const room = cli?.getRoom(room_id);
+                if (!room) return;
+
+                const isSpaceRoom = room.isSpaceRoom();
+                if (isSpaceRoom) return;
+
                 this.setShowLeftPanel(false);
                 break;
             }

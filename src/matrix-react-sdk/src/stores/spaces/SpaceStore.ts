@@ -71,6 +71,7 @@ import { SdkContextClass } from "../../contexts/SDKContext";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface IState {}
 
@@ -326,6 +327,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             // else if the last viewed room in this space is joined then view that
             // else view space home or home depending on what is being clicked on
             if (
+                !isInApp &&
                 roomId &&
                 cliSpace?.getMyMembership() !== "invite" &&
                 this.matrixClient.getRoom(roomId)?.getMyMembership() === "join" &&
