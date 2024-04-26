@@ -1,5 +1,5 @@
 const { HttpsProxyAgent } = require("https-proxy-agent");
-const agent = new HttpsProxyAgent("http://127.0.0.1:53444"); // 端口号是起desktop后，proxy随机生成的port
+const agent = new HttpsProxyAgent("http://127.0.0.1:53541"); // 端口号是起desktop后，proxy随机生成的port
 
 module.exports = {
     define: {
@@ -33,7 +33,7 @@ module.exports = {
             changeOrigin: true,
             secure: false,
             pathRewrite: {
-                "^/web/_matrix": "_matrix",
+                "^/web/_matrix": "/_matrix",
             },
             agent,
         },
@@ -42,7 +42,7 @@ module.exports = {
             changeOrigin: true,
             secure: false,
             pathRewrite: {
-                "^/web/.well-known": ".well-known",
+                "^/web/.well-known": "/.well-known",
             },
             agent,
         },
@@ -51,7 +51,7 @@ module.exports = {
             changeOrigin: true,
             secure: false,
             pathRewrite: {
-                "^/web/ipfs": "ipfs",
+                "^/web/ipfs": "/ipfs",
             },
             agent,
         },

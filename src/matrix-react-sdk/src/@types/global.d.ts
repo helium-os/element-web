@@ -56,6 +56,7 @@ import AllMember from "../utils/AllMember";
 import Host from "matrix-react-sdk/src/utils/Host";
 import User from "matrix-react-sdk/src/utils/User";
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
+import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
@@ -119,6 +120,7 @@ declare global {
         hostInstance: Host;
         userInstance: User;
         allMemberInstance: AllMember;
+        mxLayoutStore: LayoutStore;
     }
 
     interface Electron {

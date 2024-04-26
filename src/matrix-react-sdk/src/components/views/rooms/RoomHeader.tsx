@@ -56,6 +56,7 @@ import { GroupCallDuration } from "../voip/CallDuration";
 import { Alignment } from "../elements/Tooltip";
 import RoomCallBanner from "../beacon/RoomCallBanner";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
+import LayoutStore, { UPDATE_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
 
 interface CallLayoutSelectorProps {
     call: ElementCall;
@@ -156,6 +157,7 @@ interface IState {
     contextMenuPosition?: DOMRect;
     rightPanelOpen: boolean;
     showE2EIcon: boolean;
+    showLeftPanel: boolean;
 }
 
 export default class RoomHeader extends React.Component<IProps, IState> {
@@ -177,12 +179,14 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         this.state = {
             rightPanelOpen: RightPanelStore.instance.isOpen,
             showE2EIcon: false,
+            showLeftPanel: LayoutStore.instance.showLeftPanel,
         };
     }
 
     public componentDidMount(): void {
         this.client.on(RoomStateEvent.Events, this.onRoomStateEvents);
         RightPanelStore.instance.on(UPDATE_EVENT, this.onRightPanelStoreUpdate);
+        LayoutStore.instance.on(UPDATE_SHOW_LEFT_PANEL, this.updateShowLeftPanel);
     }
 
     public componentWillUnmount(): void {
@@ -191,6 +195,12 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         notiStore.removeListener(NotificationStateEvents.Update, this.onNotificationUpdate);
         RightPanelStore.instance.off(UPDATE_EVENT, this.onRightPanelStoreUpdate);
     }
+
+    private updateShowLeftPanel = () => {
+        this.setState({
+            showLeftPanel: LayoutStore.instance.showLeftPanel,
+        });
+    };
 
     private onRightPanelStoreUpdate = (): void => {
         this.setState({ rightPanelOpen: RightPanelStore.instance.isOpen });
@@ -216,7 +226,6 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         500,
         { leading: true, trailing: true },
     );
-    s;
 
     private onHideCallClick = (ev: ButtonEvent): void => {
         ev.preventDefault();
@@ -337,12 +346,12 @@ export default class RoomHeader extends React.Component<IProps, IState> {
             </RoomName>
         );
 
-        if (this.props.enableRoomOptionsMenu) {
-            return <div className="mx_RoomHeader_name mx_RoomHeader_name--textonly">{roomName}</div>;
-        }
-
         return <div className="mx_RoomHeader_name mx_RoomHeader_name--textonly">{roomName}</div>;
     }
+
+    private onShowLeftPanel = () => {
+        LayoutStore.instance.setShowLeftPanel(true);
+    };
 
     public render(): React.ReactNode {
         const isVideoRoom = SettingsStore.getValue("feature_video_rooms") && calcIsVideoRoom(this.props.room);
@@ -416,6 +425,11 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                     className="mx_RoomHeader_wrapper"
                     aria-owns={this.state.rightPanelOpen ? "mx_RightPanel" : undefined}
                 >
+                    {!this.state.showLeftPanel && (
+                        <div className="mx_RoomHeader_back" onClick={this.onShowLeftPanel}>
+                            返回按钮
+                        </div>
+                    )}
                     <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
                     {icon}
                     {name}
