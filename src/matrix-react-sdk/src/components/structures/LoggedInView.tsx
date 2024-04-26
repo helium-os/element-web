@@ -75,6 +75,7 @@ import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
 import MatrixChatToolbar from "matrix-react-sdk/src/components/structures/MatrixChatToolbar";
 import LayoutStore, { UPDATE_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -667,14 +668,14 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         window.localStorage.setItem("mx_lhs_size", (this.loadSidePanelSize().width + delta.width).toString());
     };
 
-    private loadSidePanelSize(): { height: string | number; width: number } {
+    private loadSidePanelSize(): { height: string | number; width: number | string } {
         let lhsSize = parseInt(window.localStorage.getItem("mx_lhs_size")!, 10);
         if (isNaN(lhsSize)) {
             lhsSize = this.leftPanelDefaultSize;
         }
         return {
             height: "100%",
-            width: lhsSize,
+            width: isInApp ? "100%" : lhsSize,
         };
     }
 
@@ -735,7 +736,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                             <Resizable
                                 defaultSize={this.loadSidePanelSize()}
                                 minWidth={this.leftPanelDefaultSize}
-                                maxWidth="30%"
+                                maxWidth={isInApp ? "100%" : "30%"}
                                 enable={{
                                     top: false,
                                     right: true,
