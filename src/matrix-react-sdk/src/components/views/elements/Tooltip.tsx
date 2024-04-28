@@ -23,6 +23,7 @@ import classNames from "classnames";
 
 import UIStore from "../../../stores/UIStore";
 import { objectHasDiff } from "../../../utils/objects";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 export enum Alignment {
     Natural = "natural", // Pick left or right
@@ -204,6 +205,8 @@ export default class Tooltip extends React.PureComponent<ITooltipProps, State> {
             </div>
         );
 
-        return <div className={this.props.className}>{ReactDOM.createPortal(tooltip, Tooltip.container)}</div>;
+        return isInApp ? null : (
+            <div className={this.props.className}>{ReactDOM.createPortal(tooltip, Tooltip.container)}</div>
+        );
     }
 }

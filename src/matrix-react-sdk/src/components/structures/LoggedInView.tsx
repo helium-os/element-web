@@ -675,7 +675,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         }
         return {
             height: "100%",
-            width: isInApp ? "100%" : lhsSize,
+            width: lhsSize,
         };
     }
 
@@ -720,6 +720,29 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
             return <AudioFeedArrayForLegacyCall call={call} key={call.callId} />;
         });
 
+        const getLeftPanelContent = () => {
+            return (
+                <div className={`mx_LeftPanel_outerWrapper ${this.state.showLeftPanel ? "" : "mx_LeftPanel_notShow"}`}>
+                    <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
+                    <nav className="mx_LeftPanel_wrapper">
+                        {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}
+                        {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
+                        {/*<BackdropPanel backgroundImage={this.state.backgroundImage} />*/}
+                        <div
+                            className="mx_LeftPanel_wrapper--user"
+                            data-collapsed={this.props.collapseLhs ? true : undefined}
+                        >
+                            <LeftPanel
+                                pageType={this.props.page_type as PageTypes}
+                                isMinimized={this.props.collapseLhs || false}
+                                resizeNotifier={this.props.resizeNotifier}
+                            />
+                        </div>
+                    </nav>
+                </div>
+            );
+        };
+
         return (
             <MatrixClientContext.Provider value={this._matrixClient}>
                 <div
@@ -732,11 +755,13 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                         <MatrixChatToolbar />
                     </div>
                     <div className={bodyClasses}>
-                        {this.state.showLeftPanel && (
+                        {isInApp ? (
+                            getLeftPanelContent()
+                        ) : (
                             <Resizable
                                 defaultSize={this.loadSidePanelSize()}
                                 minWidth={this.leftPanelDefaultSize}
-                                maxWidth={isInApp ? "100%" : "30%"}
+                                maxWidth={"30%"}
                                 enable={{
                                     top: false,
                                     right: true,
@@ -747,30 +772,15 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                                     bottomLeft: false,
                                     topLeft: false,
                                 }}
-                                className="mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper"
+                                className={`mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper ${
+                                    this.state.showLeftPanel ? "" : ""
+                                }`}
                                 handleClasses={{ right: "mx_ResizeHandle_horizontal" }}
                                 onResizeStart={this.onResizeStart}
                                 onResize={this.onResize}
                                 onResizeStop={this.onResizeStop}
                             >
-                                <div className="mx_LeftPanel_outerWrapper">
-                                    <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
-                                    <nav className="mx_LeftPanel_wrapper">
-                                        {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}
-                                        {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
-                                        {/*<BackdropPanel backgroundImage={this.state.backgroundImage} />*/}
-                                        <div
-                                            className="mx_LeftPanel_wrapper--user"
-                                            data-collapsed={this.props.collapseLhs ? true : undefined}
-                                        >
-                                            <LeftPanel
-                                                pageType={this.props.page_type as PageTypes}
-                                                isMinimized={this.props.collapseLhs || false}
-                                                resizeNotifier={this.props.resizeNotifier}
-                                            />
-                                        </div>
-                                    </nav>
-                                </div>
+                                {getLeftPanelContent()}
                             </Resizable>
                         )}
 

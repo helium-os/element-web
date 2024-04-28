@@ -91,7 +91,7 @@ export default class MainSplit extends React.Component<IProps, IState> {
         }
         return {
             height: "100%",
-            width: isInApp ? "100%" : rhsSize,
+            width: rhsSize,
         };
     }
 
@@ -103,13 +103,11 @@ export default class MainSplit extends React.Component<IProps, IState> {
 
         let children;
         if (hasResizer) {
-            children = (
+            children = !isInApp ? (
                 <Resizable
                     defaultSize={this.loadSidePanelSize()}
                     minWidth={this.state.rightPanelDefaultWidth}
-                    maxWidth={
-                        isInApp ? "100%" : this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth
-                    }
+                    maxWidth={this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth}
                     enable={
                         this.state.rightPanelResizeable
                             ? {
@@ -132,6 +130,10 @@ export default class MainSplit extends React.Component<IProps, IState> {
                 >
                     {panelView}
                 </Resizable>
+            ) : (
+                <div className="mx_PanelView_dialog">
+                    <div className="mx_PanelView_wrap">{panelView}</div>
+                </div>
             );
         }
 

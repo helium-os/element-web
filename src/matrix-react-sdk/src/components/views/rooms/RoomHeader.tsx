@@ -425,11 +425,7 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                     className="mx_RoomHeader_wrapper"
                     aria-owns={this.state.rightPanelOpen ? "mx_RightPanel" : undefined}
                 >
-                    {!this.state.showLeftPanel && (
-                        <div className="mx_RoomHeader_back" onClick={this.onShowLeftPanel}>
-                            返回按钮
-                        </div>
-                    )}
+                    {!this.state.showLeftPanel && <div className="mx_RoomHeader_back" onClick={this.onShowLeftPanel} />}
                     <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
                     {icon}
                     {name}
