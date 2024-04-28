@@ -863,12 +863,12 @@ legend {
         right: 0;
         height: 0;
         background: #fff;
-        border-radius: 20px;
+        border-radius: 20px 20px 0 0;
         overflow: hidden;
         transition: all 0.3s ease;
     }
     &.mx_PanelView_show {
-        z-index: 1001;
+        z-index: 1001; // 层级高于服务器连接丢失
         .mx_PanelView_wrap {
             height: 95%;
         }

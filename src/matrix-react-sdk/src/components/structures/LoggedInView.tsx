@@ -722,7 +722,11 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
 
         const getLeftPanelContent = () => {
             return (
-                <div className={`mx_LeftPanel_outerWrapper ${this.state.showLeftPanel ? "" : "mx_LeftPanel_notShow"}`}>
+                <div
+                    className={`mx_LeftPanel_outerWrapper ${isInApp ? "mx_LeftPanel_inApp" : ""} ${
+                        this.state.showLeftPanel ? "" : "mx_LeftPanel_notShow"
+                    }`}
+                >
                     <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
                     <nav className="mx_LeftPanel_wrapper">
                         {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}

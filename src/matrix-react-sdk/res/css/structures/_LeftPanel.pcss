@@ -32,8 +32,15 @@ $roomListCollapsedWidth: 68px;
     border-right: 1px solid $border-primary-color2;
     user-select: none;
     transition: all 0.2s ease;
+    z-index: 2;
+    &.mx_LeftPanel_inApp {
+        border: none;
+    }
     &.mx_LeftPanel_notShow {
         width: 0;
+        .mx_SpacePanel {
+            display: none;
+        }
     }
 }
 

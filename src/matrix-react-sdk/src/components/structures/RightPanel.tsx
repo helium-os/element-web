@@ -47,6 +47,7 @@ import { IRightPanelCard, IRightPanelCardState } from "../../stores/right-panel/
 import { Action } from "../../dispatcher/actions";
 import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface BaseProps {
     room: Room; // if showing panels for a given room, this is set
@@ -293,7 +294,7 @@ class RightPanel extends React.PureComponent<IProps, IState> {
         }
 
         return (
-            <aside className="mx_RightPanel" id="mx_RightPanel">
+            <aside className={`mx_RightPanel ${isInApp ? "mx_RightPanel_inApp" : ""}`} id="mx_RightPanel">
                 {card}
             </aside>
         );
