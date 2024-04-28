@@ -856,7 +856,6 @@ legend {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.12);
-    z-index: -1;
     .mx_PanelView_wrap {
         position: absolute;
         bottom: 0;
@@ -866,7 +865,7 @@ legend {
         background: #fff;
         border-radius: 20px;
         overflow: hidden;
-        transition: all 0.5s ease;
+        transition: all 0.3s ease;
     }
     &.mx_PanelView_show {
         z-index: 1001;
@@ -875,7 +874,8 @@ legend {
         }
     }
     &.mx_PanelView_hidden {
-        transition: all 0s ease 0.5s;
+        z-index: -1;
+        transition: all 0s ease 0.3s;
     }
 }
 
