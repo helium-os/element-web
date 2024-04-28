@@ -139,47 +139,14 @@ export default class MainSplit extends React.Component<IProps, IState> {
             ) : null;
         };
 
-        let children;
-        if (hasResizer) {
-            children = !isInApp ? (
-                <Resizable
-                    defaultSize={this.loadSidePanelSize()}
-                    minWidth={this.state.rightPanelDefaultWidth}
-                    maxWidth={this.state.rightPanelResizeable ? "70%" : this.state.rightPanelDefaultWidth}
-                    enable={
-                        this.state.rightPanelResizeable
-                            ? {
-                                  top: false,
-                                  right: false,
-                                  bottom: false,
-                                  left: true,
-                                  topRight: false,
-                                  bottomRight: false,
-                                  bottomLeft: false,
-                                  topLeft: false,
-                              }
-                            : false
-                    }
-                    onResizeStart={this.onResizeStart}
-                    onResize={this.onResize}
-                    onResizeStop={this.onResizeStop}
-                    className="mx_ResizeWrapper mx_RightPanel_ResizeWrapper"
-                    handleClasses={{ left: "mx_ResizeHandle_horizontal" }}
-                >
-                    {panelView}
-                </Resizable>
-            ) : (
-                <div className="mx_PanelView_dialog">
-                    <div className="mx_PanelView_wrap">{panelView}</div>
-                </div>
-            );
-        }
-
         return (
-            <div className={`mx_MainSplit ${this.state.rightPanelResizeable ? "mx_RightPanel_resizeable" : ""}`}>
-                {bodyView}
-                {getChildren()}
-            </div>
+            <>
+                <div className={`mx_MainSplit ${this.state.rightPanelResizeable ? "mx_RightPanel_resizeable" : ""}`}>
+                    {bodyView}
+                    {!isInApp && getChildren()}
+                </div>
+                {isInApp && getChildren()}
+            </>
         );
     }
 }
