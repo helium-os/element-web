@@ -868,12 +868,14 @@ legend {
         transition: all 0.3s ease;
     }
     &.mx_PanelView_show {
+        display: block;
         z-index: 1001;
         .mx_PanelView_wrap {
             height: 95%;
         }
     }
     &.mx_PanelView_hidden {
+        display: none;
         z-index: -1;
         transition: all 0s ease 0.3s;
     }
