@@ -16,20 +16,25 @@ limitations under the License.
 
 import React, { memo } from "react";
 import BaseDialog, { DialogProps } from "./BaseDialog";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
+import { useShowSettingsLeftPanel } from "matrix-react-sdk/src/hooks/room/useShowSettingsPanel";
 
 const RoomSettingsBaseDialog: React.FC<DialogProps> = ({ children, onFinished, ...restProps }) => {
+    const [showLeftPanel] = useShowSettingsLeftPanel();
     return (
         <BaseDialog
-            className="mx_RoomSettingsBaseDialog"
+            className={`mx_RoomSettingsBaseDialog ${isInApp ? "mx_RoomSettingsBaseDialog_inApp" : ""}`}
             hasCancel={false}
             fixedWidth={false}
             onFinished={onFinished}
             {...restProps}
         >
             <div className="mx_RoomSettingsBaseDialog_wrap">
-                <div className="mx_RoomSettingsBaseDialog_backPanel" onClick={onFinished}>
-                    <div className="mx_RoomSettingsBaseDialog_backIcon" />
-                </div>
+                {showLeftPanel && (
+                    <div className="mx_RoomSettingsBaseDialog_backPanel" onClick={onFinished}>
+                        <div className="mx_RoomSettingsBaseDialog_backIcon" />
+                    </div>
+                )}
                 <div className="mx_RoomSettingsBaseDialog_content">{children}</div>
             </div>
         </BaseDialog>

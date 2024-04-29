@@ -28,6 +28,7 @@ interface IProps {
     header?: ReactNode;
     title?: string;
     headerButton?: ReactNode;
+    backButton?: ReactNode; // 返回按钮 优先级高于displayBackBtn
     displayBackBtn?: boolean; // 是否允许展示返回按钮
     footer?: ReactNode;
     className?: string;
@@ -66,6 +67,7 @@ const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
             header,
             title,
             headerButton,
+            backButton,
             displayBackBtn = false,
             footer,
             withoutScrollContainer,
@@ -74,16 +76,16 @@ const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
         },
         ref,
     ) => {
-        let backButton;
+        let finalBackButton = backButton;
         const cardHistory = RightPanelStore.instance.roomPhaseHistory;
-        if (displayBackBtn && cardHistory.length > 1) {
+        if (!finalBackButton && displayBackBtn && cardHistory.length > 1) {
             const prevCard = cardHistory[cardHistory.length - 2];
             const onBackClick = (ev: ButtonEvent): void => {
                 onBack?.(ev);
                 RightPanelStore.instance.popCard();
             };
             const label = backLabelForPhase(prevCard.phase) ?? _t("Back");
-            backButton = <AccessibleButton className="mx_BaseCard_back" onClick={onBackClick} title={label} />;
+            finalBackButton = <AccessibleButton className="mx_BaseCard_back" onClick={onBackClick} title={label} />;
         }
 
         let closeButton;
@@ -107,7 +109,7 @@ const BaseCard: React.FC<IProps> = forwardRef<HTMLDivElement, IProps>(
                             {closeButton}
                         </div>
                     )}
-                    {backButton && <div className="mx_BaseCard_backBtn">{backButton}</div>}
+                    {finalBackButton && <div className="mx_BaseCard_backBtnBox">{finalBackButton}</div>}
                     <div className="mx_BaseCard_content">{children}</div>
                     {footer && <div className="mx_BaseCard_footer">{footer}</div>}
                 </div>

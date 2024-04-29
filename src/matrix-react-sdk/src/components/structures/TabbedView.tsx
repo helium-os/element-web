@@ -24,6 +24,8 @@ import BaseCard from "matrix-react-sdk/src/components/views/right_panel/BaseCard
 import AccessibleButton from "../views/elements/AccessibleButton";
 import { PosthogScreenTracker, ScreenName } from "../../PosthogTrackers";
 import { NonEmptyArray } from "../../@types/common";
+import withRoomPermissions, { ShowSettingsLeftPanelProps } from "matrix-react-sdk/src/hocs/withShowSettingsLeftPanel";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 /**
  * Represents a tab for the TabbedView.
@@ -51,7 +53,7 @@ export enum TabLocation {
     TOP = "top",
 }
 
-interface IProps {
+interface BaseProps {
     title?: string;
     tabs: NonEmptyArray<Tab>;
     initialTabId?: string;
@@ -63,11 +65,13 @@ interface IProps {
     showIcon: boolean;
 }
 
+interface IProps extends BaseProps, ShowSettingsLeftPanelProps {}
+
 interface IState {
     activeTabId: string;
 }
 
-export default class TabbedView extends React.Component<IProps, IState> {
+class TabbedView extends React.Component<IProps, IState> {
     public constructor(props: IProps) {
         super(props);
 
@@ -122,6 +126,11 @@ export default class TabbedView extends React.Component<IProps, IState> {
         }
     }
 
+    // 控制设置页面左侧面板展示隐藏
+    private changeSettingsLeftPanelVisible = (visible: boolean) => {
+        this.props.setShowSettingsLeftPanel(visible);
+    };
+
     private renderTabLabel(tab: Tab): JSX.Element {
         let classes = "mx_TabbedView_tabLabel ";
 
@@ -132,7 +141,10 @@ export default class TabbedView extends React.Component<IProps, IState> {
             tabIcon = <span className={`mx_TabbedView_maskedIcon ${tab.icon}`} />;
         }
 
-        const onClickHandler = (): void => this.setActiveTab(tab);
+        const onClickHandler = (): void => {
+            this.setActiveTab(tab);
+            this.changeSettingsLeftPanelVisible(false);
+        };
 
         return (
             <AccessibleButton
@@ -148,8 +160,17 @@ export default class TabbedView extends React.Component<IProps, IState> {
     }
 
     private renderTabPanel(tab: Tab): React.ReactNode {
+        const showBackBtn = !this.props.showSettingsLeftPanel;
         return (
-            <BaseCard className="mx_TabbedView_tabPanel" title={tab.label}>
+            <BaseCard
+                className={`mx_TabbedView_tabPanel ${showBackBtn ? "showBackBtn" : ""}`}
+                title={tab.label}
+                headerButton={
+                    showBackBtn && (
+                        <div className="mx_TabbedView_back" onClick={() => this.changeSettingsLeftPanelVisible(true)} />
+                    )
+                }
+            >
                 {tab.body}
             </BaseCard>
         );
@@ -169,17 +190,21 @@ export default class TabbedView extends React.Component<IProps, IState> {
         return (
             <div className={tabbedViewClasses}>
                 {screenName && <PosthogScreenTracker screenName={screenName} />}
-                <div className="mx_TabbedView_leftPanel">
-                    {this.props.title && (
-                        <div className="mx_TabbedView_title" title={this.props.title}>
-                            {this.props.title}
-                        </div>
-                    )}
-                    <div className="mx_TabbedView_tabLabels">{labels}</div>
-                    <div className="mx_TabbedView_footer">{this.props.footer}</div>
-                </div>
+                {this.props.showSettingsLeftPanel && (
+                    <div className="mx_TabbedView_leftPanel">
+                        {this.props.title && (
+                            <div className="mx_TabbedView_title" title={this.props.title}>
+                                {this.props.title}
+                            </div>
+                        )}
+                        <div className="mx_TabbedView_tabLabels">{labels}</div>
+                        <div className="mx_TabbedView_footer">{this.props.footer}</div>
+                    </div>
+                )}
                 {panel}
             </div>
         );
     }
 }
+
+export default withRoomPermissions<BaseProps>(TabbedView);

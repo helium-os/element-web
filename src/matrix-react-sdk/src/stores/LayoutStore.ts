@@ -5,13 +5,14 @@ import { isInApp } from "matrix-react-sdk/src/utils/env";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 
 export const UPDATE_SHOW_LEFT_PANEL = Symbol("show-left-panel");
-export const UPDATE_SHOW_RIGHT_CONTENT = Symbol("show-right-content");
+export const UPDATE_SETTINGS_SHOW_LEFT_PANEL = Symbol("settings-show-left-panel");
 
 interface IState {}
 
 export default class LayoutStore extends AsyncStoreWithClient<IState> {
-    private _showLeftPanel = true; // 是否展示左侧边栏
-    private _showMainPanel = true; // 是否展示主面板
+    private _showLeftPanel = true; // 是否展示主页面左侧边栏
+
+    private _showSettingsLeftPanel = true; // 是否展示room/space设置页面左侧边栏
     public static get instance(): LayoutStore {
         if (!window.mxLayoutStore) {
             window.mxLayoutStore = new LayoutStore();
@@ -54,12 +55,14 @@ export default class LayoutStore extends AsyncStoreWithClient<IState> {
         }
     }
 
-    public get showMainPanel(): boolean {
-        return this._showMainPanel;
+    public get showSettingsLeftPanel(): boolean {
+        return this._showSettingsLeftPanel;
     }
 
-    public setShowMainPanel(show: boolean) {
-        this._showMainPanel = show;
-        this.emit(UPDATE_SHOW_RIGHT_CONTENT, this._showMainPanel);
+    public setShowSettingsLeftPanel(show: boolean) {
+        if (isInApp) {
+            this._showSettingsLeftPanel = show;
+            this.emit(UPDATE_SETTINGS_SHOW_LEFT_PANEL, this._showSettingsLeftPanel);
+        }
     }
 }
