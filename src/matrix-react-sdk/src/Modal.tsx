@@ -23,6 +23,7 @@ import { TypedEventEmitter } from "matrix-js-sdk/src/models/typed-event-emitter"
 
 import dis from "./dispatcher/dispatcher";
 import AsyncWrapper from "./AsyncWrapper";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 const DIALOG_CONTAINER_ID = "mx_Dialog_Container";
 const STATIC_DIALOG_CONTAINER_ID = "mx_Dialog_StaticContainer";
@@ -382,7 +383,11 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
 
             const staticDialog = (
                 <div className={classes}>
-                    <div className={`mx_Dialog ${this.staticModal.fullScreen ? "mx_Dialog_fullScreen" : ""}`}>
+                    <div
+                        className={`mx_Dialog ${this.staticModal.fullScreen ? "mx_Dialog_fullScreen" : ""} ${
+                            isInApp ? "mx_Dialog_inApp" : ""
+                        }`}
+                    >
                         {this.staticModal.elem}
                     </div>
                     <div
@@ -407,7 +412,13 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
 
             const dialog = (
                 <div className={classes}>
-                    <div className={`mx_Dialog ${modal.fullScreen ? "mx_Dialog_fullScreen" : ""}`}>{modal.elem}</div>
+                    <div
+                        className={`mx_Dialog ${modal.fullScreen ? "mx_Dialog_fullScreen" : ""} ${
+                            isInApp ? "mx_Dialog_inApp" : ""
+                        }`}
+                    >
+                        {modal.elem}
+                    </div>
                     <div
                         data-testid="dialog-background"
                         className="mx_Dialog_background"

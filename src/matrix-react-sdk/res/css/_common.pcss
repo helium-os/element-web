@@ -294,6 +294,26 @@ legend {
     border-radius: 20px;
     overflow: hidden;
     font-size: $font-15px;
+    .mx_Dialog_fixedWidth {
+        width: 454px;
+        max-width: 704px;
+        overflow-x: hidden;
+    }
+    &.mx_Dialog_fullScreen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        .mx_Dialog_content {
+            max-height: unset;
+        }
+    }
+    &.mx_Dialog_inApp:not(.mx_Dialog_fullScreen) {
+        width: 90%;
+        .mx_Dialog_fixedWidth {
+            width: 100%;
+            max-width: unset;
+        }
+    }
 }
 
 
@@ -364,20 +384,7 @@ legend {
     padding: 0 10px;
 }
 
-.mx_Dialog_fixedWidth {
-    width: 454px;
-    max-width: 704px;
-    overflow-x: hidden;
-}
 
-.mx_Dialog_fullScreen {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    .mx_Dialog_content {
-        max-height: unset;
-    }
-}
 
 .mx_Dialog_staticWrapper .mx_Dialog {
     z-index: 4010;
@@ -392,10 +399,9 @@ legend {
     height: 100%;
     background: rgba(21, 21, 21, 0.40);
     z-index: 4011;
-}
-
-.mx_Dialog_background.mx_Dialog_staticBackground {
-    z-index: 4009;
+    &.mx_Dialog_staticBackground {
+        z-index: 4009;
+    }
 }
 
 .mx_Dialog_wrapperWithStaticUnder .mx_Dialog_background {

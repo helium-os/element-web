@@ -59,9 +59,9 @@ limitations under the License.
 }
 
 .mx_RoomHeader_back {
-    width: 28px;
-    height: 28px;
-    @mixin MaskIcon url("$(res)/img/back.svg"), 10px, 13px, #000000;
+    width: 60px;
+    height: 100%;
+    @mixin MaskIcon url("$(res)/img/back.svg"), 16px, 20px, #000000;
 }
 
 .mx_RoomHeader_spinner {
@@ -221,6 +221,32 @@ limitations under the License.
 
 .mx_RoomHeader_avatar .mx_BaseAvatar_image {
     object-fit: cover;
+}
+
+.mx_RoomHeader_name_topic {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.mx_RoomHeader_name_box {
+    max-width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.mx_RoomHeader_inApp {
+    .mx_RoomHeader_name_topic {
+        flex-direction: column;
+    }
+    .mx_RoomTile_iconType {
+        margin-left: -6px;
+    }
+    .mx_RoomHeader_topic {
+        margin-left: 0;
+    }
 }
 
 .mx_RoomHeader_button {

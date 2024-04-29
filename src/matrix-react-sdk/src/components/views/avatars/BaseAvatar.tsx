@@ -68,6 +68,8 @@ const calculateUrls = (url?: string | null, urls?: string[], lowBandwidth = fals
 };
 
 export function getRequestImageSrc(src: string): string {
+    if (!src) return;
+
     let finalSrc = src;
     if (src.includes("/_matrix")) {
         finalSrc = getMatrixRequestUrl(src) as string;

@@ -57,6 +57,7 @@ import { Alignment } from "../elements/Tooltip";
 import RoomCallBanner from "../beacon/RoomCallBanner";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 import LayoutStore, { UPDATE_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface CallLayoutSelectorProps {
     call: ElementCall;
@@ -394,14 +395,16 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                         className="mx_RoomHeader_wrapper"
                         aria-owns={this.state.rightPanelOpen ? "mx_RightPanel" : undefined}
                     >
-                        <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
-                        {icon}
-                        {name}
+                        <div className="mx_RoomHeader_name_topic">
+                            <div className="mx_RoomHeader_name_box">
+                                <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
+                                {name}
+                            </div>
+                            <div className="mx_RoomHeader_topic" />
+                        </div>
                         {this.props.activeCall instanceof ElementCall && (
                             <GroupCallDuration groupCall={this.props.activeCall.groupCall} />
                         )}
-                        {/* Empty topic element to fill out space */}
-                        <div className="mx_RoomHeader_topic" />
                         {buttons}
                     </div>
                 </header>
@@ -420,16 +423,19 @@ export default class RoomHeader extends React.Component<IProps, IState> {
         ) : null;
 
         return (
-            <header className="mx_RoomHeader light-panel">
+            <header className={`mx_RoomHeader light-panel ${isInApp ? "mx_RoomHeader_inApp" : ""}`}>
                 <div
                     className="mx_RoomHeader_wrapper"
                     aria-owns={this.state.rightPanelOpen ? "mx_RightPanel" : undefined}
                 >
                     {!this.state.showLeftPanel && <div className="mx_RoomHeader_back" onClick={this.onShowLeftPanel} />}
-                    <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
-                    {icon}
-                    {name}
-                    {topicElement}
+                    <div className="mx_RoomHeader_name_topic">
+                        <div className="mx_RoomHeader_name_box">
+                            <div className="mx_RoomHeader_avatar">{roomAvatar}</div>
+                            {name}
+                        </div>
+                        {topicElement}
+                    </div>
                     {betaPill}
                     {buttons}
                 </div>
