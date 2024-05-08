@@ -31,6 +31,7 @@ export function getOrgId(): string {
         hostname = origin.substring(origin.indexOf("/") + 2);
     }
 
+    console.warn("org3 bugfix enter getOrgId, hostname = ", hostname);
     return hostname.split(".").pop();
 }
 

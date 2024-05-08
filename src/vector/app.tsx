@@ -170,6 +170,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
         // validators for that purpose.
 
         const config = SdkConfig.get();
+        console.warn("org3 bugfix enter verifyServerConfig config = ", config);
         let wkConfig = config["default_server_config"]; // overwritten later under some conditions
         const serverName = config["default_server_name"];
         const hsUrl = config["default_hs_url"];
