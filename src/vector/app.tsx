@@ -211,6 +211,7 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
         let discoveryResult = null;
         if (wkConfig) {
             logger.log("Config uses a default_server_config - validating object");
+            console.warn("org3 debug 准备调用AutoDiscovery.fromDiscoveryConfig， wkConfig=", wkConfig);
             discoveryResult = await AutoDiscovery.fromDiscoveryConfig(wkConfig);
         }
 
