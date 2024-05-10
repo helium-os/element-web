@@ -208,13 +208,15 @@ export default abstract class BasePlatform {
                 room,
                 event: ev,
             });
-            window.ReactNativeWebView?.postMessage({
-                title,
-                msg,
-                avatarUrl,
-                room,
-                event: ev,
-            });
+            window.ReactNativeWebView?.postMessage(
+                JSON.stringify({
+                    title,
+                    msg,
+                    avatarUrl,
+                    room,
+                    event: ev,
+                }),
+            );
             return;
         }
 
