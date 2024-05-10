@@ -34,6 +34,7 @@ import { MatrixClientPeg } from "./MatrixClientPeg";
 import { idbLoad, idbSave, idbDelete } from "./utils/StorageManager";
 import { ViewRoomPayload } from "./dispatcher/payloads/ViewRoomPayload";
 import { IConfigOptions } from "./IConfigOptions";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 export const SSO_HOMESERVER_URL_KEY = "mx_sso_hs_url";
 export const SSO_ID_SERVER_URL_KEY = "mx_sso_is_url";
@@ -199,6 +200,24 @@ export default abstract class BasePlatform {
         room: Room,
         ev?: MatrixEvent,
     ): Notification {
+        if (isInApp) {
+            console.log("和app通信，并发送消息", {
+                title,
+                msg,
+                avatarUrl,
+                room,
+                event: ev,
+            });
+            window.ReactNativeWebView?.postMessage({
+                title,
+                msg,
+                avatarUrl,
+                room,
+                event: ev,
+            });
+            return;
+        }
+
         const notifBody: NotificationOptions = {
             body: msg,
             silent: true, // we play our own sounds
