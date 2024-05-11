@@ -170,7 +170,6 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
         // validators for that purpose.
 
         const config = SdkConfig.get();
-        console.warn("org3 bugfix enter verifyServerConfig config = ", config);
         let wkConfig = config["default_server_config"]; // overwritten later under some conditions
         const serverName = config["default_server_name"];
         const hsUrl = config["default_hs_url"];
@@ -211,7 +210,6 @@ async function verifyServerConfig(): Promise<IConfigOptions> {
         let discoveryResult = null;
         if (wkConfig) {
             logger.log("Config uses a default_server_config - validating object");
-            console.warn("org3 debug 准备调用AutoDiscovery.fromDiscoveryConfig， wkConfig=", wkConfig);
             discoveryResult = await AutoDiscovery.fromDiscoveryConfig(wkConfig);
         }
 
