@@ -1004,9 +1004,22 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     };
 
     private switchSpaceIfNeeded = (roomId = SdkContextClass.instance.roomViewStore.getRoomId()): void => {
-        if (!roomId || !this.matrixClient.getRoom(roomId)) return;
+        // /#/home
+        if (!roomId || !this.matrixClient.getRoom(roomId)) {
+            this.setActiveSpace(MetaSpace.Home);
+            return;
+        }
 
-        if (!this.isRoomInSpace(this.activeSpace, roomId) && !this.matrixClient.getRoom(roomId)?.isSpaceRoom()) {
+        const isSpaceRoom = this.matrixClient.getRoom(roomId)?.isSpaceRoom();
+
+        // /#/spaceId
+        if (isSpaceRoom) {
+            this.setActiveSpace(roomId);
+            return;
+        }
+
+        // /#/roomId
+        if (!this.isRoomInSpace(this.activeSpace, roomId)) {
             this.switchToRelatedSpace(roomId);
         }
     };
@@ -1312,21 +1325,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             this.emit(UPDATE_TOP_LEVEL_SPACES, this.spacePanelSpaces, this.enabledMetaSpaces);
         }
 
-        // restore selected state from last session if any and still valid
-        const lastSpaceId = window.localStorage.getItem(ACTIVE_SPACE_LS_KEY);
-        const viewRoomId = SdkContextClass.instance.roomViewStore.getRoomId(); // 当前查看的roomId
-
-        const valid =
-            lastSpaceId &&
-            (!isMetaSpace(lastSpaceId) ? this.matrixClient.getRoom(lastSpaceId) : enabledMetaSpaces[lastSpaceId]) &&
-            this.isRoomInSpace(lastSpaceId, viewRoomId);
-
-        if (valid) {
-            // don't context switch here as it may break permalinks
-            this.setActiveSpace(lastSpaceId, false);
-        } else {
-            this.switchSpaceIfNeeded();
-        }
+        this.switchSpaceIfNeeded();
     }
 
     // 切换社区时，更新社区分组列表
