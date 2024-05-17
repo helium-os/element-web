@@ -513,12 +513,28 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();
     }
 
-    private onReceiveAppMessage = ({ type, data }) => {
+    private onReceiveAppMessage = ({ type, data }: { type: string; data: any }) => {
         console.log("onReceiveAppMessage type=", type, " data=", data);
         switch (type) {
             case "viewRoom": {
                 const { roomId } = data as ReceiveAppMessageViewRoomData;
-                window.location.href = `/#/room/${roomId}`;
+
+                defaultDispatcher.dispatch<ViewRoomPayload>({
+                    action: Action.ViewRoom,
+                    show_room_tile: true, // make sure the room is visible in the list
+                    room_id: roomId,
+                    clear_search: true,
+                    metricsTrigger: "Notification",
+                });
+
+                // 跳转到未读消息
+                setImmediate(() => {
+                    dis.dispatch({
+                        action: "jump_to_unread",
+                    });
+                });
+
+                LayoutStore.instance.setShowLeftPanel(false);
                 break;
             }
         }
