@@ -152,6 +152,8 @@ import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandl
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
 import User from "matrix-react-sdk/src/utils/User";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import defaultDispatcher from "matrix-react-sdk/src/dispatcher/dispatcher";
+import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -166,6 +168,10 @@ const ONBOARDING_FLOW_STARTERS = [Action.ViewUserSettings, "view_create_chat", "
 interface IScreen {
     screen: string;
     params?: QueryDict;
+}
+
+interface ReceiveAppMessageViewRoomData {
+    roomId: string;
 }
 
 interface IProps {
@@ -467,6 +473,9 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
+
+        // 注册receiveAppMessage事件，接收app端的请求
+        window.receiveAppMessage = this.onReceiveAppMessage;
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -497,6 +506,17 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();
     }
+
+    private onReceiveAppMessage = ({ type, data }) => {
+        console.log("onReceiveAppMessage type=", type, " data=", data);
+        switch (type) {
+            case "viewRoom": {
+                const { roomId } = data as ReceiveAppMessageViewRoomData;
+                window.location.href = `/#/room/${roomId}`;
+                break;
+            }
+        }
+    };
 
     private onWindowResized = (): void => {
         // XXX: This is a very unreliable way to detect whether or not the the devtools are open

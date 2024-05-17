@@ -3,7 +3,6 @@ import defaultDispatcher from "../dispatcher/dispatcher";
 import { Action } from "matrix-react-sdk/src/dispatcher/actions";
 import { isInApp } from "matrix-react-sdk/src/utils/env";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
-import { SdkContextClass } from "matrix-react-sdk/src/contexts/SDKContext";
 
 export const UPDATE_SHOW_LEFT_PANEL = Symbol("show-left-panel");
 export const UPDATE_SETTINGS_SHOW_LEFT_PANEL = Symbol("settings-show-left-panel");
@@ -23,19 +22,6 @@ export default class LayoutStore extends AsyncStoreWithClient<IState> {
 
     public constructor() {
         super(defaultDispatcher, {});
-
-        this.initLeftPanelVisibleInApp();
-    }
-
-    // 在app内如果初始url中包含roomId，则不展示左侧边栏，直接展示消息主面板
-    private initLeftPanelVisibleInApp() {
-        const roomId = SdkContextClass.instance.roomViewStore.getRoomId();
-        const cli = MatrixClientPeg.get();
-        const room = cli?.getRoom(roomId);
-        const isSpaceRoom = room?.isSpaceRoom();
-        if (isInApp) {
-            this.setShowLeftPanel(!roomId || isSpaceRoom);
-        }
     }
 
     protected async onAction(payload): Promise<void> {

@@ -121,6 +121,7 @@ declare global {
         userInstance: User;
         allMemberInstance: AllMember;
         mxLayoutStore: LayoutStore;
+        receiveAppMessage: (params: { type: string; data: any }) => void;
     }
 
     interface Electron {
