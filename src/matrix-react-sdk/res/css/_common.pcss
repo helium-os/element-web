@@ -860,7 +860,6 @@ legend {
     top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
     background: rgba(0, 0, 0, 0.12);
     .mx_PanelView_wrap {
         position: absolute;
@@ -875,12 +874,14 @@ legend {
     }
     &.mx_PanelView_show {
         z-index: 1001; // 层级高于服务器连接丢失
+        height: 100%;
         .mx_PanelView_wrap {
             height: 95%;
         }
     }
     &.mx_PanelView_hidden {
         z-index: -1;
+        height: 0;
         transition: all 0s ease 0.3s;
     }
 }
