@@ -474,8 +474,11 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             UserStore.instance().setUserRoles(res);
         });
 
-        // 注册receiveAppMessage事件，接收app端的请求
-        window.receiveAppMessage = this.onReceiveAppMessage;
+        // 接收app端的消息
+        window.addEventListener("message", (event) => {
+            console.log("Received message from React Native App:", event.data);
+            this.onReceiveAppMessage(event.data);
+        });
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
