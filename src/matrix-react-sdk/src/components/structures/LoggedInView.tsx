@@ -255,6 +255,14 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         this.onVerifyDevice();
 
         LayoutStore.instance.on(UPDATE_SHOW_LEFT_PANEL, this.updateShowLeftPanel);
+
+        // 向React Native发送消息，传递当前加载状态
+        window.ReactNativeWebView.postMessage(
+            JSON.stringify({
+                type: "loadedStatus",
+                data: true,
+            }),
+        );
     }
 
     public componentDidUpdate(prevProps, prevState): void {

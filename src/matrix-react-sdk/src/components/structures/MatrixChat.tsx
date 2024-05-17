@@ -534,6 +534,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                     });
                 });
 
+                // 隐藏左侧边栏
                 LayoutStore.instance.setShowLeftPanel(false);
                 break;
             }
