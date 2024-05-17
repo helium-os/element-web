@@ -7,7 +7,6 @@ import { getMatrixServerOrigin, isInDesktop, isInApp, getIpfsServerOrigin } from
  * @param proxyOrigin 需要被拦截的origin
  */
 export function getRequestUrlInPlatform(resource: string | URL, proxyOrigin: string): string {
-    console.log("getRequestUrlInPlatform isInDesktop = ", isInDesktop, "isInApp = ", isInApp, "resource = ", resource);
     const url = new Url(resource);
     const { origin, href, query } = url;
 
