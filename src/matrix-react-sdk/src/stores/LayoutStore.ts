@@ -49,10 +49,10 @@ export default class LayoutStore extends AsyncStoreWithClient<IState> {
     }
 
     public setShowLeftPanel(show: boolean) {
-        if (isInApp) {
-            this._showLeftPanel = show;
-            this.emit(UPDATE_SHOW_LEFT_PANEL, this._showLeftPanel);
-        }
+        if (!isInApp) return;
+
+        this._showLeftPanel = show;
+        this.emit(UPDATE_SHOW_LEFT_PANEL, this._showLeftPanel);
     }
 
     public get showSettingsLeftPanel(): boolean {
@@ -60,9 +60,9 @@ export default class LayoutStore extends AsyncStoreWithClient<IState> {
     }
 
     public setShowSettingsLeftPanel(show: boolean) {
-        if (isInApp) {
-            this._showSettingsLeftPanel = show;
-            this.emit(UPDATE_SETTINGS_SHOW_LEFT_PANEL, this._showSettingsLeftPanel);
-        }
+        if (!isInApp) return;
+
+        this._showSettingsLeftPanel = show;
+        this.emit(UPDATE_SETTINGS_SHOW_LEFT_PANEL, this._showSettingsLeftPanel);
     }
 }

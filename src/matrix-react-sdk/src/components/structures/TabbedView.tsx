@@ -24,8 +24,9 @@ import BaseCard from "matrix-react-sdk/src/components/views/right_panel/BaseCard
 import AccessibleButton from "../views/elements/AccessibleButton";
 import { PosthogScreenTracker, ScreenName } from "../../PosthogTrackers";
 import { NonEmptyArray } from "../../@types/common";
-import withRoomPermissions, { ShowSettingsLeftPanelProps } from "matrix-react-sdk/src/hocs/withShowSettingsLeftPanel";
-import { isInApp } from "matrix-react-sdk/src/utils/env";
+import withShowSettingsLeftPanel, {
+    ShowSettingsLeftPanelProps,
+} from "matrix-react-sdk/src/hocs/withShowSettingsLeftPanel";
 
 /**
  * Represents a tab for the TabbedView.
@@ -207,4 +208,4 @@ class TabbedView extends React.Component<IProps, IState> {
     }
 }
 
-export default withRoomPermissions<BaseProps>(TabbedView);
+export default withShowSettingsLeftPanel<BaseProps>(TabbedView);
