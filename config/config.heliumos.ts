@@ -15,14 +15,14 @@ module.exports = {
             agent,
         },
         "/heliumos-user-api": {
-            target: "http://user-heliumos",
+            target: "https://user.user.system.service.heliumos",
             changeOrigin: true,
             secure: false,
             pathRewrite: { "^/heliumos-user-api": "" },
             agent,
         },
         "/heliumos-org-api": {
-            target: "https://transaction-agent.heliumos",
+            target: "https://system-api.system.service.heliumos",
             changeOrigin: true,
             secure: false,
             pathRewrite: { "^/heliumos-org-api": "" },
