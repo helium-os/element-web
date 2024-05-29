@@ -30,7 +30,7 @@ import MatrixClientContext from "../../../contexts/MatrixClientContext";
 import { useTypedEventEmitter } from "../../../hooks/useEventEmitter";
 import { toPx } from "../../../utils/units";
 import { _t } from "../../../languageHandler";
-import { getIpfsRequestUrl, getMatrixRequestUrl } from "../../../../../vector/rewrite-js-sdk/fetch";
+import { getRequestUrl } from "../../../../../vector/rewrite-js-sdk/fetch";
 
 interface IProps {
     name?: string; // The name (first initial used as default)
@@ -70,14 +70,7 @@ const calculateUrls = (url?: string | null, urls?: string[], lowBandwidth = fals
 export function getRequestImageSrc(src: string): string {
     if (!src) return;
 
-    let finalSrc = src;
-    if (src.includes("/_matrix")) {
-        finalSrc = getMatrixRequestUrl(src) as string;
-    } else if (src.includes("/ipfs")) {
-        finalSrc = getIpfsRequestUrl(src) as string;
-    }
-
-    return finalSrc;
+    return getRequestUrl(src);
 }
 
 const useImageUrl = ({ url, urls }: { url?: string | null; urls?: string[] }): [string, () => void] => {
