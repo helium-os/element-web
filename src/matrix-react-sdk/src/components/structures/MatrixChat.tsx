@@ -476,6 +476,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
         // 接收app端的消息
         window.addEventListener("message", (event) => {
+            console.log("Chat订阅到message", event.data);
             try {
                 const data = JSON.parse(event.data);
                 console.log("Received message from React Native App:", data);
