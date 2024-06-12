@@ -64,6 +64,6 @@ export function getRequestUrlInPlatform(resource: string | URL, needProxiedOrigi
         return url.toString().replace(needProxiedOrigin, "");
     }
 
-    // web网页端做请求拦截
+    // web网页端做请求拦截（本地开发 & 官网chat）
     return href.replace(needProxiedOrigin, "/web");
 }

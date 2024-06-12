@@ -474,7 +474,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             UserStore.instance().setUserRoles(res);
         });
 
-        // 接收app端的消息
+        // 接收ios app端发送的消息
         window.addEventListener(
             "message",
             (event) => {
@@ -483,6 +483,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
             },
             false,
         );
+        // 接收android app端发送的消息
         document.addEventListener(
             "message",
             (event) => {
