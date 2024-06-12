@@ -475,14 +475,22 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         });
 
         // 接收app端的消息
-        window.addEventListener("message", (event) => {
-            console.log("Chat订阅到message", event.data);
-            try {
-                const data = JSON.parse(event.data);
-                console.log("Received message from React Native App:", data);
-                this.onReceiveAppMessage(data);
-            } catch (error) {}
-        });
+        window.addEventListener(
+            "message",
+            (event) => {
+                console.log("Chat window 订阅到message", event);
+                this.onReceiveMessage(event);
+            },
+            false,
+        );
+        document.addEventListener(
+            "message",
+            (event) => {
+                console.log("Chat document 订阅到message", event);
+                this.onReceiveMessage(event);
+            },
+            false,
+        );
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -513,6 +521,14 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();
     }
+
+    private onReceiveMessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            console.log("Received message from React Native App:", data);
+            this.onReceiveAppMessage(data);
+        } catch (error) {}
+    };
 
     private onReceiveAppMessage = ({ type, data }: { type: string; data: any }) => {
         console.log("onReceiveAppMessage type=", type, " data=", data);
