@@ -85,7 +85,7 @@ limitations under the License.
     }
 }
 
-.mx_TabbedView_tabPanel {
+.mx_BaseCard.mx_TabbedView_tabPanel {
     height: 100vh;
     flex: 1;
     flex-direction: column;
@@ -94,7 +94,17 @@ limitations under the License.
         padding-right: 40px;
         .mx_BaseCard_header_title {
             line-height: 28px;
+            order: 2;
         }
+        .mx_BaseCard_header_button {
+            height: 100%;
+            order: 1;
+        }
+    }
+    .mx_TabbedView_back {
+        width: 60px;
+        height: 100%;
+        @mixin MaskIcon url("$(res)/img/back.svg"), 16px, 20px, #000000;
     }
     .mx_BaseCard_content {
         flex: 1;
@@ -104,6 +114,11 @@ limitations under the License.
             flex-direction: column;
             gap: 20px;
             padding: 20px 40px;
+        }
+    }
+    &.showBackBtn {
+        .mx_BaseCard_header_wrap {
+            padding: 0;
         }
     }
 }

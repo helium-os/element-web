@@ -71,6 +71,7 @@ import { SdkContextClass } from "../../contexts/SDKContext";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import { MatrixClientPeg } from "matrix-react-sdk/src/MatrixClientPeg";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface IState {}
 
@@ -326,6 +327,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             // else if the last viewed room in this space is joined then view that
             // else view space home or home depending on what is being clicked on
             if (
+                !isInApp &&
                 roomId &&
                 cliSpace?.getMyMembership() !== "invite" &&
                 this.matrixClient.getRoom(roomId)?.getMyMembership() === "join" &&
@@ -1002,9 +1004,22 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
     };
 
     private switchSpaceIfNeeded = (roomId = SdkContextClass.instance.roomViewStore.getRoomId()): void => {
-        if (!roomId || !this.matrixClient.getRoom(roomId)) return;
+        // /#/home
+        if (!roomId || !this.matrixClient.getRoom(roomId)) {
+            this.setActiveSpace(MetaSpace.Home);
+            return;
+        }
 
-        if (!this.isRoomInSpace(this.activeSpace, roomId) && !this.matrixClient.getRoom(roomId)?.isSpaceRoom()) {
+        const isSpaceRoom = this.matrixClient.getRoom(roomId)?.isSpaceRoom();
+
+        // /#/spaceId
+        if (isSpaceRoom) {
+            this.setActiveSpace(roomId);
+            return;
+        }
+
+        // /#/roomId
+        if (!this.isRoomInSpace(this.activeSpace, roomId)) {
             this.switchToRelatedSpace(roomId);
         }
     };
@@ -1310,17 +1325,7 @@ export class SpaceStoreClass extends AsyncStoreWithClient<IState> {
             this.emit(UPDATE_TOP_LEVEL_SPACES, this.spacePanelSpaces, this.enabledMetaSpaces);
         }
 
-        // restore selected state from last session if any and still valid
-        const lastSpaceId = window.localStorage.getItem(ACTIVE_SPACE_LS_KEY);
-        const valid =
-            lastSpaceId &&
-            (!isMetaSpace(lastSpaceId) ? this.matrixClient.getRoom(lastSpaceId) : enabledMetaSpaces[lastSpaceId]);
-        if (valid) {
-            // don't context switch here as it may break permalinks
-            this.setActiveSpace(lastSpaceId, false);
-        } else {
-            this.switchSpaceIfNeeded();
-        }
+        this.switchSpaceIfNeeded();
     }
 
     // 切换社区时，更新社区分组列表

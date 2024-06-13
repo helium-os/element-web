@@ -152,6 +152,8 @@ import { defaultLanguage, languageMap } from "matrix-react-sdk/src/languageHandl
 import UserStore from "matrix-react-sdk/src/stores/UserStore";
 import User from "matrix-react-sdk/src/utils/User";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import defaultDispatcher from "matrix-react-sdk/src/dispatcher/dispatcher";
+import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -166,6 +168,10 @@ const ONBOARDING_FLOW_STARTERS = [Action.ViewUserSettings, "view_create_chat", "
 interface IScreen {
     screen: string;
     params?: QueryDict;
+}
+
+interface ReceiveAppMessageViewRoomData {
+    roomId: string;
 }
 
 interface IProps {
@@ -467,6 +473,25 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
+
+        // 接收ios app端发送的消息
+        window.addEventListener(
+            "message",
+            (event) => {
+                console.log("Chat window 订阅到message", event.data);
+                this.onReceiveMessage(event);
+            },
+            false,
+        );
+        // 接收android app端发送的消息
+        document.addEventListener(
+            "message",
+            (event) => {
+                console.log("Chat document 订阅到message", event.data);
+                this.onReceiveMessage(event);
+            },
+            false,
+        );
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -497,6 +522,42 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         this.stores.accountPasswordStore.clearPassword();
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();
     }
+
+    private onReceiveMessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            console.log("Received message from React Native App:", data);
+            this.onReceiveAppMessage(data);
+        } catch (error) {}
+    };
+
+    private onReceiveAppMessage = ({ type, data }: { type: string; data: any }) => {
+        console.log("onReceiveAppMessage type=", type, " data=", data);
+        switch (type) {
+            case "viewRoom": {
+                const { roomId } = data as ReceiveAppMessageViewRoomData;
+
+                defaultDispatcher.dispatch<ViewRoomPayload>({
+                    action: Action.ViewRoom,
+                    show_room_tile: true, // make sure the room is visible in the list
+                    room_id: roomId,
+                    clear_search: true,
+                    metricsTrigger: "Notification",
+                });
+
+                // 跳转到未读消息
+                setImmediate(() => {
+                    dis.dispatch({
+                        action: "jump_to_unread",
+                    });
+                });
+
+                // 隐藏左侧边栏
+                LayoutStore.instance.setShowLeftPanel(false);
+                break;
+            }
+        }
+    };
 
     private onWindowResized = (): void => {
         // XXX: This is a very unreliable way to detect whether or not the the devtools are open

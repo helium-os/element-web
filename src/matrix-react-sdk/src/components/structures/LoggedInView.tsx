@@ -74,6 +74,8 @@ import { UIFeature } from "../../settings/UIFeature";
 import { NumberSize, Resizable } from "re-resizable";
 import { Direction } from "re-resizable/lib/resizer";
 import MatrixChatToolbar from "matrix-react-sdk/src/components/structures/MatrixChatToolbar";
+import LayoutStore, { UPDATE_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -117,6 +119,7 @@ interface IState {
     useCompactLayout: boolean;
     activeCalls: Array<MatrixCall>;
     backgroundImage?: string;
+    showLeftPanel: boolean;
 }
 
 /**
@@ -150,6 +153,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
             useCompactLayout: SettingsStore.getValue("useCompactLayout"),
             usageLimitDismissed: false,
             activeCalls: LegacyCallHandler.instance.getAllActiveCalls(),
+            showLeftPanel: LayoutStore.instance.showLeftPanel,
         };
 
         // stash the MatrixClient in case we log out before we are unmounted
@@ -249,6 +253,16 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         OwnProfileStore.instance.on(UPDATE_EVENT, this.refreshBackgroundImage);
         this.refreshBackgroundImage();
         this.onVerifyDevice();
+
+        LayoutStore.instance.on(UPDATE_SHOW_LEFT_PANEL, this.updateShowLeftPanel);
+
+        // 向React Native发送消息，传递当前加载状态
+        window.ReactNativeWebView?.postMessage(
+            JSON.stringify({
+                type: "loadedStatus",
+                data: true,
+            }),
+        );
     }
 
     public componentDidUpdate(prevProps, prevState): void {
@@ -269,6 +283,12 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         SettingsStore.unwatchSetting(this.compactLayoutWatcherRef);
         SettingsStore.unwatchSetting(this.backgroundImageWatcherRef);
     }
+
+    private updateShowLeftPanel = () => {
+        this.setState({
+            showLeftPanel: LayoutStore.instance.showLeftPanel,
+        });
+    };
 
     private onCallState = (): void => {
         const activeCalls = LegacyCallHandler.instance.getAllActiveCalls();
@@ -656,7 +676,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         window.localStorage.setItem("mx_lhs_size", (this.loadSidePanelSize().width + delta.width).toString());
     };
 
-    private loadSidePanelSize(): { height: string | number; width: number } {
+    private loadSidePanelSize(): { height: string | number; width: number | string } {
         let lhsSize = parseInt(window.localStorage.getItem("mx_lhs_size")!, 10);
         if (isNaN(lhsSize)) {
             lhsSize = this.leftPanelDefaultSize;
@@ -708,6 +728,33 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
             return <AudioFeedArrayForLegacyCall call={call} key={call.callId} />;
         });
 
+        const getLeftPanelContent = () => {
+            return (
+                <div
+                    className={`mx_LeftPanel_outerWrapper ${isInApp ? "mx_LeftPanel_inApp" : ""} ${
+                        this.state.showLeftPanel ? "" : "mx_LeftPanel_notShow"
+                    }`}
+                >
+                    <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
+                    <nav className="mx_LeftPanel_wrapper">
+                        {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}
+                        {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
+                        {/*<BackdropPanel backgroundImage={this.state.backgroundImage} />*/}
+                        <div
+                            className="mx_LeftPanel_wrapper--user"
+                            data-collapsed={this.props.collapseLhs ? true : undefined}
+                        >
+                            <LeftPanel
+                                pageType={this.props.page_type as PageTypes}
+                                isMinimized={this.props.collapseLhs || false}
+                                resizeNotifier={this.props.resizeNotifier}
+                            />
+                        </div>
+                    </nav>
+                </div>
+            );
+        };
+
         return (
             <MatrixClientContext.Provider value={this._matrixClient}>
                 <div
@@ -720,45 +767,35 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
                         <MatrixChatToolbar />
                     </div>
                     <div className={bodyClasses}>
-                        <Resizable
-                            defaultSize={this.loadSidePanelSize()}
-                            minWidth={this.leftPanelDefaultSize}
-                            maxWidth="30%"
-                            enable={{
-                                top: false,
-                                right: true,
-                                bottom: false,
-                                left: false,
-                                topRight: false,
-                                bottomRight: false,
-                                bottomLeft: false,
-                                topLeft: false,
-                            }}
-                            className="mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper"
-                            handleClasses={{ right: "mx_ResizeHandle_horizontal" }}
-                            onResizeStart={this.onResizeStart}
-                            onResize={this.onResize}
-                            onResizeStop={this.onResizeStop}
-                        >
-                            <div className="mx_LeftPanel_outerWrapper">
-                                <LeftPanelLiveShareWarning isMinimized={this.props.collapseLhs || false} />
-                                <nav className="mx_LeftPanel_wrapper">
-                                    {/*<BackdropPanel blurMultiplier={0.5} backgroundImage={this.state.backgroundImage} />*/}
-                                    {SettingsStore.getValue(UIFeature.LeftPanel) && <SpacePanel />}
-                                    {/*<BackdropPanel backgroundImage={this.state.backgroundImage} />*/}
-                                    <div
-                                        className="mx_LeftPanel_wrapper--user"
-                                        data-collapsed={this.props.collapseLhs ? true : undefined}
-                                    >
-                                        <LeftPanel
-                                            pageType={this.props.page_type as PageTypes}
-                                            isMinimized={this.props.collapseLhs || false}
-                                            resizeNotifier={this.props.resizeNotifier}
-                                        />
-                                    </div>
-                                </nav>
-                            </div>
-                        </Resizable>
+                        {isInApp ? (
+                            getLeftPanelContent()
+                        ) : (
+                            <Resizable
+                                defaultSize={this.loadSidePanelSize()}
+                                minWidth={this.leftPanelDefaultSize}
+                                maxWidth={"30%"}
+                                enable={{
+                                    top: false,
+                                    right: true,
+                                    bottom: false,
+                                    left: false,
+                                    topRight: false,
+                                    bottomRight: false,
+                                    bottomLeft: false,
+                                    topLeft: false,
+                                }}
+                                className={`mx_ResizeWrapper  mx_LeftPanel_ResizeWrapper ${
+                                    this.state.showLeftPanel ? "" : ""
+                                }`}
+                                handleClasses={{ right: "mx_ResizeHandle_horizontal" }}
+                                onResizeStart={this.onResizeStart}
+                                onResize={this.onResize}
+                                onResizeStop={this.onResizeStop}
+                            >
+                                {getLeftPanelContent()}
+                            </Resizable>
+                        )}
+
                         <div className="mx_RoomView_wrapper">{pageElement}</div>
                     </div>
                 </div>

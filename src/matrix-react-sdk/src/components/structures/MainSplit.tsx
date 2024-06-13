@@ -23,6 +23,7 @@ import ResizeNotifier from "../../utils/ResizeNotifier";
 import RightPanelStore from "matrix-react-sdk/src/stores/right-panel/RightPanelStore";
 import { RightPanelPhases } from "matrix-react-sdk/src/stores/right-panel/RightPanelStorePhases";
 import { UPDATE_EVENT } from "matrix-react-sdk/src/stores/AsyncStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     resizeNotifier: ResizeNotifier;
@@ -82,7 +83,7 @@ export default class MainSplit extends React.Component<IProps, IState> {
         window.localStorage.setItem("mx_rhs_size", (this.loadSidePanelSize().width + delta.width).toString());
     };
 
-    private loadSidePanelSize(): { height: string | number; width: number } {
+    private loadSidePanelSize(): { height: string | number; width: string | number } {
         let rhsSize = parseInt(window.localStorage.getItem("mx_rhs_size")!, 10);
 
         if (isNaN(rhsSize)) {
@@ -100,9 +101,15 @@ export default class MainSplit extends React.Component<IProps, IState> {
 
         const hasResizer = !this.props.collapsedRhs && panelView;
 
-        let children;
-        if (hasResizer) {
-            children = (
+        const getChildren = () => {
+            if (isInApp) {
+                return (
+                    <div className={`mx_PanelView_dialog ${hasResizer ? "mx_PanelView_show" : "mx_PanelView_hidden"}`}>
+                        <div className="mx_PanelView_wrap">{panelView}</div>
+                    </div>
+                );
+            }
+            return hasResizer ? (
                 <Resizable
                     defaultSize={this.loadSidePanelSize()}
                     minWidth={this.state.rightPanelDefaultWidth}
@@ -129,14 +136,17 @@ export default class MainSplit extends React.Component<IProps, IState> {
                 >
                     {panelView}
                 </Resizable>
-            );
-        }
+            ) : null;
+        };
 
         return (
-            <div className={`mx_MainSplit ${this.state.rightPanelResizeable ? "mx_RightPanel_resizeable" : ""}`}>
-                {bodyView}
-                {children}
-            </div>
+            <>
+                <div className={`mx_MainSplit ${this.state.rightPanelResizeable ? "mx_RightPanel_resizeable" : ""}`}>
+                    {bodyView}
+                    {!isInApp && getChildren()}
+                </div>
+                {isInApp && getChildren()}
+            </>
         );
     }
 }

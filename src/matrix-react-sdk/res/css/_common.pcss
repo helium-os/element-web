@@ -294,6 +294,26 @@ legend {
     border-radius: 20px;
     overflow: hidden;
     font-size: $font-15px;
+    .mx_Dialog_fixedWidth {
+        width: 454px;
+        max-width: 704px;
+        overflow-x: hidden;
+    }
+    &.mx_Dialog_fullScreen {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        .mx_Dialog_content {
+            max-height: unset;
+        }
+    }
+    &.mx_Dialog_inApp:not(.mx_Dialog_fullScreen) {
+        max-width: 90%;
+        .mx_Dialog_fixedWidth {
+            width: 100%;
+            max-width: unset;
+        }
+    }
 }
 
 
@@ -364,20 +384,7 @@ legend {
     padding: 0 10px;
 }
 
-.mx_Dialog_fixedWidth {
-    width: 454px;
-    max-width: 704px;
-    overflow-x: hidden;
-}
 
-.mx_Dialog_fullScreen {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-    .mx_Dialog_content {
-        max-height: unset;
-    }
-}
 
 .mx_Dialog_staticWrapper .mx_Dialog {
     z-index: 4010;
@@ -392,10 +399,9 @@ legend {
     height: 100%;
     background: rgba(21, 21, 21, 0.40);
     z-index: 4011;
-}
-
-.mx_Dialog_background.mx_Dialog_staticBackground {
-    z-index: 4009;
+    &.mx_Dialog_staticBackground {
+        z-index: 4009;
+    }
 }
 
 .mx_Dialog_wrapperWithStaticUnder .mx_Dialog_background {
@@ -847,5 +853,38 @@ legend {
         }
     }
 }
+
+// rightPanel dialog
+.mx_PanelView_dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.12);
+    .mx_PanelView_wrap {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 0;
+        background: #fff;
+        border-radius: 20px 20px 0 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    &.mx_PanelView_show {
+        z-index: 1001; // 层级高于服务器连接丢失
+        height: 100%;
+        .mx_PanelView_wrap {
+            height: 95%;
+        }
+    }
+    &.mx_PanelView_hidden {
+        z-index: -1;
+        height: 0;
+        transition: all 0s ease 0.3s;
+    }
+}
+
 
 
