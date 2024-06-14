@@ -182,7 +182,7 @@ export default class Login {
 
 // jwt登录
 export function jwtLoginRequest(client: MatrixClient): Promise<any> {
-    return fetch("/heliumos-chat-api/_matrix/client/heliumos_v1/login", {
+    return fetch(`/heliumos-chat-api/_matrix/client/heliumos_v1/login`, {
         method: "POST",
     })
         .then((response) => response.json())

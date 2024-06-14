@@ -1,5 +1,11 @@
 const Url = require("url-parse");
-import { getMatrixServerOrigin, isInDesktop, isInApp, getIpfsServerOrigin } from "matrix-react-sdk/src/utils/env";
+import {
+    isInDesktop,
+    isInApp,
+    matrixHostnamePrefix,
+    ipfsHostnamePrefix,
+    isDesktopModelDev,
+} from "matrix-react-sdk/src/utils/env";
 
 // 拦截fetch请求
 const _fetch = window.fetch;
@@ -20,13 +26,11 @@ export function getRequestUrl(resource: string | URL): string {
     const url = new Url(resource);
     const { origin, href } = url;
 
-    switch (origin) {
-        case getMatrixServerOrigin():
-        case getIpfsServerOrigin():
-            return getRequestUrlInPlatform(resource, origin);
-        default:
-            return href;
+    if (origin.includes(matrixHostnamePrefix) || origin.includes(ipfsHostnamePrefix)) {
+        return getRequestUrlInPlatform(resource, origin);
     }
+
+    return href;
 }
 
 // 获取最终请求的options
@@ -39,7 +43,7 @@ export function getRequestOptions(options) {
 
 // 获取最终请求的credentials（是否允许携带cookie）
 export function getCredentials() {
-    return isInDesktop || isInApp ? "same-origin" : "include";
+    return isInDesktop || isDesktopModelDev ? "same-origin" : "include";
 }
 
 /**
@@ -51,8 +55,11 @@ export function getRequestUrlInPlatform(resource: string | URL, needProxiedOrigi
     const url = new Url(resource);
     const { origin, href, query } = url;
 
-    // 客户端不做拦截
-    if (isInDesktop) return href;
+    if (
+        isInDesktop || // 客户端不做拦截
+        isDesktopModelDev // 本地开发模式为客户端模式时不做拦截
+    )
+        return href;
 
     // app端做请求拦截，添加real-origin参数
     if (isInApp) {
