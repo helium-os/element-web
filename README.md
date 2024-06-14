@@ -11,7 +11,7 @@ ipfs服务          直接请求 https://ipfs.system.service.heliumos
 web网页端:
 
 ```
-chat登录服务       proxy -> https://matrix.system.service.heliumos  [require cookie hos-access]
+chat登录服务       proxy -> https://matrix.system.app.heliumos  [require cookie kc-access]
 matrix服务        proxy -> https://matrix.system.service.heliumos
 ipfs服务          proxy -> https://ipfs.system.service.heliumos
 ```
@@ -32,8 +32,8 @@ ipfs服务          http://127.0.0.1:xxx/?origin=https://ipfs.system.service.hel
 ## 本地开发
 
 本地开发有两种模式可以选择
-1. 客户端模式【默认】（和客户端处理请求的逻辑保持一致，登录需要kc-access cookie）
-2. web网页端模式（和web网页端处理请求的逻辑保持一致，登录需要hos-access cookie）
+1. 客户端模式【默认】（和客户端处理请求的逻辑保持一致）
+2. web网页端模式（和web网页端处理请求的逻辑保持一致）
 
 >**Note**:<br>
 > 可以在 src/matrix-react-sdk/src/utils/env.ts 中更改 devModel 变量，切换本地开发模式

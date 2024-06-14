@@ -8,6 +8,13 @@ module.exports = {
     theme: {},
     proxy: {
         // 各端公用代理
+        "/heliumos-chat-api": {
+            target: "https://matrix.system.app.heliumos",
+            changeOrigin: true,
+            secure: false,
+            pathRewrite: { "^/heliumos-chat-api": "" },
+            agent,
+        },
         "/heliumos-user-api": {
             target: "https://user.user.system.service.heliumos",
             changeOrigin: true,
@@ -23,23 +30,7 @@ module.exports = {
             agent,
         },
 
-        // 客户端代理
-        "/heliumos-chat-api": {
-            target: "https://matrix.system.app.heliumos",
-            changeOrigin: true,
-            secure: false,
-            pathRewrite: { "^/heliumos-chat-api": "" },
-            agent,
-        },
-
         // web端代理
-        "/web/heliumos-chat-api": {
-            target: "https://matrix.system.service.heliumos",
-            changeOrigin: true,
-            secure: false,
-            pathRewrite: { "^/web/heliumos-chat-api": "" },
-            agent,
-        },
         "/web/_matrix": {
             target: "https://matrix.system.service.heliumos",
             changeOrigin: true,

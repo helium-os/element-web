@@ -3,7 +3,7 @@ enum DevModel {
     Desktop,
     WebSite,
 }
-const devModel: DevModel = DevModel.WebSite; // 本地开发模式，默认为客户端模式
+const devModel: DevModel = DevModel.Desktop; // 本地开发模式，默认为客户端模式
 
 export const isDev = process.env.NODE_ENV === "development";
 
@@ -54,9 +54,4 @@ export function getMatrixServerOrigin(): string {
 // 获取当前org ipfs service origin
 export function getIpfsServerOrigin(): string {
     return `https://${ipfsHostnamePrefix}.${getOrgId()}`;
-}
-
-// 获取接口请求前缀
-export function getApiPrefix() {
-    return isProdWebSite || isWebSiteModelDev ? "/web" : "";
 }
