@@ -3,7 +3,7 @@ enum DevModel {
     Desktop,
     WebSite,
 }
-const devModel: DevModel = DevModel.Desktop;
+const devModel: DevModel = DevModel.WebSite; // 本地开发模式，默认为客户端模式
 
 export const isDev = process.env.NODE_ENV === "development";
 
