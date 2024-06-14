@@ -1,5 +1,5 @@
 const { HttpsProxyAgent } = require("https-proxy-agent");
-const agent = new HttpsProxyAgent("http://127.0.0.1:53541"); // 端口号是起desktop后，proxy随机生成的port
+const agent = new HttpsProxyAgent("http://127.0.0.1:53496"); // 端口号是起desktop后，proxy随机生成的port
 
 module.exports = {
     define: {
@@ -7,13 +7,7 @@ module.exports = {
     },
     theme: {},
     proxy: {
-        "/heliumos-chat-api": {
-            target: "https://matrix.system.app.heliumos",
-            changeOrigin: true,
-            secure: false,
-            pathRewrite: { "^/heliumos-chat-api": "" },
-            agent,
-        },
+        // 各端公用代理
         "/heliumos-user-api": {
             target: "https://user.user.system.service.heliumos",
             changeOrigin: true,
@@ -26,6 +20,24 @@ module.exports = {
             changeOrigin: true,
             secure: false,
             pathRewrite: { "^/heliumos-org-api": "" },
+            agent,
+        },
+
+        // 客户端代理
+        "/heliumos-chat-api": {
+            target: "https://matrix.system.app.heliumos",
+            changeOrigin: true,
+            secure: false,
+            pathRewrite: { "^/heliumos-chat-api": "" },
+            agent,
+        },
+
+        // web端代理
+        "/web/heliumos-chat-api": {
+            target: "https://matrix.system.service.heliumos",
+            changeOrigin: true,
+            secure: false,
+            pathRewrite: { "^/web/heliumos-chat-api": "" },
             agent,
         },
         "/web/_matrix": {

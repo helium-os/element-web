@@ -25,6 +25,7 @@ import SecurityCustomisations from "./customisations/Security";
 import { IMatrixClientCreds } from "./MatrixClientPeg";
 
 import User from "./utils/User";
+import { getApiPrefix } from "matrix-react-sdk/src/utils/env";
 
 interface ILoginOptions {
     defaultDeviceDisplayName?: string;
@@ -182,7 +183,7 @@ export default class Login {
 
 // jwt登录
 export function jwtLoginRequest(client: MatrixClient): Promise<any> {
-    return fetch("/heliumos-chat-api/_matrix/client/heliumos_v1/login", {
+    return fetch(`${getApiPrefix()}/heliumos-chat-api/_matrix/client/heliumos_v1/login`, {
         method: "POST",
     })
         .then((response) => response.json())
