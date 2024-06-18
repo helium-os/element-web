@@ -10,7 +10,13 @@ export const isDev = process.env.NODE_ENV === "development";
 const ua = navigator.userAgent;
 
 export const isInApp = ua.toLocaleLowerCase().includes("heliumos app"); // 是否是在app端
-export const isInDesktop = ua.toLocaleLowerCase().includes("heliumos") && !isInApp; // 是否是在桌面端
+
+// 是否是在桌面端
+export const isInDesktop =
+    (ua.toLocaleLowerCase().includes("heliumos") ||
+        ua.toLocaleLowerCase().includes("helium-os") ||
+        ua.toLocaleLowerCase().includes("helium os")) &&
+    !isInApp;
 
 export const isWebSite = !isInDesktop && !isInApp; // 是否是web网页端
 export const isProdWebSite = isWebSite && !isDev; // 是否是打包后的web网页端
