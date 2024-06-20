@@ -159,6 +159,7 @@ async function getSecretStorageKey({
         /* isPriorityModal= */ false,
         /* isStaticModal= */ false,
         /* options= */ {
+            autoWidth: true,
             onBeforeClose: async (reason): Promise<boolean> => {
                 if (reason === "backgroundClick") {
                     return confirmToDismiss();
@@ -209,6 +210,7 @@ export async function getDehydrationKey(
         /* isPriorityModal= */ false,
         /* isStaticModal= */ false,
         /* options= */ {
+            autoWidth: true,
             onBeforeClose: async (reason): Promise<boolean> => {
                 if (reason === "backgroundClick") {
                     return confirmToDismiss();
@@ -337,10 +339,11 @@ export async function accessSecretStorage(func = async (): Promise<void> => {}, 
                 {
                     forceReset,
                 },
-                "mx_Dialog_CreateSecretStorage",
+                undefined,
                 /* priority = */ false,
                 /* static = */ true,
                 /* options = */ {
+                    autoWidth: true,
                     onBeforeClose: async (reason): Promise<boolean> => {
                         // If Secure Backup is required, you cannot leave the modal.
                         if (reason === "backgroundClick") {

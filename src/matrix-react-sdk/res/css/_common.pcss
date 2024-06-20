@@ -307,7 +307,10 @@ legend {
             max-height: unset;
         }
     }
-    &.mx_Dialog_inApp:not(.mx_Dialog_fullScreen) {
+    .mx_Dialog_autoWidth {
+        width: auto;
+    }
+    &.mx_Dialog_inApp:not(.mx_Dialog_fullScreen):not(.mx_Dialog_autoWidth) {
         width: 90%;
         .mx_Dialog_fixedWidth {
             width: 100%;

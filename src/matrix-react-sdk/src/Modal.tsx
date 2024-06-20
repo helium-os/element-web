@@ -51,7 +51,8 @@ export type ComponentProps<C extends ComponentType> = Defaultize<
 export interface IModal<C extends ComponentType> {
     elem: React.ReactNode;
     className?: string;
-    fullScreen?: boolean;
+    fullScreen?: boolean; // Modal是否全屏展示
+    autoWidth?: boolean; // Modal宽度是否自适应
     beforeClosePromise?: Promise<boolean>;
     closeReason?: string;
     onBeforeClose?(reason?: string): Promise<boolean>;
@@ -67,7 +68,8 @@ export interface IHandle<C extends ComponentType> {
 
 interface IOptions<C extends ComponentType> {
     onBeforeClose?: IModal<C>["onBeforeClose"];
-    fullScreen?: boolean;
+    fullScreen?: boolean; // Modal是否全屏展示
+    autoWidth?: boolean; // Modal宽度是否自适应
 }
 
 export enum ModalManagerEvent {
@@ -182,6 +184,7 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
             className,
 
             fullScreen: options?.fullScreen,
+            autoWidth: options?.autoWidth,
             // these will be set below but we need an object reference to pass to getCloseFn before we can do that
             elem: null,
         } as IModal<C>;
@@ -384,9 +387,9 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
             const staticDialog = (
                 <div className={classes}>
                     <div
-                        className={`mx_Dialog ${this.staticModal.fullScreen ? "mx_Dialog_fullScreen" : ""} ${
-                            isInApp ? "mx_Dialog_inApp" : ""
-                        }`}
+                        className={`mx_Dialog ${this.staticModal.autoWidth ? "mx_Dialog_autoWidth" : ""} ${
+                            this.staticModal.fullScreen ? "mx_Dialog_fullScreen" : ""
+                        } ${isInApp ? "mx_Dialog_inApp" : ""}`}
                     >
                         {this.staticModal.elem}
                     </div>
@@ -413,9 +416,9 @@ export class ModalManager extends TypedEventEmitter<ModalManagerEvent, HandlerMa
             const dialog = (
                 <div className={classes}>
                     <div
-                        className={`mx_Dialog ${modal.fullScreen ? "mx_Dialog_fullScreen" : ""} ${
-                            isInApp ? "mx_Dialog_inApp" : ""
-                        }`}
+                        className={`mx_Dialog ${modal.autoWidth ? "mx_Dialog_autoWidth" : ""} ${
+                            modal.fullScreen ? "mx_Dialog_fullScreen" : ""
+                        } ${isInApp ? "mx_Dialog_inApp" : ""}`}
                     >
                         {modal.elem}
                     </div>

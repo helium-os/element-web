@@ -3,7 +3,6 @@ import { useShowLeftPanel } from "matrix-react-sdk/src/hooks/useShowLeftPanel";
 
 const AppBackLeftPanelBtn = () => {
     const [showLeftPanel, setShowLeftPanel] = useShowLeftPanel();
-    console.log("showLeftPanel", showLeftPanel);
     return <>{!showLeftPanel && <div className="mx_RoomViewHeader_back" onClick={() => setShowLeftPanel(true)} />}</>;
 };
 
