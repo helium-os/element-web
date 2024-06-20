@@ -58,6 +58,7 @@ import RoomCallBanner from "../beacon/RoomCallBanner";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
 import LayoutStore, { UPDATE_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
 import { isInApp } from "matrix-react-sdk/src/utils/env";
+import AppBackLeftPanelBtn from "matrix-react-sdk/src/components/views/elements/AppBackLeftPanelBtn";
 
 interface CallLayoutSelectorProps {
     call: ElementCall;
@@ -428,7 +429,7 @@ export default class RoomHeader extends React.Component<IProps, IState> {
                     className="mx_RoomHeader_wrapper"
                     aria-owns={this.state.rightPanelOpen ? "mx_RightPanel" : undefined}
                 >
-                    {!this.state.showLeftPanel && <div className="mx_RoomHeader_back" onClick={this.onShowLeftPanel} />}
+                    <AppBackLeftPanelBtn />
                     <div className="mx_RoomHeader_name_topic">
                         <div className="mx_RoomHeader_name_box">
                             <div className="mx_RoomHeader_avatar">{roomAvatar}</div>

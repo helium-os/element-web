@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import LayoutStore, { UPDATE_SETTINGS_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
 
-export type SetShowLeftPanel = (show: boolean) => void;
+export type SetShowRoomSettingsLeftPanel = (show: boolean) => void;
 
-export function useShowSettingsLeftPanel() {
+export function useShowSettingsLeftPanel(): [boolean, SetShowRoomSettingsLeftPanel] {
     const [show, setShow] = useState<boolean>(LayoutStore.instance.showSettingsLeftPanel);
 
     useEffect(() => {
@@ -17,7 +17,7 @@ export function useShowSettingsLeftPanel() {
         };
     }, []);
 
-    const setShowLeftPanel: SetShowLeftPanel = useCallback((show) => {
+    const setShowLeftPanel: SetShowRoomSettingsLeftPanel = useCallback((show) => {
         LayoutStore.instance.setShowSettingsLeftPanel(show);
     }, []);
 

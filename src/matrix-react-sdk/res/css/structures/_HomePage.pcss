@@ -25,11 +25,20 @@ limitations under the License.
 }
 
 .mx_HomePage_default {
-    text-align: center;
+    position: relative;
     display: flex;
+    align-items: center;
+
+    .mx_RoomViewHeader_back {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 60px;
+    }
 
     .mx_HomePage_default_wrapper {
-        margin: auto;
+        flex: 1;
+        overflow: hidden;
         text-align: center;
     }
 
@@ -58,6 +67,7 @@ limitations under the License.
 
     .mx_HomePage_actionWrap {
         display: flex;
+        justify-content: center;
         margin: 20px auto 0;
         gap: 60px;
         .mx_HomePage_actionItem {
@@ -89,6 +99,12 @@ limitations under the License.
         }
         .mx_HomePage_actionBtn {
             margin-top: 30px;
+        }
+    }
+
+    &.inApp {
+        .mx_HomePage_actionWrap {
+            gap: 10px;
         }
     }
 }

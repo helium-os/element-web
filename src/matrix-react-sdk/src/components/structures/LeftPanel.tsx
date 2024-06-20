@@ -53,7 +53,6 @@ import SpaceAddTagContextMenu from "matrix-react-sdk/src/components/views/contex
 import IconizedContextMenu, {
     IconizedContextMenuOptionList,
 } from "matrix-react-sdk/src/components/views/context_menus/IconizedContextMenu";
-import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     isMinimized: boolean;
@@ -453,11 +452,9 @@ export default class LeftPanel extends React.PureComponent<IProps, IState> {
                                 selected={this.props.pageType === PageType.HomePage}
                                 minimized={this.props.isMinimized}
                             />
-                            {!isInApp && (
-                                <div className="mx_LeftPanel_spaceHomeEntrance">
-                                    <SpaceHomeEntrance space={this.state.activeSpace} pageType={this.props.pageType} />
-                                </div>
-                            )}
+                            <div className="mx_LeftPanel_spaceHomeEntrance">
+                                <SpaceHomeEntrance space={this.state.activeSpace} pageType={this.props.pageType} />
+                            </div>
                         </div>
                     </div>
                     <div className="mx_LeftPanel_roomListWrapper">

@@ -8,6 +8,8 @@ import { ViewRoomPayload } from "matrix-react-sdk/src/dispatcher/payloads/ViewRo
 import { SdkContextClass } from "matrix-react-sdk/src/contexts/SDKContext";
 import { UPDATE_EVENT } from "matrix-react-sdk/src/stores/AsyncStore";
 import { _t } from "matrix-react-sdk/src/languageHandler";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
+import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
 
 interface IProps {
     pageType: PageType;
@@ -36,13 +38,16 @@ function SpaceHomeEntrance({ pageType, space }: IProps): JSX.Element {
     const goSpaceHome = () => {
         if (space === MetaSpace.Home) {
             dis.dispatch({ action: Action.ViewHomePage });
-            return;
+        } else {
+            dis.dispatch<ViewRoomPayload>({
+                action: Action.ViewRoom,
+                room_id: space,
+                metricsTrigger: undefined, // other
+            });
         }
-        dis.dispatch<ViewRoomPayload>({
-            action: Action.ViewRoom,
-            room_id: space,
-            metricsTrigger: undefined, // other
-        });
+
+        // 隐藏左侧边栏
+        isInApp && LayoutStore.instance.setShowLeftPanel(false);
     };
 
     return (
