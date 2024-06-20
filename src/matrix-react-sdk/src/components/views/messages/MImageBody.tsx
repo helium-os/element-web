@@ -40,6 +40,7 @@ import { presentableTextForFile } from "../../../utils/FileUtils";
 import { createReconnectedListener } from "../../../utils/connection";
 import MediaProcessingError from "./shared/MediaProcessingError";
 import { DecryptError, DownloadError } from "../../../utils/DecryptFile";
+import { getRequestImageSrc } from "matrix-react-sdk/src/components/views/avatars/BaseAvatar";
 
 enum Placeholder {
     NoImage,
@@ -129,7 +130,9 @@ export default class MImageBody extends React.Component<IBodyProps, IState> {
                 };
             }
 
-            Modal.createDialog(ImageView, params, "mx_Dialog_lightbox", undefined, true);
+            Modal.createDialog(ImageView, params, "mx_Dialog_lightbox", undefined, true, {
+                fullScreen: true,
+            });
         }
     };
 
@@ -275,8 +278,8 @@ export default class MImageBody extends React.Component<IBodyProps, IState> {
                 return;
             }
         } else {
-            thumbUrl = this.getThumbUrl();
-            contentUrl = this.getContentUrl();
+            thumbUrl = getRequestImageSrc(this.getThumbUrl());
+            contentUrl = getRequestImageSrc(this.getContentUrl());
         }
 
         const content = this.props.mxEvent.getContent<IMediaEventContent>();

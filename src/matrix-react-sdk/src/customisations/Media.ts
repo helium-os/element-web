@@ -20,6 +20,7 @@ import { Optional } from "matrix-events-sdk";
 
 import { MatrixClientPeg } from "../MatrixClientPeg";
 import { IMediaEventContent, IPreparedMedia, prepEventContentAsMedia } from "./models/IMediaEventContent";
+import { getRequestUrl } from "../../../vector/rewrite-js-sdk/fetch";
 
 // Populate this class with the details of your customisations when copying it.
 
@@ -36,7 +37,10 @@ export class Media {
     private client: MatrixClient;
 
     // Per above, this constructor signature can be whatever is helpful for you.
-    public constructor(private prepared: IPreparedMedia, client?: MatrixClient) {
+    public constructor(
+        private prepared: IPreparedMedia,
+        client?: MatrixClient,
+    ) {
         this.client = client ?? MatrixClientPeg.get();
         if (!this.client) {
             throw new Error("No possible MatrixClient for media resolution. Please provide one or log in.");
@@ -77,7 +81,7 @@ export class Media {
      */
     public get srcHttp(): string | null {
         // eslint-disable-next-line no-restricted-properties
-        return this.client.mxcUrlToHttp(this.srcMxc);
+        return getRequestUrl(this.client.mxcUrlToHttp(this.srcMxc));
     }
 
     /**
@@ -167,7 +171,7 @@ export function mediaFromMxc(mxc?: string, client?: MatrixClient): Media {
 
 export function getHttpUrlFromMxc(url, size = 0): string | null {
     if (!url) return null;
-    if (url.startsWith('mxc://')) {
+    if (url.startsWith("mxc://")) {
         const media = mediaFromMxc(url);
         if (!size || size <= 0) {
             return media.srcHttp;
@@ -180,13 +184,12 @@ export function getHttpUrlFromMxc(url, size = 0): string | null {
 
 export function getSourceHttpUrlFromMxc(url, width, height, resizeMethod?): string | null {
     if (!url) return null;
-    if (url.startsWith('mxc://')) {
+    if (url.startsWith("mxc://")) {
         const media = mediaFromMxc(url);
         if (width !== undefined && height !== undefined) {
             return media.getThumbnailOfSourceHttp(width, height, resizeMethod);
         }
         return media.srcHttp;
-
     }
     return url;
 }

@@ -40,6 +40,8 @@ import { DefaultTagID, TagID } from "matrix-react-sdk/src/stores/room-list/model
 import SpaceChannelAvatar from "matrix-react-sdk/src/components/views/avatars/SpaceChannelAvatar";
 import { isPrivateRoom } from "../../../../vector/rewrite-js-sdk/room";
 import RoomListStore, { LISTS_UPDATE_EVENT } from "matrix-react-sdk/src/stores/room-list/RoomListStore";
+import AppBackLeftPanelBtn from "matrix-react-sdk/src/components/views/elements/AppBackLeftPanelBtn";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 interface IProps {
     space: Room;
@@ -382,8 +384,9 @@ const SpaceHierarchy: React.FC<IProps> = ({ space, initialText = "", showRoom, a
         <RovingTabIndexProvider onKeyDown={onKeyDown} handleHomeEnd handleUpDown>
             {({ onKeyDownHandler }) => {
                 return (
-                    <div className="mx_SpaceHierarchy_page">
+                    <div className={`mx_SpaceHierarchy_page ${isInApp ? "inApp" : ""}`}>
                         <div className="mx_SpaceHierarchy_header">
+                            <AppBackLeftPanelBtn />
                             <div className="mx_SpaceHierarchy_title_box">
                                 <div className="mx_SpaceHierarchy_title_icon" />
                                 <p className="mx_SpaceHierarchy_title">首页</p>

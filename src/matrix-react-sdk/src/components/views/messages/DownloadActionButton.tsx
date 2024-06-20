@@ -25,6 +25,8 @@ import Spinner from "../elements/Spinner";
 import { _t, _td } from "../../../languageHandler";
 import { FileDownloader } from "../../../utils/FileDownloader";
 import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
+import { download } from "matrix-react-sdk/src/utils/download";
 
 interface IProps {
     mxEvent: MatrixEvent;
@@ -56,20 +58,24 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
     private onDownloadClick = async (): Promise<void> => {
         if (this.state.loading) return;
 
+        this.setState({ loading: true });
+
         if (this.props.mediaEventHelperGet().media.isEncrypted) {
             this.setState({ tooltip: _td("Decrypting") });
         }
 
-        this.setState({ loading: true });
-
-        if (this.state.blob) {
-            // Cheat and trigger a download, again.
-            return this.doDownload(this.state.blob);
+        if (isInApp) {
+            download(this.props.mediaEventHelperGet().media.srcHttp, "heliumos resource");
+        } else {
+            let blob: Blob = this.state.blob;
+            if (!blob) {
+                blob = await this.props.mediaEventHelperGet().sourceBlob.value;
+                this.setState({ blob });
+            }
+            await this.doDownload(blob);
         }
 
-        const blob = await this.props.mediaEventHelperGet().sourceBlob.value;
-        this.setState({ blob });
-        await this.doDownload(blob);
+        this.setState({ loading: false });
     };
 
     private async doDownload(blob: Blob): Promise<void> {
@@ -77,7 +83,6 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
             blob,
             name: this.props.mediaEventHelperGet().fileName,
         });
-        this.setState({ loading: false });
     }
 
     public render(): React.ReactNode {

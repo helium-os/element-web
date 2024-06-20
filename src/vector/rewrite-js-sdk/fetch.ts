@@ -5,6 +5,7 @@ import {
     matrixHostnamePrefix,
     ipfsHostnamePrefix,
     isDesktopModelDev,
+    isAppModelDev,
 } from "matrix-react-sdk/src/utils/env";
 
 // 拦截fetch请求
@@ -68,7 +69,7 @@ export function getRequestUrlInPlatform(resource: string | URL, needProxiedOrigi
             searchParams.set("real-origin", needProxiedOrigin);
             url.set("query", searchParams.toString());
         }
-        return url.toString().replace(needProxiedOrigin, "");
+        return url.toString().replace(needProxiedOrigin, isAppModelDev ? "/app" : "");
     }
 
     // web网页端做请求拦截（本地开发 & 官网chat）

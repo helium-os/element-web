@@ -204,7 +204,9 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         } else if (crossSigningPrivateKeysInStorage) {
             // 账户在秘密存储中有交叉签名身份，但并没有被此会话信任，则信任此会话
             console.log("~~~ 账户在秘密存储中有交叉签名身份，但并没有被此会话信任，信任此会话");
-            Modal.createDialog(SetupEncryptionDialog, {}, undefined, /* priority = */ false, /* static = */ true);
+            Modal.createDialog(SetupEncryptionDialog, {}, undefined, /* priority = */ false, /* static = */ true, {
+                autoWidth: true,
+            });
         } else {
             // 未设置交叉签名，则设置备份密钥
             console.log("~~~ 未设置交叉签名，设置备份密钥");

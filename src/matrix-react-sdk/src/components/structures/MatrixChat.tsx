@@ -154,6 +154,7 @@ import User from "matrix-react-sdk/src/utils/User";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import defaultDispatcher from "matrix-react-sdk/src/dispatcher/dispatcher";
 import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -478,7 +479,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         window.addEventListener(
             "message",
             (event) => {
-                console.log("Chat window 订阅到message", event.data);
                 this.onReceiveMessage(event);
             },
             false,
@@ -487,7 +487,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         document.addEventListener(
             "message",
             (event) => {
-                console.log("Chat document 订阅到message", event.data);
                 this.onReceiveMessage(event);
             },
             false,
@@ -993,11 +992,12 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 }
 
                 // Focus the composer
-                dis.dispatch({
-                    action: Action.FocusSendMessageComposer,
-                    context: TimelineRenderingType.Thread,
-                });
-
+                if (!isInApp) {
+                    dis.dispatch({
+                        action: Action.FocusSendMessageComposer,
+                        context: TimelineRenderingType.Thread,
+                    });
+                }
                 break;
             }
         }
@@ -1044,7 +1044,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
 
     // switch view to the given room
     private async viewRoom(roomInfo: ViewRoomPayload): Promise<void> {
-        this.focusComposer = true;
+        this.focusComposer = !isInApp;
 
         if (roomInfo.room_alias) {
             logger.log(`Switching to room alias ${roomInfo.room_alias} at event ${roomInfo.event_id}`);
@@ -1729,7 +1729,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 showNotificationsToast(false);
             }
 
-            dis.fire(Action.FocusSendMessageComposer);
+            !isInApp && dis.fire(Action.FocusSendMessageComposer);
             this.setState({
                 ready: true,
             });

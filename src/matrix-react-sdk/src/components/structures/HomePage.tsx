@@ -33,6 +33,8 @@ import EmbeddedPage from "./EmbeddedPage";
 import Button, { ButtonType } from "matrix-react-sdk/src/components/views/button/Button";
 import { onCreateRoom } from "matrix-react-sdk/src/components/views/context_menus/SpaceAddChannelContextMenu";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
+import AppBackLeftPanelBtn from "matrix-react-sdk/src/components/views/elements/AppBackLeftPanelBtn";
 
 const onClickSendDm = (ev: ButtonEvent): void => {
     PosthogTrackers.trackInteraction("WebHomeCreateChatButton", ev);
@@ -83,7 +85,8 @@ const HomePage: React.FC<IProps> = ({ justRegistered = false }) => {
     }
 
     return (
-        <AutoHideScrollbar className="mx_HomePage mx_HomePage_default" element="main">
+        <AutoHideScrollbar className={`mx_HomePage mx_HomePage_default ${isInApp ? "inApp" : ""}`} element="main">
+            <AppBackLeftPanelBtn />
             <div className="mx_HomePage_default_wrapper">
                 <UserWelcomeTop />
                 <div className="mx_HomePage_actionWrap">

@@ -47,7 +47,7 @@ function getManagedIframe(): { iframe: HTMLIFrameElement; onLoadPromise: Promise
 
     // @ts-ignore
     // noinspection JSConstantReassignment
-    managedIframe.sandbox = "allow-scripts allow-same-origin allow-downloads allow-downloads-without-user-activation";
+    managedIframe.sandbox = "allow-scripts allow-same-origin allow-downloads";
 
     onLoadPromise = new Promise((resolve) => {
         managedIframe.onload = () => {
@@ -91,6 +91,7 @@ export class FileDownloader {
     public async download({ blob, name, autoDownload = true, opts = DEFAULT_STYLES }: DownloadOptions): Promise<void> {
         const iframe = this.iframe; // get the iframe first just in case we need to await onload
         if (this.onLoadPromise) await this.onLoadPromise;
+        console.log("enter download, postMessage to iframe", blob);
         iframe.contentWindow?.postMessage(
             {
                 ...opts,

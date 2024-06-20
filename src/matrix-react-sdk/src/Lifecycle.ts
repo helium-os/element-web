@@ -659,9 +659,7 @@ async function doSetLoggedIn(credentials: IMatrixClientCreds, clearStorageEnable
         logger.warn("No local storage available: can't persist session!");
     }
 
-    try {
-        await setOrgList();
-    } catch (error) {}
+    setOrgList();
 
     console.log("init bugfix dispatch Action.OnLoggedIn");
     dis.fire(Action.OnLoggedIn);

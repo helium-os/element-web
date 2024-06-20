@@ -49,6 +49,7 @@ import DialogButtons from "matrix-react-sdk/src/components/views/elements/Dialog
 import Field, { SelectedUserOrRoomTile } from "matrix-react-sdk/src/components/views/elements/Field";
 import ContextMenu, { ChevronFace } from "matrix-react-sdk/src/components/structures/ContextMenu";
 import RoomAndChannelAvatar from "matrix-react-sdk/src/components/views/avatars/RoomAndChannelAvatar";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 const AVATAR_SIZE = 30;
 
@@ -304,7 +305,7 @@ const ForwardDialog: React.FC<IProps> = ({ matrixClient: cli, event, permalinkCr
     return (
         <BaseDialog
             title={_t("Forward message")}
-            className="mx_ForwardDialog"
+            className={`mx_ForwardDialog ${isInApp ? "inApp" : ""}`}
             onFinished={onFinished}
             fixedWidth={false}
             footer={footer}
