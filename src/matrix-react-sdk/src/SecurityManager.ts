@@ -337,7 +337,7 @@ export async function accessSecretStorage(func = async (): Promise<void> => {}, 
                 {
                     forceReset,
                 },
-                undefined,
+                "mx_Dialog_CreateSecretStorage",
                 /* priority = */ false,
                 /* static = */ true,
                 /* options = */ {

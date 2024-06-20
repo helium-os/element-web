@@ -38,5 +38,6 @@ ipfs服务          http://127.0.0.1:xxx/?origin=https://ipfs.system.service.hel
 >**Note**:<br>
 > 可以在 src/matrix-react-sdk/src/utils/env.ts 中更改 devModel 变量，切换本地开发模式
 > 本地开发三种模式相关代理配置可在 config/config.heliumos.ts 中查看
+> 以上两点在本地开发时需要配合使用
 > 本地开发模式选择客户端模式时，需要在浏览器中使用代理设置工具【如switchyOmega】配置本地代理，因为matrix服务和ipfs服务在 config/config.heliumos.ts 中没有配置代理，直接请求的原始地址，其余两种模式则不需要
 
