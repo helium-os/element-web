@@ -479,7 +479,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         window.addEventListener(
             "message",
             (event) => {
-                console.log("Chat window 订阅到message", event.data);
                 this.onReceiveMessage(event);
             },
             false,
@@ -488,7 +487,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         document.addEventListener(
             "message",
             (event) => {
-                console.log("Chat document 订阅到message", event.data);
                 this.onReceiveMessage(event);
             },
             false,

@@ -38,6 +38,7 @@ import { ViewRoomPayload } from "../../../dispatcher/payloads/ViewRoomPayload";
 import { KeyBindingAction } from "../../../accessibility/KeyboardShortcuts";
 import { getKeyBindingsManager } from "../../../KeyBindingsManager";
 import { presentableTextForFile } from "../../../utils/FileUtils";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 // Max scale to keep gaps around the image
 const MAX_SCALE = 0.95;
@@ -547,8 +548,12 @@ export default class ImageView extends React.Component<IProps, IState> {
                 ref={this.focusLock}
             >
                 <div className="mx_ImageView_panel">
-                    {info}
-                    {title}
+                    {!isInApp && (
+                        <>
+                            {info}
+                            {title}
+                        </>
+                    )}
                     <div className="mx_ImageView_toolbar">
                         {zoomOutButton}
                         {zoomInButton}

@@ -130,7 +130,9 @@ export default class MImageBody extends React.Component<IBodyProps, IState> {
                 };
             }
 
-            Modal.createDialog(ImageView, params, "mx_Dialog_lightbox", undefined, true);
+            Modal.createDialog(ImageView, params, "mx_Dialog_lightbox", undefined, true, {
+                fullScreen: true,
+            });
         }
     };
 
