@@ -30,11 +30,13 @@ ipfs服务          http://127.0.0.1:xxx/?origin=https://ipfs.system.service.hel
 
 
 ## 本地开发
-
-本地开发有两种模式可以选择
+本地开发有三种模式可以选择
 1. 客户端模式【默认】（和客户端处理请求的逻辑保持一致）
 2. web网页端模式（和web网页端处理请求的逻辑保持一致）
+3. app端模式（和app网页端处理请求的逻辑保持一致）
 
 >**Note**:<br>
 > 可以在 src/matrix-react-sdk/src/utils/env.ts 中更改 devModel 变量，切换本地开发模式
+> 本地开发三种模式相关代理配置可在 config/config.heliumos.ts 中查看
+> 本地开发模式选择客户端模式时，需要在浏览器中使用代理设置工具【如switchyOmega】配置本地代理，因为matrix服务和ipfs服务在 config/config.heliumos.ts 中没有配置代理，直接请求的原始地址，其余两种模式则不需要
 
