@@ -23,7 +23,7 @@ export const isProdWebSite = isWebSite && !isDev; // 是否是打包后的web网
 
 export const isDesktopModelDev = isDev && devModel === DevModel.Desktop; // 本地开发模式是否是客户端模式
 
-export const isWebSiteModelDev = isDev && devModel === DevModel.WebSite; // 本地开发模式是否是wen网页端模式
+export const isWebSiteModelDev = isDev && devModel === DevModel.WebSite; // 本地开发模式是否是web网页端模式
 
 export const matrixHostnamePrefix = "matrix.system.service"; // matrix服务域名前缀
 export const ipfsHostnamePrefix = "file.system.service"; // ipfs服务域名前缀

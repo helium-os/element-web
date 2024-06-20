@@ -53,6 +53,7 @@ import { linkify } from "../../../linkify-matrix";
 import { SdkContextClass } from "../../../contexts/SDKContext";
 import withRoomPermissions from "matrix-react-sdk/src/hocs/withRoomPermissions";
 import { StateEventType } from "matrix-react-sdk/src/powerLevel";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 // matches emoticons which follow the start of a line or whitespace
 const REGEX_EMOTICON_WHITESPACE = new RegExp("(?:^|\\s)(" + EMOTICON_REGEX.source + ")\\s|:^$");
@@ -736,7 +737,7 @@ class BasicMessageEditor extends React.Component<IProps, IState> {
         this.editorRef.current?.addEventListener("input", this.onInput, true);
         this.editorRef.current?.addEventListener("compositionstart", this.onCompositionStart, true);
         this.editorRef.current?.addEventListener("compositionend", this.onCompositionEnd, true);
-        this.editorRef.current?.focus();
+        !isInApp && this.focus();
     }
 
     private getInitialCaretPosition(): DocumentPosition {

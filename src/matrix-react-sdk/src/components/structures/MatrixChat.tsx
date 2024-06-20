@@ -154,6 +154,7 @@ import User from "matrix-react-sdk/src/utils/User";
 import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import defaultDispatcher from "matrix-react-sdk/src/dispatcher/dispatcher";
 import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
+import { isInApp } from "matrix-react-sdk/src/utils/env";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -1729,7 +1730,7 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 showNotificationsToast(false);
             }
 
-            dis.fire(Action.FocusSendMessageComposer);
+            !isInApp && dis.fire(Action.FocusSendMessageComposer);
             this.setState({
                 ready: true,
             });
