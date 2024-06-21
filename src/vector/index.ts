@@ -125,6 +125,8 @@ async function start(): Promise<void> {
         // give rageshake a chance to load/fail, we don't actually assert rageshake loads, we allow it to fail if no IDB
         await settled(rageshakePromise);
 
+        const fragparts = parseQsFromFragment(window.location);
+
         const loadOlmPromise = loadOlm();
         // set the platform for react sdk
         preparePlatform();
