@@ -1,6 +1,11 @@
+import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
 export enum SendMsgType {
     LoadedStatus = "loadedStatus", // 页面是否加载完成
     Download = "download", // 下载
+}
+
+export enum ReactNativeAction {
+    ViewRoom = `rn_viewRoom`,
 }
 
 class ReactNativeBridge {
@@ -15,6 +20,11 @@ class ReactNativeBridge {
             const { from, type, data } = JSON.parse(event.data);
             if (from !== "ReactNative") return;
             console.log("Received message from React Native App: type=", type, "data=", data);
+
+            dis.dispatch({
+                action: `rn_${type}`,
+                data,
+            });
         } catch (error) {}
     }
 
