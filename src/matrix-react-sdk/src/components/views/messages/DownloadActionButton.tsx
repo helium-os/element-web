@@ -64,16 +64,14 @@ export default class DownloadActionButton extends React.PureComponent<IProps, IS
             this.setState({ tooltip: _td("Decrypting") });
         }
 
-        if (isInApp) {
-            download(this.props.mediaEventHelperGet().media.srcHttp, "heliumos resource");
-        } else {
-            let blob: Blob = this.state.blob;
-            if (!blob) {
-                blob = await this.props.mediaEventHelperGet().sourceBlob.value;
-                this.setState({ blob });
-            }
-            await this.doDownload(blob);
-        }
+        download(this.props.mediaEventHelperGet().media.srcHttp, this.props.mediaEventHelperGet().fileName);
+
+        // let blob: Blob = this.state.blob;
+        // if (!blob) {
+        //     blob = await this.props.mediaEventHelperGet().sourceBlob.value;
+        //     this.setState({ blob });
+        // }
+        // await this.doDownload(blob);
 
         this.setState({ loading: false });
     };

@@ -29,6 +29,7 @@ import { IBodyProps } from "./IBodyProps";
 import { FileDownloader } from "../../../utils/FileDownloader";
 import TextWithTooltip from "../elements/TextWithTooltip";
 import RoomContext, { TimelineRenderingType } from "../../../contexts/RoomContext";
+import { download } from "matrix-react-sdk/src/utils/download";
 
 export let DOWNLOAD_ICON_URL: string; // cached copy of the download.svg asset for the sandboxed iframe later on
 
@@ -186,12 +187,14 @@ export default class MFileBody extends React.Component<IProps, IState> {
             await this.decryptFile();
             this.downloadFile(this.fileName, this.linkText);
         } else {
+            download(mediaHelper.media.srcHttp, this.fileName);
+
             // As a button we're missing the `download` attribute for styling reasons, so
             // download with the file downloader.
-            this.fileDownloader.download({
-                blob: await mediaHelper.sourceBlob.value,
-                name: this.fileName,
-            });
+            // this.fileDownloader.download({
+            //     blob: await mediaHelper.sourceBlob.value,
+            //     name: this.fileName,
+            // });
         }
     };
 
