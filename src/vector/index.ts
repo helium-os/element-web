@@ -18,8 +18,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-import './rewrite-js-sdk'; // 重写sdk中的一些方法
+import "./rewrite-js-sdk"; // 重写sdk中的一些方法
 import { logger } from "matrix-js-sdk/src/logger";
 
 // These are things that can run before the skin loads - be careful not to reference the react-sdk though.
@@ -125,25 +124,6 @@ async function start(): Promise<void> {
     try {
         // give rageshake a chance to load/fail, we don't actually assert rageshake loads, we allow it to fail if no IDB
         await settled(rageshakePromise);
-
-        const fragparts = parseQsFromFragment(window.location);
-
-        // don't try to redirect to the native apps if we're
-        // verifying a 3pid (but after we've loaded the config)
-        // or if the user is following a deep link
-        // (https://github.com/vector-im/element-web/issues/7378)
-        const preventRedirect = fragparts.params.client_secret || fragparts.location.length > 0;
-
-        if (!preventRedirect) {
-            const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isAndroid = /Android/.test(navigator.userAgent);
-            if (isIos || isAndroid) {
-                if (document.cookie.indexOf("element_mobile_redirect_to_guide=false") === -1) {
-                    window.location.href = "mobile_guide/";
-                    return;
-                }
-            }
-        }
 
         const loadOlmPromise = loadOlm();
         // set the platform for react sdk
