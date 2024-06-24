@@ -278,8 +278,8 @@ export default class MImageBody extends React.Component<IBodyProps, IState> {
                 return;
             }
         } else {
-            thumbUrl = getRequestImageSrc(this.getThumbUrl());
-            contentUrl = getRequestImageSrc(this.getContentUrl());
+            thumbUrl = this.getThumbUrl();
+            contentUrl = this.getContentUrl();
         }
 
         const content = this.props.mxEvent.getContent<IMediaEventContent>();

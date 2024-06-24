@@ -65,9 +65,9 @@ export function getRequestUrlInPlatform(resource: string | URL, needProxiedOrigi
             searchParams.set("real-origin", needProxiedOrigin);
             url.set("query", searchParams.toString());
         }
-        return url.toString().replace(needProxiedOrigin, isAppModelDev ? "/app" : "");
+        return url.toString().replace(needProxiedOrigin, window.location.origin + (isAppModelDev ? "/app" : ""));
     }
 
     // web网页端做请求拦截（本地开发 & 官网chat）
-    return href.replace(needProxiedOrigin, "/web");
+    return href.replace(needProxiedOrigin, `${window.location.origin}/web`);
 }

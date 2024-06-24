@@ -25,7 +25,6 @@ import Spinner from "../elements/Spinner";
 import { _t, _td } from "../../../languageHandler";
 import { FileDownloader } from "../../../utils/FileDownloader";
 import { Alignment } from "matrix-react-sdk/src/components/views/elements/Tooltip";
-import { isInApp } from "matrix-react-sdk/src/utils/env";
 import { download } from "matrix-react-sdk/src/utils/download";
 
 interface IProps {
