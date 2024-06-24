@@ -1,5 +1,5 @@
 import { isAppModelDev, isInApp } from "matrix-react-sdk/src/utils/env";
-import rnBridge, { SendMsgType } from "matrix-react-sdk/src/utils/ReactNativeBridge";
+import rnBridge, { PostMessageType } from "matrix-react-sdk/src/utils/ReactNativeBridge";
 
 interface DownloadData {
     url: string;
@@ -23,7 +23,7 @@ export function download(src: string, name: string) {
 }
 
 export function downloadInApp(url: string, name: string) {
-    rnBridge.send<DownloadData>(SendMsgType.Download, {
+    rnBridge.send<DownloadData>(PostMessageType.Download, {
         url,
         name,
     });

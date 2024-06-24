@@ -1,5 +1,5 @@
 import dis from "matrix-react-sdk/src/dispatcher/dispatcher";
-export enum SendMsgType {
+export enum PostMessageType {
     LoadedStatus = "loadedStatus", // 页面是否加载完成
     Download = "download", // 下载
 }
@@ -29,7 +29,7 @@ class ReactNativeBridge {
     }
 
     // 向React Native Webview发送消息
-    send<T>(type: SendMsgType, data: T) {
+    send<T>(type: PostMessageType, data: T) {
         window.ReactNativeWebView?.postMessage(
             JSON.stringify({
                 type,
