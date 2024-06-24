@@ -155,6 +155,7 @@ import SpaceStore from "matrix-react-sdk/src/stores/spaces/SpaceStore";
 import defaultDispatcher from "matrix-react-sdk/src/dispatcher/dispatcher";
 import LayoutStore from "matrix-react-sdk/src/stores/LayoutStore";
 import { isInApp } from "matrix-react-sdk/src/utils/env";
+import { ReactNativeAction } from "matrix-react-sdk/src/utils/ReactNativeBridge";
 
 // legacy export
 export { default as Views } from "../../Views";
@@ -169,10 +170,6 @@ const ONBOARDING_FLOW_STARTERS = [Action.ViewUserSettings, "view_create_chat", "
 interface IScreen {
     screen: string;
     params?: QueryDict;
-}
-
-interface ReceiveAppMessageViewRoomData {
-    roomId: string;
 }
 
 interface IProps {
@@ -474,23 +471,6 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         getUserRoles().then((res) => {
             UserStore.instance().setUserRoles(res);
         });
-
-        // 接收ios app端发送的消息
-        window.addEventListener(
-            "message",
-            (event) => {
-                this.onReceiveMessage(event);
-            },
-            false,
-        );
-        // 接收android app端发送的消息
-        document.addEventListener(
-            "message",
-            (event) => {
-                this.onReceiveMessage(event);
-            },
-            false,
-        );
     }
 
     public componentDidUpdate(prevProps: IProps, prevState: IState): void {
@@ -522,40 +502,24 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
         if (this.voiceBroadcastResumer) this.voiceBroadcastResumer.destroy();
     }
 
-    private onReceiveMessage = (event) => {
-        try {
-            const data = JSON.parse(event.data);
-            console.log("Received message from React Native App:", data);
-            this.onReceiveAppMessage(data);
-        } catch (error) {}
-    };
+    private onViewRoomInApp = (roomId: string) => {
+        defaultDispatcher.dispatch<ViewRoomPayload>({
+            action: Action.ViewRoom,
+            show_room_tile: true, // make sure the room is visible in the list
+            room_id: roomId,
+            clear_search: true,
+            metricsTrigger: "Notification",
+        });
 
-    private onReceiveAppMessage = ({ type, data }: { type: string; data: any }) => {
-        console.log("onReceiveAppMessage type=", type, " data=", data);
-        switch (type) {
-            case "viewRoom": {
-                const { roomId } = data as ReceiveAppMessageViewRoomData;
+        // 跳转到未读消息
+        setImmediate(() => {
+            dis.dispatch({
+                action: "jump_to_unread",
+            });
+        });
 
-                defaultDispatcher.dispatch<ViewRoomPayload>({
-                    action: Action.ViewRoom,
-                    show_room_tile: true, // make sure the room is visible in the list
-                    room_id: roomId,
-                    clear_search: true,
-                    metricsTrigger: "Notification",
-                });
-
-                // 跳转到未读消息
-                setImmediate(() => {
-                    dis.dispatch({
-                        action: "jump_to_unread",
-                    });
-                });
-
-                // 隐藏左侧边栏
-                LayoutStore.instance.setShowLeftPanel(false);
-                break;
-            }
-        }
+        // 隐藏左侧边栏
+        LayoutStore.instance.setShowLeftPanel(false);
     };
 
     private onWindowResized = (): void => {
@@ -1000,6 +964,9 @@ export default class MatrixChat extends React.PureComponent<IProps, IState> {
                 }
                 break;
             }
+            case ReactNativeAction.ViewRoom:
+                this.onViewRoomInApp(payload.data.roomId);
+                break;
         }
     };
 

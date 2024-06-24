@@ -4,7 +4,6 @@ import {
     isInApp,
     matrixHostnamePrefix,
     ipfsHostnamePrefix,
-    isDesktopModelDev,
     isAppModelDev,
 } from "matrix-react-sdk/src/utils/env";
 
@@ -44,7 +43,7 @@ export function getRequestOptions(options) {
 
 // 获取最终请求的credentials（是否允许携带cookie）
 export function getCredentials() {
-    return isInDesktop || isDesktopModelDev ? "same-origin" : "include";
+    return isInDesktop ? "same-origin" : "include";
 }
 
 /**
@@ -56,11 +55,8 @@ export function getRequestUrlInPlatform(resource: string | URL, needProxiedOrigi
     const url = new Url(resource);
     const { origin, href, query } = url;
 
-    if (
-        isInDesktop || // 客户端不做拦截
-        isDesktopModelDev // 本地开发模式为客户端模式时不做拦截
-    )
-        return href;
+    // 客户端不做拦截
+    if (isInDesktop) return href;
 
     // app端做请求拦截，添加real-origin参数
     if (isInApp) {
@@ -69,9 +65,9 @@ export function getRequestUrlInPlatform(resource: string | URL, needProxiedOrigi
             searchParams.set("real-origin", needProxiedOrigin);
             url.set("query", searchParams.toString());
         }
-        return url.toString().replace(needProxiedOrigin, isAppModelDev ? "/app" : "");
+        return url.toString().replace(needProxiedOrigin, window.location.origin + (isAppModelDev ? "/app" : ""));
     }
 
     // web网页端做请求拦截（本地开发 & 官网chat）
-    return href.replace(needProxiedOrigin, "/web");
+    return href.replace(needProxiedOrigin, `${window.location.origin}/web`);
 }

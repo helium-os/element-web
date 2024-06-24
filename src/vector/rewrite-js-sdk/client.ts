@@ -3,6 +3,7 @@ import { EventType } from "matrix-js-sdk/src/@types/event";
 import { Tag } from "matrix-react-sdk/src/stores/room-list/models";
 import * as utils from "matrix-js-sdk/src/utils";
 import { ClientPrefix, Method } from "matrix-js-sdk/src/http-api";
+import { getRequestUrl } from "./fetch";
 
 /**
  * setRoomOnlyTags -设置room tag（tag只打在room上）
@@ -54,4 +55,10 @@ MatrixClient.prototype.getDefaultSpace = function () {
     return this.http.authedRequest(Method.Get, "/default_space", undefined, undefined, {
         prefix: "/_matrix/client/api/v1",
     });
+};
+
+// 将mxc url转化为http url后，适配各端
+const _mxcUrlToHttp = MatrixClient.prototype.mxcUrlToHttp;
+MatrixClient.prototype.mxcUrlToHttp = function (...args) {
+    return getRequestUrl(_mxcUrlToHttp.call(this, ...args));
 };

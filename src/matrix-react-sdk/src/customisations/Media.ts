@@ -81,7 +81,7 @@ export class Media {
      */
     public get srcHttp(): string | null {
         // eslint-disable-next-line no-restricted-properties
-        return getRequestUrl(this.client.mxcUrlToHttp(this.srcMxc));
+        return this.client.mxcUrlToHttp(this.srcMxc);
     }
 
     /**

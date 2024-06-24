@@ -8,25 +8,27 @@ const devModel: DevModel = DevModel.Desktop; // 本地开发模式，默认为�
 
 export const isDev = process.env.NODE_ENV === "development";
 
+// @ts-ignore
+export const isDesktopModelDev = isDev && devModel === DevModel.Desktop; // 本地开发模式是否是客户端模式
+// @ts-ignore
+export const isAppModelDev = isDev && devModel === DevModel.App; // 本地开发模式是否是app端模式
+// @ts-ignore
+export const isWebSiteModelDev = isDev && devModel === DevModel.WebSite; // 本地开发模式是否是web网页端模式
+
 const ua = navigator.userAgent;
 
-export const isInApp = ua.toLocaleLowerCase().includes("heliumos app"); // 是否是在app端
+export const isInApp = ua.toLocaleLowerCase().includes("heliumos app") || isAppModelDev; // 是否是在app端
 
 // 是否是在桌面端
 export const isInDesktop =
-    (ua.toLocaleLowerCase().includes("heliumos") ||
+    ((ua.toLocaleLowerCase().includes("heliumos") ||
         ua.toLocaleLowerCase().includes("helium-os") ||
         ua.toLocaleLowerCase().includes("helium os")) &&
-    !isInApp;
+        !isInApp) ||
+    isDesktopModelDev;
 
 export const isWebSite = !isInDesktop && !isInApp; // 是否是web网页端
 export const isProdWebSite = isWebSite && !isDev; // 是否是打包后的web网页端
-
-export const isDesktopModelDev = isDev && devModel === DevModel.Desktop; // 本地开发模式是否是客户端模式
-
-export const isWebSiteModelDev = isDev && devModel === DevModel.WebSite; // 本地开发模式是否是web网页端模式
-
-export const isAppModelDev = isDev && devModel === DevModel.App; // 本地开发模式是否是app端模式
 
 export const matrixHostnamePrefix = "matrix.system.service"; // matrix服务域名前缀
 export const ipfsHostnamePrefix = "file.system.service"; // ipfs服务域名前缀

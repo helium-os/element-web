@@ -76,6 +76,7 @@ import { Direction } from "re-resizable/lib/resizer";
 import MatrixChatToolbar from "matrix-react-sdk/src/components/structures/MatrixChatToolbar";
 import LayoutStore, { UPDATE_SHOW_LEFT_PANEL } from "matrix-react-sdk/src/stores/LayoutStore";
 import { isInApp } from "matrix-react-sdk/src/utils/env";
+import rnBridge, { PostMessageType } from "matrix-react-sdk/src/utils/ReactNativeBridge";
 
 // We need to fetch each pinned message individually (if we don't already have it)
 // so each pinned message may trigger a request. Limit the number per room for sanity.
@@ -259,12 +260,7 @@ class LoggedInView extends React.PureComponent<IProps, IState> {
         LayoutStore.instance.on(UPDATE_SHOW_LEFT_PANEL, this.updateShowLeftPanel);
 
         // 向React Native发送消息，传递当前加载状态
-        window.ReactNativeWebView?.postMessage(
-            JSON.stringify({
-                type: "loadedStatus",
-                data: true,
-            }),
-        );
+        rnBridge.send<boolean>(PostMessageType.LoadedStatus, true);
     }
 
     public componentDidUpdate(prevProps, prevState): void {
